@@ -84,6 +84,7 @@ for step in range(STEPS + 1):
     loss.backward()
     torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
     opt.step(); sched.step()
+train_seconds = time.time() - t0
 _ = model.eval()                                          # switch to "use" mode (the _ = stops Jupyter printing the model)
 '''
 
@@ -133,7 +134,7 @@ def build(redo: bool = False) -> None:
         path=PATH,
         question="How does a program learn to write, one character at a time?",
         answer=("Show it a long text and ask it, millions of times, to guess the next character. "
-                "Each wrong guess nudges its weights. After enough guesses, its own writing looks like the text."),
+                "Each guess nudges its weights a little, more when the guess was further off. After enough guesses, its own writing looks like the text."),
         build_text=f"""
             By the end you will have:
 
@@ -141,7 +142,7 @@ def build(redo: bool = False) -> None:
             2. **Made it write** at different temperatures, and **looked at its attention**.
             3. **Exported it** in the format the site reads, so you can put your own model on the page.
 
-            Training here runs {STEPS:,} steps (the site's model ran 6,000). On Colab's free CPU this takes about 10–15 minutes. The picture below is a real run of this notebook.
+            Training here runs {STEPS:,} steps (the site's model ran 6,000). Running every cell, including the exercise solutions, takes about 15 minutes on Colab's free CPU. The picture below is a real run of this notebook.
         """,
         image=IMG,
     )
@@ -152,7 +153,6 @@ def build(redo: bool = False) -> None:
         - 🤔 **Predict first** boxes ask you to guess before you run. The answer is one click away.
         - 🐍 **Python notes** explain Python as it comes up.
         - Exercise solutions are in collapsed cells. In Colab, double-click a solution's title to open it.
-        - Optional: **Runtime → Change runtime type → T4 GPU** makes training much faster. The code runs on the CPU either way.
     """)
 
     nb.md("""
@@ -202,8 +202,8 @@ print(f"even guess: {math.log(len(chars)):.2f}    counting pairs: {pair_loss:.2f
         ## 3. The network
 
         This is the exact code behind the site's model (`training/train_tinylm.py`). Each character becomes a list of 128 numbers.
-        Five blocks then mix information along the text. In each block, **attention** lets every position take a weighted average of
-        the positions before it, with weights it computes itself. The last step turns 128 numbers into one score per character.
+        Five blocks then mix information along the text. In each block, **attention** lets every position combine
+        the positions before it, giving each a share that it works out from the text itself. The last step turns 128 numbers into one score per character.
     """)
     nb.code(CODE_MODEL + '''
 
@@ -216,6 +216,8 @@ print(f"{sum(p.numel() for p in model.parameters()):,} weights")
         - `super().__init__()` runs `nn.Module`'s own set-up first.
         - `masked_fill(~mask, -inf)` hides the future: position 10 can't look at position 11. After `softmax`, hidden positions get weight 0.
         - `(t.view(...) for t in (q, k, v))` is a **generator expression**; unpacking it into three names applies the same reshape to all three.
+        - `B, T, C = x.shape` unpacks the three sizes of a tensor: batch, positions, numbers per position. `@` multiplies matrices.
+        - `{**CFG}` copies the dict `CFG`; `TinyLM(..., **CFG)` passes its keys as named arguments (`n_layer=5`, ...).
 
         **What it's called:** this design is a **transformer**. Each block has **attention** (4 **heads**, each with its own weights) and a small two-layer network.
     """)
@@ -227,8 +229,17 @@ print(f"{sum(p.numel() for p in model.parameters()):,} weights")
         This is gradient descent (Field 1) with a better step rule called **AdamW**. The loss is printed every 250 steps, on training text and on held-out text.
     """)
     nb.code(CODE_TRAIN)
+    nb.md("""
+        🐍 **Reading the training loop**
+        - `loss.backward()` works out, for every weight, which way to nudge it (the slopes from Field 1). `opt.zero_grad()` clears the old ones first.
+        - `opt.step()` nudges every weight. The **learning rate** (`lr=2e-3`) sets the size of the nudges.
+        - `LambdaLR(...)` changes the learning rate over time: it grows for the first 200 steps, then shrinks smoothly (a cosine curve) to a tenth.
+        - `clip_grad_norm_(..., 1.0)` caps the size of one nudge, so a rare bad batch can't throw the weights far off.
+        - `@torch.no_grad()` and `with torch.no_grad():` switch off slope-tracking while measuring, which saves time and memory.
+        - `def estimate_loss(): ...` inside the cell is a normal function; the `@` line above it is a **decorator** that wraps it.
+    """)
     nb.code('''
-st, tr, va = zip(*curve)
+st, tr, va = zip(*curve)                                  # three lists: steps, training losses, held-out losses
 plt.figure(figsize=(6.5, 3.4))
 plt.plot(st, tr, color="#999", label="training text")
 plt.plot(st, va, color="#e0a100", lw=2.5, label="held-out text")
@@ -249,16 +260,16 @@ print(f"held-out loss: {va[-1]:.2f}   (counting pairs: {pair_loss:.2f}, even gue
         $$p_i = \\frac{e^{z_i / T}}{\\sum_j e^{z_j / T}}$$
     """)
     nb.predict(
-        "**What will temperature 0.2 do to the text? And temperature 2?**",
-        "At 0.2 the top guess wins almost every time, and the text starts to repeat itself. At 2 the probabilities even out, rare characters get picked, and words fall apart. Run the next cell.",
+        "**What will temperature 0.05 do to the text? And temperature 2?**",
+        "At 0.05 the top guess wins almost every time, and the text falls into loops. At 2 the probabilities even out, rare characters get picked, and words fall apart. Run the next cell.",
     )
     nb.code(CODE_SAMPLE + '''
-for t in (0.2, 0.8, 2.0):
+for t in (0.05, 0.8, 2.0):
     print(f"----- temperature {t}")
     print(write("ROMEO:\\n", 250, t))
 ''')
     nb.md("""
-        🐍 `@torch.no_grad()` above a function is a **decorator**: it wraps the function so PyTorch doesn't record steps for gradients, which saves time and memory.
+        🐍 `torch.multinomial(probs, 1)` picks one index at random, in proportion to the probabilities. `torch.cat` joins tensors end to end.
 
         **What it's called:** picking at random in proportion to probability is **sampling**. Always picking the top one is **greedy decoding**.
     """)
@@ -266,31 +277,33 @@ for t in (0.2, 0.8, 2.0):
     nb.md("""
         ## 6. Look at the attention
 
-        For each position, each head has a row of weights over the earlier positions. Here are the weights of every head in the first layer, for one line of text.
+        For each position, each head shares out its attention over the earlier positions; the shares add up to 1. Here are the shares of every head in the third layer, for one line of text.
     """)
     nb.code('''
 prompt = "ROMEO:\\nBut soft, what light"
 with torch.no_grad():
     _, atts = model(torch.tensor([encode(prompt)]), return_att=True)
+LAYER = 2                                                  # the third layer (counting from 0)
 fig, axes = plt.subplots(1, CFG["n_head"], figsize=(16, 4.2))
 labels = [c if c != "\\n" else "↵" for c in prompt]
 for h, ax in enumerate(axes):
-    ax.imshow(atts[0][0, h].numpy(), cmap="magma")
+    ax.imshow(atts[LAYER][0, h].numpy(), cmap="magma", vmax=0.5)    # vmax: shares of 0.5 or more show as the brightest
     ax.set_xticks(range(len(prompt)), labels, fontsize=7); ax.set_yticks(range(len(prompt)), labels, fontsize=7)
-    ax.set_title(f"layer 1, head {h + 1}", fontsize=10)
+    ax.set_title(f"layer {LAYER + 1}, head {h + 1}", fontsize=10)
 plt.tight_layout(); plt.show()
 ''')
     nb.md("""
         **How to read it:** row = the position doing the looking; column = the earlier position it looks at. Bright = more attention. Everything above the diagonal is black: no position can look ahead.
 
-        Some heads mostly look one or two characters back. Others spread out over the word or the line. The site's attention view shows the same weights, for any character you click.
+        Compare the four heads: some put most of their attention on one or two recent characters (a bright stripe next to the diagonal); others spread it over the word or the line. The site's attention view shows the same shares, for any character you click.
     """)
 
     nb.md("""
         ## 7. Put your model on the site
 
-        The site reads one JSON file. This cell writes your model in that format, as `model.json`.
-        Download it (Colab's file panel, on the left) and replace `site/public/models/tinylm/model.json` in your copy of the repository.
+        The site reads two files: `model.json` (the weights) and `train.json` (the numbers on the page: steps, loss curve, minutes).
+        This cell writes both. Download them (Colab's file panel, on the left), put them in `site/public/models/tinylm/` in your copy of the repository,
+        and run `npm run dev` to see your model on the page (or `npm run build` for the static site).
     """)
     nb.code('''
 def b64(t):
@@ -308,10 +321,19 @@ export = {
 }
 with open("model.json", "w") as f:
     json.dump(export, f)
-print(f"wrote model.json ({len(json.dumps(export)) / 1e6:.1f} MB)")
+train_info = {
+    "curve": [{"step": s_, "train": round(t_, 4), "val": round(v_, 4)} for s_, t_, v_ in curve],
+    "minutes": round(train_seconds / 60, 1), "iters": STEPS, "batch": BATCH, "params": export["params"],
+    "characters": len(text), "final": {"step": curve[-1][0], "train": round(curve[-1][1], 4), "val": round(curve[-1][2], 4)},
+}
+with open("train.json", "w") as f:
+    json.dump(train_info, f)
+print(f"wrote model.json ({len(json.dumps(export)) / 1e6:.1f} MB) and train.json")
 ''')
     nb.md("""
-        🐍 The weights are saved as 16-bit numbers (`float16`) to halve the file size, then as **base64** text so they fit in JSON. The site turns them back into numbers when the page loads.
+        🐍 **Python notes**
+        - The weights are saved as 16-bit numbers (`float16`) to halve the file size, then as **base64** text so they fit in JSON. The site turns them back into numbers when the page loads.
+        - `with open("model.json", "w") as f:` opens a file for writing and closes it at the end of the block, even if an error happens.
     """)
 
     nb.md("## Practice\n\nTry each one before opening its solution.")
@@ -329,11 +351,29 @@ print(f"wrote model.json ({len(json.dumps(export)) / 1e6:.1f} MB)")
         "**Make the model write in a different style.** Train it on another text of at least 200,000 characters (a public-domain book, or your own writing), and show a sample.",
         "# your code here\n",
         solution_src='''
-            # Any plain-text file works. For example, a Project Gutenberg book (public domain):
-            # text = urllib.request.urlopen("https://www.gutenberg.org/cache/epub/1342/pg1342.txt").read().decode("utf-8")
-            # Then re-run the cells from section 1 (they rebuild chars, encode, data) and sections 3 to 5.
-            # The vocabulary changes with the text, so the model must be rebuilt, not reused.
-            print("Replace `text` in section 1, then run sections 1, 3, 4 and 5 again.")
+            # Any plain-text file works, for example a Project Gutenberg book in Colab:
+            #   text2 = urllib.request.urlopen("https://www.gutenberg.org/cache/epub/1342/pg1342.txt").read().decode("utf-8")
+            # Here: Python's own source code, which is always on the machine. The model learns a very different style.
+            import inspect, collections, json as json_module, textwrap as tw, random as rnd
+            text2 = "\\n".join(inspect.getsource(m) for m in (collections, json_module.decoder, json_module.encoder, tw, rnd))
+            chars2 = sorted(set(text2)); stoi2 = {c: i for i, c in enumerate(chars2)}
+            data2 = torch.tensor([stoi2[c] for c in text2])
+            torch.manual_seed(0)
+            model2 = TinyLM(len(chars2), **CFG)
+            opt2 = torch.optim.AdamW(model2.parameters(), lr=2e-3, weight_decay=0.05, betas=(0.9, 0.98))
+            for step in range(400):                                   # a short run: enough to pick up the style
+                ix = torch.randint(len(data2) - CFG["block"] - 1, (BATCH,))
+                x = torch.stack([data2[i:i + CFG["block"]] for i in ix]); y = torch.stack([data2[i + 1:i + CFG["block"] + 1] for i in ix])
+                loss = F.cross_entropy(model2(x).flatten(0, 1), y.flatten())
+                opt2.zero_grad(set_to_none=True); loss.backward(); opt2.step()
+            model2.eval()
+            print(f"{len(text2):,} characters of Python; loss after 400 steps: {loss.item():.2f}")
+            idx = torch.tensor([[stoi2[c] for c in "def "]])
+            with torch.no_grad():
+                for _ in range(300):
+                    probs = (model2(idx[:, -CFG["block"]:])[0, -1] / 0.8).softmax(-1)
+                    idx = torch.cat([idx, torch.multinomial(probs, 1)[None]], 1)
+            print("".join(chars2[i] for i in idx[0].tolist()))
         ''',
     )
     nb.exercise(
@@ -341,14 +381,18 @@ print(f"wrote model.json ({len(json.dumps(export)) / 1e6:.1f} MB)")
         "Halve the width (`n_embd=64`) and use 2 layers. **How many weights are left? Train it for the same number of steps: how much higher is its held-out loss?**",
         "# your experiment here\n",
         solution_src='''
+            torch.manual_seed(0)                                          # same seed as section 4, before building
             small = TinyLM(len(chars), n_layer=2, n_head=4, n_embd=64, block=128)
             print(f"{sum(p.numel() for p in small.parameters()):,} weights")
-            torch.manual_seed(0)
             opt_s = torch.optim.AdamW(small.parameters(), lr=2e-3, weight_decay=0.05, betas=(0.9, 0.98))
-            for step in range(STEPS):                        # same steps and batches as section 4
+            sched_s = torch.optim.lr_scheduler.LambdaLR(
+                opt_s, lambda s: min(1, (s + 1) / 200) * (0.1 + 0.9 * 0.5 * (1 + math.cos(math.pi * min(1, s / STEPS)))))
+            for step in range(STEPS):                                     # same steps, schedule and clipping as section 4
                 x, y = get_batch("train")
                 loss = F.cross_entropy(small(x).flatten(0, 1), y.flatten())
-                opt_s.zero_grad(set_to_none=True); loss.backward(); opt_s.step()
+                opt_s.zero_grad(set_to_none=True); loss.backward()
+                torch.nn.utils.clip_grad_norm_(small.parameters(), 1.0)
+                opt_s.step(); sched_s.step()
             small.eval()
             with torch.no_grad():
                 small_val = float(np.mean([F.cross_entropy(small(x).flatten(0, 1), y.flatten()).item()
@@ -365,7 +409,7 @@ print(f"wrote model.json ({len(json.dumps(export)) / 1e6:.1f} MB)")
     ])
     nb.footer(
         experiments=[
-            "**Longer training.** Set `STEPS = 6000` (or use a GPU). How low does the held-out loss go?",
+            "**Longer training.** Set `STEPS = 6000` (about four times as long). How low does the held-out loss go, and when does it stop falling?",
             "**A shorter memory.** Set `block=32` in `CFG`. What kind of mistakes appear in the writing?",
             "**Your own prompt.** Start `write` with a speaker name that isn't in the plays. What does the model do?",
         ],
