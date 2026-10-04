@@ -1,0 +1,16 @@
+/* DSA 6: binary search tree visualiser (classes prefixed bst-) */
+.bst-svg .dv-node.bst-new { fill: var(--red-soft); stroke: var(--red); stroke-width: 2.5; }
+.bst-svg .dv-node.done { stroke-width: 2; }
+.dp-stage svg.bst-svg { max-height: 500px; }
+.bst-val { fill: var(--text); font-size: 17px; font-weight: 700; }
+.bst-level { fill: var(--muted); font-size: 16px; font-weight: 650; }
+.bst-level.off { opacity: .35; }
+.bst-level-h { fill: var(--faint); font-size: 14px; }
+.bst-guide { stroke: var(--border); stroke-width: 1; stroke-dasharray: 2 5; }
+.bst-spot { fill: none; stroke: var(--muted); stroke-width: 1.6; stroke-dasharray: 4 4; }
+.bst-spot-edge { stroke: var(--muted); stroke-width: 1.6; stroke-dasharray: 4 4; fill: none; }
+.bst-q { fill: var(--muted); font-size: 17px; font-weight: 650; }
+.bst-chip { fill: var(--surface); stroke: var(--text); stroke-width: 2; }
+.bst-chip-l { fill: var(--muted); font-size: 17px; font-weight: 650; }
+.bst-queue { fill: var(--text); font-size: 16px; font-weight: 650; white-space: pre; }
+.bst-queue-l { fill: var(--muted); }
