@@ -28,6 +28,8 @@ Open the address it prints (usually http://localhost:5173).
 
 GitHub Pages on a **private** repository needs a paid GitHub plan. If that isn't available, use Option A.
 
+**Option C: a hosted copy (no install).** A built copy of the site is published at https://claude.ai/artifact/3YB6RZN1TBihrZQ51qiwdF. It is private to the account that built it; the owner can share it from the page's Share menu. Two limits there: links back to Home may not work from inner pages (use the browser's Back button), and the Spark Log's **Export as Markdown** is blocked, so use **Copy as Markdown** instead.
+
 ---
 
 ## 2. What to do first
