@@ -308,7 +308,7 @@ print(f"bigram loss on unseen text: {nll:.3f}    uniform guessing: {np.log(V):.3
 
     # ------------------------------------------------------------------ 4 attention
     nb.md("""
-        ## 4. Looking further back: attention
+        ## 4. Looking further back
 
         To do better, each position needs information from **earlier** positions, and it must choose **which** ones matter.
         After "The king said that h", the "h" should look back at "said that" more than at "The".
@@ -458,7 +458,7 @@ plt.tight_layout(); plt.show()
 
     # ------------------------------------------------------------------ 7 BPE
     nb.md("""
-        ## 7. Bigger tokens: byte-pair encoding
+        ## 7. Bigger pieces than single characters
 
         Real models don't use single characters: sequences would be long and each step would carry little meaning.
         They use pieces of words, found by a **greedy** rule:

@@ -23,7 +23,9 @@ CITIES = rng.uniform(0, 100, size=(30, 2))
 def tour_length(tour, pts=CITIES):
     p = pts[tour]
     return float(np.linalg.norm(p - np.roll(p, -1, axis=0), axis=1).sum())
+'''
 
+CODE_ANNEAL = '''
 def anneal(pts=CITIES, steps=40000, t_start=30.0, t_end=0.05, seed=0, record_every=1000):
     r = np.random.default_rng(seed)
     tour = r.permutation(len(pts))
@@ -54,6 +56,7 @@ def make_end_image(redo: bool) -> None:
     matplotlib.use("Agg")
     ns: dict = {}
     exec(textwrap.dedent(CODE_TSP), ns)
+    exec(textwrap.dedent(CODE_ANNEAL), ns)
     np, plt = ns["np"], ns["plt"]
     best_tour, best, history, frames = ns["anneal"]()
     C = ns["CITIES"]
@@ -98,6 +101,10 @@ def build(redo: bool = False) -> None:
         - 🐍 **Python notes** explain Python as it comes up.
         - Exercise solutions are in collapsed cells. In Colab, double-click a solution's title to open it.
     """)
+    nb.md("""
+        The next cell installs OR-Tools, Google's constraint solver. `%pip install` runs the installer from inside the notebook.
+        Red pip warnings about other packages are safe to ignore. If the import in section 3 fails, use **Runtime → Restart session** and run the cells again.
+    """)
     nb.code("%pip install -q ortools   # Google's constraint solver, used in section 3")
 
     # ------------------------------------------------------------------ 1
@@ -140,7 +147,7 @@ print("Python clashes with:", sorted(clash["Python"]))
 
     # ------------------------------------------------------------------ 2 backtracking
     nb.md("""
-        ## 2. Search with undo: backtracking
+        ## 2. Search with undo
 
         Assign exams one at a time. After each choice, check the rules for what's assigned so far.
         If an exam has no slot left that works, **undo** the last choice and try its next option.
@@ -170,12 +177,17 @@ def backtrack(plan, order, stats):
 stats = {"tried": 0}
 plan = backtrack({}, EXAMS, stats)
 print("slot choices tried:", stats["tried"])
-for s in range(SLOTS):
-    print(f"slot {s}:", [e for e, v in plan.items() if v == s])
+if plan is None:
+    print("no valid timetable exists")
+else:
+    for s in range(SLOTS):
+        print(f"slot {s}:", [e for e, v in plan.items() if v == s])
 ''')
     nb.md("""
         🐍 **Python notes**
-        - `backtrack` calls itself: **recursion**. Each call handles one exam; returning `None` tells the caller "no luck, try something else".
+        - `backtrack` calls itself: **recursion**. Each call handles one exam. Returning `None` means no timetable was found from this point, so the caller tries its next slot.
+        - `sum(1 for s in plan.values() if s == slot)` counts the exams already in `slot`: it makes one 1 per match, and `sum` adds them up. `all(...)` is True only if every item is True.
+        - `dict(plan)` makes a copy, so later undo steps don't change the finished answer.
         - `del plan[exam]` removes a key from a dict: the undo step.
         - `plan.get(other)` returns `None` if `other` isn't assigned yet, instead of raising an error.
 
@@ -206,7 +218,11 @@ SLOTS = 5                     # back to the real problem
     nb.md("""
         🐍 `random.sample(EXAMS, len(EXAMS))` returns the exams in a random order. `sorted(f(x) for x in ...)` collects the results and sorts them, so `counts[0]` is the smallest and `counts[-1]` the largest.
     """)
-    nb.md("**What it's called:** picking the most constrained variable first is a **variable-ordering heuristic**: a rule of thumb that doesn't change the answer, only how fast you find it.")
+    nb.md("""
+        **What you see:** with 5 slots every order is quick. With 4 slots, the slowest random order tried over ten times as many choices as hardest-first.
+
+        **What it's called:** picking the most constrained variable first is a **variable-ordering heuristic**. It doesn't change whether a timetable exists; it changes how much work the search does, and which valid timetable it finds first.
+    """)
 
     # ------------------------------------------------------------------ 3 solver
     nb.md("""
@@ -251,9 +267,14 @@ for s in range(SLOTS):
     print(f"slot {s}:", [e for e in EXAMS if solver.Value(slot[e]) == s])
 ''')
     nb.md("""
+        🐍 **Reading the OR-Tools code**
+        - `m.NewIntVar(0, SLOTS - 1, e)` makes a variable the solver will choose: a whole number from 0 to 4.
+        - `m.Add(...)` adds a rule. `m.NewBoolVar(...)` makes a true/false variable, and `.OnlyEnforceIf(b)` makes a rule apply only when `b` is true. Together they count which exams are in each slot.
+        - `m.Minimize(...)` sets the goal. CP-SAT is the name of the solver inside OR-Tools.
+
         **What you see:** a valid timetable that also keeps clashing exams apart where possible. `OPTIMAL` means the solver proved no better timetable exists.
 
-        **The same model in MiniZinc.** Monash is a home of the **MiniZinc** modelling language, and FIT5216 is about modelling problems like this one. A MiniZinc model reads almost like the rules in English:
+        **The same rules in MiniZinc.** Monash is a home of the **MiniZinc** modelling language, and FIT5216 is about modelling problems like this one. A MiniZinc model reads almost like the rules in English:
 
         ```
         int: SLOTS = 5;
@@ -267,7 +288,7 @@ for s in range(SLOTS):
         solve satisfy;
         ```
 
-        (Running MiniZinc needs its own install; the official tutorial is linked at the end.)
+        This version leaves out the back-to-back goal. (Running MiniZinc needs its own install; the official tutorial is linked at the end.)
     """)
 
     # ------------------------------------------------------------------ 4 TSP
@@ -278,16 +299,19 @@ for s in range(SLOTS):
     """)
     nb.predict(
         "**How many different round trips are there through 30 stops?** (Fix the start; a trip and its reverse count as one.)",
-        "$29!/2 \\approx 4.4 \\times 10^{30}$. Checking a billion per second would take about $10^{14}$ years. Run the next cell for the exact count.",
+        "$29!/2 \\approx 4.4 \\times 10^{30}$, where $29!$ means $29 \\times 28 \\times \\dots \\times 1$. Checking a billion per second would take about $10^{14}$ years. Run the next cell for the exact count.",
     )
     nb.code(CODE_TSP + '''
 import math
 print(f"round trips through 30 stops: {math.factorial(29) // 2:,}")
 ''')
     nb.md("""
-        🐍 `np.roll(p, -1, axis=0)` shifts the rows up by one, wrapping the first to the end; subtracting it from `p` gives the step from each stop to the next, including the step home.
+        🐍 **Python notes**
+        - `pts[tour]` picks the rows of `pts` in the order listed in `tour`.
+        - `np.roll(p, -1, axis=0)` shifts the rows up by one, wrapping the first to the end; subtracting it from `p` gives the step from each stop to the next, including the step home.
+        - `math.factorial(29) // 2` is whole-number division; `{x:,}` prints commas between thousands.
 
-        **What it's called:** this is the **travelling salesperson problem** (TSP). It is **NP-hard**: no known method finds the guaranteed best trip in time that grows only polynomially with the number of stops.
+        **What it's called:** this is the **travelling salesperson problem** (TSP). It is **NP-hard**: no known method finds the guaranteed best trip in time that grows only like a power of the number of stops ($n^2$, $n^3$, …).
 
         ### A quick answer: always go to the nearest stop
     """)
@@ -303,16 +327,25 @@ def nearest_neighbour(pts=CITIES, start=0):
 
 greedy = nearest_neighbour()
 print("nearest-stop-next trip length:", round(tour_length(greedy)))
+p = CITIES[np.append(greedy, greedy[0])]
+plt.figure(figsize=(5, 3.6))
+plt.plot(p[:, 0], p[:, 1], color="#a87b00"); plt.scatter(CITIES[:, 0], CITIES[:, 1], color="#188a4a", zorder=3, s=15)
+plt.scatter(*CITIES[0], color="#d03a3a", zorder=4, s=50, label="start")
+plt.title("nearest stop next"); plt.xticks([]); plt.yticks([]); plt.legend(); plt.show()
 ''')
     nb.md("""
-        **What it's called:** taking the best-looking step now, with no planning ahead, is a **greedy** heuristic. It is fast, but the last few steps often have to cross the map back to the start.
+        🐍 `min(left, key=lambda j: ...)` returns the item of `left` with the smallest value of the expression.
 
-        ### Improve it with small changes: simulated annealing
+        **What you see:** the route is mostly sensible, but it crosses itself, and the final stretches jump across the map to stops that were skipped.
+
+        **What it's called:** taking the best-looking step now, with no planning ahead, is a **greedy** heuristic.
+
+        ### Improve it with small changes
 
         Start from a random trip. Repeatedly pick a section of the trip and reverse it. Keep the change if the trip gets shorter.
         **Also keep some changes that make it longer**, with probability $e^{-\\Delta/T}$, where $\\Delta$ is how much longer and $T$ (the **temperature**) shrinks over time.
     """)
-    nb.code('''
+    nb.code(CODE_ANNEAL + '''
 import time
 t0 = time.time()
 best_tour, best, history, frames = anneal()
@@ -334,10 +367,21 @@ plt.close(fig)
 HTML(anim.to_jshtml())
 ''')
     nb.md("""
-        **What you see:** early on (high temperature), the length jumps up and down: many worse trips are accepted. As it cools, it settles and crossings disappear.
+        🐍 **Python notes**
+        - `def anneal(pts=CITIES, steps=40000, ...)` gives each argument a **default value**, used when you leave it out: `anneal()` or `anneal(steps=20000)`.
+        - `new[i:j + 1][::-1]` is that section of the trip in reverse order. `return best_tour, best, history, frames` returns four values at once.
+        - `ks, lens, temps = zip(*history)` turns a list of (step, length, temperature) rows into three separate lists.
+        - `frame(i)` is a function defined inside the cell; `FuncAnimation` calls it once per picture.
 
-        **Why accept worse trips?** A search that only accepts improvements gets stuck: sometimes no single reversal helps, though a better trip exists a few changes away. Test that:
+        **What you see:** early on (high temperature), many worse trips are accepted, so the length falls slowly. As it cools, it settles and the crossings disappear.
+
+        **Why accept worse trips?** A search that only accepts improvements can get stuck: sometimes no single reversal helps, though a better trip exists a few changes away.
     """)
+    nb.predict(
+        "Run each method 5 times from different random starts. **Will accepting some worse moves give a shorter trip every time?**",
+        "**Not every time, but more reliably.** Annealing's 5 trips are all close to the best length. "
+        "The improvements-only search is sometimes as good and sometimes much worse, depending on where it starts.",
+    )
     nb.code('''
 greedy_only = [anneal(t_start=1e-6, t_end=1e-9, seed=s, steps=20000)[1] for s in range(5)]
 annealed = [anneal(seed=s, steps=20000)[1] for s in range(5)]
@@ -345,12 +389,14 @@ print("only accept improvements:", [round(x) for x in greedy_only])
 print("simulated annealing:     ", [round(x) for x in annealed])
 ''')
     nb.md("""
+        **What you see:** improvements-only gives anything from 463 to 499. Annealing gives 462 to 467: not better on every run (look at the first), but never far off.
+
         **What it's called:** improving one answer by small changes is **local search**. A trip no single change can improve is a **local optimum**. Accepting worse moves with a shrinking probability is **simulated annealing**.
     """)
 
     # ------------------------------------------------------------------ 5 branch and bound
     nb.md("""
-        ## 5. Guaranteed best, without checking everything: branch and bound
+        ## 5. Guaranteed best, without checking everything
 
         For small cases you can find the guaranteed shortest trip. Build trips stop by stop.
         **If a half-built trip is already longer than the best complete trip found so far, abandon it**: nothing built on it can win.
@@ -386,7 +432,9 @@ print(f"partial trips explored: {explored:,} out of {all_partial:,} possible")
 ''')
     nb.md("""
         **What it's called:** splitting the problem into choices is **branching**; abandoning a branch that can't beat the best so far is **bounding**. Together: **branch and bound**.
-        It still explodes for large inputs (that's NP-hardness), but it pushes the limit far beyond checking everything.
+        Here it explored about one partial trip in five and still proved the answer is the shortest. It still explodes for large inputs (that's NP-hardness).
+
+        🐍 `extend` is defined inside `branch_and_bound`, so it can use `D`, `best` and `counted`. They are a list and a dict so that `extend` can change them. `tour[:]` copies a list; `tour.pop()` removes the last stop (the undo step). `pts[:, None] - pts[None, :]` gives every stop-to-stop difference at once.
     """)
 
     # ------------------------------------------------------------------ practice
@@ -425,22 +473,30 @@ print(f"partial trips explored: {explored:,} out of {all_partial:,} possible")
                 return None
 
             p2 = backtrack2({}, hardest_first)
-            print("backtracking: Python", p2["Python"], "AI", p2["AI"])
-            m.Add(slot["Python"] < slot["AI"])
+            print("backtracking:")
+            for s in range(SLOTS):
+                print(f"  slot {s}:", [e for e, v in p2.items() if v == s])
+
+            m.Add(slot["Python"] < slot["AI"])         # this adds the rule to the model m for the rest of the notebook
             solver.Solve(m)
-            print("OR-Tools:     Python", solver.Value(slot["Python"]), "AI", solver.Value(slot["AI"]))
+            print("OR-Tools:")
+            for s in range(SLOTS):
+                print(f"  slot {s}:", [e for e in EXAMS if solver.Value(slot[e]) == s])
         """,
     )
     nb.exercise(
         3,
-        "Simulated annealing has two settings: the starting temperature and the number of steps. **Find settings that beat the default trip length for this map**, and say why they help.",
+        "Simulated annealing has two settings: the starting temperature and the number of steps. "
+        "**Find settings that give shorter trips, on average over 5 runs, than the defaults (start temperature 30, 40,000 steps).** Say why they help.",
         "# your experiment here\n",
         solution_src="""
-            for t_start, steps in [(30, 40000), (10, 80000), (60, 80000), (5, 20000)]:
-                lengths = [anneal(t_start=t_start, steps=steps, seed=s)[1] for s in range(3)]
-                print(f"start temperature {t_start:3d}, {steps:6,} steps: {np.round(lengths)}")
-            # More steps means slower cooling: more time near each temperature, so fewer bad tangles get locked in.
-            # Too low a start temperature behaves like plain local search; too high wastes steps wandering.
+            for t_start, steps in [(30, 40000), (5, 40000), (30, 80000), (60, 80000)]:
+                lengths = [anneal(t_start=t_start, steps=steps, seed=s)[1] for s in range(5)]
+                print(f"start temperature {t_start:3d}, {steps:6,} steps: average {np.mean(lengths):.1f}, worst {max(lengths):.0f}")
+            # Doubling the steps (30, 80,000) gives the shortest and steadiest trips: slower cooling spends more
+            # time at each temperature, so fewer tangles get locked in.
+            # A lower start (5) also helps on this map: at 30, many early steps wander among long trips.
+            # Far lower (try 0.01) accepts almost no worse moves, and behaves like the improvements-only search.
         """,
     )
     nb.cue([

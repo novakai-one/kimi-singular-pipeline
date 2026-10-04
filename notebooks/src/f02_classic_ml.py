@@ -28,6 +28,49 @@ y = df["target"].to_numpy()
 COLOURS = np.array(["#2563d6", "#e0a100", "#d03a3a"])
 '''
 
+CODE_KNN = '''
+def knn_predict(X_train, y_train, X_new, k=5):
+    out = []
+    for p in X_new:
+        d = np.sqrt(((X_train - p) ** 2).sum(axis=1))        # distance to every training bottle
+        nearest = np.argsort(d)[:k]                          # sort, keep the k closest
+        out.append(np.bincount(y_train[nearest], minlength=3).argmax())
+    return np.array(out)
+'''
+
+CODE_CV = '''
+def cross_validate(predict_fn, X, y, folds=5, seed=0):
+    idx = np.random.default_rng(seed).permutation(len(X))
+    scores = []
+    for f in range(folds):
+        test = idx[f::folds]                              # every 5th bottle, starting at f
+        train = np.setdiff1d(idx, test)
+        scores.append((predict_fn(X[train], y[train], X[test]) == y[test]).mean())
+    return np.mean(scores)
+'''
+
+CODE_COMPARE = '''
+from sklearn.model_selection import cross_val_score
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+
+X_all = wine.data.to_numpy()
+models = {
+    "nearest neighbours (k=7, scaled)": make_pipeline(StandardScaler(), KNeighborsClassifier(7)),
+    "nearest neighbours (k=7, raw)": KNeighborsClassifier(7),
+    "decision tree (depth 3)": DecisionTreeClassifier(max_depth=3, random_state=0),
+    "straight-line boundaries (scaled)": make_pipeline(StandardScaler(), LogisticRegression(max_iter=2000)),
+    "random forest (100 trees)": RandomForestClassifier(100, random_state=0),
+}
+results = pd.DataFrame({name: cross_val_score(m, X_all, y, cv=5) for name, m in models.items()}).T
+results.columns = [f"fold {i + 1}" for i in range(5)]
+results["mean"] = results.mean(axis=1)
+'''
+
 CODE_BOUNDARY = '''
 def boundary(ax, predict, title, X=X, y=y):
     gx, gy = np.meshgrid(np.linspace(X[:, 0].min() - .5, X[:, 0].max() + .5, 150),
@@ -47,21 +90,23 @@ def make_end_image(redo: bool) -> None:
     import matplotlib
     matplotlib.use("Agg")
     ns: dict = {}
-    exec(textwrap.dedent(CODE_DATA), ns)
-    exec(textwrap.dedent(CODE_BOUNDARY), ns)
+    for code in (CODE_DATA, CODE_BOUNDARY, CODE_KNN, CODE_CV, CODE_COMPARE):
+        exec(textwrap.dedent(code), ns)
     plt, X, y = ns["plt"], ns["X"], ns["y"]
-    from sklearn.neighbors import KNeighborsClassifier
     from sklearn.tree import DecisionTreeClassifier
-    from sklearn.linear_model import LogisticRegression
-    from sklearn.model_selection import cross_val_score
-    models = [("nearest neighbours (k=7)", KNeighborsClassifier(7)), ("decision tree (depth 3)", DecisionTreeClassifier(max_depth=3, random_state=0)),
-              ("straight-line boundaries", LogisticRegression(max_iter=2000))]
-    fig, axes = plt.subplots(1, 3, figsize=(13, 3.6), dpi=90)
-    for ax, (name, m) in zip(axes, models):
-        score = cross_val_score(m, X, y, cv=5).mean()
-        m.fit(X, y)
-        ns["boundary"](ax, m.predict, f"{name}: {score:.0%} in cross-validation")
-    fig.suptitle("Three kinds of model on the same wine data: each draws its boundaries differently", fontsize=11)
+    fig, axes = plt.subplots(1, 3, figsize=(14, 3.8), dpi=90, gridspec_kw={"width_ratios": [1, 1, 1.15]})
+    knn = lambda a, b, c: ns["knn_predict"](a, b, c, 15)
+    ns["boundary"](axes[0], lambda g: knn(X, y, g), f"nearest neighbours, k = 15: {ns['cross_validate'](knn, X, y):.0%}")
+    tree = DecisionTreeClassifier(max_depth=3, random_state=0)
+    tcv = ns["cross_validate"](lambda a, b, c: tree.fit(a, b).predict(c), X, y)
+    ns["boundary"](axes[1], tree.fit(X, y).predict, f"decision tree, depth 3: {tcv:.0%}")
+    res = ns["results"]["mean"].sort_values()
+    axes[2].barh(range(len(res)), res.values, color="#e0a100")
+    axes[2].set_yticks(range(len(res)), res.index, fontsize=8.5)
+    for i, v in enumerate(res.values):
+        axes[2].text(v - 0.01, i, f"{v:.1%}", va="center", ha="right", fontsize=8.5)
+    axes[2].set_xlim(0.5, 1.0); axes[2].set_title("all 13 measurements: five models compared", fontsize=10)
+    fig.suptitle("Two models on two measurements (cross-validation scores), then five models compared fairly on all 13", fontsize=11)
     fig.tight_layout()
     out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out, bbox_inches="tight")
@@ -115,6 +160,7 @@ df.head()
         - A **DataFrame** (`df`) is a table with named columns. `df.head()` shows the first rows; `df.shape` is (rows, columns).
         - `df["alcohol"]` is one column. `df[["alcohol", "flavanoids"]]` is a smaller table.
         - `.map(...)` replaces each value using a dict; `.to_numpy()` turns a table into a numpy array.
+        - `dict(enumerate(["A", "B", "C"]))` makes `{0: "A", 1: "B", 2: "C"}`: `enumerate` numbers the items of a list.
     """)
     nb.code('''
 print(df.groupby("kind")[["alcohol", "flavanoids", "color_intensity"]].agg(["mean", "std"]).round(2))
@@ -125,7 +171,10 @@ for k, name in enumerate("ABC"):
 ax.set_xlabel("alcohol"); ax.set_ylabel("flavanoids"); ax.legend(); plt.show()
 ''')
     nb.md("""
-        🐍 `df.groupby("kind")[...].agg(["mean", "std"])` splits the table by grower and computes each column's **mean** (average) and **standard deviation** (typical distance from the average) per group.
+        🐍 **Python notes**
+        - `df.groupby("kind")[...].agg(["mean", "std"])` splits the table by grower and computes each column's mean (average) and standard deviation (typical distance from the average) per group.
+        - `m = y == k` makes a list of True/False, one per bottle. `X[m, 0]` keeps the rows where it is True, column 0: a **boolean mask**.
+        - `f"grower {name}"` is an f-string: the value of `name` is put inside the text.
 
         **What you see:** with only two of the 13 measurements, the three growers already sit in different areas, with some overlap. To keep every picture flat, the models below use these two.
     """)
@@ -136,7 +185,7 @@ ax.set_xlabel("alcohol"); ax.set_ylabel("flavanoids"); ax.legend(); plt.show()
 
         First a simpler question: **predict flavanoids from total phenols** (another measurement). The answer is a number, not a label.
 
-        Draw a line $\\hat{y} = a\\,x + b$. For each wine, the error is the gap between the line and the real value. Choose $a$ and $b$ to make the **sum of squared gaps** as small as possible.
+        Draw a line $\\hat{y} = a\\,x + b$, where $\\hat{y}$ (say "y-hat") is the line's prediction. For each wine, the error is the gap between the line and the real value. Choose $a$ and $b$ to make the **sum of squared gaps** as small as possible.
     """)
     nb.code('''
 x1 = df["total_phenols"].to_numpy()
@@ -145,11 +194,11 @@ y1 = df["flavanoids"].to_numpy()
 # least squares by hand: put a column of 1s next to x, then solve A^T A [a, b] = A^T y
 A = np.c_[x1, np.ones_like(x1)]
 a, b = np.linalg.solve(A.T @ A, A.T @ y1)
-print(f"by hand:      flavanoids = {a:.3f} x phenols + {b:.3f}")
+print(f"by hand:      flavanoids = {a:.3f} x phenols {b:+.3f}")
 
 from sklearn.linear_model import LinearRegression
 lr = LinearRegression().fit(x1[:, None], y1)
-print(f"scikit-learn: flavanoids = {lr.coef_[0]:.3f} x phenols + {lr.intercept_:.3f}")
+print(f"scikit-learn: flavanoids = {lr.coef_[0]:.3f} x phenols {lr.intercept_:+.3f}")
 
 plt.figure(figsize=(6, 4))
 plt.scatter(x1, y1, s=12, color="#188a4a")
@@ -158,18 +207,21 @@ plt.plot(xs, a * xs + b, color="#d03a3a", lw=2.5)
 plt.xlabel("total phenols"); plt.ylabel("flavanoids"); plt.title("The least-squares line"); plt.show()
 ''')
     nb.md("""
-        🐍 `np.c_[a, b]` sticks columns side by side. `x1[:, None]` turns a list of numbers into a one-column table, which scikit-learn expects.
+        🐍 **Python notes**
+        - `np.c_[a, b]` sticks columns side by side. `x1[:, None]` turns a list of numbers into a one-column table, which scikit-learn expects.
+        - `A.T` is the table turned on its side (rows become columns: the **transpose**). `@` multiplies matrices.
+        - `{a:.3f}` prints a number with 3 decimals; `{b:+.3f}` also prints its sign.
 
         **What it's called:** predicting a number is **regression**; predicting a label is **classification**. Minimising the sum of squared gaps is **least squares**. The formula you solved is the **normal equation**:
 
         $$A^\\top A \\begin{bmatrix} a \\\\ b \\end{bmatrix} = A^\\top \\cg{y}$$
 
-        It comes from setting the slope of the squared-error total to zero, with respect to $a$ and $b$: calculus and linear algebra together.
+        It comes from finding where the squared-error total stops going down as you change $a$ or $b$: where its slope in both directions is zero. That is calculus and linear algebra together.
     """)
 
     # ------------------------------------------------------------------ 3 kNN
     nb.md("""
-        ## 3. Label by the nearest examples: k-nearest neighbours
+        ## 3. Label a bottle by the bottles nearest to it
 
         Back to the growers. For a new bottle, find the $k$ past bottles closest to it, and take their most common grower.
 
@@ -179,24 +231,19 @@ plt.xlabel("total phenols"); plt.ylabel("flavanoids"); plt.title("The least-squa
     nb.md("""
         🐍 `np.meshgrid` makes the grid's x and y values. `.ravel()` flattens a grid into one long list, and `.reshape(gx.shape)` turns the answers back into a grid. `predict` is a function passed in as an argument, so the same helper draws any model.
     """)
-    nb.code('''
-def knn_predict(X_train, y_train, X_new, k=5):
-    out = []
-    for p in X_new:
-        d = np.sqrt(((X_train - p) ** 2).sum(axis=1))        # distance to every training bottle
-        nearest = np.argsort(d)[:k]                          # sort, keep the k closest
-        out.append(np.bincount(y_train[nearest], minlength=3).argmax())
-    return np.array(out)
-
+    nb.code(CODE_KNN + '''
 fig, axes = plt.subplots(1, 3, figsize=(15, 4))
-for ax, k in zip(axes, [1, 7, 51]):
+for ax, k in zip(axes, [1, 15, 101]):
     boundary(ax, lambda g, k=k: knn_predict(X, y, g, k), f"k = {k}")
 plt.show()
 ''')
     nb.md("""
-        🐍 `np.bincount(labels, minlength=3)` counts how many 0s, 1s and 2s there are; `.argmax()` picks the most common.
+        🐍 **Python notes**
+        - `np.bincount(labels, minlength=3)` counts how many 0s, 1s and 2s there are; `.argmax()` picks the most common.
+        - `zip(axes, [1, 15, 101])` pairs the three plots with the three values of `k`.
+        - `lambda g, k=k: knn_predict(X, y, g, k)` makes a one-line function of `g`. The `k=k` part stores this loop's `k` inside the function; without it, all three would use the last `k`.
 
-        **What you see:** with $k = 1$ the regions have small islands around single bottles. With $k = 51$ the boundaries are smooth and start ignoring real structure.
+        **What you see:** with $k = 1$ the regions have small islands around single bottles. With $k = 101$, each vote uses more than half of all 178 bottles, so the smallest group (grower C) loses much of its area.
 
         **What it's called:** this model is **k-nearest neighbours** (kNN). Its distance is the straight-line (**Euclidean**) distance:
 
@@ -209,52 +256,44 @@ plt.show()
         "**$k = 1$, at 100%**: each bottle's nearest neighbour is itself. That score says nothing about new bottles. The next section fixes the test.",
     )
     nb.code('''
-for k in [1, 7, 51]:
+for k in [1, 15, 101]:
     acc = (knn_predict(X, y, X, k) == y).mean()
     print(f"k = {k:2d}: accuracy on its own training bottles {acc:.0%}")
 ''')
 
     # ------------------------------------------------------------------ 4 CV
     nb.md("""
-        ## 4. An honest test: cross-validation
+        ## 4. An honest test
 
         Hold some bottles back, train on the rest, and score only on the held-back ones.
         One split can be lucky, so do it 5 times: split the bottles into 5 groups (**folds**), hold out each fold in turn, and average the 5 scores.
     """)
-    nb.code('''
-def cross_validate(predict_fn, X, y, folds=5, seed=0):
-    idx = np.random.default_rng(seed).permutation(len(X))
-    scores = []
-    for f in range(folds):
-        test = idx[f::folds]                              # every 5th bottle, starting at f
-        train = np.setdiff1d(idx, test)
-        scores.append((predict_fn(X[train], y[train], X[test]) == y[test]).mean())
-    return np.mean(scores)
-
+    nb.code(CODE_CV + '''
 ks = [1, 3, 5, 7, 9, 15, 25, 51, 101]
 cv = [cross_validate(lambda a, b, c, k=k: knn_predict(a, b, c, k), X, y) for k in ks]
 train = [(knn_predict(X, y, X, k) == y).mean() for k in ks]
 plt.figure(figsize=(7, 3.5))
 plt.plot(ks, train, "o-", label="score on training bottles", color="#888")
 plt.plot(ks, cv, "o-", label="cross-validation score", color="#d03a3a")
-plt.xscale("log"); plt.xlabel("k"); plt.ylabel("accuracy"); plt.legend(); plt.title("Small k: memorises. Large k: blurs."); plt.show()
+plt.xscale("log"); plt.xlabel("k"); plt.ylabel("accuracy"); plt.legend(); plt.title("Training score and cross-validation score for each k"); plt.show()
 best_k = ks[int(np.argmax(cv))]
 print("best k by cross-validation:", best_k, f"({max(cv):.1%})")
 ''')
     nb.md("""
         🐍 `idx[f::folds]` takes every 5th item starting at position `f`. `np.setdiff1d(a, b)` keeps the items of `a` that are not in `b`.
 
-        **What you see:** the training score falls as $k$ grows; the cross-validation score rises, peaks, then falls.
+        **What you see:** the training score is 100% at $k = 1$ and lower for larger $k$. The cross-validation score stays between about 89% and 93% from $k = 1$ to $k = 51$, then drops sharply at $k = 101$.
+        **The training score can't tell you how a model does on new bottles; only held-out bottles can.**
 
         **What it's called:**
-        - scoring well on training data but worse on new data is **overfitting** (small $k$)
-        - smoothing away real structure is **underfitting** (large $k$)
+        - scoring much better on training data than on new data is **overfitting** ($k = 1$: 100% against about 91%)
+        - smoothing away real structure is **underfitting** ($k = 101$)
         - repeated held-out testing is **cross-validation**; accuracy is one **evaluation metric** (others count different kinds of mistakes separately)
     """)
 
     # ------------------------------------------------------------------ 5 decision tree
     nb.md("""
-        ## 5. A model that asks yes/no questions: decision trees
+        ## 5. A model that asks yes/no questions
 
         Another approach: split the bottles with one question, like "alcohol < 12.8?". Choose the question that makes each side as **pure** (one grower) as possible. Then split each side again.
     """)
@@ -328,15 +367,14 @@ for depth in [1, 2, 3, 5, 12]:
 
     # ------------------------------------------------------------------ 6 k-means
     nb.md("""
-        ## 6. No labels at all: clustering
+        ## 6. No labels at all: can the bottles still be grouped?
 
         Suppose the growers' names were lost. **Can the bottles be grouped anyway?**
 
         k-means: place 3 centres at random. Repeat: give each bottle to its nearest centre; move each centre to the average of its bottles.
     """)
     nb.code('''
-from sklearn.preprocessing import StandardScaler
-Z = StandardScaler().fit_transform(X)                     # put both measurements on the same scale
+Z = (X - X.mean(axis=0)) / X.std(axis=0)                 # each column: average 0, spread 1
 
 def kmeans(Z, k=3, steps=20, seed=0):
     r = np.random.default_rng(seed)
@@ -362,9 +400,12 @@ print(f"agreement with the true growers (1 = perfect, 0 = random): yours {adjust
       f"scikit-learn {adjusted_rand_score(y, sk_group):.2f}")
 ''')
     nb.md("""
-        🐍 `StandardScaler` rescales each column to mean 0 and standard deviation 1, so a measurement with big numbers doesn't dominate the distances.
+        🐍 **Python notes**
+        - `(X - X.mean(axis=0)) / X.std(axis=0)` rescales each column to average 0 and spread 1, so a measurement with big numbers doesn't dominate the distances. scikit-learn's `StandardScaler` does the same.
+        - `Z[:, None, :] - centres[None, :, :]` gives every bottle-to-centre difference at once (178 × 3 × 2), by broadcasting.
+        - `axes[1].scatter(*centres.T, ...)`: `centres.T` has two rows (x values, y values), and `*` passes them as two arguments.
 
-        **What you see:** without ever seeing a label, k-means finds groups that mostly match the growers. The cluster colours may be swapped: k-means doesn't know which group is "A".
+        **What you see:** without ever seeing a label, k-means finds groups that mostly match the growers. The colours can be in a different order: k-means has no names for its groups.
 
         **What it's called:** finding groups without labels is **clustering**, a kind of **unsupervised learning**. Everything before used labels: **supervised learning**.
     """)
@@ -373,47 +414,42 @@ print(f"agreement with the true growers (1 = perfect, 0 = random): yours {adjust
     nb.md("""
         ## 7. Pick a winner, honestly
 
-        Now use all 13 measurements and let scikit-learn's cross-validation compare four kinds of model.
+        Now use all 13 measurements and let scikit-learn's cross-validation compare five models:
+
+        - nearest neighbours ($k = 7$), once on scaled measurements and once on raw ones
+        - a decision tree of depth 3
+        - straight-line boundaries between the groups (scikit-learn calls it `LogisticRegression`; despite the name, it predicts labels)
+        - a random forest: 100 decision trees, each trained on a random part of the data, voting together
     """)
     nb.predict(
-        "With all 13 measurements, **which model do you expect to win?**",
-        "It depends on the data, which is the point of cross-validation. On this dataset, models that compare scaled measurements (like nearest neighbours after scaling, or straight-line boundaries) usually win; a single tree is often a little behind. Run the next cell.",
+        "With all 13 measurements, **which of the five do you expect to win, and which to come last?**",
+        "It depends on the data, which is why you measure. Here the random forest and the straight-line boundaries tie for first (98.3%). "
+        "Scaled nearest neighbours is close behind; the single tree is about 9 points lower; nearest neighbours on raw measurements comes last. Run the next cell.",
     )
-    nb.code('''
-from sklearn.model_selection import cross_val_score
-from sklearn.pipeline import make_pipeline
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
-
-X_all = wine.data.to_numpy()
-models = {
-    "nearest neighbours (k=7, scaled)": make_pipeline(StandardScaler(), KNeighborsClassifier(7)),
-    "nearest neighbours (k=7, raw)": KNeighborsClassifier(7),
-    "decision tree (depth 3)": DecisionTreeClassifier(max_depth=3, random_state=0),
-    "straight-line boundaries (scaled)": make_pipeline(StandardScaler(), LogisticRegression(max_iter=2000)),
-    "random forest (100 trees)": RandomForestClassifier(100, random_state=0),
-}
-results = pd.DataFrame({name: cross_val_score(m, X_all, y, cv=5) for name, m in models.items()}).T
-results.columns = [f"fold {i + 1}" for i in range(5)]
-results["mean"] = results.mean(axis=1)
+    nb.code(CODE_COMPARE + '''
 results.sort_values("mean", ascending=False).round(3)
 ''')
     nb.md("""
+        🐍 **Python notes**
+        - `make_pipeline(StandardScaler(), model)` scales the measurements and then runs the model. Inside cross-validation, the scaling is learned from the training folds only.
+        - `{name: ... for name, m in models.items()}` is a **dict comprehension**: it builds a dict in one line. `.items()` gives each (key, value) pair.
+    """)
+    nb.md("""
         **What you see:** scaling matters a lot for nearest neighbours: raw measurements on different scales distort distances. Several models tie near the top; the fold-by-fold scores show how much one split can vary.
 
-        A **random forest** (many trees, each trained on a random part of the data, voting together) is a strong default for tables like this.
-        **Why it matters:** this table, several models compared fairly on held-out folds, is how most real machine-learning projects choose a model.
+        A random forest is a strong default for tables like this.
+
+        **Why it matters:** comparing several models fairly on held-out folds is how most real machine-learning projects choose a model.
     """)
 
     # ------------------------------------------------------------------ practice
     nb.md("## Practice\n\nTry each one before opening its solution.")
     nb.exercise(
         1,
-        "By hand: five labelled points: A(1, 1) red, B(2, 1) red, E(3, 3) blue, C(4, 4) blue, D(5, 4) blue. A new point P(2, 2) arrives. "
+        "By hand: five labelled points: (1, 1) red, (2, 1) red, (3, 3) blue, (4, 4) blue, (5, 4) blue. A new point P = (2, 2) arrives. "
         "**What label would you give it? Does the answer change if you look at the closest 1, 3, or all 5 points?**",
         None,
-        solution_md="Distances from P: B = 1, A = 1.41, E = 1.41, C = 2.83, D = 3.61. Closest 1: red. Closest 3: red, red, blue → red. All 5: 2 red, 3 blue → blue. The answer depends on how many neighbours you use.",
+        solution_md="Distances from P: (2, 1) is 1; (1, 1) and (3, 3) are both 1.41; (4, 4) is 2.83; (5, 4) is 3.61. Closest 1: red. Closest 3: red, red, blue → red. All 5: 2 red, 3 blue → blue. The answer depends on how many neighbours you use.",
     )
     nb.exercise(
         2,
@@ -423,13 +459,16 @@ results.sort_values("mean", ascending=False).round(3)
     )
     nb.exercise(
         3,
-        "Use cross-validation to choose the **best tree depth** from 1 to 10 on all 13 measurements, and report its score.",
+        "A friend trains a decision tree with no depth limit on all 13 measurements. It scores 100% on the bottles it learned from. "
+        "**Would you believe that score? Choose the depth from 1 to 10 you would actually use, and give a score you would trust for it.**",
         "# your code here\n",
         solution_src="""
             scores = {d: cross_val_score(DecisionTreeClassifier(max_depth=d, random_state=0), X_all, y, cv=5).mean() for d in range(1, 11)}
             best = max(scores, key=scores.get)
             print({d: round(float(s), 3) for d, s in scores.items()})
             print("best depth:", best, f"({scores[best]:.1%})")
+            # The 100% was measured on the training bottles, so it says nothing about new ones.
+            # Held-out folds give a score you can trust, and pick the depth.
         """,
     )
     nb.cue([

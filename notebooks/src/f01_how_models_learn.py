@@ -221,7 +221,7 @@ def build() -> None:
 
     # ------------------------------------------------------------------ 4. chain rule
     nb.md("""
-        ## 4. Passing slopes backwards: the chain rule
+        ## 4. Passing slopes backwards
 
         Take one `*` step: $out = a \\times b$.
 

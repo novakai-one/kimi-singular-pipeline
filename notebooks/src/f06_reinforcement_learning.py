@@ -311,7 +311,7 @@ for eps in found:
 
     # ------------------------------------------------------------------ 4 value iteration
     nb.md("""
-        ## 4. If you knew the map: dynamic programming
+        ## 4. If you knew the map
 
         Suppose you **did** know the maze. You could compute every square's value directly, without wandering:
 

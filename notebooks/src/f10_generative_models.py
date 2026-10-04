@@ -204,7 +204,7 @@ print(f"mismatch between real and Gaussian points: {kl(histogram(data), histogra
 
     # ------------------------------------------------------------------ 3 autoencoder
     nb.md("""
-        ## 3. Find the shape: an autoencoder
+        ## 3. Find the shape
 
         The spiral is really a **curve**: one number (how far along it) describes each point, plus a little noise.
         Train a network to squeeze each point into **one** number and rebuild the point from it. To rebuild well, that number has to mean "how far along the spiral".
@@ -244,7 +244,7 @@ print(f"mismatch (KL) for the autoencoder's points: {kl(histogram(data), histogr
 
     # ------------------------------------------------------------------ 4 diffusion
     nb.md("""
-        ## 4. Diffusion: add noise, learn to remove it
+        ## 4. Add noise, then learn to remove it
 
         A different idea, the one behind modern image generators.
 

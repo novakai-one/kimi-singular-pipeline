@@ -283,7 +283,7 @@ print(f"angle between the 'round' direction and the 'ink' direction: {angle(dire
         **What you see:** round digits carry about 40% more ink, and the two directions are only about 30° apart. The first direction was **mostly measuring ink**.
         A hidden second difference like this is a **confound**. Spotting confounds is a large part of interpretability research.
 
-        ### A better direction: train a probe
+        ### A better direction: train a small model to find it
 
         A **probe** is a small model trained to read one idea out of activations. Logistic regression (from scikit-learn) finds the direction that best separates the two groups, so it learns to ignore differences, like ink, that don't help.
         Train it on 70% of the digits and test it on the other 30% (a **train/test split**).
@@ -371,7 +371,7 @@ print(f"pushed along random directions:   {np.mean(random_round):.0%} become rou
 
     # ------------------------------------------------------------------ 7 superposition
     nb.md("""
-        ## 7. More ideas than numbers: superposition
+        ## 7. More ideas than numbers
 
         The digit network has 64 numbers but may track more than 64 ideas. How can that work?
 

@@ -16,6 +16,7 @@ Usage (see notebooks/src/*.py):
 from __future__ import annotations
 
 import base64
+import re
 import json
 import textwrap
 from pathlib import Path
@@ -41,6 +42,23 @@ def _clean(text: str) -> str:
     return textwrap.dedent(text).strip("\n")
 
 
+# The site defines KaTeX colour macros (\cg, \cr, ...). Colab and GitHub don't, so notebooks use \color.
+_COLOURS = {"g": "green", "r": "red", "y": "orange", "b": "blue", "p": "purple", "t": "teal"}
+
+
+def normalise_md(text: str) -> str:
+    """Make markdown safe and consistent for Colab/GitHub:
+    - colour macros \cg{x} -> \color{green}{x}
+    - in a "What it's called" block, only the label is bold; named terms are italic (one bold idea per block)."""
+    text = re.sub(r"\\c([grybpt])\{", lambda m: "\\color{" + _COLOURS[m.group(1)] + "}{", text)
+    label = "**What it's called:**"
+    if label in text:
+        before, _, after = text.partition(label)
+        after = re.sub(r"\*\*([^*\n]+?)\*\*", r"*\1*", after)
+        text = before + label + after
+    return text
+
+
 class Notebook:
     def __init__(self) -> None:
         self.nb = new_notebook()
@@ -52,7 +70,7 @@ class Notebook:
 
     # ---------------- basic cells ----------------
     def md(self, text: str, attachments: dict | None = None) -> None:
-        cell = new_markdown_cell(_clean(text))
+        cell = new_markdown_cell(normalise_md(_clean(text)))
         if attachments:
             cell["attachments"] = attachments
         self.nb.cells.append(cell)

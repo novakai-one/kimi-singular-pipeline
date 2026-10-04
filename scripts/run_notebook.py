@@ -20,6 +20,15 @@ ROOT = Path(__file__).resolve().parent.parent
 RUNTIMES = ROOT / "notebooks" / "runtimes.json"
 
 
+def clear_solution_outputs(nb) -> None:
+    """Solution cells (collapsed, cellView=form) run during the check, so they are known to work,
+    but their saved outputs would show the answers before the student tries. Clear them."""
+    for c in nb.cells:
+        if c.cell_type == "code" and c.metadata.get("cellView") == "form":
+            c.outputs = []
+            c.execution_count = None
+
+
 def run(path: Path) -> float:
     nb = nbformat.read(str(path), as_version=4)
     client = NotebookClient(nb, timeout=1800, kernel_name="python3",
@@ -27,6 +36,7 @@ def run(path: Path) -> float:
     t0 = time.time()
     client.execute()
     dt = time.time() - t0
+    clear_solution_outputs(nb)
     # keep execution counts tidy and strip widget state
     nb.metadata.pop("widgets", None)
     nbformat.write(nb, str(path))
