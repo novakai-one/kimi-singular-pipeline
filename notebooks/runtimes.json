@@ -1,50 +1,86 @@
 {
+  "notebooks/dsa/01_big_o.ipynb": {
+    "seconds": 14.5,
+    "date": "2026-10-04"
+  },
+  "notebooks/dsa/02_arrays_hashing.ipynb": {
+    "seconds": 1.4,
+    "date": "2026-10-04"
+  },
+  "notebooks/dsa/03_stacks_queues.ipynb": {
+    "seconds": 1.4,
+    "date": "2026-10-04"
+  },
+  "notebooks/dsa/04_recursion_backtracking.ipynb": {
+    "seconds": 0.9,
+    "date": "2026-10-04"
+  },
   "notebooks/dsa/05_sorting_searching.ipynb": {
-    "seconds": 1.8,
+    "seconds": 1.9,
+    "date": "2026-10-04"
+  },
+  "notebooks/dsa/06_trees_bst.ipynb": {
+    "seconds": 1.1,
+    "date": "2026-10-04"
+  },
+  "notebooks/dsa/07_heaps.ipynb": {
+    "seconds": 2.0,
+    "date": "2026-10-04"
+  },
+  "notebooks/dsa/08_graphs.ipynb": {
+    "seconds": 2.7,
+    "date": "2026-10-04"
+  },
+  "notebooks/dsa/09_greedy.ipynb": {
+    "seconds": 0.9,
+    "date": "2026-10-04"
+  },
+  "notebooks/dsa/10_dynamic_programming.ipynb": {
+    "seconds": 1.1,
     "date": "2026-10-04"
   },
   "notebooks/fields/01_how_models_learn.ipynb": {
-    "seconds": 255.6,
+    "seconds": 234.5,
     "date": "2026-10-04"
   },
   "notebooks/fields/02_classic_ml.ipynb": {
-    "seconds": 7.2,
+    "seconds": 5.7,
     "date": "2026-10-04"
   },
   "notebooks/fields/03_language_models.ipynb": {
-    "seconds": 80.6,
+    "seconds": 74.1,
     "date": "2026-10-04"
   },
   "notebooks/fields/04_interpretability.ipynb": {
-    "seconds": 10.3,
+    "seconds": 10.5,
     "date": "2026-10-04"
   },
   "notebooks/fields/05_computer_vision.ipynb": {
-    "seconds": 46.9,
+    "seconds": 41.0,
     "date": "2026-10-04"
   },
   "notebooks/fields/06_reinforcement_learning.ipynb": {
-    "seconds": 36.6,
+    "seconds": 27.3,
     "date": "2026-10-04"
   },
   "notebooks/fields/07_multi_agent.ipynb": {
-    "seconds": 32.3,
+    "seconds": 33.9,
     "date": "2026-10-04"
   },
   "notebooks/fields/08_planning_search.ipynb": {
-    "seconds": 14.9,
+    "seconds": 13.5,
     "date": "2026-10-04"
   },
   "notebooks/fields/09_optimisation.ipynb": {
-    "seconds": 51.6,
+    "seconds": 47.4,
     "date": "2026-10-04"
   },
   "notebooks/fields/10_generative_models.ipynb": {
-    "seconds": 25.1,
+    "seconds": 26.9,
     "date": "2026-10-04"
   },
   "notebooks/showpieces/digits_retrain.ipynb": {
-    "seconds": 67.9,
+    "seconds": 77.1,
     "date": "2026-10-04"
   },
   "notebooks/showpieces/tinylm_retrain.ipynb": {
