@@ -47,7 +47,8 @@
 .dt-practice-links li { margin: .35em 0; }
 
 @media (max-width: 800px) {
-  .dp-main { grid-template-columns: 1fr; }
+  .dp-main { grid-template-columns: minmax(0, 1fr); }
+  .dp-left { min-width: 0; }
   /* wide drawings keep a readable size on phones; swipe the picture sideways */
   .dp-stage { overflow-x: auto; justify-content: flex-start; }
   .dp-stage svg[data-wide] { min-width: 540px; }

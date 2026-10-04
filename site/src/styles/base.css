@@ -362,9 +362,11 @@ table.simple th { font-size: 13px; color: var(--muted); font-weight: 650; }
   .topbar .crumbs { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .page { padding: 22px 16px 80px; }
   h1 { font-size: 1.7rem; }
-  .split, .split.pic-right { grid-template-columns: 1fr; gap: 20px; }
+  .split, .split.pic-right { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .split > *, .grid-2 > *, .grid-3 > *, .grid-4 > * { min-width: 0; }
+  table.simple { display: block; overflow-x: auto; }
   .sticky-pic { position: static; }
-  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: minmax(0, 1fr); }
   .btn { min-height: 44px; }
   .field-row { grid-template-columns: 90px 1fr 48px; }
 }

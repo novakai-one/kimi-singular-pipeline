@@ -84,7 +84,7 @@ for step in range(STEPS + 1):
     loss.backward()
     torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
     opt.step(); sched.step()
-model.eval()
+_ = model.eval()                                          # switch to "use" mode (the _ = stops Jupyter printing the model)
 '''
 
 CODE_SAMPLE = '''
@@ -179,8 +179,8 @@ print(encode("ROMEO:"), "->", repr(decode(encode("ROMEO:"))))
         Before any network: for each character, count which characters follow it in the text. Guess in proportion to those counts.
     """)
     nb.predict(
-        "**Loss** measures surprise: $-\\\\ln p$, where $p$ is the probability the model gave the real next character. "
-        f"An even guess among {65} characters scores $\\\\ln 65 \\\\approx 4.17$. **What will counting pairs score?**",
+        "**Loss** measures surprise: $-\\ln p$, where $p$ is the probability the model gave the real next character. "
+        f"An even guess among {65} characters scores $\\ln 65 \\approx 4.17$. **What will counting pairs score?**",
         "**About 2.5.** Knowing only the previous character already removes a lot of surprise. Run the next cell.",
     )
     nb.code('''
@@ -338,13 +338,23 @@ print(f"wrote model.json ({len(json.dumps(export)) / 1e6:.1f} MB)")
     )
     nb.exercise(
         3,
-        "Halve the width (`n_embd=64`) and use 2 layers. **How many weights are left, and how much worse is the held-out loss after the same number of steps?**",
+        "Halve the width (`n_embd=64`) and use 2 layers. **How many weights are left? Train it for the same number of steps: how much higher is its held-out loss?**",
         "# your experiment here\n",
         solution_src='''
             small = TinyLM(len(chars), n_layer=2, n_head=4, n_embd=64, block=128)
             print(f"{sum(p.numel() for p in small.parameters()):,} weights")
-            # To train it: set model = small in section 4's cell (replace the TinyLM(...) line) and run it again.
-            # Expect a higher held-out loss: fewer weights store fewer patterns of spelling and grammar.
+            torch.manual_seed(0)
+            opt_s = torch.optim.AdamW(small.parameters(), lr=2e-3, weight_decay=0.05, betas=(0.9, 0.98))
+            for step in range(STEPS):                        # same steps and batches as section 4
+                x, y = get_batch("train")
+                loss = F.cross_entropy(small(x).flatten(0, 1), y.flatten())
+                opt_s.zero_grad(set_to_none=True); loss.backward(); opt_s.step()
+            small.eval()
+            with torch.no_grad():
+                small_val = float(np.mean([F.cross_entropy(small(x).flatten(0, 1), y.flatten()).item()
+                                           for x, y in (get_batch("val") for _ in range(20))]))
+            print(f"held-out loss: small {small_val:.2f}, full {va[-1]:.2f}")
+            # Fewer weights store fewer patterns of spelling and grammar, so the loss stays higher.
         ''',
     )
     nb.cue([
