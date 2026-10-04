@@ -276,7 +276,7 @@ page.append(
     **Every field also uses the same CS core:** data structures (arrays, hash maps, heaps, graphs, trees), algorithm design (search, dynamic programming, greedy) and complexity (how cost grows as the problem gets bigger). The [DSA track](@/dsa/index.html) covers all three.
   `, 'prose'),
   cue([
-    ['a field you like, but its card feels hard', 'look at what it builds on on this map, and try that first'],
+    ['a field you like, but its card looks hard', 'look at what it builds on on this map, and try that first'],
     ['"vectors", "matrices" or "directions" in a field description', 'your linear algebra course is the prerequisite'],
     ['"probability", "noise" or "expected value"', 'statistics is the prerequisite'],
   ]),

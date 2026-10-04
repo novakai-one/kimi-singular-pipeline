@@ -11,5 +11,24 @@
     "text": "n! ",
     "where": "optimisation",
     "reason": "factorial notation"
+  },
+  {
+    "text": "nobody knows",
+    "reason": "about people, not personification"
+  },
+  {
+    "text": "eat a rabbit",
+    "where": "07_multi_agent",
+    "reason": "literal: foxes eat rabbits in the predator-prey simulation"
+  },
+  {
+    "text": "since eating",
+    "where": "07_multi_agent",
+    "reason": "literal: the fox's hunger counter"
+  },
+  {
+    "text": "banana",
+    "where": "language-models",
+    "reason": "the string 'banana' is data for a bigram exercise, not an analogy"
   }
 ]

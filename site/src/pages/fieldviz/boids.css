@@ -1,0 +1,10 @@
+/* Field 7 — "Make them flock" (boids.ts) */
+.boids-order { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 10px; }
+.boids-compass { flex: none; width: 56px !important; }
+.boids-score { flex: none; min-width: 112px; }
+.boids-score-l { font-size: 13.5px; color: var(--muted); }
+.boids-score-v { font-size: 24px; font-weight: 750; line-height: 1.15; font-variant-numeric: tabular-nums; color: var(--yellow); }
+.boids-score-held { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.boids-spark { flex: 1 1 200px; min-width: 0; }
+.boids-spark-hint { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.boids-sliders { display: grid; gap: 4px; }

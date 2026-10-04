@@ -3,12 +3,32 @@
     "seconds": 296.6,
     "date": "2026-10-04"
   },
+  "notebooks/fields/03_language_models.ipynb": {
+    "seconds": 80.6,
+    "date": "2026-10-04"
+  },
+  "notebooks/fields/04_interpretability.ipynb": {
+    "seconds": 15.1,
+    "date": "2026-10-04"
+  },
+  "notebooks/fields/05_computer_vision.ipynb": {
+    "seconds": 46.9,
+    "date": "2026-10-04"
+  },
   "notebooks/fields/06_reinforcement_learning.ipynb": {
     "seconds": 27.2,
     "date": "2026-10-04"
   },
+  "notebooks/fields/07_multi_agent.ipynb": {
+    "seconds": 17.8,
+    "date": "2026-10-04"
+  },
   "notebooks/fields/08_planning_search.ipynb": {
     "seconds": 13.4,
+    "date": "2026-10-04"
+  },
+  "notebooks/fields/10_generative_models.ipynb": {
+    "seconds": 29.4,
     "date": "2026-10-04"
   },
   "notebooks/showpieces/digits_retrain.ipynb": {

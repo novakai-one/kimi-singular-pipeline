@@ -1,0 +1,6 @@
+/* Field 10 — "Turn noise into a spiral" (diffusion.ts) */
+.diffusion-stage { position: relative; }
+.diffusion-step {
+  position: absolute; top: 8px; left: 10px; pointer-events: none;
+  font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums; color: var(--muted);
+}

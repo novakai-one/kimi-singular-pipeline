@@ -260,7 +260,7 @@ print("best route now:", len(route) - 1 if route else "doesn't reach G yet", "mo
         ## 3. Try something new, or use what works?
 
         `epsilon` is the chance of a random move instead of the best-known one.
-        With 0, the agent always uses what it knows. With 0.5, it wanders half the time.
+        With 0, the agent always takes its best-scored move. With 0.5, half its moves are random.
     """)
     nb.predict(
         "Once the agent has learned the maze, **which setting gives the shortest trips: epsilon 0, 0.1 or 0.5?**",

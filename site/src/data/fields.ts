@@ -408,7 +408,7 @@ $s$ = state, $a$ = action, $s'$ = the next state, $\\alpha$ = how big a nudge, $
       detail: 'Order score 1 means every bird points the same way; 0 means no shared direction.',
     },
     explain: {
-      see: `Each triangle is a bird. Every frame, each bird looks only at birds within a short distance, then adjusts its direction using three rules. Change a rule's weight and watch the pattern change.`,
+      see: `Each triangle is a bird. Every frame, each bird looks only at birds within a short distance, then adjusts its direction using three rules, plus a small random turn. Change a rule's weight and watch the pattern change.`,
       means: `*Separation*: steer away from birds that are too close. *Alignment*: turn toward the average direction of nearby birds. *Cohesion*: steer toward the centre of nearby birds. **None of the rules mentions the flock, yet the flock appears.**`,
       called: `Each bird is an *agent*. A pattern that exists for the group but is written in no single rule is *emergence*. These three-rule birds are called *boids* (Craig Reynolds, 1987). The order score is the length of the birds' average direction arrow.`,
       formula: `Each frame: $\\mathbf{v} \\leftarrow \\mathbf{v} + s\\,\\mathbf{F}_{\\text{sep}} + a\\,\\mathbf{F}_{\\text{align}} + c\\,\\mathbf{F}_{\\text{coh}}$
@@ -575,8 +575,8 @@ $g(n)$ = steps from the start so far, $h(n) = |x_n - x_{\\text{goal}}| + |y_n - 
     `,
     predict: {
       prompt: 'Noise is added to the spiral over 50 small steps. **Around which step does the spiral stop being recognisable?**',
-      choices: ['Around step 5', 'Around step 20', 'Only at step 50'],
-      reveal: `**Around step 20.** Press **Add noise** and watch the step counter. Most of the shape is gone well before the end. The last steps turn a blurry cloud into pure noise.`,
+      choices: ['Around step 3', 'Around step 10', 'Only at step 50'],
+      reveal: `**Around step 10.** Press **Add noise** and watch the step counter. Most of the shape is gone well before the end. The last steps turn a blurry cloud into pure noise.`,
     },
     viz: {
       title: 'Turn noise into a spiral',
@@ -586,7 +586,7 @@ $g(n)$ = steps from the start so far, $h(n) = |x_n - x_{\\text{goal}}| + |y_n - 
     explain: {
       see: `"Add noise": the spiral dissolves into a cloud. "Generate": new random points start as a cloud and drift, step by step, onto the spiral. Each step removes a little noise. With very few steps, the jumps are large and some points land off the spiral.`,
       means: `At every step, each point moves toward where the spiral most likely is, given how noisy the point still is. Early steps make rough moves; late steps make fine ones. **The new points land between the old ones, so they are new, not copies.**`,
-      called: `Adding noise step by step is the *forward process*; undoing it is *denoising*. How much noise each step adds is the *noise schedule*. Running the denoiser from pure noise is *sampling*. A model built this way is a *diffusion model*. Here the denoiser is calculated exactly from the spiral's points; a real diffusion model learns it with a neural network, because for images the exact calculation is impossible.`,
+      called: `Adding noise step by step is the *forward process*; undoing it is *denoising*. How much noise each step adds is the *noise schedule*. Running the denoiser from pure noise is *sampling*. A model built this way is a *diffusion model*. Here the denoiser is calculated exactly from 2,000 points spread along the spiral's curve; a real diffusion model learns it with a neural network, because for images the exact calculation is impossible.`,
       formula: `Noisy point at step $t$: $\\cy{x_t} = \\sqrt{\\bar\\alpha_t}\\;\\cg{x_0} + \\sqrt{1 - \\bar\\alpha_t}\\;\\epsilon$
 
 $\\cg{x_0}$ = the clean point, $\\epsilon$ = random Gaussian noise, $\\bar\\alpha_t$ falls from 1 (no noise) to near 0 (all noise).`,
