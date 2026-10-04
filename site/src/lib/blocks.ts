@@ -122,7 +122,7 @@ export function solution(content: string, summary = 'Show worked solution'): HTM
 export function cue(pairs: [string, string][]): HTMLElement {
   return h('div', { class: 'cue' },
     h('span', { class: 'block-label' }, 'Recognition cues'),
-    pairs.map(([see, think]) => h('p', { html: `When you see <strong>${inline(see)}</strong> in a problem, think <strong>${inline(think)}</strong>.` })));
+    pairs.map(([see, think]) => h('p', { html: `When you see <span class="cue-see">${inline(see)}</span> in a problem, think <strong>${inline(think)}</strong>.` })));
 }
 
 /** One real use in AI or competitive programming. */

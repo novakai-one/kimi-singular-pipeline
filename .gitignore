@@ -10,3 +10,5 @@ training/runs/
 test-results/
 shots/
 *.log
+notebooks/**/data/
+notebooks/**/export/

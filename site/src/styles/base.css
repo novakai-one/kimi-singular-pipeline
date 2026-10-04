@@ -179,7 +179,7 @@ button { font: inherit; }
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   min-width: 36px; height: 36px; padding: 0 10px;
   border: 1px solid var(--border); border-radius: 9px;
-  background: var(--surface); color: var(--text); cursor: pointer;
+  background: var(--surface); color: var(--text); cursor: pointer; white-space: nowrap;
 }
 .icon-btn:hover { background: var(--surface-2); }
 .menu-btn { display: none; }
@@ -261,7 +261,7 @@ button { font: inherit; }
   border: 1px solid var(--border);
   background: var(--surface);
 }
-.problem { border-left: 4px solid var(--green); }
+.problem { border-left: 4px solid var(--green); max-width: 72ch; }
 .problem .block-label { color: var(--green); }
 .predict { border-left: 4px solid var(--yellow); }
 .predict .block-label { color: var(--yellow); }
@@ -287,6 +287,7 @@ button { font: inherit; }
 .cue { border-left: 4px solid var(--act); background: var(--act-soft); }
 .cue .block-label { color: var(--act); }
 .cue p { margin: .2em 0; }
+.cue-see { font-style: italic; }
 
 details.solution {
   border: 1px solid var(--border); border-radius: var(--radius-sm);
