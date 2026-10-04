@@ -1,0 +1,31 @@
+{
+  "fields": [
+    { "num": 1, "slug": "how-models-learn", "title": "How models learn", "sub": "Deep learning foundations", "idea": "learn", "question": "How does a network get better from examples?", "notebook": "notebooks/fields/01_how_models_learn.ipynb" },
+    { "num": 2, "slug": "classic-ml", "title": "Classic machine learning", "sub": "Models, data and honest testing", "idea": "learn", "question": "Which kind of model fits this data best, and how do I know it's not fooling me?", "notebook": "notebooks/fields/02_classic_ml.ipynb" },
+    { "num": 3, "slug": "language-models", "title": "Language models", "sub": "Natural language processing (NLP)", "idea": "learn", "question": "How does a model predict the next word?", "notebook": "notebooks/fields/03_language_models.ipynb" },
+    { "num": 4, "slug": "interpretability", "title": "Looking inside models", "sub": "Interpretability", "idea": "learn", "question": "What is a trained model actually doing inside?", "notebook": "notebooks/fields/04_interpretability.ipynb" },
+    { "num": 5, "slug": "computer-vision", "title": "Computer vision", "sub": "Finding and recognising things in images", "idea": "learn", "question": "How does a model find and recognise things in an image?", "notebook": "notebooks/fields/05_computer_vision.ipynb" },
+    { "num": 6, "slug": "reinforcement-learning", "title": "Learning by trial and error", "sub": "Reinforcement learning", "idea": "act", "question": "How does an agent learn to act well when rewards come later?", "notebook": "notebooks/fields/06_reinforcement_learning.ipynb" },
+    { "num": 7, "slug": "multi-agent", "title": "Swarms and many agents", "sub": "Multi-agent systems", "idea": "act", "question": "How does group behaviour emerge from simple individual rules?", "notebook": "notebooks/fields/07_multi_agent.ipynb" },
+    { "num": 8, "slug": "planning-search", "title": "Planning and search", "sub": "Finding paths through huge sets of choices", "idea": "search", "question": "What's the smartest path through a huge number of choices?", "notebook": "notebooks/fields/08_planning_search.ipynb" },
+    { "num": 9, "slug": "optimisation", "title": "Optimisation", "sub": "Schedules, routes and allocations", "idea": "search", "question": "What's the best schedule, route or allocation under a set of rules?", "notebook": "notebooks/fields/09_optimisation.ipynb" },
+    { "num": 10, "slug": "generative-models", "title": "Generative models", "sub": "Creating new things that look real", "idea": "learn", "question": "How can a model create new things that look real?", "notebook": "notebooks/fields/10_generative_models.ipynb" }
+  ],
+  "dsa": [
+    { "num": 1, "slug": "big-o", "title": "Big-O", "sub": "How cost grows as input grows", "notebook": "notebooks/dsa/01_big_o.ipynb" },
+    { "num": 2, "slug": "arrays-hashing", "title": "Arrays, hash maps and sets", "sub": "Finding things fast", "notebook": "notebooks/dsa/02_arrays_hashing.ipynb" },
+    { "num": 3, "slug": "stacks-queues", "title": "Stacks and queues", "sub": "Last in first out, first in first out", "notebook": "notebooks/dsa/03_stacks_queues.ipynb" },
+    { "num": 4, "slug": "recursion-backtracking", "title": "Recursion and backtracking", "sub": "Try, undo, try again", "notebook": "notebooks/dsa/04_recursion_backtracking.ipynb" },
+    { "num": 5, "slug": "sorting-searching", "title": "Sorting and binary search", "sub": "Merge sort, quicksort, halving the search", "notebook": "notebooks/dsa/05_sorting_searching.ipynb" },
+    { "num": 6, "slug": "trees-bst", "title": "Trees and binary search trees", "sub": "Branching structures", "notebook": "notebooks/dsa/06_trees_bst.ipynb" },
+    { "num": 7, "slug": "heaps", "title": "Heaps and priority queues", "sub": "Always know the smallest", "notebook": "notebooks/dsa/07_heaps.ipynb" },
+    { "num": 8, "slug": "graphs", "title": "Graphs", "sub": "BFS, DFS, Dijkstra, topological sort, union-find", "notebook": "notebooks/dsa/08_graphs.ipynb" },
+    { "num": 9, "slug": "greedy", "title": "Greedy algorithms", "sub": "Take the best-looking step", "notebook": "notebooks/dsa/09_greedy.ipynb" },
+    { "num": 10, "slug": "dynamic-programming", "title": "Dynamic programming", "sub": "Fill a table of smaller answers", "notebook": "notebooks/dsa/10_dynamic_programming.ipynb" }
+  ],
+  "ideas": {
+    "search": { "label": "Search", "question": "What's the best path through a huge set of choices?" },
+    "learn": { "label": "Learning from data", "question": "How do I adjust numbers so the predictions get better?" },
+    "act": { "label": "Acting over time", "question": "How do I choose actions when the results come later?" }
+  }
+}

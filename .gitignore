@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.DS_Store
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+/data/
+training/data/
+training/runs/
+test-results/
+shots/
+*.log
