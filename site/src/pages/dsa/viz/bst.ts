@@ -84,7 +84,7 @@ const viz: Viz = (el, api) => {
   const compsR = readout('Comparisons so far');
   const legend = h('div', { class: 'legend' });
   const LEGENDS: Record<string, [string, string][]> = {
-    Insert: [['var(--search)', 'being compared'], ['var(--yellow)', 'the path so far'], ['var(--red)', 'the node just added'], ['var(--green)', 'the finished tree']],
+    Insert: [['var(--search)', 'being compared'], ['var(--yellow)', 'the path so far'], ['var(--red)', 'the node added in this step'], ['var(--green)', 'the finished tree']],
     Search: [['var(--search)', 'being compared'], ['var(--yellow)', 'the path so far'], ['var(--green)', 'found']],
   };
   const setLegend = (name: string) => legend.replaceChildren(...LEGENDS[name].map(([c, t]) => h('span', null, h('span', { class: 'sw', style: `background:${c}` }), t)));

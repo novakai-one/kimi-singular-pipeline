@@ -120,7 +120,7 @@ const viz: Viz = (el, api) => {
     ([
       ['var(--yellow)', 'the current amount, and the coin chosen for it'],
       ['var(--search)', 'what is left after each coin that fits (looked at)'],
-      ['var(--red)', 'the coin just put on a stack'],
+      ['var(--red)', 'the coin put on a stack in this step'],
       ['var(--green)', 'a finished stack, and the trace-back path'],
     ] as [string, string][]).map(([c, t]) => h('span', null, h('span', { class: 'sw', style: `background:${c}` }), t)));
 

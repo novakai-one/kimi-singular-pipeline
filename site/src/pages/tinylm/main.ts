@@ -30,7 +30,7 @@ page.append(
       h('p', { class: 'lede', html: inline('This model read the plays of Shakespeare, one character at a time, and learned to guess the next character. **Give it a start, and watch it write the rest, one guess at a time.**') })),
     inShort(
       'How can a program write text it has never seen?',
-      'At every step it scores all 65 characters it knows, turns the scores into probabilities, and picks one. Then it repeats, with the new character added to the text.')),
+      'At every step it scores each of the 65 characters it can write, turns the scores into probabilities, and picks one. Then it repeats, with the new character added to the text.')),
   problem(`
     Your phone suggests the next word while you type. Large language models write whole essays.
     **Both do the same small thing over and over: guess what comes next.** This one is small enough to watch.
