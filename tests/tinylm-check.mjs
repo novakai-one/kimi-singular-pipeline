@@ -40,19 +40,30 @@ for (const width of [1440, 390]) {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   ok(overflow <= 1, `${width}px: no horizontal overflow (${overflow})`);
   if (width === 1440) {
-    // challenge 1: repeat at low temperature (the student's own run, not Show me)
-    let won = false;
-    for (let k = 0; k < 4 && !won; k++) {
-      await page.evaluate(async () => { window.__tinylm.setT(0.05); window.__tinylm.restart(); await window.__tinylm.write(300); });
-      won = await page.evaluate(() => [...document.querySelectorAll('.challenge')][0].classList.contains('done'));
-    }
-    ok(won, 'repeat challenge won at temperature 0.05');
-    won = false;
-    for (let k = 0; k < 4 && !won; k++) {
-      await page.evaluate(async () => { window.__tinylm.setT(2); window.__tinylm.restart(); await window.__tinylm.write(300); });
-      won = await page.evaluate(() => [...document.querySelectorAll('.challenge')][1].classList.contains('done'));
-    }
-    ok(won, 'ramble challenge won at temperature 2');
+    const done = (k) => page.evaluate((k) => [...document.querySelectorAll('.challenge')][k].classList.contains('done'), k);
+    // repeat, at the lowest allowed temperature, with a run known to repeat (seed 1)
+    await page.evaluate(async () => { window.__tinylm.setT(0.2); window.__tinylm.seedNext(1); await window.__tinylm.write(300); });
+    ok(await done(0), 'repeat challenge won at temperature 0.2');
+    // below the allowed range it repeats but does not count
+    await page.evaluate(async () => { window.__tinylm.setT(0.05); await window.__tinylm.write(300); });
+    // ramble at 1.6 with a run known to ramble (seed 6)
+    await page.evaluate(async () => { window.__tinylm.setT(1.6); window.__tinylm.seedNext(6); await window.__tinylm.write(300); });
+    ok(await done(1), 'ramble challenge won at temperature 1.6');
+    // attention: the sharpest head on this text gives over half its attention to one character
+    const best = await page.evaluate(() => window.__tinylm.sharpest());
+    await page.evaluate((b) => { window.__tinylm.select(b.j); window.__tinylm.setAttention(b.layer, b.head); }, best);
+    ok(best.v > 0.5 && await done(2), `attention challenge won (layer ${best.layer + 1}, head ${best.head + 1}: ${(best.v * 100).toFixed(0)}%)`);
+    // Show me buttons play and never win on their own (fresh page)
+    const p2 = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    await p2.goto(`http://localhost:${PORT}/demo/tiny-lm.html`, { waitUntil: 'networkidle' });
+    await p2.waitForFunction(() => window.__tinylm);
+    const showBtns = await p2.$$('.tl-challenges .challenge button:has-text("Show me")');
+    await showBtns[0].click();
+    await p2.waitForFunction(() => window.__tinylm.generated().length === 300, null, { timeout: 30000 });
+    await p2.waitForTimeout(300);
+    const fb = await p2.textContent('.tl-challenges .challenge:nth-child(1)');
+    ok(fb.includes('appears') && !(await p2.evaluate(() => document.querySelector('.tl-challenges .challenge').classList.contains('done'))), 'repeat Show me reaches the goal and reports it without winning');
+    await p2.close();
     await page.screenshot({ path: `${out}/tinylm-1440-ramble.png` });
   }
   ok(errors.length === 0, `${width}px: no page errors ${errors.slice(0, 3).join(' | ')}`);

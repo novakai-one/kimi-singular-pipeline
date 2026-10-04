@@ -35,9 +35,14 @@ export function madeUp(text: string, known: Set<string>): { total: number; unkno
 /** Challenge thresholds (set from sampling the trained model at many temperatures; see DECISIONS.md). */
 export const CHALLENGE = {
   minChars: 300,
-  repeat: { length: 12, times: 3 },
-  ramble: { share: 0.4 },
+  /** Repeat: a piece of 12+ characters seen 3 times, at a temperature of 0.2 or higher (lower always repeats). */
+  repeat: { length: 12, times: 3, minT: 0.2 },
+  /** Ramble: at least 40% made-up words, at a temperature of 1.6 or lower (2 always rambles). */
+  ramble: { share: 0.4, maxT: 1.6 },
 };
+
+/** Show me: a fixed temperature and random seed from "ROMEO:" that reaches each goal (checked in tests/unit/tinylm-showme.test.ts). */
+export const DEMO = { repeat: { T: 0.2, seed: 1 }, ramble: { T: 1.6, seed: 6 } };
 
 export function isRepetitive(generated: string) {
   const r = longestRepeat(generated, CHALLENGE.repeat.times, 8);
