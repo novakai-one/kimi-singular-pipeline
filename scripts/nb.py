@@ -127,6 +127,55 @@ class Notebook:
             "3. **Excitement, 1 to 10.** How much would you enjoy a year of this?\n\n"
             "Write it now, while it's fresh. You will compare fields later.")
 
+    # ---------------- DSA practice notebooks ----------------
+    def check_setup(self) -> None:
+        """The check() helper every DSA notebook uses. It prints results and never raises,
+        so the notebook runs top to bottom even before the student has solved anything."""
+        self.md("""
+            ## How the checks work
+
+            Each problem gives you a function to fill in, and a list of test cases.
+            Run the check after writing your code: it prints ✓ or ✗ for each case.
+            Run the next cell once now, so `check` exists.
+        """)
+        self.code('''
+def check(fn, cases):
+    """Run fn on each (arguments, expected answer) pair and print ✓ or ✗."""
+    passed = 0
+    for args, expected in cases:
+        try:
+            got = fn(*args)
+        except Exception as e:                      # a crash counts as a wrong answer
+            got = f"error: {type(e).__name__}: {e}"
+        ok = got == expected
+        passed += ok
+        shown = ", ".join(repr(a) for a in args)
+        print(("✓" if ok else "✗"), f"{fn.__name__}({shown}) -> {got!r}", "" if ok else f"   (expected {expected!r})")
+    print(f"{passed} of {len(cases)} passed")
+''')
+        self.md("""
+            🐍 **Python notes**
+            - `def check(fn, cases):` takes a **function** as an argument. In Python, functions are values like any other.
+            - `fn(*args)` unpacks a tuple into separate arguments: `fn(*(3, 4))` is `fn(3, 4)`.
+            - `try: ... except Exception as e:` catches an error, so one crash doesn't stop the whole check.
+            - `f"{got!r}"` is an f-string; `!r` shows the value as Python would write it (strings get quotes).
+        """)
+
+    def problem(self, n: int, text: str, starter: str, solution: str) -> None:
+        """A practice problem: statement (no method named), a starter cell that ends with check(...),
+        and a collapsed solution cell that ends with the same check (so the saved outputs show it passing)."""
+        self.md(f"### Problem {n}\n\n{_clean(text)}")
+        self.code(starter)
+        self.solution(solution, title=f"Solution to problem {n} (double-click to show)")
+
+    def practise_more(self, sites: str) -> None:
+        """Links to the three practice sites (linked, never copied)."""
+        self.md("## Practise more\n\n" + _clean(sites) + "\n\n"
+                "- CSES Problem Set: https://cses.fi/problemset/ (short problems grouped by topic, with an online judge)\n"
+                "- USACO Guide: https://usaco.guide/ (free modules from Bronze to Platinum)\n"
+                "- LeetCode: https://leetcode.com/problemset/ (filter by topic tag)\n\n"
+                "Pick two or three problems, solve them here in a new cell first, then submit.")
+
     # ---------------- output ----------------
     def save(self, path: str) -> Path:
         out = ROOT / path

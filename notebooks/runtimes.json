@@ -1,6 +1,14 @@
 {
+  "notebooks/dsa/05_sorting_searching.ipynb": {
+    "seconds": 1.8,
+    "date": "2026-10-04"
+  },
   "notebooks/fields/01_how_models_learn.ipynb": {
-    "seconds": 296.6,
+    "seconds": 255.6,
+    "date": "2026-10-04"
+  },
+  "notebooks/fields/02_classic_ml.ipynb": {
+    "seconds": 5.3,
     "date": "2026-10-04"
   },
   "notebooks/fields/03_language_models.ipynb": {
@@ -8,7 +16,7 @@
     "date": "2026-10-04"
   },
   "notebooks/fields/04_interpretability.ipynb": {
-    "seconds": 15.1,
+    "seconds": 10.3,
     "date": "2026-10-04"
   },
   "notebooks/fields/05_computer_vision.ipynb": {
@@ -16,19 +24,23 @@
     "date": "2026-10-04"
   },
   "notebooks/fields/06_reinforcement_learning.ipynb": {
-    "seconds": 27.2,
+    "seconds": 36.6,
     "date": "2026-10-04"
   },
   "notebooks/fields/07_multi_agent.ipynb": {
-    "seconds": 17.8,
+    "seconds": 32.3,
     "date": "2026-10-04"
   },
   "notebooks/fields/08_planning_search.ipynb": {
-    "seconds": 13.4,
+    "seconds": 14.9,
+    "date": "2026-10-04"
+  },
+  "notebooks/fields/09_optimisation.ipynb": {
+    "seconds": 33.0,
     "date": "2026-10-04"
   },
   "notebooks/fields/10_generative_models.ipynb": {
-    "seconds": 29.4,
+    "seconds": 25.1,
     "date": "2026-10-04"
   },
   "notebooks/showpieces/digits_retrain.ipynb": {

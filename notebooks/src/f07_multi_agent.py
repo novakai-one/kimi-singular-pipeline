@@ -104,7 +104,7 @@ def build(redo: bool = False) -> None:
             4. **A predator–prey world** whose populations rise and fall in cycles.
             5. **A cooperation tournament** from basic game theory.
 
-            Running every cell takes about two minutes.
+            Running every cell takes about a minute.
         """,
         image=IMG,
     )
@@ -145,7 +145,7 @@ print("positions:", pos.shape, "  velocities:", vel.shape, "  order score at the
     """)
     nb.predict(
         "Turn **alignment off** (0), keep the other two rules. **What will the birds do?**",
-        "**Bunch together, but point every way.** Cohesion pulls them in; nothing makes them agree on a direction. The order score stays low. Run the next cell.",
+        "**They point every way.** Nothing makes them agree on a direction, so the order score stays near 0. Run the next cell.",
     )
     nb.code('''
 def run(separation, alignment, cohesion, steps=300, seed=0):
@@ -239,7 +239,7 @@ for n in (500, 2000, 4000):
     nb.md("""
         🐍 `defaultdict(list)` makes a dict where a missing key starts as an empty list. `cells.get(key, ())` returns an empty tuple when a cell is empty.
 
-        **What you see:** the compare-everything time grows about 4 times when $n$ doubles (that's $O(n^2)$). The grid's grows about 2 times ($O(n)$ when agents are spread out). At a few thousand agents the grid wins.
+        **What you see:** compare-everything slows down far faster than the grid as the number of agents grows. Comparing all pairs is $O(n^2)$: doubling $n$ heads toward 4 times the work. The grid is about $O(n)$ when agents are spread out: doubling $n$ about doubles the work. At 4,000 agents the grid is many times faster (the exact times depend on the computer).
 
         **What it's called:** this is a **spatial grid** (or spatial hash). A **quadtree** does the same job when agents bunch up unevenly.
 
@@ -315,7 +315,7 @@ plt.show()
 ''')
     nb.md("""
         **What you see:** at first the scent is scattered. Ants that find food lay scent on the way home, others follow it, and a trail forms between nest (green) and food (red).
-        Ants that follow trails deliver noticeably more food than ants that ignore them. No ant knows where the food is; the trail does the remembering.
+        Ants that follow trails deliver noticeably more food than ants that ignore them. No ant stores where the food is. The scent on the ground holds that information.
 
         **What it's called:** agents that coordinate by changing their shared surroundings use **stigmergy**. Turned into an algorithm for finding short routes in a graph, this is **ant colony optimisation**.
     """)
@@ -324,15 +324,15 @@ plt.show()
     nb.md("""
         ## 4. Predators and prey
 
-        Rabbits wander and sometimes have offspring. Foxes wander, eat a rabbit when they land next to one, have offspring when well fed, and die if they go too long without food.
-        **No rule mentions population sizes.**
+        Rabbits wander and sometimes have young, less often as the field fills up. Foxes wander, eat a rabbit when they land on its square, sometimes have young after eating, and die if they go too long without food.
+        **No rule mentions cycles or timing.**
     """)
     nb.predict(
         "**What do you expect the two population counts to do over time?**",
         "**Rise and fall in cycles**, with foxes lagging behind rabbits: plenty of rabbits → foxes multiply → rabbits crash → foxes starve → rabbits recover. Run the next cell.",
     )
     nb.code('''
-def predator_prey(steps=400, seed=1, size=40, rabbit_birth=0.08, fox_hunger=12):
+def predator_prey(steps=600, seed=2, size=40, rabbit_birth=0.08, room=1000, fox_birth=0.35, fox_hunger=15):
     rng = np.random.default_rng(seed)
     rabbits = [tuple(p) for p in rng.integers(0, size, (150, 2))]
     foxes = [[tuple(p), 0] for p in rng.integers(0, size, (20, 2))]       # position, steps since eating
@@ -340,8 +340,8 @@ def predator_prey(steps=400, seed=1, size=40, rabbit_birth=0.08, fox_hunger=12):
     move = lambda p: ((p[0] + rng.integers(-1, 2)) % size, (p[1] + rng.integers(-1, 2)) % size)
     for _ in range(steps):
         rabbits = [move(r) for r in rabbits]
-        babies = [r for r in rabbits if rng.random() < rabbit_birth]
-        rabbits = (rabbits + babies)[:2000]                               # the field holds at most 2000
+        crowding = 1 - len(rabbits) / room                               # fewer young as the field fills up
+        rabbits = rabbits + [r for r in rabbits if rng.random() < rabbit_birth * crowding]
         where = defaultdict(list)                                        # rabbits by square, for fast lookup
         for k, r in enumerate(rabbits):
             where[r].append(k)
@@ -351,7 +351,7 @@ def predator_prey(steps=400, seed=1, size=40, rabbit_birth=0.08, fox_hunger=12):
             here = [k for k in where.get(f[0], []) if k not in eaten]
             if here:
                 eaten.add(here[0]); f[1] = 0
-                if rng.random() < 0.5:
+                if rng.random() < fox_birth:
                     new_foxes.append([f[0], 0])
         foxes = [f for f in foxes + new_foxes if f[1] < fox_hunger]
         rabbits = [r for k, r in enumerate(rabbits) if k not in eaten]
@@ -363,13 +363,13 @@ def predator_prey(steps=400, seed=1, size=40, rabbit_birth=0.08, fox_hunger=12):
 hist = predator_prey()
 plt.figure(figsize=(9, 3))
 plt.plot(hist[:, 0], color="#188a4a", label="rabbits")
-plt.plot(hist[:, 1] * 5, color="#d03a3a", label="foxes (× 5)")
+plt.plot(hist[:, 1], color="#d03a3a", label="foxes")
 plt.xlabel("step"); plt.legend(); plt.title("Populations rise and fall in cycles")
 plt.show()
 ''')
     nb.md("""
         **What you see:** rabbit numbers climb, fox numbers follow, rabbits crash, foxes starve, and it repeats. The cycle comes from the interaction, not from any one rule.
-        (Exact numbers depend on the random seed; sometimes one species dies out. That fragility is real too.)
+        Try other seeds: the size and timing of the cycles change. With other settings one species can die out; that fragility is real too.
     """)
 
     # ------------------------------------------------------------------ 5 game theory
@@ -469,7 +469,8 @@ for name, score in sorted(totals.items(), key=lambda kv: -kv[1]):
             for ev in (0.0, 0.02, 0.2):
                 res = ants(evaporate=ev, snapshots=(1200,))
                 print(f"evaporate {ev}: {res[1200][1]} deliveries")
-            # Fast fading (0.2) erases trails before other ants can use them, so deliveries drop toward the no-trail level.
+            # Fast fading (0.2) erases trails before other ants can use them. Deliveries drop, here even below
+            # the ants that ignore trails: a trail that fades before it reaches the food can lead ants astray.
             # With no fading, the trail never goes away. That is fine while the food stays put, but if the food moved,
             # ants would keep following the old trail. Fading is how the colony forgets.
         """,

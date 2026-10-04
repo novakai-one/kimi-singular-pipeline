@@ -172,6 +172,12 @@ plt.xlabel("total phenols"); plt.ylabel("flavanoids"); plt.title("The least-squa
         ## 3. Label by the nearest examples: k-nearest neighbours
 
         Back to the growers. For a new bottle, find the $k$ past bottles closest to it, and take their most common grower.
+
+        First, a drawing helper used for every model below. It asks the model for a label at 22,500 points on a grid (150 × 150), and colours each area by the answer.
+    """)
+    nb.code(CODE_BOUNDARY)
+    nb.md("""
+        🐍 `np.meshgrid` makes the grid's x and y values. `.ravel()` flattens a grid into one long list, and `.reshape(gx.shape)` turns the answers back into a grid. `predict` is a function passed in as an argument, so the same helper draws any model.
     """)
     nb.code('''
 def knn_predict(X_train, y_train, X_new, k=5):
@@ -284,12 +290,14 @@ def tree_predict_one(node, p):
         node = node["yes"] if p[node["feature"]] < node["threshold"] else node["no"]
     return node["leaf"]
 
-def show(node, indent=""):
+def show(node, indent="", label=""):
     if "leaf" in node:
-        print(indent + "→ grower " + "ABC"[node["leaf"]])
-    else:
-        print(indent + f"{FEATURES[node['feature']]} < {node['threshold']:.2f}?")
-        show(node["yes"], indent + "   yes: "); show(node["no"], indent + "   no:  ")
+        print(indent + label + "grower " + "ABC"[node["leaf"]])
+        return
+    print(indent + label + f"{FEATURES[node['feature']]} < {node['threshold']:.2f}?")
+    pad = indent + " " * len(label) + "  "
+    show(node["yes"], pad, "yes → ")
+    show(node["no"], pad, "no  → ")
 
 tree = grow(X, y, depth=2)
 show(tree)
@@ -315,7 +323,7 @@ for depth in [1, 2, 3, 5, 12]:
     print(f"depth {depth:2d}: cross-validation {cross_validate(lambda a, b, c: sk.fit(a, b).predict(c), X, y):.1%}")
 ''')
     nb.md("""
-        **What you see:** a tree's boundaries are made of straight, axis-aligned steps. A very deep tree carves tiny boxes around single bottles (overfitting again); cross-validation shows a middle depth wins.
+        **What you see:** a tree's boundaries are made of straight, axis-aligned steps. The depth-12 tree carves tiny boxes around single bottles, yet in cross-validation it scores about the same as depth 3. The extra boxes add complexity without helping much on new bottles. **When two models score about the same, prefer the simpler one.**
     """)
 
     # ------------------------------------------------------------------ 6 k-means
@@ -420,7 +428,7 @@ results.sort_values("mean", ascending=False).round(3)
         solution_src="""
             scores = {d: cross_val_score(DecisionTreeClassifier(max_depth=d, random_state=0), X_all, y, cv=5).mean() for d in range(1, 11)}
             best = max(scores, key=scores.get)
-            print({d: round(s, 3) for d, s in scores.items()})
+            print({d: round(float(s), 3) for d, s in scores.items()})
             print("best depth:", best, f"({scores[best]:.1%})")
         """,
     )

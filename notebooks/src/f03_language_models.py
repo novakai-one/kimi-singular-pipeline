@@ -452,7 +452,7 @@ for L in range(LAYERS):
 plt.tight_layout(); plt.show()
 ''')
     nb.md("""
-        **What you see:** heads differ. Some look mostly at the character directly before (a bright stripe just left of the diagonal). Some look back to the last space or the start of the word.
+        **What you see:** heads differ. Some look mostly at the character directly before (a bright stripe directly left of the diagonal). Some look back to the last space or the start of the word.
         Nobody programmed these patterns; they came from training. Working out what heads like these do is the job of [interpretability](https://transformer-circuits.pub/), Field 4.
     """)
 

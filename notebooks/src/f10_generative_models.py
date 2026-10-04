@@ -129,7 +129,7 @@ def build(redo: bool = False) -> None:
             2. **An autoencoder** that finds the spiral's one-dimensional shape and generates from it.
             3. **A diffusion model**, trained from scratch, that turns noise into new spiral points (below), plus the same sampling with the Hugging Face `diffusers` library.
 
-            Runs on a CPU in about 3 minutes.
+            Runs on a CPU in about two minutes.
         """,
         image=IMG,
     )

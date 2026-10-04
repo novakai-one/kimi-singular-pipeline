@@ -30,5 +30,14 @@
     "text": "banana",
     "where": "language-models",
     "reason": "the string 'banana' is data for a bigram exercise, not an analogy"
+  },
+  {
+    "text": "after eating",
+    "where": "07_multi_agent",
+    "reason": "literal: foxes have young after eating in the predator-prey simulation"
+  },
+  {
+    "text": "5! =",
+    "reason": "factorial notation, not an exclamation"
   }
 ]

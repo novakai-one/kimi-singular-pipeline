@@ -144,7 +144,7 @@ def build(redo: bool = False) -> None:
             3. **Pushed a "1" along it** and watched the network's answer change (right, below).
             4. **Seen superposition**: a tiny network storing five ideas in two numbers.
 
-            This field is applied linear algebra: vectors, dot products, projections, eigenvectors. Running every cell takes about 2 minutes.
+            This field is applied linear algebra: vectors, dot products, projections, eigenvectors. Running every cell takes under a minute.
         """,
         image=IMG,
     )

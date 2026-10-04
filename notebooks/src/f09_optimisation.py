@@ -86,7 +86,7 @@ def build(redo: bool = False) -> None:
             2. **A delivery route through 30 stops**, untangled by simulated annealing (below), and compared with simpler methods.
             3. **A branch-and-bound search** that finds the guaranteed shortest route for small cases while skipping most of the options.
 
-            Running every cell takes about 2 minutes.
+            Running every cell takes about a minute, including installing OR-Tools.
         """,
         image=IMG,
     )
@@ -182,15 +182,30 @@ for s in range(SLOTS):
         **What it's called:** this is **backtracking**. It skips huge parts of the 9.8 million assignments: once a partial plan breaks a rule, nothing built on it is tried.
     """)
     nb.predict(
-        "Change the order: assign the exams with the **most clashes first**. **Will the search try more slot choices, or fewer?**",
-        "**Fewer** (usually). The hardest exams get placed while there is still room; easy ones fit in at the end. Problems are found early, when undoing is cheap.",
+        "Backtracking assigns the exams in a fixed order. **Does that order change how many slot choices it tries?**",
+        "**Yes, when the timetable is tight.** With 5 slots there is plenty of room, so almost any order is quick. "
+        "With 4 slots, most orders are still quick, but a few try hundreds of choices. "
+        "Placing the most-clashing exams first avoids those bad cases: problems show up early, when undoing is cheap.",
     )
     nb.code('''
+import random
 hardest_first = sorted(EXAMS, key=lambda e: -len(clash[e]) - (2 if e in MATHS else 0))
-stats2 = {"tried": 0}
-backtrack({}, hardest_first, stats2)
-print("original order:", stats["tried"], "choices tried.   hardest first:", stats2["tried"])
+
+def tries(order):
+    st = {"tried": 0}
+    backtrack({}, order, st)
+    return st["tried"]
+
+random.seed(1)
+for SLOTS in (5, 4):          # the loop changes the global SLOTS that backtrack reads; 4 is a tighter timetable
+    counts = sorted(tries(random.sample(EXAMS, len(EXAMS))) for _ in range(200))
+    print(f"{SLOTS} slots: 200 random orders tried {counts[0]} to {counts[-1]} choices (middle: {counts[100]}).",
+          f"Hardest first: {tries(hardest_first)}.")
+SLOTS = 5                     # back to the real problem
 ''')
+    nb.md("""
+        🐍 `random.sample(EXAMS, len(EXAMS))` returns the exams in a random order. `sorted(f(x) for x in ...)` collects the results and sorts them, so `counts[0]` is the smallest and `counts[-1]` the largest.
+    """)
     nb.md("**What it's called:** picking the most constrained variable first is a **variable-ordering heuristic**: a rule of thumb that doesn't change the answer, only how fast you find it.")
 
     # ------------------------------------------------------------------ 3 solver
@@ -198,7 +213,7 @@ print("original order:", stats["tried"], "choices tried.   hardest first:", stat
         ## 3. The library version: a constraint solver
 
         Real timetables have hundreds of exams. You write the **model** (variables, constraints, goal) and a **solver** does the search, with far better tricks than plain backtracking.
-        Here is the same model in Google **OR-Tools** CP-SAT, plus a goal: **as few students as possible with exams in back-to-back slots.**
+        Here is the same model in Google **OR-Tools** CP-SAT, plus a goal: **as few clashing pairs as possible in back-to-back slots**, so students who sit both exams get a break between them.
     """)
     nb.code('''
 from ortools.sat.python import cp_model
@@ -436,7 +451,7 @@ print(f"partial trips explored: {explored:,} out of {all_partial:,} possible")
     ])
     nb.footer(
         experiments=[
-            "**A harder timetable.** Set `SLOTS = 4`. Does a valid timetable still exist? How do the backtracking counts change?",
+            "**A harder timetable.** Set `SLOTS = 3`. Does a valid timetable still exist? Can you tell before running it?",
             "**Clustered stops.** Put the 30 stops in three tight groups. Which method does best now: greedy or annealing?",
             "**Bigger branch and bound.** Try 12 stops. How fast does the explored count grow?",
         ],

@@ -145,7 +145,7 @@ def build() -> None:
             2. **The "if you knew the map" version** of the same calculation, and a check that both agree.
             3. **An agent that balances a pole on a cart**, trained in the Gymnasium library.
 
-            Running every cell takes about two minutes.
+            Running every cell takes about a minute.
         """,
         image=IMG,
     )

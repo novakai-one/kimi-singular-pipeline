@@ -116,7 +116,7 @@ def build(redo: bool = False) -> None:
         ## 1. The problem: a photo is only numbers
 
         To a computer, a photo is a grid. Each pixel is three numbers (red, green, blue) from 0 to 255.
-        A cat, a shirt, a temple: all just grids of numbers.
+        A cat, a shirt, a temple: all of them grids of numbers.
 
         **Before a program can recognise anything, it has to find structure in the grid.** The simplest structure is an **edge**: a place where dark turns to light.
     """)
