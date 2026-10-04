@@ -46,5 +46,9 @@
   "notebooks/showpieces/digits_retrain.ipynb": {
     "seconds": 67.9,
     "date": "2026-10-04"
+  },
+  "notebooks/showpieces/tinylm_retrain.ipynb": {
+    "seconds": 316.3,
+    "date": "2026-10-04"
   }
 }
