@@ -368,3 +368,4 @@ table.simple th { font-size: 13px; color: var(--muted); font-weight: 650; }
   .btn { min-height: 44px; }
   .field-row { grid-template-columns: 90px 1fr 48px; }
 }
+[hidden] { display: none !important; }

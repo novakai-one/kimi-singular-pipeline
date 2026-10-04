@@ -2,7 +2,7 @@
 // Mode 1 checks brackets with a pile (a stack). Mode 2 puts the same items through a pile and a line (a queue).
 
 /** Cell colours: look = blue (being read / compared), open = yellow (still open, on the pile),
- *  done = green (matched / finished), red = wrong, or the item that just moved. */
+ *  done = green (matched / finished), red = wrong, or the item that moved in this step. */
 export type Cell = '' | 'look' | 'open' | 'done' | 'red' | 'out' | 'dim';
 
 export interface PileItem { ch: string; at: number }
@@ -167,6 +167,7 @@ export function bracketFrames(chars: string[]): BracketFrame[] {
   const matched = new Set<number>();
   let maxDepth = 0;
   const slots = Math.max(GOAL_DEPTH, checkBrackets(chars).maxDepth);
+  const firstOpen = chars.findIndex(isOpen);
 
   /** Row colours: matched = green, still open = yellow, unread = plain. */
   const rowState = (): Cell[] => chars.map((_, i) => (matched.has(i) ? 'done' : pile.some((p) => p.at === i) ? 'open' : ''));
@@ -176,7 +177,7 @@ export function bracketFrames(chars: string[]): BracketFrame[] {
     pairs: pairs.map((p) => [p[0], p[1]] as [number, number]), depth: pile.length, maxDepth, slots, status: 'running', ...f,
   });
 
-  push({ note: `Read the ${plural(n, 'bracket')} from left to right. The pile starts empty.`, line: 0 });
+  push({ note: `Read the ${plural(n, 'bracket')} from left to right. The pile starts empty. Its *depth* is the number of brackets on it.`, line: 0 });
 
   for (let i = 0; i < n; i++) {
     const c = chars[i];
@@ -185,7 +186,8 @@ export function bracketFrames(chars: string[]): BracketFrame[] {
       const deeper = pile.length > maxDepth;
       maxDepth = Math.max(maxDepth, pile.length);
       const cs = rowState(); cs[i] = 'look';
-      push({ note: `\`${c}\` at position ${i} opens. Push it on the pile. Depth ${pile.length}${deeper && pile.length > 1 ? ', the deepest so far' : ''}.`,
+      const act = i === firstOpen ? 'Put it on top of the pile (adding to the top is a *push*)' : 'Push it on the pile';
+      push({ note: `\`${c}\` at position ${i} opens. ${act}. Depth ${pile.length}${deeper && pile.length > 1 ? ', the deepest so far' : ''}.`,
         line: 2, ptr: i, charState: cs });
       continue;
     }
@@ -205,7 +207,8 @@ export function bracketFrames(chars: string[]): BracketFrame[] {
       pile.pop();
       matched.add(top.at); matched.add(i);
       pairs.push([top.at, i]);
-      push({ note: `\`${top.ch}\` and \`${c}\` match. Pop \`${top.ch}\` off the pile. Depth ${pile.length}.`, line: 4, ptr: i });
+      const act = pairs.length === 1 ? `Take \`${top.ch}\` off the top of the pile (removing the top is a *pop*)` : `Pop \`${top.ch}\` off the pile`;
+      push({ note: `\`${top.ch}\` and \`${c}\` match. ${act}. Depth ${pile.length}.`, line: 4, ptr: i });
     } else {
       cs = rowState(); cs[i] = 'red'; cs[top.at] = 'look';            // the wrong one is red; the top it failed to match stays blue
       push({ note: `\`${c}\` does not match \`${top.ch}\`. The \`${top.ch}\` at position ${top.at} must close first, so **\`${c}\` at position ${i} is the wrong bracket**.`,

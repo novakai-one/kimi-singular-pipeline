@@ -190,7 +190,7 @@ function renderOrder(stage: HTMLElement, f: OrderFrame) {
 // ------------------------------------------------------------------ the visualiser
 const LEGENDS: [string, string][][] = [
   [['var(--search)', 'being read or compared'], ['var(--yellow)', 'still open (on the pile)'], ['var(--green)', 'matched'], ['var(--red)', 'the wrong bracket']],
-  [['var(--red)', 'just moved'], ['var(--search)', 'next to come out'], ['var(--yellow)', 'came out, in this order'], ['var(--green)', 'all out']],
+  [['var(--red)', 'moved in this step'], ['var(--search)', 'next to come out'], ['var(--yellow)', 'came out, in this order'], ['var(--green)', 'all out']],
 ];
 const LABELS = [
   `Brackets: ( ) [ ] { }, up to ${MAX_BRACKETS}, spaces allowed`,
@@ -234,7 +234,7 @@ const viz: Viz = (el, api) => {
         } else if (r.ok) {
           api.feedback(`Matched. The pile got ${r.maxDepth} deep; the goal is ${GOAL_DEPTH}.`);
         } else {
-          api.feedback(`Not matched: ${describeError(r.error!)}. The pile got ${r.maxDepth} deep.`);
+          if (r.error) api.feedback(`Not matched: ${describeError(r.error)}. The pile got ${r.maxDepth} deep.`);
         }
       }
       showing = false;
