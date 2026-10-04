@@ -1,0 +1,30 @@
+/* DSA 2 "Put words in buckets": list on top, the bucket rule in the middle, 8 buckets below. */
+.hashing-cell.moved { fill: var(--red-soft); stroke: var(--red); stroke-width: 2; }
+.hashing-bucket { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+.hashing-bucket.cmp { fill: var(--search-soft); stroke: var(--search); stroke-width: 2.5; }
+.hashing-bucket.hi { fill: var(--yellow-soft); stroke: var(--yellow); stroke-width: 2.5; }
+.hashing-faded { opacity: .35; }
+.hashing-num { fill: var(--muted); font-size: 15px; font-weight: 750; }
+.hashing-num.on { fill: var(--text); }
+.hashing-word { fill: var(--text); font-size: 14px; font-weight: 600; }
+.hashing-label { fill: var(--muted); font-size: 13px; font-weight: 650; }
+.hashing-pos { fill: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.hashing-count { fill: var(--search); font-size: 13.5px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.hashing-letter { fill: var(--text); font-size: 16px; font-weight: 650; }
+.hashing-code { fill: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.hashing-op { fill: var(--muted); font-size: 16px; }
+.hashing-sum { fill: var(--text); font-size: 18px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.hashing-mod { fill: var(--text); font-size: 15px; font-variant-numeric: tabular-nums; }
+.hashing-result { fill: var(--yellow); font-size: 15px; font-weight: 750; }
+.hashing-hint { fill: var(--faint); font-size: 14px; }
+.hashing-arrow { stroke: var(--search); stroke-width: 2; fill: none; }
+.hashing-arrow.hi { stroke: var(--yellow); }
+.hashing-head { fill: var(--search); }
+.hashing-head.hi { fill: var(--yellow); }
+
+@keyframes hashing-drop {
+  from { transform: translateY(-30px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.hashing-drop { animation: hashing-drop .45s ease-out; }
+@media (prefers-reduced-motion: reduce) { .hashing-drop { animation: none; } }
