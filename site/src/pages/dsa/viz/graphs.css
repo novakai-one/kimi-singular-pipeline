@@ -1,0 +1,44 @@
+/* DSA 8 graphs visualiser: the graph (SVG) beside a panel showing what the algorithm keeps. */
+.graphs-wrap { width: 100%; container-type: inline-size; }
+.graphs-view { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; align-items: center; }
+@container (min-width: 600px) { .graphs-view { grid-template-columns: minmax(0, 1fr) 215px; } }
+.graphs-svg { min-width: 0; }
+.graphs-panel {
+  min-width: 0; display: grid; gap: 10px; align-content: start;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px;
+}
+.graphs-sec-h { font-size: 12px; font-weight: 750; letter-spacing: .05em; text-transform: uppercase; color: var(--faint); margin-bottom: 5px; }
+.graphs-chips { display: flex; flex-wrap: wrap; gap: 5px; min-height: 30px; align-items: center; }
+.graphs-chip {
+  font-family: var(--mono); font-size: 14px; font-weight: 650; padding: 3px 8px; border-radius: 6px;
+  border: 1.5px solid var(--border); background: var(--surface-2); color: var(--text);
+}
+.graphs-chip.wait { border-color: var(--search); background: var(--search-soft); }
+.graphs-chip.cur { border-color: var(--yellow); background: var(--yellow-soft); }
+.graphs-chip.done { border-color: var(--green); background: var(--green-soft); }
+.graphs-empty { font-size: 13.5px; color: var(--faint); font-style: italic; }
+.graphs-hint { font-size: 13px; color: var(--muted); }
+.graphs-table { border-collapse: collapse; font-size: 14px; width: 100%; font-variant-numeric: tabular-nums; }
+.graphs-table th { font-size: 12px; color: var(--muted); font-weight: 650; text-align: left; padding: 2px 6px; }
+.graphs-table td { padding: 2px 6px; border-top: 1px solid var(--border); font-family: var(--mono); }
+.graphs-table tr.wait td { background: var(--search-soft); }
+.graphs-table tr.cur td { background: var(--yellow-soft); font-weight: 700; }
+.graphs-table tr.done td { background: var(--green-soft); }
+
+/* SVG */
+.graphs-edge { fill: none; stroke: var(--faint); stroke-width: 2; }
+.graphs-edge.tree { stroke: var(--muted); stroke-width: 4; }
+.graphs-edge.follow { stroke: var(--red); stroke-width: 4.5; }
+.graphs-edge.route { stroke: var(--yellow); stroke-width: 5; }
+.graphs-edge.off { stroke-dasharray: 5 5; opacity: .55; }
+.graphs-arrow { fill: var(--faint); }
+.graphs-arrow.tree { fill: var(--muted); }
+.graphs-arrow.follow { fill: var(--red); }
+.graphs-arrow.route { fill: var(--yellow); }
+.graphs-arrow.off { opacity: .55; }
+.graphs-cost-bg { fill: var(--surface-2); }
+.graphs-cost { fill: var(--text); font-size: 15px; font-weight: 650; }
+.graphs-letter { fill: var(--text); font-size: 20px; font-weight: 700; }
+.graphs-badge { fill: var(--surface); stroke: var(--border); stroke-width: 1.2; }
+.graphs-badge-t { fill: var(--text); font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.graphs-input { font-feature-settings: 'calt' 0; font-variant-ligatures: no-contextual; }

@@ -338,8 +338,8 @@ export const DSA: DsaContent[] = [
       detail: 'Edges are written like A>B ("A before B"). Add one and run topological sort.',
     },
     explain: {
-      see: 'Circles are nodes; lines are edges, some with costs. Highlighted nodes are waiting to be explored. The panel shows what each algorithm keeps: a queue, a stack, the cheapest cost found so far, or groups of connected nodes.',
-      means: 'Every algorithm here keeps a collection of nodes to visit next. **The kind of collection decides the order of exploration:** a queue gives rings, a stack gives depth, a priority queue gives cheapest first.',
+      see: 'Circles are nodes; lines are edges, some with costs. Blue nodes are waiting to be explored, the yellow node is being explored now, and green nodes are finished. The panel shows what each algorithm keeps: a queue, a stack, the cheapest cost found so far, the nodes that are ready, or groups of connected nodes.',
+      means: 'Each search here keeps a collection of nodes to visit next. **The kind of collection decides the order of exploration:** a queue gives rings, a stack gives depth, a priority queue gives cheapest first.',
       called: 'A *graph* is *nodes* (vertices) joined by *edges*. *BFS* (queue) finds paths with the fewest edges. *DFS* (stack, or recursion) goes deep first. *Dijkstra* (priority queue) finds cheapest paths when no cost is negative. *Topological sort* orders nodes so every edge points forward; it only works when there are no cycles. *Union-find* keeps track of connected groups as edges arrive.',
       formula: 'BFS and DFS: $O(V + E)$ for $V$ nodes and $E$ edges. Dijkstra with a heap: $O((V + E) \\log V)$.',
     },
@@ -427,7 +427,7 @@ export const DSA: DsaContent[] = [
       see: 'Row $i$, column $j$ holds the number of edits needed to turn the first $i$ letters of one word into the first $j$ letters of the other. Each cell looks at three cells already filled: left (insert a letter), above (delete one), and diagonal (change one, or free if the letters match).',
       means: 'Each cell reuses answers already in the table, so nothing is worked out twice. **The bottom-right cell is the answer for the whole words.** Following the arrows back from it gives the list of edits.',
       called: 'Storing the answers to smaller problems and building up from them is *dynamic programming* (DP). The rule linking a cell to smaller cells is the *recurrence*. This distance is the *edit distance* (also called Levenshtein distance). Filling the table takes $O(nm)$ for words of lengths $n$ and $m$.',
-      formula: '$D[i][j] = \\min\\big(D[i-1][j] + 1,\\; D[i][j-1] + 1,\\; D[i-1][j-1] + c\\big)$, where $c = 0$ if the $i$-th and $j$-th letters match and $1$ if not.',
+      formula: 'For each cell: $D[i][j] = \\min\\big(D[i-1][j] + 1,\\; D[i][j-1] + 1,\\; D[i-1][j-1] + c\\big)$\n\nHere $c = 0$ if the $i$-th letter of the first word matches the $j$-th letter of the second, and $c = 1$ if not.',
     },
     inAI: 'Value iteration in reinforcement learning is dynamic programming over states (Field 6). Spell-checkers and DNA comparison use edit distance. Speech recognition lines sounds up with words using DP.',
     practice: [
