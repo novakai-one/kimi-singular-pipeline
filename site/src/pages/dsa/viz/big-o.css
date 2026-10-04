@@ -1,0 +1,44 @@
+/* DSA 1, Big-O: timing chart, table and guess box */
+.big-o-wrap { width: 100%; display: grid; gap: 8px; }
+.big-o-wrap svg { width: 100%; height: auto; display: block; }
+.big-o-grid { stroke: var(--border); stroke-width: 1; }
+.big-o-axis { stroke: var(--faint); stroke-width: 1; }
+.big-o-tick { fill: var(--muted); font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.big-o-tick.later { fill: var(--faint); }
+.big-o-title { fill: var(--muted); font-size: 13.5px; }
+.big-o-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.big-o-pt { stroke: var(--surface-2); stroke-width: 2; }
+.big-o-lab { fill: var(--text); font-size: 14.5px; font-weight: 650; }
+.big-o-cur { fill: var(--yellow-soft); }
+.big-o-ring { fill: none; stroke: var(--yellow); stroke-width: 2.5; }
+.big-o-window { stroke: var(--yellow); stroke-width: 9; stroke-linecap: round; opacity: .28; }
+.big-o-guess-lab { fill: var(--text); font-size: 13.5px; }
+.big-o-measuring { fill: var(--text); font-size: 14.5px; font-weight: 650; animation: big-o-pulse .9s ease-in-out infinite alternate; }
+@keyframes big-o-pulse { from { opacity: 1; } to { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .big-o-measuring { animation: none; } }
+
+.big-o-table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.big-o-table { border-collapse: collapse; width: 100%; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.big-o-table th, .big-o-table td { padding: 4px 7px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--border); }
+.big-o-table tbody tr:last-child td { border-bottom: 0; }
+.big-o-table th { font-weight: 650; color: var(--muted); font-size: 13px; }
+.big-o-table thead tr:first-child th { text-align: center; }
+.big-o-table th.n, .big-o-table td.n { text-align: left; }
+.big-o-table td.ratio { color: var(--muted); }
+.big-o-table td.pair { font-weight: 650; }
+.big-o-table td.later { color: var(--faint); }
+.big-o-table tr.cur td { background: var(--yellow-soft); }
+.big-o-table .ok { color: var(--green); font-weight: 650; }
+.big-o-table .no { color: var(--red); font-weight: 650; }
+.big-o-sw { display: inline-block; vertical-align: -1px; margin-right: 5px; }
+
+.big-o-guess { display: grid; gap: 6px; margin-top: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
+.big-o-guess-label { font-weight: 650; font-size: 14.5px; }
+.big-o-guess-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.big-o-guess-row input { width: 120px; font-family: var(--mono); font-size: 14px; min-height: 36px; }
+.big-o-guess-help { font-size: 13.5px; color: var(--muted); }
+.big-o-guess.off .big-o-guess-label { color: var(--muted); }
+.big-o-axes { margin-top: 10px; }
+@media (max-width: 800px) {
+  .big-o-guess-row .btn { min-height: 44px; }
+}

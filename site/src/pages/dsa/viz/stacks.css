@@ -1,0 +1,24 @@
+/* DSA 3 — stacks and queues visualiser (classes prefixed stacks-) */
+.stacks-ch { fill: var(--text); font-family: var(--mono); font-size: 22px; font-weight: 650; }
+.stacks-ch.sm { font-size: 19px; }
+.stacks-ch.xs { font-size: 14px; }
+.stacks-label { fill: var(--muted); font-size: 15px; }
+.stacks-title { fill: var(--text); font-size: 17px; font-weight: 700; }
+.stacks-num { fill: var(--text); font-size: 34px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.stacks-hint { fill: var(--text); font-size: 17px; }
+.stacks-b { font-family: var(--mono); font-weight: 800; }
+.stacks-ptr { fill: var(--search); font-size: 22px; font-weight: 750; }
+.dv-cell.stacks-red { fill: var(--red-soft); stroke: var(--red); stroke-width: 2.4; }
+.stacks-arc { fill: none; stroke: var(--green); stroke-width: 2.2; }
+.stacks-wall { fill: none; stroke: var(--muted); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.stacks-wall.bad { stroke: var(--red); stroke-width: 3; }
+.stacks-track { fill: none; stroke: var(--border); stroke-width: 1.4; stroke-dasharray: 5 4; }
+.stacks-frame { fill: none; stroke-width: 3.5; }
+.stacks-frame.bad { stroke: var(--red); }
+.stacks-frame.ok { stroke: var(--green); }
+.stacks-verdict.bad { fill: var(--red-soft); stroke: var(--red); stroke-width: 2; }
+.stacks-verdict.ok { fill: var(--green-soft); stroke: var(--green); stroke-width: 2; }
+.stacks-verdict-t { fill: var(--text); font-size: 17px; }
+.stacks-verdict-t.head { font-weight: 750; font-size: 18px; }
+.stacks-muted { fill: var(--muted); }
+.stacks-strong { font-weight: 750; font-size: 21px; }

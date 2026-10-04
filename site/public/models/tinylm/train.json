@@ -1,0 +1,29 @@
+{
+ "curve": [
+  {
+   "step": 0,
+   "train": 4.184,
+   "val": 4.1831
+  },
+  {
+   "step": 250,
+   "train": 2.3528,
+   "val": 2.3485
+  }
+ ],
+ "samples": {
+  "0.2": "ROMEO:\nAnd I the son me the so the me the the the the the the the the the so thean the the thean sthe the there the the ore the thean the sousth the there the theare the meare the there theare the\nThe there the there the thean the the thean the the the shean the theare the the thean se theand\nAn the thean ",
+  "0.8": "ROMEO:\nBure; the an Tom uspl, thartie, by faces.\n\nBUMORGDUELA:\nSTARI maver, irare.\nO, arof foganee, he sin, grathof fongor dere therind atsses, otheserd\n\nPs meay arest ade, samy be isour areris telf thit reand mon y thead, han.\nCalterend,\nFith hipte WAnous mime, thearchells I hanesinsuen tee,\nHils aigut be",
+  "1.6": "ROMEO:\nBCaw;stqWerenTme uagl,', pavje,oZo f cem.\nBowin'sacvy ceeactic heeWotir. mIoxp; roalfngaiee, h\nFs'd, gritoofZu?\nJor d:\nB thetiRbeatss?hilot tsErdv$es,, Ry! ULut-udmhcrmO s b izutitie'dfNLOLFft, itprshn'cellvel,\nIAd, vafod, atereizogeDih jl;\nJYWAks,\nS:!\n3aet waHcNKl,shIs, CSuinsuen. uO,\nKRTMB\n\nUzukin"
+ },
+ "minutes": 1.0,
+ "iters": 250,
+ "batch": 32,
+ "params": 1016320,
+ "characters": 1115394,
+ "final": {
+  "step": 250,
+  "train": 2.3528,
+  "val": 2.3485
+ }
+}
