@@ -297,7 +297,7 @@ export const DSA: DsaContent[] = [
     },
     explain: {
       see: 'The same heap twice: as a tree and as an array. A new item goes into the first free spot at the bottom, then swaps with its parent while it is smaller. Removing the top moves the last item up to the top, then swaps it down with its smaller child.',
-      means: 'Every parent is smaller than its children, so the smallest item is always at the top. **Repairing after an add or a remove only touches one path, so it takes about $\\log n$ swaps.**',
+      means: 'Every parent is no bigger than its children, so the smallest item is always at the top. **Repairing after an add or a remove only touches one path, so it takes about $\\log n$ swaps.**',
       called: 'This is a *binary heap*; with the smallest on top, a *min-heap*. Stored in an array, the children of position $i$ sit at $2i + 1$ and $2i + 2$. A heap is the usual way to build a *priority queue*: add and remove-smallest in $O(\\log n)$, look at the smallest in $O(1)$.',
       formula: 'Children of position $i$: $2i + 1$ and $2i + 2$. Parent of position $i$: $\\lfloor (i - 1) / 2 \\rfloor$.',
     },
@@ -388,7 +388,7 @@ export const DSA: DsaContent[] = [
     },
     inAI: 'Byte-pair encoding (Field 3) merges the most frequent pair greedily. Greedy decoding picks the single most likely next token each time, which can miss better sentences; beam search keeps several options instead. Decision trees pick the best split greedily at each node.',
     practice: [
-      { q: 'Meetings run 1–4, 2–3, 3–5 and 6–7. **What is the largest number that fit in one room, with no overlaps?**', a: '**3**: take the meeting that ends earliest (2–3), then the next that starts after it ends (3–5), then 6–7. Earliest-finish-first is a greedy rule that is provably best here.' },
+      { q: 'Meetings run 1–4, 2–3, 3–5 and 6–7. **What is the largest number that fit in one room, with no overlaps?**', a: '**3**: take the meeting that ends earliest (2–3), then the next that starts no earlier than it ends (3–5), then 6–7. Earliest-finish-first is a greedy rule that is provably best here.' },
       { q: 'Coins 1, 5, 10, 25. **Make 30 biggest-first. Is it the fewest coins?**', a: '25 + 5: two coins, and that is the fewest.' },
       { q: 'You can carry 10 kg, and every item can be cut into smaller pieces. **What should you take first? Why does that stop working when items can\'t be cut?**', a: 'Take the most valuable per kilogram first, cutting the last item to fit. Uncut, a heavy high-value item can block two lighter items worth more together, so a choice that looks best can waste space.' },
       { q: '**Find coins and an amount, other than 1, 3, 4 and 6, where biggest-first fails.**', a: 'For example coins 1, 5, 6, 9 and amount 11: biggest-first gives 9 + 1 + 1 (three coins); 5 + 6 uses two.' },
@@ -416,7 +416,7 @@ export const DSA: DsaContent[] = [
     predict: {
       prompt: '**How many edits turn "kitten" into "sitting"?**',
       choices: ['2', '3', '4'],
-      reveal: '**3**: change k to s, change e to i, add g at the end. Fill the table to check.',
+      reveal: '**3**: change k to s, change e to i, insert g at the end. Fill the table to check.',
     },
     viz: {
       title: 'Fill the table',

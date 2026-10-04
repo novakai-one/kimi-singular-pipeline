@@ -50,6 +50,8 @@ export interface PlayerHandle<F extends Frame = Frame> {
   /** Set the input box and re-run (used by Show me). */
   setInput(value: string, algorithmIndex?: number): void;
   play(): void;
+  /** Change playback speed (0.5, 1, 2 or 4), e.g. so a long Show me plays faster. */
+  setSpeed(v: number): void;
   frames(): F[];
 }
 
@@ -59,6 +61,7 @@ export function makePlayer<F extends Frame>(o: PlayerOpts<F>): PlayerHandle<F> {
   let i = 0;
   let timer: number | null = null;
   let speed = 1;
+  let speedSel: HTMLSelectElement | null = null;
 
   const stage = h('div', { class: 'dp-stage', style: o.stageHeight ? `min-height:${o.stageHeight}px` : '' });
   const note = h('div', { class: 'dp-note', 'aria-live': 'polite' });
@@ -81,6 +84,7 @@ export function makePlayer<F extends Frame>(o: PlayerOpts<F>): PlayerHandle<F> {
         const sel = h('select', { 'aria-label': 'Playback speed' },
           ['0.5', '1', '2', '4'].map((v) => h('option', { value: v, selected: v === '1' }, `${v}×`)));
         sel.addEventListener('change', () => { speed = Number(sel.value); if (timer) { pause(); play(); } });
+        speedSel = sel;
         return sel;
       })()));
 
@@ -175,6 +179,11 @@ export function makePlayer<F extends Frame>(o: PlayerOpts<F>): PlayerHandle<F> {
       else runNow();
     },
     play,
+    setSpeed(v: number) {
+      speed = v;
+      if (speedSel) speedSel.value = String(v);
+      if (timer) { pause(); play(); }
+    },
     frames: () => frames,
   };
 }

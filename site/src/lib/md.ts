@@ -68,7 +68,12 @@ export function md(src: string): string {
   while (i < lines.length) {
     const line = lines[i];
     if (!line.trim()) { i++; continue; }
-    if (line.trim().startsWith('$$')) {
+    // a display block is a line that is only $$...$$, or a $$ line whose block closes on a later line;
+    // "$$x$$, where ..." is a paragraph (inline() renders the $$...$$ part)
+    const t = line.trim();
+    const oneLine = t.length > 4 && t.startsWith('$$') && t.endsWith('$$') && t.slice(2, -2).indexOf('$$') < 0;
+    const opens = t.startsWith('$$') && t.slice(2).indexOf('$$') < 0;
+    if (oneLine || opens) {
       const buf: string[] = [line.trim().slice(2)];
       if (line.trim().length > 2 && line.trim().endsWith('$$')) {
         out.push(`<div class="math-block">${tex(line.trim().slice(2, -2), true)}</div>`);
@@ -101,7 +106,8 @@ export function md(src: string): string {
       continue;
     }
     const buf: string[] = [];
-    while (i < lines.length && lines[i].trim() && !isList(lines[i]) && !isOl(lines[i]) && !/^#{2,4} /.test(lines[i]) && !lines[i].trim().startsWith('$$')) {
+    const start = i;
+    while (i < lines.length && lines[i].trim() && !isList(lines[i]) && !isOl(lines[i]) && !/^#{2,4} /.test(lines[i]) && !(i > start && lines[i].trim().startsWith('$$'))) {
       buf.push(lines[i].trim());
       i++;
     }

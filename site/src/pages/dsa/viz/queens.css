@@ -1,0 +1,31 @@
+/* DSA 4 — queens visualiser (classes prefixed qn-) */
+.qn-sq { fill: var(--surface); }
+.qn-sq.dark { fill: var(--surface-3); }
+.qn-hit { fill: var(--faint); opacity: .38; }
+.qn-x { stroke: var(--muted); stroke-width: 1.6; opacity: .7; }
+.qn-frame { fill: none; stroke: var(--border); stroke-width: 1.5; }
+.qn-rowband { fill: none; stroke: var(--search); stroke-width: 3; }
+.qn-dead { fill: var(--red-soft); stroke: var(--red); stroke-width: 2.5; stroke-dasharray: 6 4; }
+.qn-queen { fill: var(--text); }
+.qn-queen.cur { fill: var(--yellow); }
+.qn-queen.done { fill: var(--green); }
+.qn-ghost { fill: none; stroke: var(--red); stroke-width: 2.5; stroke-dasharray: 4 3; }
+.qn-label { fill: var(--muted); font-size: 14px; }
+.qn-head { fill: var(--muted); font-size: 14px; font-weight: 650; }
+.qn-count { fill: var(--text); font-size: 20px; font-weight: 750; }
+.qn-call { fill: var(--surface); stroke: var(--border); stroke-width: 1.2; }
+.qn-call.current { fill: var(--yellow-soft); stroke: var(--yellow); stroke-width: 2; }
+.qn-call.ended { fill: var(--red-soft); stroke: var(--red); stroke-width: 2; stroke-dasharray: 5 3; }
+.qn-call.done { fill: var(--green-soft); stroke: var(--green); }
+.qn-call-t { fill: var(--text); font-size: 14.5px; font-weight: 600; }
+.qn-call-t.ended { fill: var(--red); }
+.qn-base { fill: var(--green); font-size: 14.5px; font-weight: 650; }
+.qn-none { fill: var(--red); font-size: 15px; font-weight: 650; }
+.qn-link { stroke: var(--border); stroke-width: 1.2; stroke-dasharray: 2 4; }
+/* narrow stage (phones): a narrower picture with slightly bigger text */
+.qn-compact .qn-label { font-size: 16px; }
+.qn-compact .qn-head { font-size: 16.5px; }
+.qn-compact .qn-count { font-size: 22px; }
+.qn-compact .qn-call-t { font-size: 16.5px; }
+.qn-compact .qn-base { font-size: 16px; }
+.qn-compact .qn-none { font-size: 17px; }

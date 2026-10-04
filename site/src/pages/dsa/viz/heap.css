@@ -1,0 +1,21 @@
+/* DSA 7 heap visualiser: the same colour for a position in the tree and in the array. */
+.heap-shape { fill: var(--surface); stroke: var(--muted); stroke-width: 1.5; }
+.heap-shape.cur { fill: var(--yellow-soft); stroke: var(--yellow); stroke-width: 2.5; }
+.heap-shape.cmp { fill: var(--search-soft); stroke: var(--search); stroke-width: 2.5; }
+.heap-shape.swap { fill: var(--red-soft); stroke: var(--red); stroke-width: 2.5; }
+.heap-shape.done { fill: var(--green-soft); stroke: var(--green); stroke-width: 2; }
+.heap-shape.hole { fill: none; stroke: var(--faint); stroke-dasharray: 4 3; }
+.heap-shape.free { fill: none; stroke: var(--border); stroke-dasharray: 3 3; }
+.heap-edge { stroke: var(--border); stroke-width: 2; }
+.heap-edge.cmp { stroke: var(--search); stroke-width: 3.5; }
+.heap-edge.swap { stroke: var(--red); stroke-width: 3.5; }
+.heap-arc { fill: none; stroke-width: 2.5; }
+.heap-arc.cmp { stroke: var(--search); }
+.heap-arc.swap { stroke: var(--red); }
+.heap-num { fill: var(--text); font-size: 18px; font-weight: 650; }
+.heap-num.ghost { fill: var(--faint); font-weight: 500; }
+.heap-pos { fill: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.heap-label { fill: var(--muted); font-size: 14px; font-weight: 650; }
+.heap-out { fill: var(--green-soft); stroke: var(--green); stroke-width: 1.5; }
+/* Inter and JetBrains Mono turn "1 x 6" into "1 × 6". Here x is typed as a letter, so keep it a letter. */
+.heap-viz, .heap-viz input { font-feature-settings: 'calt' 0; font-variant-ligatures: no-contextual; }

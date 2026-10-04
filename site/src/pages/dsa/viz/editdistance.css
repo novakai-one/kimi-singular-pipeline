@@ -1,0 +1,13 @@
+/* DSA 10, edit distance table. Shared .dv-* classes come from styles/dsa.css. */
+.dp-stage svg.editdistance-svg { max-height: 600px; }
+.editdistance-num { fill: var(--text); font-weight: 650; font-variant-numeric: tabular-nums; }
+.editdistance-head { fill: var(--text); font-weight: 750; }
+.editdistance-head.cmp { fill: var(--search); }
+.editdistance-idx { fill: var(--muted); font-size: 14px; }
+.editdistance-add { fill: var(--search); font-size: 14px; font-weight: 750; }
+.editdistance-label { fill: var(--red); font-size: 14px; font-weight: 750; }
+.editdistance-keep { fill: var(--surface); stroke: var(--red); stroke-width: 2; }
+.editdistance-edit { fill: var(--red-soft); stroke: var(--red); stroke-width: 2.5; }
+.editdistance-path { stroke: var(--red); stroke-width: 3; fill: none; stroke-linecap: round; }
+.editdistance-arrowhead { fill: var(--red); }
+.editdistance-band { fill: var(--yellow-soft); }

@@ -1,0 +1,16 @@
+/* DSA 9 — Make change (greedy vs the table). Shared .dv-* classes come from styles/dsa.css. */
+.greedy-panel { fill: var(--surface); stroke: var(--border); stroke-width: 1; }
+.greedy-h { fill: var(--text); font-size: 15px; font-weight: 700; }
+.greedy-l { fill: var(--muted); font-size: 13px; }
+.greedy-v { fill: var(--text); font-size: 15px; font-weight: 650; }
+.greedy-bad { fill: var(--red); font-weight: 700; }
+.greedy-good { fill: var(--green); font-weight: 700; }
+.greedy-base { stroke: var(--muted); stroke-width: 2; stroke-linecap: round; }
+.greedy-coin { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1.4; }
+.greedy-coin.fresh { fill: var(--red-soft); stroke: var(--red); stroke-width: 2.2; }
+.greedy-coin.done { fill: var(--green-soft); stroke: var(--green); stroke-width: 1.8; }
+.greedy-coin-t { fill: var(--text); font-size: 13px; font-weight: 700; }
+.greedy-chip-dim { opacity: .35; }
+.greedy-cell-n { fill: var(--muted); font-size: 13px; }
+.greedy-cell-v { fill: var(--text); font-size: 16px; font-weight: 700; }
+.greedy-unfilled { opacity: .4; }
