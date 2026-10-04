@@ -295,7 +295,9 @@ plt.tight_layout(); plt.show()
     nb.md("""
         **How to read it:** row = the position doing the looking; column = the earlier position it looks at. Bright = more attention. Everything above the diagonal is black: no position can look ahead.
 
-        Compare the four heads: some put most of their attention on one or two recent characters (a bright stripe next to the diagonal); others spread it over the word or the line. The site's attention view shows the same shares, for any character you click.
+        Compare the four heads. Head 1 puts most of its attention on the current character itself (the bright diagonal).
+        Head 4 looks back to the space before the current word (the bright vertical stripes). Heads 2 and 3 mix nearby characters.
+        The site's attention view shows the same shares, for any character you click.
     """)
 
     nb.md("""
