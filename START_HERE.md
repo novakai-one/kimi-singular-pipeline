@@ -88,6 +88,12 @@ DECISIONS.md   every judgement call made while building, with the reason
 
 ---
 
-## 6. What is unfinished or limited
+## 6. What is limited
 
-See the end of `PROGRESS.md` for the current list.
+- **Colab links point to `main`.** Until the branch is merged, use the GitHub tab in Colab (section 3).
+- **GitHub Pages and private repositories.** Publishing a private repo's site needs a paid GitHub plan. The site always runs locally with `npm run dev`.
+- **Speed.** The notebook times in the README were measured on a 4-core machine. Colab's free CPU is slower; the slowest notebook (retraining the tiny language model) should take about 15 minutes there.
+- **The tiny language model** was trained on Shakespeare's plays only (Project Gutenberg was not reachable while building it). The retrain notebook shows how to train it on other text.
+- **Phones work, but the site is designed for a laptop screen.** Wide animations in the DSA track scroll sideways on a phone.
+
+Everything else in the brief is built. `PROGRESS.md` lists what was checked, and `DECISIONS.md` explains every judgement call.

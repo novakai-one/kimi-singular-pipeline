@@ -696,7 +696,7 @@ def build() -> None:
     """)
     nb.md("""
         **What you see:** the same loss and the same slopes, to about 6 decimal places. Your 100 lines do what PyTorch's `backward()` does.
-        The difference is speed: PyTorch ran 2,000 steps in about a second; your engine took a few minutes for 300.
+        The difference is speed: PyTorch ran 2,000 steps in under a second; your engine took a few minutes for 300.
     """)
 
     # ------------------------------------------------------------------ 10. overfitting
