@@ -1,0 +1,51 @@
+/* Field 3 — "Guess the next letter" (bigram.ts) */
+.bigram { container-type: inline-size; }
+.bigram-hover { min-height: 1.4em; margin-top: 6px; }
+.bigram-hover .bigram-k { font-family: var(--mono); font-weight: 700; color: var(--text); }
+
+.bigram-panel { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 10px 18px; margin-top: 10px; align-items: start; }
+.bigram-label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+.bigram input.bigram-input {
+  width: 100%; box-sizing: border-box; min-height: 44px;
+  font-family: var(--mono); font-size: 18px; letter-spacing: .04em;
+  border-left: 4px solid var(--green);
+}
+.bigram input.bigram-input:focus { outline: 2px solid var(--green); outline-offset: 1px; }
+
+.bigram-bars-title { font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+.bigram-bars { display: grid; gap: 4px; }
+.bigram-bar { display: grid; grid-template-columns: 26px minmax(0, 1fr) 44px; gap: 8px; align-items: center; font-size: 14px; }
+.bigram-bar-ch {
+  font-family: var(--mono); font-weight: 700; text-align: center; line-height: 22px;
+  border: 1px solid var(--yellow); color: var(--yellow); border-radius: 5px; background: var(--yellow-soft);
+}
+.bigram-bar-track { height: 14px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+.bigram-bar-fill { height: 100%; background: var(--yellow); border-radius: 4px; transition: width .15s; }
+.bigram-bar-p { font-variant-numeric: tabular-nums; text-align: right; font-weight: 650; }
+
+.bigram-word { display: flex; flex-wrap: wrap; gap: 4px; min-height: 64px; align-items: flex-start; }
+.bigram-word-empty { font-size: 13.5px; color: var(--faint); padding-top: 6px; }
+.bigram-l { display: flex; flex-direction: column; align-items: center; width: 34px; }
+.bigram-l-ch {
+  width: 30px; height: 32px; display: grid; place-items: center;
+  font-family: var(--mono); font-size: 18px; font-weight: 650;
+  border: 1px solid var(--border); border-radius: 6px; background: var(--surface);
+}
+.bigram-l.ok .bigram-l-ch { border-color: var(--green); }
+.bigram-l.bad .bigram-l-ch { border-color: var(--red); background: var(--red-soft); }
+.bigram-l-m { font-size: 15px; font-weight: 700; line-height: 1.3; }
+.bigram-l.ok .bigram-l-m { color: var(--green); }
+.bigram-l.bad .bigram-l-m { color: var(--red); }
+.bigram-l-p { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.bigram-l.first .bigram-l-m { color: var(--faint); font-weight: 500; font-size: 12px; }
+.bigram-write { margin-top: 10px; }
+
+.bigram-out { margin-top: 10px; border-left: 4px solid var(--yellow); background: var(--surface-2); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; padding: 8px 12px; }
+.bigram-out[hidden] { display: none; }
+.bigram-out-label { font-size: 13px; color: var(--muted); margin-bottom: 2px; }
+.bigram-out-text { font-family: var(--mono); font-size: 15px; line-height: 1.5; white-space: pre-wrap; word-break: break-all; min-height: 3em; }
+.bigram-out-pre { color: var(--faint); }
+
+@container (max-width: 400px) {
+  .bigram-panel { grid-template-columns: 1fr; }
+}

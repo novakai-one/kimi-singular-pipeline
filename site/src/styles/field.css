@@ -55,6 +55,7 @@
   .fc-top { grid-template-columns: 1fr; }
 }
 @media (max-width: 800px) {
+  .fc-split { grid-template-columns: 1fr; }
   .fc-taste, .fc-spark { flex-direction: column; align-items: stretch; }
   .fc-taste-btns { flex-direction: row; flex-wrap: wrap; }
   .fc-pn { grid-template-columns: 1fr; }

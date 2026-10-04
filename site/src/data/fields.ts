@@ -172,7 +172,7 @@ Prediction: the most common colour among the $k$ training points with the smalle
       detail: 'The three bars under the box are the model\'s top 3 guesses for the next letter.',
     },
     explain: {
-      see: `The grid shows how often each letter follows each other letter in the training text (Shakespeare's plays). Each row is one "current letter"; bright cells are common pairs. When you type, the row for your last letter is highlighted, and its biggest cells become the guesses.`,
+      see: `The grid shows how often each letter follows each other letter in the training text (Shakespeare's plays). Each row is one "current letter". A bright cell means that next letter is common after the row's letter. When you type, the row for your last letter is highlighted, and its biggest cells become the guesses.`,
       means: `Divide each count in a row by the row's total, and you get the chance of each next letter. **That table of chances is the whole model.** Writing means: look up the row, pick a letter using those chances, move to that letter's row, repeat.`,
       called: `Counting pairs like this gives a *bigram model*. Each letter here is a *token*. Predicting what comes next is *next-token prediction*. Picking at random in proportion to the chances is *sampling*; a *temperature* setting makes the picks bolder or safer.`,
       formula: `$P(\\text{next} = \\cy{b} \\mid \\text{current} = \\cg{a}) = \\dfrac{\\text{count}(\\cg{a}\\,\\cy{b})}{\\text{count of all pairs starting with } \\cg{a}}$`,
@@ -293,7 +293,7 @@ $\\cy{\\text{shadow}} = \\cg{\\mathbf{h}} \\cdot \\cr{\\mathbf{w}} = h_1 w_1 + h
       detail: 'Click a filter cell to change it: 0 → +1 → −1 → 0.',
     },
     explain: {
-      see: `The 3 × 3 grid is your filter: {r|red} cells are +1, blue cells are −1. Hover over the image: the filter sits on that 3 × 3 patch. Each output pixel is the patch's pixels times the filter's cells, all added up.`,
+      see: `The 3 × 3 grid is your filter: {r|red} cells are +1, {b|blue} cells are −1. Hover over or tap the image: the filter sits on that 3 × 3 patch. Each output pixel is the patch's pixels times the filter's cells, all added up.`,
       means: `Where a patch is one flat shade, the +1s and −1s cancel and the output is 0. Where the left of the patch is dark and the right is light, they don't cancel, so the output lights up. **A filter with −1s on one side and +1s on the other finds edges that run the other way.**`,
       called: `Sliding a filter like this is a *convolution*. The filter is also called a *kernel*, and the output grid is a *feature map*. A *CNN* (convolutional neural network) learns its filter values from data instead of having them set by hand. Shrinking feature maps by keeping the biggest value in each block is *pooling*.`,
       formula: `$\\cy{\\text{out}}[i, j] = \\displaystyle\\sum_{a=-1}^{1}\\sum_{b=-1}^{1} \\cr{w}[a, b]\\; \\cg{x}[i+a,\\, j+b]$`,

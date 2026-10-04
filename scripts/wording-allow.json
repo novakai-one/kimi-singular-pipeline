@@ -1,1 +1,15 @@
-[]
+[
+  {
+    "text": "9! =",
+    "reason": "factorial notation, not an exclamation"
+  },
+  {
+    "text": "grows like n!",
+    "reason": "factorial notation, not an exclamation"
+  },
+  {
+    "text": "n! ",
+    "where": "optimisation",
+    "reason": "factorial notation"
+  }
+]

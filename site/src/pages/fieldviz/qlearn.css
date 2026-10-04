@@ -1,0 +1,5 @@
+/* Field 6 interactive (qlearn.ts) */
+.ql .btn:disabled { opacity: .5; cursor: default; transform: none; }
+@media (max-width: 800px) {
+  .ql .btn { min-height: 44px; min-width: 44px; }
+}

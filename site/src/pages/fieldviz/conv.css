@@ -1,0 +1,39 @@
+/* Field 5 interactive: filter editor and worked sum (conv.ts) */
+.conv-pic { max-width: 540px; }
+.conv-heads, .conv-legends { position: relative; height: 22px; }
+.conv-heads span, .conv-legends > span { position: absolute; top: 0; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; }
+.conv-heads span { font-size: 14px; }
+.conv-legends > span { font-size: 12.5px; color: var(--muted); }
+.conv-sw { width: 12px; height: 12px; border: 1px solid var(--border); border-radius: 2px; display: inline-block; }
+.conv-legends .conv-sw:not(:first-child) { margin-left: 8px; }
+.conv-bar { width: 56px; height: 12px; border: 1px solid var(--border); border-radius: 2px; display: inline-block; }
+@media (max-width: 420px) {
+  .conv-bar { width: 32px; }
+  .conv-legends > span { font-size: 12px; gap: 4px; }
+}
+.conv-row { display: flex; flex-wrap: wrap; gap: 14px 26px; align-items: flex-start; margin-top: 14px; }
+.conv-label { font-size: 13.5px; color: var(--muted); margin-bottom: 6px; }
+.conv-filter { display: grid; grid-template-columns: repeat(3, 52px); gap: 5px; }
+.conv-cell {
+  width: 52px; height: 52px; padding: 0; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--muted);
+  font: 700 17px/1 var(--font); font-variant-numeric: tabular-nums;
+  transition: background .12s, box-shadow .2s, transform .06s;
+}
+.conv-cell:hover { border-color: var(--faint); }
+.conv-cell:active { transform: translateY(1px); }
+.conv-cell[data-v='1'] { background: var(--red); border-color: var(--red); color: var(--surface); }
+.conv-cell[data-v='-1'] { background: var(--search); border-color: var(--search); color: var(--surface); }
+.conv-cell.conv-flash { box-shadow: 0 0 0 3px var(--yellow); }
+.conv-filter-btns { margin-top: 8px; }
+.conv-sum { min-width: 0; }
+.conv-sum-lines { font-family: var(--mono); font-size: 13px; line-height: 1.8; white-space: nowrap; }
+.conv-w-pos { color: var(--red); font-weight: 700; }
+.conv-w-neg { color: var(--search); font-weight: 700; }
+.conv-w-zero { color: var(--faint); }
+.conv-x { color: var(--green); font-weight: 600; }
+.conv-total { font-family: var(--mono); font-size: 14px; margin-top: 2px; }
+.conv-total b { color: var(--yellow); }
+@media (max-width: 800px) {
+  .conv .btn { min-height: 44px; }
+}
