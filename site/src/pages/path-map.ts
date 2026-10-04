@@ -26,14 +26,14 @@ page.append(
     h('h1', null, 'How do the ten fields fit together?'),
     h('p', { class: 'lede' }, 'Every field on one page: which big idea it uses, which fields it builds on, and the maths each one needs.')),
   h('div', { class: 'pm-intro' },
+    inShort(
+      'Which field should you try first, and which ones make the others easier?',
+      'Start with **How models learn**: six other fields build on it, directly or through another field. **Planning and search** and **Classic machine learning** are the other starting points. Then follow the arrows toward the field you want.'),
     problem(`
       You have a year of courses ahead and a thesis to choose.
-      **Which field should you try first, and which ones will make the others easier?**
-      An arrow on the map means "builds on": the field at the arrow's tail makes the one at its head easier.
-    `),
-    inShort(
-      'How do the ten fields fit together?',
-      'They group into three big ideas. A few fields are foundations that others build on, and four areas of maths run through all of them.')),
+      Some fields make others easier to learn.
+      **An arrow from A to B means: learn A first; it makes B easier.**
+    `)),
 );
 
 // ------------------------------------------------------------------ layout of the map
@@ -63,11 +63,12 @@ for (const fc of FIELDS) for (const b of fc.buildsOn) edges.push([b, fc.slug]);
 const regOf = (slug: string) => reg.fields.find((f) => f.slug === slug)!;
 
 // ------------------------------------------------------------------ route challenge
+// The student picks the field they want, then walks back along its arrows to a starting point.
 let route: string[] = [];
 const ch = challenge({
-  goal: 'Plan a route: click three fields in a row, where each one builds on the one before.',
-  detail: 'Follow the arrows. For example, start at a field with no arrows coming in.',
-  showMe: () => showRoute(['classic-ml', 'how-models-learn', 'language-models'], true),
+  goal: 'Plan your route: click the field you most want to work in, then click back along its arrows until you reach a field with no arrows coming in.',
+  detail: 'That last field is where to start. Your route, read backwards, is a learning plan.',
+  showMe: () => showRoute(['interpretability', 'language-models', 'how-models-learn'], true),
 });
 
 // ------------------------------------------------------------------ svg
@@ -96,20 +97,23 @@ for (const L of LANES) {
 const edgeEls: { from: string; to: string; el: SVGPathElement }[] = [];
 const edgeLayer = s('g', null);
 svg.append(edgeLayer);
+const incoming: Record<string, string[]> = {};
+for (const [a, b] of edges) (incoming[b] ??= []).push(a);
 for (const [a, b] of edges) {
   const [ax, ay] = POS[a], [bx, by] = POS[b];
-  // connect right side of a to left side of b (or top/bottom when stacked)
-  let x1 = ax + NODE_W, y1 = ay + NODE_H / 2, x2 = bx, y2 = by + NODE_H / 2;
+  // several arrows into one node enter at different heights
+  const ins = incoming[b].slice().sort((p, q) => POS[p][1] - POS[q][1]);
+  const slot = (ins.indexOf(a) + 1) / (ins.length + 1);
+  let x1 = ax + NODE_W, y1 = ay + NODE_H / 2;
+  const x2 = bx, y2 = by + NODE_H * slot;
   let d: string;
-  if (bx === ax) { // same column: vertical
-    x1 = ax + NODE_W / 2; x2 = bx + NODE_W / 2;
-    y1 = ay < by ? ay + NODE_H : ay; y2 = ay < by ? by : by + NODE_H;
-    d = `M${x1},${y1} L${x2},${y2}`;
-  } else if (bx - ax > COLX[2] - COLX[0] - 10) { // skips a column: curve around
-    const lift = by >= ay ? 1 : -1;
-    const midY = (by === ay ? ay - 30 : Math.max(ay, by) + NODE_H + 22);
-    d = `M${x1},${y1} C${x1 + 60},${y1} ${x1 + 40},${midY} ${(x1 + x2) / 2},${midY} S${x2 - 60},${y2} ${x2},${y2}`;
-    void lift;
+  if (bx === ax) {
+    x1 = ax + NODE_W / 2;
+    d = `M${x1},${ay < by ? ay + NODE_H : ay} L${x1},${ay < by ? by : by + NODE_H}`;
+  } else if (Math.abs(by - ay) > 300) {
+    // a long drop across a lane: run down the gap between columns
+    const gx = x1 + (x2 - x1) * 0.5;
+    d = `M${x1},${y1} L${gx - 10},${y1} Q${gx},${y1} ${gx},${y1 + 10} L${gx},${y2 - 10} Q${gx},${y2} ${gx + 10},${y2} L${x2},${y2}`;
   } else {
     const mx = (x1 + x2) / 2;
     d = `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
@@ -135,10 +139,12 @@ for (const f of reg.fields) {
     s('circle', { cx: x + 24, cy: y + 24, r: 13, class: 'pm-node-num-bg' }),
     s('text', { x: x + 24, y: y + 28.5, class: 'pm-node-num', 'text-anchor': 'middle' }, String(f.num)),
     lines.slice(0, 2).map((ln, k) => s('text', { x: x + 46, y: y + 24 + k * 17, class: 'pm-node-title' }, ln)),
-    MATHS.filter((m) => fc.maths.includes(m.key)).map((m, k) =>
-      s('g', null,
-        s('rect', { x: x + 46 + k * 42, y: y + NODE_H - 24, width: 38, height: 16, rx: 8, class: `pm-tag ${m.key}` }),
-        s('text', { x: x + 46 + k * 42 + 19, y: y + NODE_H - 12.5, class: 'pm-tag-t', 'text-anchor': 'middle' }, m.short))),
+    MATHS.filter((m) => fc.maths.includes(m.key) || (fc.mathsVia ?? []).includes(m.key as 'calc')).map((m, k) => {
+      const via = !fc.maths.includes(m.key);
+      return s('g', null,
+        s('rect', { x: x + 44 + k * 40, y: y + NODE_H - 25, width: 37, height: 18, rx: 9, class: `pm-tag ${m.key}${via ? ' via' : ''}` }),
+        s('text', { x: x + 44 + k * 40 + 18.5, y: y + NODE_H - 12, class: 'pm-tag-t', 'text-anchor': 'middle' }, m.short));
+    }),
     s('text', { x: x + NODE_W - 10, y: y + 20, class: 'pm-step', 'text-anchor': 'end' }, ''));
   g.addEventListener('mouseenter', () => focusField(f.slug));
   g.addEventListener('focus', () => focusField(f.slug));
@@ -179,32 +185,42 @@ function focusField(slug: string) {
 // ------------------------------------------------------------------ route picking
 const routeBox = h('div', { class: 'pm-route' });
 function paintRoute() {
+  const n = route.length;
   for (const [k, g] of Object.entries(nodeEls)) {
     const i = route.indexOf(k);
     g.classList.toggle('picked', i >= 0);
-    (g.querySelector('.pm-step') as SVGTextElement).textContent = i >= 0 ? `#${i + 1}` : '';
+    // label in learning order: the start is #1, the goal is last
+    (g.querySelector('.pm-step') as SVGTextElement).textContent = i >= 0 ? `#${n - i}` : '';
   }
   for (const e of edgeEls) {
-    const a = route.indexOf(e.from), b = route.indexOf(e.to);
+    const a = route.indexOf(e.to), b = route.indexOf(e.from);
     e.el.classList.toggle('route', a >= 0 && b === a + 1);
   }
   clear(routeBox);
+  const plan = [...route].reverse();
   append(routeBox, [
-    h('span', { class: 'c-muted' }, 'Your route: '),
-    route.length ? route.map((r, i) => [i ? ' → ' : '', h('strong', null, regOf(r).title)]) : h('span', null, 'click fields on the map'),
-    route.length ? h('button', { class: 'btn small ghost', type: 'button', onclick: () => { route = []; paintRoute(); ch.feedback(''); }, style: 'margin-left:10px' }, 'Clear') : null]);
+    h('span', { class: 'c-muted' }, n ? 'Your learning plan: ' : 'Your plan: '),
+    n ? plan.map((r, i) => [i ? ' → ' : '', h('strong', null, regOf(r).title)]) : h('span', null, 'click the field you want first'),
+    n ? h('button', { class: 'btn small ghost', type: 'button', onclick: () => { route = []; paintRoute(); ch.feedback(''); }, style: 'margin-left:10px' }, 'Clear') : null]);
 }
 function pick(slug: string) {
   focusField(slug);
   if (route.includes(slug)) { route = route.slice(0, route.indexOf(slug)); paintRoute(); return; }
   const last = route[route.length - 1];
-  if (last && !fieldContent(slug).buildsOn.includes(last)) {
-    ch.feedback(`**${regOf(slug).title}** doesn't build on **${regOf(last).title}**: no arrow joins them. Pick a field the arrow from ${regOf(last).title} points to, or start again.`);
+  if (!last) {
     route = [slug];
+    if (!fieldContent(slug).buildsOn.length) ch.feedback(`**${regOf(slug).title}** is already a starting point: no arrows come in. Pick a field further along to plan a route to it.`);
+    else ch.feedback(`Goal: **${regOf(slug).title}**. Now click a field with an arrow pointing into it.`);
+  } else if (!fieldContent(last).buildsOn.includes(slug)) {
+    ch.feedback(`No arrow goes from **${regOf(slug).title}** into **${regOf(last).title}**. Pick a field at the tail of an arrow pointing into ${regOf(last).title}.`);
+    paintRoute();
+    return;
   } else {
-    route = [...route, slug].slice(-3);
-    if (route.length === 3) ch.win(`Done: ${route.map((r) => regOf(r).title).join(' → ')}. Each field makes the next one easier.`);
-    else ch.feedback(route.length === 1 ? 'Now pick a field that an arrow from it points to.' : 'One more.');
+    route = [...route, slug];
+    if (!fieldContent(slug).buildsOn.length) {
+      const plan = [...route].reverse().map((r) => regOf(r).title).join(', then ');
+      ch.win(`Done. Start with ${plan}.`);
+    } else ch.feedback('Keep going back along an arrow.');
   }
   paintRoute();
 }
@@ -212,12 +228,12 @@ async function showRoute(r: string[], demo: boolean) {
   route = [];
   paintRoute();
   for (const slug of r) {
-    await new Promise((res) => setTimeout(res, 550));
+    await new Promise((res) => setTimeout(res, 600));
     focusField(slug);
     route.push(slug);
     paintRoute();
   }
-  if (demo) ch.feedback('That is one route. Try your own: pick three fields joined by arrows.');
+  if (demo) ch.feedback('That plan ends at Interpretability. Try one for the field you want.');
 }
 
 // ------------------------------------------------------------------ list view (phones)
@@ -235,23 +251,19 @@ const listView = h('div', { class: 'pm-list' },
       }))));
 
 // ------------------------------------------------------------------ assemble
-const counts = MATHS.map((m) => ({ ...m, n: FIELDS.filter((f) => f.maths.includes(m.key)).length }));
+const named = (k: string) => FIELDS.filter((f) => f.maths.includes(k as 'la')).length;
+const viaCount = (k: string) => FIELDS.filter((f) => (f.mathsVia ?? []).includes(k as 'calc')).length;
 page.append(
   h('h2', null, 'Which fields build on which?'),
-  predict({
-    prompt: 'Four areas of maths run through AI: linear algebra, calculus, probability and statistics, discrete maths. **Which one do you think the most fields name in their maths list?**',
-    choices: MATHS.map((m) => m.label),
-    reveal: `**${counts.slice().sort((a, b) => b.n - a.n).map((c) => `${c.label}: ${c.n} of 10`).join('. ')}.**
-
-Linear algebra comes first: data, weights and layers are all vectors and matrices. Calculus appears in only two maths lists, but every field that trains a network uses it, through gradients.`,
-  }),
+  h('div', { class: 'pm-legend' },
+    h('span', { class: 'c-muted' }, 'Tags on each field: the maths it needs.'),
+    MATHS.map((m) => h('span', { class: `chip pm-chip ${m.key}` }, `${m.short} = ${m.label}`)),
+    h('span', { class: 'chip pm-chip calc via' }, 'faded = used through training (Field 1)')),
   h('div', { class: 'pm-wrap' },
     h('div', { class: 'pm-map' }, svg, routeBox),
     h('div', { class: 'pm-side' }, ch.el, panel)),
   listView,
-  h('p', { class: 'c-muted pm-legend' },
-    'Tags on each field: ', MATHS.map((m) => h('span', { class: `chip pm-chip ${m.key}` }, `${m.short} = ${m.label}`)),
-    ' · Taken from each field\'s maths list. Hover a field for the details; click to add it to your route.'),
+  h('p', { class: 'c-muted', style: 'font-size:14px;margin-top:8px' }, 'Hover a field for its details. Click fields to plan a route.'),
 );
 paintRoute();
 focusField('how-models-learn');
@@ -259,7 +271,14 @@ focusField('how-models-learn');
 // ------------------------------------------------------------------ maths & CS table
 page.append(
   h('h2', null, 'What maths and CS does each field need?'),
-  h('p', { class: 'c-muted', style: 'margin-top:-6px' }, 'A dot means the area is named in that field\'s maths list. The CS column lists the data structures and algorithms the field uses most.'),
+  predict({
+    prompt: 'Four areas of maths run through AI: linear algebra, calculus, probability and statistics, and discrete maths. **Which area do most of the ten fields need?**',
+    choices: MATHS.map((m) => m.label),
+    reveal: `**Linear algebra: ${named('la')} of 10.** Then probability and statistics (${named('prob')}), calculus (${named('calc')} name it, and ${viaCount('calc')} more use it through training networks), discrete maths (${named('disc')}).
+
+Data, weights and layers are all vectors and matrices, so linear algebra is everywhere. Your linear algebra course is the most useful prerequisite on this map.`,
+  }),
+  h('p', { class: 'c-muted' }, 'A filled dot means the area is named in that field\'s maths list; a hollow dot means the field uses it through training networks. The CS column lists the data structures and algorithms the field uses most.'),
   h('div', { class: 'pm-table-wrap' },
     h('table', { class: 'simple pm-table' },
       h('thead', null, h('tr', null, h('th', null, 'Field'), h('th', null, 'Main idea'), MATHS.map((m) => h('th', { class: 'pm-dot-col' }, m.label)), h('th', null, 'CS / DSA'))),
@@ -269,15 +288,16 @@ page.append(
           return h('tr', null,
             h('td', null, h('a', { href: url(`fields/${f.slug}.html`) }, `${f.num}. ${f.title}`)),
             h('td', { class: `c-${f.idea}` }, ideas[f.idea as Idea].label),
-            MATHS.map((m) => h('td', { class: 'pm-dot-col' }, fc.maths.includes(m.key) ? h('span', { class: `pm-dot ${m.key}`, 'aria-label': 'yes' }, '●') : '')),
+            MATHS.map((m) => h('td', { class: 'pm-dot-col' }, fc.maths.includes(m.key) ? h('span', { class: `pm-dot ${m.key}`, 'aria-label': 'named' }, '●')
+              : (fc.mathsVia ?? []).includes(m.key as 'calc') ? h('span', { class: `pm-dot ${m.key}`, 'aria-label': 'through training' }, '○') : '')),
             h('td', { style: 'font-size:14px' }, fc.learn.cs.join('; ')));
         })))),
   mdEl(`
     **Every field also uses the same CS core:** data structures (arrays, hash maps, heaps, graphs, trees), algorithm design (search, dynamic programming, greedy) and complexity (how cost grows as the problem gets bigger). The [DSA track](@/dsa/index.html) covers all three.
   `, 'prose'),
   cue([
-    ['a field you like, but its card looks hard', 'look at what it builds on on this map, and try that first'],
+    ['a field you like, but its card looks hard', 'follow its arrows back and try the earlier field first'],
     ['"vectors", "matrices" or "directions" in a field description', 'your linear algebra course is the prerequisite'],
-    ['"probability", "noise" or "expected value"', 'statistics is the prerequisite'],
-  ]),
+    ['"probability", "noise" or "expected value" in a field description', 'statistics is the prerequisite'],
+  ], { inProblem: false }),
 );

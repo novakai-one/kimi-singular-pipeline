@@ -6,7 +6,7 @@ import { h } from '../../lib/dom';
 import { url } from '../../lib/config';
 import { button, colours, makeCanvas, onTheme, sleep, type Colours, type Viz } from './kit';
 import {
-  checkWord, clean, currentChar, DEMO_WORD, lastWord, makeModel, MAX_CHARS, MIN_LETTERS, sample, TOP, topK,
+  checkWord, clean, currentChar, DEMO_WORD, lastWord, makeModel, MAX_CHARS, MIN_LETTERS, sample, SURPRISE, TOP, topK,
   type BigramData, type Model,
 } from './bigram-core';
 import './bigram.css';
@@ -46,15 +46,15 @@ const viz: Viz = (el, api) => {
 
   let ready: Promise<Model | null>;
   let handle: { showMe(): Promise<void> } | null = null;
-  ready = fetch(url('models/fields/bigram.json'))
-    .then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json() as Promise<BigramData>; })
-    .then((data) => { const m = makeModel(data); handle = build(m); return m; })
+  const getJson = <T,>(p: string) => fetch(url(p)).then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json() as Promise<T>; });
+  ready = Promise.all([getJson<BigramData>('models/fields/bigram.json'), getJson<string[]>('models/fields/words.json')])
+    .then(([data, words]) => { const m = makeModel(data); handle = build(m, new Set(words)); return m; })
     .catch(() => {
       root.replaceChildren(h('div', { class: 'note-building' }, 'The letter counts did not load. Reload the page to try again.'));
       return null;
     });
 
-  function build(model: Model) {
+  function build(model: Model, real: Set<string>) {
     const cv = makeCanvas(W, H, 'A 27 by 27 grid. Each row is a current letter, each column a next letter. Brighter cells are more common pairs.');
     cv.c.style.touchAction = 'manipulation'; // no dragging here, so let phones scroll over the grid
     let hover: [number, number] | null = null;
@@ -149,16 +149,16 @@ const viz: Viz = (el, api) => {
     function renderWord(text: string) {
       const { word } = lastWord(text);
       if (!word) {
-        wordBox.replaceChildren(h('div', { class: 'bigram-word-empty' }, 'Type a word to see a mark under each letter.'));
+        wordBox.replaceChildren(h('div', { class: 'bigram-word-empty' }, 'Type a word to see the chance of each letter.'));
         return;
       }
-      const chk = checkWord(model, word);
+      const chk = checkWord(model, word, real);
       wordBox.replaceChildren(...chk.letters.map((l, k) => h('div', {
-        class: `bigram-l ${k === 0 ? 'first' : l.ok ? 'ok' : 'bad'}`,
+        class: `bigram-l ${k === 0 ? 'first' : l.surprising ? 'bad' : 'ok'}`,
         title: k === 0 ? 'first letter' : `${PCT(l.p!)} after "${word[k - 1]}"`,
       },
       h('span', { class: 'bigram-l-ch' }, l.ch),
-      h('span', { class: 'bigram-l-m' }, k === 0 ? 'first' : l.ok ? '✓' : '✗'),
+      h('span', { class: 'bigram-l-m' }, k === 0 ? 'first' : l.surprising ? 'rare' : '✓'),
       k === 0 ? null : h('span', { class: 'bigram-l-p' }, PCT(l.p!)))));
     }
 
@@ -170,31 +170,25 @@ const viz: Viz = (el, api) => {
       renderWord(text);
       if (mode === 'quiet') return;
       const { word, start } = lastWord(text);
-      const chk = checkWord(model, word);
+      const chk = checkWord(model, word, real);
       const pre = mode === 'demo' ? 'Show me: ' : '';
       const n = word.length;
-      if (!n) {
-        api.feedback(`${pre}Type a word. Pick each next letter from the three bars.`);
-      } else if (!chk.okSoFar) {
-        const k = chk.firstBad;
-        api.feedback(`${pre}**${word}**: "${word[k]}" is not in the top 3 after "${word[k - 1]}". Delete it, or type a space and start a new word.`);
+      const rareText = () => {
+        const k = chk.rarest;
+        return `the model gives "${word[k]}" after "${word[k - 1]}" only ${PCT(chk.minP)}`;
+      };
+      if (n < MIN_LETTERS) {
+        api.feedback(`${pre}Type a real word from the plays. Under the box, each letter shows its chance.`);
       } else if (chk.wins) {
-        const pcts = chk.letters.slice(1).map((l) => PCT(l.p!));
-        const list = pcts.slice(0, -1).join(', ') + ' and ' + pcts[pcts.length - 1];
-        const after = chk.letters.slice(1).map((l) => `"${l.ch}"`).join(', ');
-        const chances = `The model's chances for ${after}: ${list}.`;
+        const msg = `**${word}** is a real word, but ${rareText()}. Counting one letter back can't tell a rare pair in a real word from a mistake.`;
         const demoOwned = demoPrefix !== null && text.startsWith(demoPrefix) && start < demoPrefix.length;
-        if (mode === 'demo') {
-          api.feedback(`Show me typed **${word}**: ${n} letters, all in the top 3. ${chances} Now type a space and try your own word.`);
-        } else if (demoOwned) {
-          api.feedback(`Show me typed **${word}**. Now type your own word.`);
-        } else {
-          api.win(`**${word}**: ${n} letters, all in the top 3. ${chances}`);
-        }
-      } else if (n === 1) {
-        api.feedback(`${pre}**${word}**: 1 letter. Pick the next one from the three bars.`);
+        if (mode === 'demo') api.feedback(`Show me typed ${msg} Now type a space and find your own.`);
+        else if (demoOwned) api.feedback(`Show me typed **${word}**. Now type your own word.`);
+        else api.win(msg);
+      } else if (!chk.isReal) {
+        api.feedback(`${pre}**${word}** isn't a word in the plays (or it is very rare there). Try a common word.`);
       } else {
-        api.feedback(`${pre}**${word}**: ${n} letters so far, all in the top 3.${n < MIN_LETTERS ? ` ${MIN_LETTERS - n} more to go.` : ''}`);
+        api.feedback(`${pre}**${word}**: every letter has at least a ${Math.round(SURPRISE * 100)}% chance. The model expects this word. Try another.`);
       }
     }
 
@@ -272,7 +266,7 @@ const viz: Viz = (el, api) => {
           barsTitle,
           bars),
         h('div', null,
-          h('span', { class: 'bigram-label' }, 'Last word: is each letter in the top 3?'),
+          h('span', { class: 'bigram-label' }, 'Last word: the chance of each letter'),
           wordBox,
           h('div', { class: 'btn-row bigram-write' },
             button('Write 80 letters', () => { void write(); }, 'btn small primary'),

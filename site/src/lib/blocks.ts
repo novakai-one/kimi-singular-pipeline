@@ -79,7 +79,7 @@ export interface ChallengeOpts {
 /** A goal with a win condition. Optional to complete. Never blocks anything. */
 export function challenge(o: ChallengeOpts): ChallengeHandle {
   let won = false;
-  const pill = h('span', { class: 'status-pill' }, 'Not yet');
+  const pill = h('span', { class: 'status-pill' }, 'Optional');
   const fb = h('div', { class: 'feedback', 'aria-live': 'polite' });
   const body = h('div', null,
     h('div', { class: 'goal', html: inline(o.goal) }),
@@ -119,10 +119,11 @@ export function solution(content: string, summary = 'Show worked solution'): HTM
 }
 
 /** "When you see ___ in a problem, think ___." */
-export function cue(pairs: [string, string][]): HTMLElement {
+export function cue(pairs: [string, string][], opts: { inProblem?: boolean } = {}): HTMLElement {
+  const where = opts.inProblem === false ? '' : ' in a problem';
   return h('div', { class: 'cue' },
     h('span', { class: 'block-label' }, 'Recognition cues'),
-    pairs.map(([see, think]) => h('p', { html: `When you see <span class="cue-see">${inline(see)}</span> in a problem, think <strong>${inline(think)}</strong>.` })));
+    pairs.map(([see, think]) => h('p', { html: `When you see <span class="cue-see">${inline(see)}</span>${where}, think <strong>${inline(think)}</strong>.` })));
 }
 
 /** One real use in AI or competitive programming. */

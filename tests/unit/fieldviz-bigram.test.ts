@@ -19,30 +19,28 @@ test('bigram: data has the shape the viz expects', () => {
   for (const t of m.totals) assert.ok(t > 0, 'every row has counts, so every row has guesses');
 });
 
-test('bigram: "there" (and the other example words) win the challenge', () => {
-  for (const w of ['there', 'where', 'father', 'within', 'store', 'rouse']) {
-    const c = checkWord(m, w);
-    assert.ok(c.wins, `${w} should win`);
-    console.log(`  ${w}: ${c.letters.slice(1).map((l) => `${l.ch} ${(l.p! * 100).toFixed(1)}% (#${l.rank! + 1})`).join(', ')}`);
+const words = new Set<string>(JSON.parse(readFileSync(new URL('../../site/public/models/fields/words.json', import.meta.url), 'utf8')));
+
+test('bigram: real words with a rare letter pair win; expected words and non-words do not', () => {
+  for (const w of ['people', 'two', 'like', 'noble']) {
+    const c = checkWord(m, w, words);
+    assert.ok(c.wins, `${w} should win (rarest chance ${c.minP})`);
   }
-  // a word with a letter outside the top 3 does not win
-  const thing = checkWord(m, 'thing');
-  assert.equal(thing.wins, false);
-  assert.equal(thing.firstBad, 4, '"g" is not in the top 3 after "n"');
-  // four good letters is not enough
-  assert.equal(checkWord(m, 'ther').wins, false);
-  assert.equal(checkWord(m, 'ther').okSoFar, true);
+  const there = checkWord(m, 'there', words);
+  assert.equal(there.isReal, true);
+  assert.equal(there.wins, false, '"there" has no pair under 1%');
+  const fake = checkWord(m, 'qzx', words);
+  assert.equal(fake.isReal, false);
+  assert.equal(fake.wins, false, 'a non-word never wins, however rare its pairs');
 });
 
-test('bigram: Show me types a word that reaches the goal only on its last letter', () => {
+test('bigram: Show me types a word that wins only once complete', () => {
   assert.ok(DEMO_WORD.length >= MIN_LETTERS);
   let text = '';
   for (const ch of DEMO_WORD) {
     text += ch;
-    const { word } = lastWord(text);
-    const c = checkWord(m, word);
-    assert.ok(c.okSoFar, `each letter Show me types is in the top 3 (${word})`);
-    assert.equal(c.wins, text.length === DEMO_WORD.length);
+    const c = checkWord(m, text, words);
+    assert.equal(c.wins, text === DEMO_WORD, `"${text}"`);
   }
 });
 

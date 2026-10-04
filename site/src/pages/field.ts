@@ -26,8 +26,7 @@ page.classList.add('fc');
 page.append(
   h('header', { class: 'page-head fc-head' },
     h('div', { class: 'eyebrow' }, `Field ${f.num} of 10 · ${f.sub}`),
-    h('h1', null, f.title),
-    h('p', { class: 'lede', html: inline(f.question) })),
+    h('h1', null, f.title)),
   h('div', { class: 'fc-top' },
     inShort(c.inShort[0], c.inShort[1]),
     h('aside', { class: `fc-idea ${f.idea}` },
@@ -43,25 +42,28 @@ const vizBox = h('div', { class: 'fc-viz' });
 let handle: VizHandle | null = null;
 const ch = challenge({ goal: c.viz.goal, detail: c.viz.detail, showMe: () => handle?.showMe() });
 
-const steps: [string, string][] = [
-  ['What you see', c.explain.see],
-  ['What it means', c.explain.means],
-  ['What it\'s called', c.explain.called],
-];
-if (c.explain.formula) steps.push(['The formula', c.explain.formula]);
+const stepBox = (n: number, label: string, text: string) =>
+  h('section', { class: 'fc-step' },
+    h('div', { class: 'fc-step-label' }, h('span', { class: 'fc-step-n' }, String(n)), label),
+    mdEl(text, 'fc-step-body'));
 
 page.append(
   h('h2', null, c.viz.title),
   h('div', { class: 'split fc-split' },
-    h('div', { class: 'sticky-pic' }, h('div', { class: 'viz fc-viz-card' }, vizBox)),
+    // left: the picture, what you see in it, and the formula next to it
+    h('div', { class: 'fc-left' },
+      h('div', { class: 'viz fc-viz-card' }, vizBox),
+      h('div', { class: 'fc-steps' },
+        stepBox(1, 'What you see', c.explain.see),
+        // long maths gets its own line (display style), so it never breaks mid-expression
+        c.explain.formula ? stepBox(4, 'The formula', c.explain.formula.replace(/(^|[^$])\$([^$]{28,}?)\$(?!\$)/g, (_, pre, m) => `${pre}$$${m}$$`)) : null)),
+    // right: guess first, the goal, then what it means and what it's called
     h('div', null,
       predict(c.predict),
       ch.el,
       h('div', { class: 'fc-steps' },
-        steps.map(([label, text], k) =>
-          h('section', { class: 'fc-step' },
-            h('div', { class: 'fc-step-label' }, h('span', { class: 'fc-step-n' }, String(k + 1)), label),
-            mdEl(text, 'fc-step-body')))))),
+        stepBox(2, 'What it means', c.explain.means),
+        stepBox(3, 'What it\'s called', c.explain.called)))),
   why(c.why),
 );
 
@@ -87,7 +89,7 @@ page.append(
     groups.map(([g, items]) =>
       h('div', { class: 'card' },
         h('div', { class: 'fc-learn-h' }, g),
-        h('ul', null, items.map((t) => h('li', { html: inline(t) })))))),
+        h('div', { class: 'chips' }, items.map((t) => h('span', { class: 'chip', html: inline(t) })))))),
   ...(c.learn.note ? [h('p', { class: 'fc-note', html: inline(`**${c.learn.note}**`) })] : []),
 );
 

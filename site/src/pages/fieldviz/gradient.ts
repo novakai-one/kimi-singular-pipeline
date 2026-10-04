@@ -20,15 +20,22 @@ const viz: Viz = (el, api) => {
   let w = START, shown = START, steps = 0, eta = 0.05;
   let trail: number[] = [START];
   let animating = false;
+  let showValley = false;
 
   // plot areas
   const L = { x: 40, y: 20, w: 230, h: 240 };      // data plot
   const R = { x: 340, y: 20, w: 240, h: 240 };     // error plot
   const wMin = -1.6, wMax = 4.6, eMax = err(wMin);
+  const yLo = -4, yHi = 8;                                    // room below 0, so a negative w still shows its line
   const dx = (x: number) => L.x + (x / 3.5) * L.w;
-  const dy = (y: number) => L.y + L.h - (y / 8) * L.h;
+  const dy = (y: number) => L.y + L.h - ((y - yLo) / (yHi - yLo)) * L.h;
   const ex = (ww: number) => R.x + ((ww - wMin) / (wMax - wMin)) * R.w;
-  const ey = (e: number) => R.y + R.h - (Math.min(e, eMax) / eMax) * R.h;
+  // square-root scale, so small errors near the bottom are still visible
+  const ey = (e: number) => R.y + R.h - Math.sqrt(Math.min(Math.max(e, 0), eMax) / eMax) * R.h;
+  // the stretch of w where the error is below the target
+  const wStar = XS.reduce((a, x, i) => a + x * YS[i], 0) / XS.reduce((a, x) => a + x * x, 0);
+  const curv = XS.reduce((a, x) => a + x * x, 0) / N;
+  const half = Math.sqrt(Math.max(0, TARGET - err(wStar)) / curv);
 
   function draw() {
     const c = colours();
@@ -49,6 +56,13 @@ const viz: Viz = (el, api) => {
     g.save(); g.translate(R.x - 26, R.y + R.h / 2); g.rotate(-Math.PI / 2); g.fillText('error', 0, 0); g.restore();
     for (const t of [-1, 0, 1, 2, 3, 4]) { g.fillText(String(t), ex(t), R.y + R.h + 14); }
     for (const t of [0, 1, 2, 3]) { g.fillText(String(t), dx(t), L.y + L.h + 14); }
+    g.textAlign = 'right';
+    for (const t of [-4, 0, 4, 8]) g.fillText(String(t), L.x - 6, dy(t) + 4);
+    for (const t of [0, 1, 5, 15, 30]) g.fillText(String(t), R.x - 6, ey(t) + 4);
+    g.textAlign = 'center';
+    g.strokeStyle = c.border; g.setLineDash([2, 3]);
+    g.beginPath(); g.moveTo(L.x, dy(0)); g.lineTo(L.x + L.w, dy(0)); g.stroke();
+    g.setLineDash([]);
 
     // left: gaps, line, points
     g.save();
@@ -64,20 +78,30 @@ const viz: Viz = (el, api) => {
     g.fillStyle = c.red; g.textAlign = 'left';
     g.fillText(`y = ${shown.toFixed(2)} x`, L.x + 8, L.y + 14);
 
-    // right: error curve
-    g.strokeStyle = c.muted; g.lineWidth = 2;
-    g.beginPath();
-    for (let k = 0; k <= 200; k++) {
-      const ww = wMin + ((wMax - wMin) * k) / 200;
-      const X = ex(ww), Y = ey(err(ww));
-      if (k === 0) g.moveTo(X, Y); else g.lineTo(X, Y);
-    }
-    g.stroke();
-    // target band
-    g.fillStyle = c.green; g.globalAlpha = 0.12;
-    g.fillRect(R.x, ey(TARGET), R.w, ey(0) - ey(TARGET));
+    // right: the error. Hidden valley by default: only what gradient descent can know.
+    g.fillStyle = c.green; g.globalAlpha = 0.14;
+    g.fillRect(R.x, ey(TARGET), R.w, ey(0) - ey(TARGET));          // the goal: error below 0.05
     g.globalAlpha = 1;
-    // trail of past steps
+    if (showValley) {
+      g.strokeStyle = c.muted; g.lineWidth = 2;
+      g.beginPath();
+      for (let k = 0; k <= 200; k++) {
+        const ww = wMin + ((wMax - wMin) * k) / 200;
+        const X = ex(ww), Y = ey(err(ww));
+        if (k === 0) g.moveTo(X, Y); else g.lineTo(X, Y);
+      }
+      g.stroke();
+      g.fillStyle = c.green; g.globalAlpha = 0.18;
+      g.fillRect(ex(wStar - half), R.y, ex(wStar + half) - ex(wStar - half), R.h);
+      g.globalAlpha = 1;
+    } else {
+      g.fillStyle = c.faint; g.textAlign = 'center';
+      g.fillText('The valley is hidden: you only know', R.x + R.w / 2 + 20, R.y + R.h * 0.5);
+      g.fillText('the error and the slope where you are.', R.x + R.w / 2 + 20, R.y + R.h * 0.5 + 15);
+    }
+    // trail of past steps (the points you have measured)
+    g.fillStyle = c.yellow; g.globalAlpha = 0.5;
+    trail.forEach((tw) => { const cw = Math.max(wMin, Math.min(wMax, tw)); g.beginPath(); g.arc(ex(cw), ey(err(cw)), 3.5, 0, Math.PI * 2); g.fill(); });
     g.strokeStyle = c.yellow; g.lineWidth = 1.5; g.globalAlpha = 0.6;
     g.beginPath();
     trail.forEach((tw, k) => {
@@ -88,10 +112,16 @@ const viz: Viz = (el, api) => {
     // tangent at the ball
     const sw = Math.max(wMin, Math.min(wMax, shown));
     const sl = slope(sw);
-    const span = 0.6;
-    g.strokeStyle = c.text; g.setLineDash([4, 3]); g.lineWidth = 1.2;
-    g.beginPath(); g.moveTo(ex(sw - span), ey(err(sw) - sl * span)); g.lineTo(ex(sw + span), ey(err(sw) + sl * span)); g.stroke();
-    g.setLineDash([]);
+    // the slope at the ball, drawn as an arrow pointing downhill (in the direction the next step will move)
+    const dirDown = sl > 0 ? -1 : 1;
+    const bx = ex(sw), by = ey(err(sw));
+    const len = 42;
+    g.strokeStyle = c.red; g.fillStyle = c.red; g.lineWidth = 3;
+    g.beginPath(); g.moveTo(bx, by); g.lineTo(bx + dirDown * len, by); g.stroke();
+    g.beginPath(); g.moveTo(bx + dirDown * (len + 8), by); g.lineTo(bx + dirDown * len, by - 5); g.lineTo(bx + dirDown * len, by + 5); g.fill();
+    g.font = '12px Inter Variable, system-ui, sans-serif'; g.textAlign = dirDown > 0 ? 'left' : 'right';
+    g.fillText(`slope ${sl.toFixed(1)}`, bx + dirDown * 6, by - 10);
+    g.textAlign = 'center';
     // ball
     g.fillStyle = c.yellow;
     g.beginPath(); g.arc(ex(sw), ey(err(sw)), 8, 0, Math.PI * 2); g.fill();
@@ -102,12 +132,12 @@ const viz: Viz = (el, api) => {
     }
   }
 
-  const stepsR = readout('Steps');
+  const stepsR = readout('Steps taken');
   const wR = readout('w');
   const eR = readout('Error');
   const sR = readout('Slope');
   function readouts() {
-    stepsR.set(`${steps} / ${MAX_STEPS}`);
+    stepsR.set(`${steps} (goal: ${MAX_STEPS} or fewer)`);
     wR.set(w.toFixed(3));
     const e = err(w);
     eR.set(e > 999 ? 'huge' : e.toFixed(3));
@@ -157,9 +187,10 @@ const viz: Viz = (el, api) => {
     cv.c,
     h('div', { class: 'viz-controls' },
       seg.el,
-      h('div', { class: 'btn-row' }, button('Take a step', () => step(), 'btn small primary'), button('Reset', reset))),
+      h('div', { class: 'btn-row' }, button('Take a step', () => step(), 'btn small primary'), button('Reset', reset),
+        (() => { const b = button('Show the whole valley', () => { showValley = !showValley; b.textContent = showValley ? 'Hide the valley' : 'Show the whole valley'; draw(); }, 'btn small ghost'); return b; })())),
     h('div', { class: 'viz-readouts' }, stepsR.el, wR.el, eR.el, sR.el),
-    h('div', { class: 'viz-caption' }, 'Green band on the right: error below 0.05. Dashed line: the slope at the ball.'),
+    h('div', { class: 'viz-caption' }, 'Green band: error below 0.05 (the goal). Red arrow: the downhill direction at the ball, and its slope. Error is on a square-root scale so small values show.'),
   );
   readouts();
   draw();

@@ -3,14 +3,16 @@
 // Index 0 of the alphabet is the space.
 
 export const ALPHABET = ' abcdefghijklmnopqrstuvwxyz';
-/** How many guesses count as "in the top": the challenge uses the top 3. */
+/** How many guesses the bars show. */
 export const TOP = 3;
+/** A letter is "surprising" when the model gives it less than this chance. */
+export const SURPRISE = 0.01;
 /** The challenge needs a word with at least this many letters. */
-export const MIN_LETTERS = 5;
+export const MIN_LETTERS = 3;
 /** Longest text the box accepts. */
 export const MAX_CHARS = 24;
 /** The word Show me types. */
-export const DEMO_WORD = 'there';
+export const DEMO_WORD = 'people';
 
 export interface BigramData { alphabet: string; counts: number[][]; source?: string }
 
@@ -70,19 +72,30 @@ export function lastWord(text: string): { word: string; start: number } {
   return { word, start };
 }
 
-export interface LetterMark { ch: string; ok: boolean | null; p: number | null; rank: number | null }
-export interface WordCheck { word: string; letters: LetterMark[]; okSoFar: boolean; firstBad: number; wins: boolean }
+export interface LetterMark { ch: string; p: number | null; rank: number | null; surprising: boolean }
+export interface WordCheck {
+  word: string;
+  letters: LetterMark[];
+  /** Index of the letter with the smallest chance (-1 for a one-letter word). */
+  rarest: number;
+  minP: number;
+  /** In the list of words from the training text. */
+  isReal: boolean;
+  /** A real word with at least one letter under the SURPRISE chance. */
+  wins: boolean;
+}
 
-/** Mark each letter after the first: is it in the top 3 guesses after the letter before it? */
-export function checkWord(m: Model, word: string): WordCheck {
+/** Give each letter after the first its chance after the letter before; find the rarest one. */
+export function checkWord(m: Model, word: string, real?: Set<string>): WordCheck {
   const letters: LetterMark[] = [...word].map((ch, k) => {
-    if (k === 0) return { ch, ok: null, p: null, rank: null };
-    const r = rank(m, word[k - 1], ch);
-    return { ch, ok: r < TOP, p: prob(m, word[k - 1], ch), rank: r };
+    if (k === 0) return { ch, p: null, rank: null, surprising: false };
+    const p = prob(m, word[k - 1], ch);
+    return { ch, p, rank: rank(m, word[k - 1], ch), surprising: p < SURPRISE };
   });
-  const firstBad = letters.findIndex((l) => l.ok === false);
-  const okSoFar = firstBad < 0;
-  return { word, letters, okSoFar, firstBad, wins: okSoFar && word.length >= MIN_LETTERS };
+  let rarest = -1, minP = Infinity;
+  letters.forEach((l, k) => { if (l.p !== null && l.p < minP) { minP = l.p; rarest = k; } });
+  const isReal = real ? real.has(word) : false;
+  return { word, letters, rarest, minP, isReal, wins: isReal && word.length >= MIN_LETTERS && minP < SURPRISE };
 }
 
 /** Pick one next character at random, in proportion to the row's chances. */

@@ -39,9 +39,11 @@
 .pm-node-title { fill: var(--text); font-size: 14.5px; font-weight: 650; }
 .pm-step { fill: var(--yellow); font-size: 13px; font-weight: 800; }
 .pm-tag { fill: var(--surface-2); stroke: var(--border); }
-.pm-tag-t { fill: var(--muted); font-size: 10.5px; font-weight: 650; }
+.pm-tag-t { fill: var(--muted); font-size: 11.5px; font-weight: 700; }
+.pm-tag.via { stroke-dasharray: 3 2; opacity: .55; }
+.pm-chip.via { opacity: .6; border-style: dashed; }
 
-.pm-legend { font-size: 14px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 12px; }
+.pm-legend { font-size: 14px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: -4px 0 12px; }
 .pm-chip.la, .pm-dot.la { color: var(--green); }
 .pm-chip.calc, .pm-dot.calc { color: var(--red); }
 .pm-chip.prob, .pm-dot.prob { color: var(--yellow); }
@@ -69,7 +71,6 @@
   .pm-side { grid-template-columns: 1fr; }
   .pm-panel { display: none; }
   .pm-list { display: block; }
-  .pm-legend { display: none; }
 }
 @media (max-width: 800px) {
   .pm-side .challenge { display: none; }

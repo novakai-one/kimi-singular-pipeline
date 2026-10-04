@@ -328,9 +328,12 @@ print(f"median distance to the nearest training point: generated {np.median(near
         The Hugging Face **diffusers** library provides noise schedules and sampling steps (its "schedulers") for image models. Plug your trained denoiser into its DDIM scheduler.
     """)
     nb.code('''
+import warnings
+warnings.filterwarnings("ignore", message=".*IProgress.*")     # a harmless notice from a progress-bar library
 from diffusers import DDIMScheduler
 
-sched = DDIMScheduler(num_train_timesteps=T, beta_schedule="squaredcos_cap_v2", clip_sample=False)
+# clip_sample keeps each "clean point" guess inside the same box as your sampler's clamp(-1.5, 1.5)
+sched = DDIMScheduler(num_train_timesteps=T, beta_schedule="squaredcos_cap_v2", clip_sample=True, clip_sample_range=1.5)
 sched.set_timesteps(T)
 x = torch.randn(1500, 2, generator=torch.Generator().manual_seed(1))
 with torch.no_grad():

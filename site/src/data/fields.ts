@@ -21,6 +21,8 @@ export interface FieldContent {
   buildsOn: string[];
   /** For the Path Map: maths areas named in this field's maths list. */
   maths: ('la' | 'calc' | 'prob' | 'disc')[];
+  /** Maths the field also uses through training neural networks (Field 1), though its own list doesn't name it. */
+  mathsVia?: ('calc')[];
 }
 
 export const FIELDS: FieldContent[] = [
@@ -29,11 +31,11 @@ export const FIELDS: FieldContent[] = [
     slug: 'how-models-learn',
     inShort: [
       'How does a network get better from examples?',
-      'It measures how wrong its predictions are, works out which way each weight should move to be less wrong, and moves every weight a small step that way. Then it repeats, thousands of times.',
+      'It measures how wrong its predictions are. It works out which way each adjustable number should move to be less wrong. Then it moves every number a small step that way, and repeats thousands of times.',
     ],
     problem: `
-      A model has one adjustable number, $\\cr{w}$. It predicts $y = \\cr{w}\\,x$.
-      You have six data points. **Which value of $w$ puts the line closest to the points?**
+      A model has one adjustable number, called a **weight**: $\\cr{w}$. It predicts $y = \\cr{w}\\,x$.
+      You have six data points. Which value of $w$ puts the line closest to the points?
       You could try every value, but a real network has millions of weights.
       You need a way to know which direction to move each one.
     `,
@@ -48,14 +50,16 @@ export const FIELDS: FieldContent[] = [
       detail: 'Pick a step size, then press **Take a step**. Reset any time.',
     },
     explain: {
-      see: `The left plot shows the data ({g|green}) and the model's line ({r|red}). The right plot shows the error for every possible $w$: a valley. The {y|yellow} ball is your current $w$. Each step moves the ball. Small steps crawl. Big steps jump past the bottom.`,
+      see: `The left plot shows the data ({g|green}) and the model's line ({r|red}), with the gaps between them. On the right, the {y|yellow} ball shows your current $w$ and its error. The red arrow points downhill and shows the slope. The valley itself is hidden: gradient descent never sees it either. Press "Show the whole valley" to check. Small steps crawl; big steps jump past the bottom.`,
       means: `The slope of the valley under the ball tells you two things: which way is downhill, and how steep it is. **Move against the slope, further where it is steep.** At the bottom the slope is zero, so the steps stop.`,
-      called: `The valley is the *loss* (the error, as a function of the weights). Its slope is the *derivative* $dE/dw$. With many weights, the list of all their slopes is the *gradient*. Stepping against it is *gradient descent*, and the step size is the *learning rate*. Working out the gradient through every layer of a network uses the chain rule from calculus; that is *backpropagation*.`,
+      called: `The error, as a function of the weights, is also called the *loss*. Its slope is the *derivative* $dE/dw$. With many weights, the list of all their slopes is the *gradient*. Stepping against it is *gradient descent*, and the step size is the *learning rate*.`,
       formula: `Error (mean squared difference): $E(\\cr{w}) = \\frac{1}{n}\\sum_i (\\cr{w}\\,x_i - \\cg{y_i})^2$
 
 Its slope: $\\dfrac{dE}{dw} = \\frac{1}{n}\\sum_i 2x_i(\\cr{w}\\,x_i - \\cg{y_i})$
 
-One step, with learning rate $\\eta$: $\\cr{w} \\leftarrow \\cr{w} - \\eta\\,\\dfrac{dE}{dw}$`,
+One step, with learning rate $\\eta$: $\\cr{w} \\leftarrow \\cr{w} - \\eta\\,\\dfrac{dE}{dw}$
+
+How to read it: $\\Sigma$ means "add up over every data point"; $\\eta$ (the Greek letter eta) is the learning rate; $\\leftarrow$ means "replace with".`,
     },
     why: `Every network on this site was trained with this loop, from the digit reader to the tiny language model. Large language models are trained the same way, with billions of weights instead of one, and smarter step sizes.`,
     learn: {
@@ -86,7 +90,7 @@ One step, with learning rate $\\eta$: $\\cr{w} \\leftarrow \\cr{w} - \\eta\\,\\d
       ['the error bounces or grows during training', 'the learning rate is too big'],
       ['a chain of functions, and you need the derivative of the whole chain', 'the chain rule (backpropagation)'],
     ],
-    buildsOn: ['classic-ml'],
+    buildsOn: [],
     maths: ['la', 'calc', 'prob'],
   },
 
@@ -154,7 +158,7 @@ Prediction: the most common colour among the $k$ training points with the smalle
     slug: 'language-models',
     inShort: [
       'How does a model predict the next word?',
-      'It learns, from lots of text, how likely each possible next piece of text is, given what came before. Writing is repeating that: pick a likely next piece, add it, predict again.',
+      'It learns from lots of text what usually comes next. The demo below counts which letter follows which; big models predict pieces of words, using weights adjusted as in Field 1. To write, a model picks a likely next piece, adds it, and repeats.',
     ],
     problem: `
       Type "th" on a phone and it suggests "the".
@@ -162,20 +166,22 @@ Prediction: the most common colour among the $k$ training points with the smalle
       The simplest version counts, in a big pile of text, which letter tends to follow which.
     `,
     predict: {
-      prompt: 'This model only ever looks **one letter back**. **If you let it write, what will come out?**',
+      prompt: 'This model only ever looks one letter back. **If you let it write, what will come out?**',
       choices: ['Real English sentences', 'Word-like gibberish', 'Random letters'],
-      reveal: `**Word-like gibberish.** Pairs of letters look right ("th", "he", "in"), but nothing longer holds together, because the model can't see further back than one letter. Press **Write 80 letters** to check. Seeing further back is what *attention* adds; see the tiny language model showpiece.`,
+      reveal: `**Word-like gibberish.** Pairs of letters look right ("th", "he", "in"), but nothing longer holds together, because the model can't see further back than one letter. Press "Write 80 letters" to check. Looking further back takes a bigger model, a transformer: see the tiny language model showpiece.`,
     },
     viz: {
       title: 'Guess the next letter',
-      goal: 'Type a word of 5 or more letters where every letter after the first is one of the model\'s top 3 guesses.',
-      detail: 'The three bars under the box are the model\'s top 3 guesses for the next letter.',
+      goal: 'Find a real word that surprises the model: a word from the plays with a letter that gets less than a 1% chance.',
+      detail: 'Under the box, each letter shows the chance the model gave it after the letter before. Common words are allowed.',
     },
     explain: {
       see: `The grid shows how often each letter follows each other letter in the training text (Shakespeare's plays). Each row is one "current letter". A bright cell means that next letter is common after the row's letter. When you type, the row for your last letter is highlighted, and its biggest cells become the guesses.`,
       means: `Divide each count in a row by the row's total, and you get the chance of each next letter. **That table of chances is the whole model.** Writing means: look up the row, pick a letter using those chances, move to that letter's row, repeat.`,
-      called: `Counting pairs like this gives a *bigram model*. Each letter here is a *token*. Predicting what comes next is *next-token prediction*. Picking at random in proportion to the chances is *sampling*; a *temperature* setting makes the picks bolder or safer.`,
-      formula: `$P(\\text{next} = \\cy{b} \\mid \\text{current} = \\cg{a}) = \\dfrac{\\text{count}(\\cg{a}\\,\\cy{b})}{\\text{count of all pairs starting with } \\cg{a}}$`,
+      called: `A *token* is the unit a model predicts: here one letter, in real models usually part of a word. Counting pairs of tokens gives a *bigram model*. Predicting what comes next is *next-token prediction*. Picking at random in proportion to the chances is *sampling*. Counting is the simplest way to learn from data; a neural network can learn the same table by adjusting weights.`,
+      formula: `$P(\\text{next} = \\cy{b} \\mid \\text{current} = \\cg{a}) = \\dfrac{\\text{count}(\\cg{a}\\,\\cy{b})}{\\text{count of all pairs starting with } \\cg{a}}$
+
+How to read it: $P(\\dots)$ is "the chance that"; the bar $\\mid$ reads "given".`,
     },
     why: `Large language models do the same job: predict the next token. The difference is how far back they look (thousands of tokens) and how they combine what they see, using attention inside a transformer.`,
     learn: {
@@ -184,7 +190,7 @@ Prediction: the most common colour among the $k$ training points with the smalle
       cs: ['hash maps for counting', 'byte-pair encoding (a greedy merging algorithm)'],
       prog: ['PyTorch modules', 'batching', 'training on CPU vs GPU'],
     },
-    taste: 'Start with a bigram model (it counts which letter follows which). Then build a tiny character-level transformer, trained on a public-domain book, that writes new text in that style. Draw what each attention head looks at.',
+    taste: 'Start with a bigram model (it counts which letter follows which). Then build a tiny character-level transformer, trained on a public-domain book, that writes new text in that style. Draw which earlier characters each attention head uses.',
     practice: [
       {
         q: 'In some text, the letter "q" appears 50 times. It is followed by "u" 49 times and by a space once. **What chance does a bigram model give to "u" after "q"?**',
@@ -203,10 +209,11 @@ Prediction: the most common colour among the $k$ training points with the smalle
     cues: [
       ['"predict what comes next in a sequence"', 'next-token prediction'],
       ['"count how often things appear together"', 'a hash map of pair counts'],
-      ['output that is too repetitive, or too random', 'change the sampling temperature'],
+      ['text that looks right a few letters at a time but makes no sense overall', 'the model sees too little context'],
     ],
     buildsOn: ['how-models-learn'],
     maths: ['la', 'prob'],
+    mathsVia: ['calc'],
   },
 
   // ------------------------------------------------------------------ 4
@@ -268,6 +275,7 @@ $\\cy{\\text{shadow}} = \\cg{\\mathbf{h}} \\cdot \\cr{\\mathbf{w}} = h_1 w_1 + h
     ],
     buildsOn: ['language-models', 'computer-vision'],
     maths: ['la'],
+    mathsVia: ['calc'],
   },
 
   // ------------------------------------------------------------------ 5
@@ -296,7 +304,9 @@ $\\cy{\\text{shadow}} = \\cg{\\mathbf{h}} \\cdot \\cr{\\mathbf{w}} = h_1 w_1 + h
       see: `The 3 × 3 grid is your filter: {r|red} cells are +1, {b|blue} cells are −1. Hover over or tap the image: the filter sits on that 3 × 3 patch. Each output pixel is the patch's pixels times the filter's cells, all added up.`,
       means: `Where a patch is one flat shade, the +1s and −1s cancel and the output is 0. Where the left of the patch is dark and the right is light, they don't cancel, so the output lights up. **A filter with −1s on one side and +1s on the other finds edges that run the other way.**`,
       called: `Sliding a filter like this is a *convolution*. The filter is also called a *kernel*, and the output grid is a *feature map*. A *CNN* (convolutional neural network) learns its filter values from data instead of having them set by hand. Shrinking feature maps by keeping the biggest value in each block is *pooling*.`,
-      formula: `$\\cy{\\text{out}}[i, j] = \\displaystyle\\sum_{a=-1}^{1}\\sum_{b=-1}^{1} \\cr{w}[a, b]\\; \\cg{x}[i+a,\\, j+b]$`,
+      formula: `$\\cy{\\text{out}}[i, j] = \\displaystyle\\sum_{a=-1}^{1}\\sum_{b=-1}^{1} \\cr{w}[a, b]\\; \\cg{x}[i+a,\\, j+b]$
+
+How to read it: $\\Sigma$ means "add up"; $a$ and $b$ run over the 3 × 3 patch around pixel $(i, j)$.`,
     },
     why: `The first layer of a trained CNN often ends up with edge filters much like the one you build here. You can see this in the digit showpiece: look at the small red-and-blue squares in layer 1.`,
     learn: {
@@ -324,6 +334,7 @@ $\\cy{\\text{shadow}} = \\cg{\\mathbf{h}} \\cdot \\cr{\\mathbf{w}} = h_1 w_1 + h
     ],
     buildsOn: ['how-models-learn'],
     maths: ['la'],
+    mathsVia: ['calc'],
   },
 
   // ------------------------------------------------------------------ 6
@@ -621,6 +632,7 @@ $\\cg{x_0}$ = the clean point, $\\epsilon$ = random Gaussian noise, $\\bar\\alph
     ],
     buildsOn: ['computer-vision'],
     maths: ['prob'],
+    mathsVia: ['calc'],
   },
 ];
 

@@ -269,47 +269,53 @@ print(f"k-d tree: {time.time() - t0:.3f}s   same answers as the grid: {all(sorte
     """)
     nb.code('''
 GW, GH = 60, 40
-NEST, FOOD = np.array([8, 20]), np.array([50, 28])
+NEST, FOOD = np.array([10, 20]), np.array([46, 24])
 MOVES8 = np.array([(dx, dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1) if (dx, dy) != (0, 0)])
 
-def ants(n=120, steps=800, evaporate=0.02, seed=0, snapshots=(100, 400, 800)):
+def ants(n=150, steps=1200, evaporate=0.02, follow=60, seed=0, snapshots=(150, 500, 1200)):
     rng = np.random.default_rng(seed)
     scent = np.zeros((GW, GH))
     pos = np.tile(NEST, (n, 1))
+    heading = rng.integers(8, size=n)                 # each ant tends to keep going the way it was going
     carrying = np.zeros(n, bool)
     delivered, saved = 0, {}
     for t in range(1, steps + 1):
         for i in range(n):
             options = (pos[i] + MOVES8).clip([0, 0], [GW - 1, GH - 1])
             if carrying[i]:
-                # head home: pick the move that gets closest to the nest (with a little randomness)
+                # head home (with a little randomness) and drop scent on the way
                 d = np.linalg.norm(options - NEST, axis=1) + rng.random(8) * 0.5
                 pos[i] = options[np.argmin(d)]
                 scent[tuple(pos[i])] += 1.0
                 if np.abs(pos[i] - NEST).max() <= 1:
                     carrying[i] = False; delivered += 1
             else:
-                w = 1 + 20 * scent[options[:, 0], options[:, 1]]          # more scent, more likely
-                pos[i] = options[rng.choice(8, p=w / w.sum())]
+                ahead = (MOVES8 @ MOVES8[heading[i]]) > 0                                 # moves close to the current heading
+                w = (1 + follow * scent[options[:, 0], options[:, 1]]) * np.where(ahead, 4.0, 1.0)
+                k = rng.choice(8, p=w / w.sum())                                          # more scent, more likely
+                heading[i], pos[i] = k, options[k]
                 if np.abs(pos[i] - FOOD).max() <= 2:
                     carrying[i] = True
-        scent *= 1 - evaporate
+        scent *= 1 - evaporate                        # every square's scent fades a little
         if t in snapshots:
             saved[t] = (scent.copy(), delivered)
     return saved
 
 t0 = time.time()
 saved = ants()
+no_trail = ants(follow=0, snapshots=(1200,))
 print(f"simulated in {time.time() - t0:.0f}s")
+print(f"food delivered in 1,200 steps: following trails {saved[1200][1]}, ignoring trails {no_trail[1200][1]}")
 fig, axes = plt.subplots(1, 3, figsize=(15, 3.6))
 for ax, (t, (sc, dl)) in zip(axes, saved.items()):
     ax.imshow(sc.T, origin="lower", cmap="YlOrBr", vmax=np.percentile(sc, 99.5) + 1e-9)
     ax.plot(*NEST, "o", color="#188a4a", ms=10); ax.plot(*FOOD, "s", color="#d03a3a", ms=10)
-    ax.set_title(f"step {t}: {dl} food deliveries", fontsize=10); ax.set_xticks([]); ax.set_yticks([])
+    ax.set_title(f"step {t}: {dl} food deliveries so far", fontsize=10); ax.set_xticks([]); ax.set_yticks([])
 plt.show()
 ''')
     nb.md("""
-        **What you see:** at first the scent is scattered. Then the ants that found food lay scent on the way home, others follow it, and a single strong trail forms between nest (green) and food (red). Deliveries speed up.
+        **What you see:** at first the scent is scattered. Ants that find food lay scent on the way home, others follow it, and a trail forms between nest (green) and food (red).
+        Ants that follow trails deliver noticeably more food than ants that ignore them. No ant knows where the food is; the trail does the remembering.
 
         **What it's called:** agents that coordinate by changing their shared surroundings use **stigmergy**. Turned into an algorithm for finding short routes in a graph, this is **ant colony optimisation**.
     """)
@@ -428,8 +434,9 @@ for name, score in sorted(totals.items(), key=lambda kv: -kv[1]):
     nb.md("""
         🐍 `lambda mine, theirs: ...` defines a small function inline. `sorted(..., key=lambda kv: -kv[1])` sorts by score, biggest first.
 
-        **What you see:** "always defect" is not the winner over many rounds. Strategies that start nice, punish defection, and forgive (like tit for tat) do well against a mixed field.
-        When agents meet again and again, cooperation can pay. Which strategies win depends on who else is in the population: an emergent effect again.
+        **What you see:** "always defect" is not the winner over many rounds. The top strategies start by cooperating and punish defection: "grudger" (never forgives) and "tit for tat" (copies the last move).
+        "Always defect" wins single games against kind players, but loses points overall because it never gets the 3-and-3 rounds.
+        When agents meet again and again, cooperation can pay. Which strategy wins depends on who else is in the population: an emergent effect again.
     """)
 
     # ------------------------------------------------------------------ practice
@@ -456,14 +463,15 @@ for name, score in sorted(totals.items(), key=lambda kv: -kv[1]):
     )
     nb.exercise(
         3,
-        "In the ant world, set `evaporate=0.0` (scent never fades) and then `evaporate=0.2`. **How many deliveries happen in each case, and why?**",
+        "In the ant world, compare `evaporate=0.0` (scent never fades), `0.02` and `0.2`. **How many deliveries happen in each case? What would go wrong with no fading if the food moved?**",
         "# your experiment here\n",
         solution_src="""
             for ev in (0.0, 0.02, 0.2):
-                s = ants(evaporate=ev, snapshots=(800,))
-                print(f"evaporate {ev}: {s[800][1]} deliveries")
-            # No fading: old wandering scent never disappears, so ants are pulled in many directions.
-            # Fast fading: trails vanish before other ants can follow them. A middle value works best.
+                res = ants(evaporate=ev, snapshots=(1200,))
+                print(f"evaporate {ev}: {res[1200][1]} deliveries")
+            # Fast fading (0.2) erases trails before other ants can use them, so deliveries drop toward the no-trail level.
+            # With no fading, the trail never goes away. That is fine while the food stays put, but if the food moved,
+            # ants would keep following the old trail. Fading is how the colony forgets.
         """,
     )
     nb.cue([

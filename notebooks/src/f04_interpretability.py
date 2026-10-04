@@ -62,6 +62,16 @@ H = captured["hidden"].numpy()                          # one row of 64 numbers 
 labels = yt.numpy()
 '''
 
+CODE_PROBE = '''
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+
+keep = is_round | is_straight
+Htr, Hte, ytr, yte = train_test_split(H[keep], is_round[keep], test_size=0.3, random_state=0)
+probe = LogisticRegression(max_iter=2000).fit(Htr, ytr)
+w = probe.coef_[0] / np.linalg.norm(probe.coef_[0])      # the probe's direction, length 1
+'''
+
 CODE_DIRECTION = '''
 ROUND, STRAIGHT = [0, 6, 8, 9], [1, 4, 7]
 is_round = np.isin(labels, ROUND)
@@ -89,24 +99,25 @@ def make_end_image(redo: bool) -> None:
     finally:
         os.chdir(cwd)
     np, plt, torch, F = ns["np"], ns["plt"], ns["torch"], ns["F"]
+    exec(textwrap.dedent(CODE_PROBE), ns)
     fig, axes = plt.subplots(1, 2, figsize=(12, 3.4), dpi=90)
-    sh, r, s = ns["shadow"], ns["is_round"], ns["is_straight"]
+    H, w = ns["H"], ns["w"]
+    sh, r, st = H @ w, ns["is_round"], ns["is_straight"]
     bins = np.linspace(sh.min(), sh.max(), 50)
-    axes[0].hist(sh[s], bins, color="#2563d6", alpha=0.7, label="straight digits: 1 4 7")
+    axes[0].hist(sh[st], bins, color="#2563d6", alpha=0.7, label="straight digits: 1 4 7")
     axes[0].hist(sh[r], bins, color="#e0a100", alpha=0.7, label="round digits: 0 6 8 9")
-    axes[0].legend(); axes[0].set_title("Every test digit's position along the 'round' direction", fontsize=10)
-    # steering a "1"
+    axes[0].legend(); axes[0].set_title("Every test digit's position along a learned 'round' direction", fontsize=10)
     model, Xt, labels = ns["model"], ns["Xt"], ns["labels"]
     k = int(np.flatnonzero(labels == 1)[0])
-    d = torch.tensor(ns["direction"], dtype=torch.float32)
-    alphas = np.linspace(0, 12, 25)
+    d = torch.tensor(w, dtype=torch.float32)
+    alphas = np.linspace(0, 30, 31)
     probs = []
     with torch.no_grad():
         h = F.relu(model[0](Xt[k:k + 1]))
         for a in alphas:
             probs.append(F.softmax(model[2](h + a * d), dim=1)[0].numpy())
     probs = np.array(probs)
-    for digit, col in [(1, "#2563d6"), (0, "#e0a100"), (8, "#d03a3a"), (6, "#188a4a")]:
+    for digit, col in [(1, "#2563d6"), (8, "#d03a3a"), (9, "#e0a100"), (0, "#188a4a")]:
         axes[1].plot(alphas, probs[:, digit], label=f"probability of {digit}", color=col)
     axes[1].set_xlabel("how far the '1' is pushed along the direction"); axes[1].legend(fontsize=8)
     axes[1].set_title("Push a '1' along that direction: the model's answer changes", fontsize=10)
@@ -150,7 +161,7 @@ def build(redo: bool = False) -> None:
     nb.md("""
         ## 1. The problem: a network that works, but nobody knows how
 
-        Here is a small network that reads handwritten digits. It is 97% accurate.
+        Here is a small network that reads handwritten digits. It is about 95% accurate.
         Inside, it turns every image into **64 numbers**, then turns those into 10 scores.
 
         Nobody told it which features to use. **Does it track an idea like "this digit is round"? Where? How would you check?**
@@ -187,6 +198,8 @@ print(np.round(H[0], 2))
         ## 3. Is there a "round" neuron?
 
         The simplest guess: one of the 64 numbers means "round". Test each one: how well does it alone sort round digits (0, 6, 8, 9) from straight ones (1, 4, 7)?
+
+        Then try a **direction**: take the average round digit's 64 numbers and subtract the average straight digit's. That arrow points "from straight toward round". Scale it to length 1.
     """)
     nb.code(CODE_DIRECTION + '''
 def best_cut(values, positive):
@@ -202,32 +215,17 @@ def best_cut(values, positive):
 
 single = [best_cut(H[:, j], is_round) for j in range(64)]
 print(f"best single neuron: number {int(np.argmax(single))}, accuracy {max(single):.1%}")
-print(f"the direction:      accuracy {best_cut(shadow, is_round):.1%}")
+print(f"average-difference direction: accuracy {best_cut(shadow, is_round):.1%}")
 ''')
     nb.md("""
-        **What you see:** the best single neuron sorts them fairly well, but a **direction**, a weighted mix of all 64 numbers, sorts them better.
-
-        How the direction was made: take the average round digit's 64 numbers, subtract the average straight digit's. That arrow points "from straight toward round". Scale it to length 1.
-        Each digit's position along it is a **dot product**:
+        Each digit's position along the direction is a **dot product**:
 
         $$\\cy{\\text{shadow}} = \\cg{\\mathbf{h}} \\cdot \\cr{\\mathbf{d}} = h_1 d_1 + h_2 d_2 + \\dots + h_{64} d_{64}$$
 
         **What it's called:** that number is the **projection** of $\\mathbf{h}$ onto $\\mathbf{d}$: where its shadow falls on the line through $\\mathbf{d}$.
+
+        **What you see:** the direction barely beats the best single neuron. Something is wrong with it. Section 5 finds out what.
     """)
-    nb.code('''
-bins = np.linspace(shadow.min(), shadow.max(), 50)
-plt.figure(figsize=(8, 3))
-plt.hist(shadow[is_straight], bins, color="#2563d6", alpha=0.7, label="straight: 1 4 7")
-plt.hist(shadow[is_round], bins, color="#e0a100", alpha=0.7, label="round: 0 6 8 9")
-other = ~(is_round | is_straight)
-plt.hist(shadow[other], bins, color="#999", alpha=0.4, label="others: 2 3 5")
-plt.legend(); plt.xlabel("position along the 'round' direction"); plt.title("One number per digit, from one dot product")
-plt.show()
-''')
-    nb.predict(
-        "The digits 2, 3 and 5 were not used to make the direction. **Where do you expect them to land: with the round digits, with the straight ones, or in between?**",
-        "**In between, leaning round.** 3 and 5 have curves, 2 has a curve and a straight base. The direction measures curviness, not only membership of the two groups. Look at the grey bars.",
-    )
 
     # ------------------------------------------------------------------ 4 PCA
     nb.md("""
@@ -259,18 +257,72 @@ plt.show()
         **What it's called:** this is **PCA** (principal component analysis). An **eigenvector** of the covariance matrix is a direction the matrix only stretches; its **eigenvalue** says by how much, which here equals the spread of the data along it.
     """)
 
-    # ------------------------------------------------------------------ 5 steering
+    # ------------------------------------------------------------------ 5 confound + probe
     nb.md("""
-        ## 5. Push along the direction
+        ## 5. What did the first direction really measure?
 
-        If the direction really means "round" **to the model**, then moving a digit's 64 numbers along it should change the model's answer toward round digits.
+        Round digits have loops; straight ones are thin strokes. So round digits also have **more ink**.
+        An average-difference direction picks up **every** way the two groups differ, ink included.
+
+        Test it: build a "lots of ink versus little ink" direction the same way, and measure the angle between the two directions.
+        For two length-1 arrows, the dot product is the cosine of the angle between them.
+    """)
+    nb.code('''
+ink = Xt.sum(1).numpy()
+print(f"average ink: round digits {ink[is_round].mean():.0f}, straight digits {ink[is_straight].mean():.0f}")
+
+thick, thin = ink > np.percentile(ink, 67), ink < np.percentile(ink, 33)
+ink_dir = H[thick].mean(0) - H[thin].mean(0)
+ink_dir /= np.linalg.norm(ink_dir)
+
+def angle(a, b):
+    return float(np.degrees(np.arccos(np.clip(abs(a @ b), -1, 1))))
+print(f"angle between the 'round' direction and the 'ink' direction: {angle(direction, ink_dir):.0f} degrees")
+''')
+    nb.md("""
+        **What you see:** round digits carry about 40% more ink, and the two directions are only about 30° apart. The first direction was **mostly measuring ink**.
+        A hidden second difference like this is a **confound**. Spotting confounds is a large part of interpretability research.
+
+        ### A better direction: train a probe
+
+        A **probe** is a small model trained to read one idea out of activations. Logistic regression (from scikit-learn) finds the direction that best separates the two groups, so it learns to ignore differences, like ink, that don't help.
+        Train it on 70% of the digits and test it on the other 30% (a **train/test split**).
+    """)
+    nb.code(CODE_PROBE + '''
+print(f"probe accuracy on held-out digits: {probe.score(Hte, yte):.1%}")
+print(f"angle between the probe and the 'ink' direction: {angle(w, ink_dir):.0f} degrees")
+''')
+    nb.md("""
+        **What you see:** the probe is far more accurate, and it is almost at right angles to the ink direction: it measures roundness, not ink.
+    """)
+    nb.predict(
+        "The digits 2, 3 and 5 were not used to train the probe. **Where will they land along its direction: with the round digits, with the straight ones, or in between?**",
+        "**In between.** 3 and 5 have curves; 2 has a curve and a straight base. Look at the grey bars below.",
+    )
+    nb.code('''
+probe_shadow = H @ w
+bins = np.linspace(probe_shadow.min(), probe_shadow.max(), 50)
+other = ~(is_round | is_straight)
+plt.figure(figsize=(8, 3))
+plt.hist(probe_shadow[is_straight], bins, color="#2563d6", alpha=0.7, label="straight: 1 4 7")
+plt.hist(probe_shadow[is_round], bins, color="#e0a100", alpha=0.7, label="round: 0 6 8 9")
+plt.hist(probe_shadow[other], bins, color="#999", alpha=0.4, label="not used: 2 3 5")
+plt.legend(); plt.xlabel("position along the probe's 'round' direction"); plt.title("One dot product per digit")
+plt.show()
+''')
+
+    # ------------------------------------------------------------------ 6 steering
+    nb.md("""
+        ## 6. Push along the direction
+
+        If the probe's direction really means "round" **to the model**, then moving a digit's 64 numbers along it should change the model's answer toward round digits.
 
         Take a "1". Compute its 64 numbers. Add $\\alpha \\times$ the direction, for growing $\\alpha$. Feed the result to the last layer.
     """)
     nb.code('''
-d = torch.tensor(direction, dtype=torch.float32)
+d = torch.tensor(w, dtype=torch.float32)
 k = int(np.flatnonzero(labels == 1)[0])
-alphas = np.linspace(0, 12, 25)
+alphas = np.linspace(0, 30, 31)
 
 def push(direction_vec, alphas, k):
     out = []
@@ -288,51 +340,38 @@ for digit in range(10):
 axes[1].set_xlabel("alpha: how far it is pushed along the 'round' direction"); axes[1].set_ylabel("probability")
 axes[1].legend(ncol=5, fontsize=8); plt.show()
 top = probs[-1].argmax()
-print(f"at alpha = 0 the model says 1 ({probs[0, 1]:.0%}); at alpha = 12 it says {top} ({probs[-1, top]:.0%})")
+print(f"at alpha = 0 the model says 1 ({probs[0, 1]:.0%}); at alpha = 30 it says {top} ({probs[-1, top]:.0%})")
 ''')
     nb.md("""
         **What it's called:** changing a model's behaviour by adding a direction to its activations is **steering**.
 
         ### Careful measurement: is it the direction, or any push?
 
-        A fair test needs a **control**. Push the same "1" by the same amount along **random** directions of length 1. If those also change the answer, the result above means little.
+        A fair test needs a **control**. Push 50 different "1"s by the same amount along **random** directions of length 1. Count how often the answer becomes a round digit.
     """)
     nb.code('''
+ones = np.flatnonzero(labels == 1)[:50]
+with torch.no_grad():
+    hs = F.relu(model[0](Xt[ones]))
+    pushed = model[2](hs + 20 * d).argmax(1).numpy()
 rng = np.random.default_rng(0)
-changed = 0
+random_round = []
 for trial in range(20):
     r = rng.normal(size=64); r /= np.linalg.norm(r)
-    p = push(torch.tensor(r, dtype=torch.float32), [12.0], k)[0]
-    changed += int(p.argmax() != 1)
-print(f"random directions that changed the answer away from 1: {changed} of 20")
+    with torch.no_grad():
+        ans = model[2](hs + 20 * torch.tensor(r, dtype=torch.float32)).argmax(1).numpy()
+    random_round.append(np.isin(ans, ROUND).mean())
+print(f"pushed along the probe direction: {np.isin(pushed, ROUND).mean():.0%} become round digits")
+print(f"pushed along random directions:   {np.mean(random_round):.0%} become round digits (average of 20 directions)")
 ''')
     nb.md("""
-        **What you see:** most random pushes of the same size leave the answer at 1. The "round" direction is special.
-        Checking against a control like this is basic **experiment design**, and the core skill of the field.
-
-        ### The library version: a probe
-
-        A **probe** is a small model trained to read an idea out of activations. Logistic regression (from scikit-learn) finds a direction too, chosen to separate the two groups as well as possible. Compare it with your averaged-difference direction.
-    """)
-    nb.code('''
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
-
-keep = is_round | is_straight
-Htr, Hte, ytr, yte = train_test_split(H[keep], is_round[keep], test_size=0.3, random_state=0)
-probe = LogisticRegression(max_iter=2000).fit(Htr, ytr)
-w = probe.coef_[0] / np.linalg.norm(probe.coef_[0])
-print(f"probe accuracy on held-out digits: {probe.score(Hte, yte):.1%}")
-print(f"angle between probe direction and your direction: {np.degrees(np.arccos(np.clip(w @ direction, -1, 1))):.0f} degrees")
-''')
-    nb.md("""
-        **What you see:** the probe scores higher on held-out digits, and its direction points roughly the same way as yours. The cosine of the angle between two length-1 vectors is their dot product.
-        (The probe was tested on digits it didn't train on: a train/test split, again.)
+        **What you see:** along the probe's direction, almost every "1" becomes a round digit. Random pushes of the same size rarely do. The direction is special.
+        Checking against a control like this is basic **experiment design**, and the core habit of the field.
     """)
 
-    # ------------------------------------------------------------------ 6 superposition
+    # ------------------------------------------------------------------ 7 superposition
     nb.md("""
-        ## 6. More ideas than numbers: superposition
+        ## 7. More ideas than numbers: superposition
 
         The digit network has 64 numbers but may track more than 64 ideas. How can that work?
 
@@ -380,20 +419,18 @@ print("lengths of the five feature arrows:", np.round(np.linalg.norm(cols, axis=
     )
     nb.exercise(
         2,
-        "Find a direction for **thick versus thin** strokes. (Hint: count each test image's ink, `Xt.sum(1)`, and compare the thickest third with the thinnest third.) "
-        "**How well does it sort them, and is it the same as the round direction?**",
+        "Train a probe for **\"is it a 7?\"** (7 against every other digit). Push a \"1\" along its direction. "
+        "**What does the model say, and at what push size does it change?**",
         "# your code here\n",
         solution_src="""
-            ink = Xt.sum(1).numpy()
-            thick, thin = ink > np.percentile(ink, 67), ink < np.percentile(ink, 33)
-            thick_dir = H[thick].mean(0) - H[thin].mean(0)
-            thick_dir /= np.linalg.norm(thick_dir)
-            s = H @ thick_dir
-            both = thick | thin
-            acc = ((s[both] > np.median(s[both])) == thick[both]).mean()
-            print(f"thick-vs-thin accuracy with a median cut: {acc:.1%}")
-            print(f"angle to the round direction: {np.degrees(np.arccos(abs(thick_dir @ direction))):.0f} degrees")
-            # A separate direction, at a large angle to 'round': the 64 numbers hold several ideas at once.
+            is7 = labels == 7
+            Htr7, Hte7, ytr7, yte7 = train_test_split(H, is7, test_size=0.3, random_state=0)
+            probe7 = LogisticRegression(max_iter=2000).fit(Htr7, ytr7)
+            w7 = probe7.coef_[0] / np.linalg.norm(probe7.coef_[0])
+            print(f"probe accuracy: {probe7.score(Hte7, yte7):.1%}")
+            p7 = push(torch.tensor(w7, dtype=torch.float32), alphas, k)
+            for a, row in zip(alphas[::5], p7[::5]):
+                print(f"alpha {a:4.0f}: says {row.argmax()} ({row.max():.0%})")
         """,
     )
     nb.exercise(
@@ -412,6 +449,7 @@ print("lengths of the five feature arrows:", np.round(np.linalg.norm(cols, axis=
         ("\"how much does this vector point along that one?\"", "a dot product (projection onto a length-1 vector)"),
         ("\"too many dimensions to look at\"", "PCA: the top eigenvectors of the covariance matrix"),
         ("an effect from an intervention", "compare against a control (for example, random directions)"),
+        ("two groups that differ in more than one way", "check for a confound before trusting a direction"),
     ])
     nb.footer(
         experiments=[

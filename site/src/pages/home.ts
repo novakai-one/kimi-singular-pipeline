@@ -15,15 +15,14 @@ page.append(
     h('h1', null, 'Which part of AI would you want to research?'),
     h('p', { class: 'lede' }, 'Ten fields. One weekend project each. A log to compare how each one felt.')),
 
+  inShort(
+    'How do you find the AI field you would enjoy researching?',
+    'Spend a weekend on a small project in each field, and log what excited you. This site gives you ten projects, two demos and the log.'),
   problem(`
     Next year you pick a thesis topic, and then spend a year on it.
     On paper, every field of AI sounds interesting.
     **The way to find out is to build something small in each field and notice which one you keep thinking about.**
   `),
-
-  inShort(
-    'How do you find the AI field you would enjoy researching?',
-    'Spend a weekend on a small project in each field, and log what excited you. This site gives you ten projects, two demos and the log.'),
 );
 
 // ---- Suggested route ------------------------------------------------------
