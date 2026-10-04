@@ -1,0 +1,56 @@
+/* DSA track: step player and topic pages */
+.dp { display: grid; gap: 10px; }
+.dp-algos { margin-bottom: 2px; }
+.dp-inputs { display: grid; gap: 6px; }
+.dp-input-label { font-size: 13px; font-weight: 650; color: var(--muted); }
+.dp-input-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.dp-input { flex: 1 1 220px; min-width: 0; font-family: var(--mono); font-size: 14px; min-height: 36px; }
+.dp-presets { gap: 6px; }
+.dp-help { font-size: 13px; color: var(--muted); }
+.dp-error { font-size: 13.5px; color: var(--red); }
+.dp-main { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 12px; align-items: start; }
+.dp-stage { background: var(--surface-2); border-radius: var(--radius-sm); padding: 8px; min-height: 220px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.dp-stage svg { width: 100%; height: auto; display: block; font-family: var(--font); }
+.dp-note { min-height: 3.1em; font-size: 14.5px; margin-top: 8px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.dp-controls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
+.dp-btn { min-width: 38px; }
+.dp-counter { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; margin: 0 4px; }
+.dp-speed { font-size: 13px; color: var(--muted); margin-left: auto; }
+.dp-speed select { padding: 4px 6px; font-size: 13px; }
+.dp-right { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 8px 8px 0; }
+.dp-code-h { font-size: 11.5px; font-weight: 750; letter-spacing: .07em; text-transform: uppercase; color: var(--faint); padding-left: 12px; margin-bottom: 4px; }
+.dp-code { margin: 0; padding-left: 30px; font-family: var(--mono); font-size: 12px; line-height: 1.55; color: var(--muted); }
+.dp-line { padding: 1px 6px; border-radius: 4px; white-space: pre-wrap; }
+.dp-line.on { background: var(--yellow-soft); color: var(--text); font-weight: 650; }
+
+/* shared SVG classes for visualisers */
+.dv-cell { fill: var(--surface); stroke: var(--border); stroke-width: 1.2; }
+.dv-cell.hi { fill: var(--yellow-soft); stroke: var(--yellow); stroke-width: 2; }
+.dv-cell.done { fill: var(--green-soft); stroke: var(--green); }
+.dv-cell.cmp { fill: var(--search-soft); stroke: var(--search); stroke-width: 2; }
+.dv-cell.dim { opacity: .35; }
+.dv-text { fill: var(--text); font-size: 15px; font-weight: 650; }
+.dv-small { fill: var(--muted); font-size: 12px; }
+.dv-bar { fill: var(--faint); }
+.dv-bar.cmp { fill: var(--search); }
+.dv-bar.swap { fill: var(--red); }
+.dv-bar.done { fill: var(--green); }
+.dv-bar.pivot { fill: var(--yellow); }
+.dv-edge { stroke: var(--faint); stroke-width: 1.6; fill: none; }
+.dv-edge.hi { stroke: var(--yellow); stroke-width: 3; }
+.dv-node { fill: var(--surface); stroke: var(--muted); stroke-width: 1.5; }
+.dv-node.hi { fill: var(--yellow-soft); stroke: var(--yellow); stroke-width: 2.5; }
+.dv-node.done { fill: var(--green-soft); stroke: var(--green); }
+.dv-node.front { fill: var(--search-soft); stroke: var(--search); stroke-width: 2; }
+
+.dt-practice-links li { margin: .35em 0; }
+
+@media (max-width: 800px) {
+  .dp-main { grid-template-columns: 1fr; }
+  .dp-speed { margin-left: 0; }
+  .dp-btn { min-height: 44px; min-width: 44px; }
+}
+
+.dv-range { fill: var(--yellow-soft); opacity: .45; }
+.dv-mark { fill: var(--text); font-size: 12.5px; font-weight: 650; }
+.dv-faded { opacity: .45; }
