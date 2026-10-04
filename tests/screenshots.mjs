@@ -8,7 +8,10 @@ import { fileURLToPath } from 'node:url';
 import { serve } from './serve.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const dist = resolve(here, '..', 'dist');
+const distArg = process.argv.find((a) => a.startsWith('--dist='))?.split('=')[1];
+const dist = distArg ? resolve(distArg) : resolve(here, '..', 'dist');
+const PORT = Number(process.argv.find((a) => a.startsWith('--port='))?.split('=')[1] ?? 4321);
+const outRoot = process.argv.find((a) => a.startsWith('--out='))?.split('=')[1];
 const reg = JSON.parse(readFileSync(join(here, '..', 'site/src/data/registry.json'), 'utf8'));
 const args = process.argv.slice(2);
 const filter = args.find((a) => !a.startsWith('--')) ?? '';
@@ -22,7 +25,7 @@ const pages = [
   ...reg.dsa.map((d) => `dsa/${d.slug}.html`),
 ].filter((p) => p.includes(filter));
 
-const server = await serve(dist, 4321);
+const server = await serve(dist, PORT);
 const browser = await chromium.launch();
 let errors = 0;
 for (const w of widths) {
@@ -35,9 +38,9 @@ for (const w of widths) {
   page.on('console', (m) => { if (m.type() === 'error') { errors++; console.log(`  [console.error] ${page.url()}: ${m.text()}`); } });
   page.on('pageerror', (e) => { errors++; console.log(`  [pageerror] ${page.url()}: ${e.message}`); });
   for (const p of pages) {
-    await page.goto(`http://localhost:4321/${p}`, { waitUntil: 'networkidle' });
+    await page.goto(`http://localhost:${PORT}/${p}`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(p.startsWith('demo/') ? 2500 : 600);
-    const out = join(here, '..', 'shots', String(w) + (theme ? '-' + theme : ''), p.replace(/\//g, '__').replace('.html', '.png'));
+    const out = join(outRoot ? resolve(outRoot) : join(here, '..', 'shots'), String(w) + (theme ? '-' + theme : ''), p.replace(/\//g, '__').replace('.html', '.png'));
     mkdirSync(dirname(out), { recursive: true });
     await page.screenshot({ path: out, fullPage: full });
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
