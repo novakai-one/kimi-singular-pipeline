@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   DEFAULT_SIZES, MAX_SIZES, PRESETS, PROGRAMS, TIME_OPTS, everyPair, everyPairSteps, fmtMs, guessResult, halvingSteps,
-  makeData, makeFrames, measureAllSync, median, nestedLoopSteps, noteFor, onePass, onePassSteps, parseSizes,
+  makeData, makeFrames, measureAllSync, nestedLoopSteps, noteFor, onePass, onePassSteps, parseSizes,
   patternGuess, randomSizes, ratioAt, sortedCopy, type ProgKey, type Program,
 } from '../../site/src/pages/dsa/viz/big-o-core.ts';
 
@@ -38,7 +38,7 @@ test('big-o: the three programs give the right answers', () => {
   assert.deepEqual(makeData(50, 3), makeData(50, 3));
 });
 
-test('big-o: the timer warms up, fills each block, and keeps the median', () => {
+test('big-o: the timer warms up, fills each block, and keeps the fastest block', () => {
   const c = fakeClock();
   const sizes = parseSizes(DEFAULT_SIZES);
   const res = measureAllSync(sizes, 1, c.now, c.programs(COST));
@@ -53,11 +53,9 @@ test('big-o: the timer warms up, fills each block, and keeps the median', () => 
   });
   // every pair at 16,000 costs 512 ms here: timed 3 times, one call per block
   assert.equal(res.reps[4].pair, 1);
-  assert.equal(median([5, 1, 3]), 3);
-  assert.equal(median([4, 1, 3, 2]), 2.5);
 });
 
-test('big-o: a busy or slowing computer barely moves the every-pair ratio (rounds + median)', () => {
+test('big-o: a busy or slowing computer barely moves the every-pair ratio (rounds + fastest block)', () => {
   // bursts: for 40 ms out of every 300 ms, something else runs and everything is 2 times slower
   const b = fakeClock((t) => (t % 300 < 40 ? 2 : 1));
   const rb = measureAllSync([1000, 2000, 4000], 3, b.now, b.programs(COST));
@@ -66,7 +64,7 @@ test('big-o: a busy or slowing computer barely moves the every-pair ratio (round
     assert.ok(q > 3.6 && q < 4.4, `bursty ratio ${q}`);
   }
   // drift: the computer gets steadily slower, 2 times slower after 20 seconds
-  // (the whole timing takes about 20 fake seconds here, so it ends almost 2 times slower than it began)
+  // (the whole timing takes about 13 fake seconds here, so it ends 1.67 times slower than it began)
   const d = fakeClock((t) => 1 + t / 20000);
   const rd = measureAllSync(parseSizes(DEFAULT_SIZES), 4, d.now, d.programs(COST));
   for (let k = 1; k < 6; k++) {

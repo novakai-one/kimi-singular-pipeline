@@ -115,7 +115,7 @@ export function makeData(n: number, seed: number): Float64Array {
 export interface TimeOpts {
   /** Each timed block repeats the call until it lasts at least this long. */
   minBlockMs: number;
-  /** Timed blocks per size (the median is kept). */
+  /** Timed blocks per size (the fastest is kept). */
   blocks: number;
   /** A call this slow is timed only 3 times. */
   bigCallMs: number;
@@ -124,13 +124,7 @@ export interface TimeOpts {
 export const TIME_OPTS: Record<ProgKey, TimeOpts> = {
   one: { minBlockMs: 15, blocks: 5, bigCallMs: 100 },
   sort: { minBlockMs: 15, blocks: 5, bigCallMs: 100 },
-  pair: { minBlockMs: 40, blocks: 5, bigCallMs: 100 },
-};
-
-export const median = (xs: number[]) => {
-  const s = xs.slice().sort((p, q) => p - q);
-  const m = s.length >> 1;
-  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  pair: { minBlockMs: 30, blocks: 5, bigCallMs: 100 },
 };
 
 let sink = 0;
@@ -161,7 +155,9 @@ export interface MeasureResult {
  * 1. Warm up, smallest size first: run each program in growing blocks until a block lasts minBlockMs.
  *    This lets the browser compile the code, and sets how many calls make one block.
  * 2. Time in rounds. Each round times one block of every program at every size (the order flips each round),
- *    so a slow moment on the computer hits every size alike. Keep the median time per call.
+ *    so a slow spell on the computer hits every size alike.
+ * 3. Keep the fastest block. Other programs on the computer can only make a block slower, never faster,
+ *    so the fastest block is the closest to the program's own time. (Python's timeit uses the same rule.)
  * It yields after every block, so the page can redraw in between.
  */
 export function* measureAll(
@@ -215,7 +211,7 @@ export function* measureAll(
   }
   const times = samples.map((sm) => {
     const t = {} as Times;
-    for (const p of programs) t[p.key] = median(sm[p.key]);
+    for (const p of programs) t[p.key] = Math.min(...sm[p.key]);
     return t;
   });
   return { times, samples, reps };

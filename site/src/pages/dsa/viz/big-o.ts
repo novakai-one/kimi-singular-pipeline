@@ -233,8 +233,27 @@ const viz: Viz = (el, api) => {
   }
 
   // ---------------------------------------------------------------- timing every size (in rounds), before any is shown
+  let onScreen: Promise<void> | null = null;
+  /** Resolves once the visualiser has been on screen (timing never competes with the page loading). */
+  function whenOnScreen() {
+    onScreen ??= new Promise<void>((res) => {
+      if (typeof IntersectionObserver === 'undefined') { res(); return; }
+      const io = new IntersectionObserver((es) => {
+        if (es.some((e) => e.isIntersecting)) { io.disconnect(); res(); }
+      });
+      io.observe(el);
+    });
+    return onScreen;
+  }
+  const idle = () => new Promise<void>((res) => {
+    if ('requestIdleCallback' in window) requestIdleCallback(() => res(), { timeout: 800 });
+    else setTimeout(res, 150);
+  });
+
   async function measureRun(r: RunState) {
     r.measuring = true;
+    await whenOnScreen();
+    await idle();
     await nextPaint();
     if (r !== run) return;
     const g = measureAll(r.sizes, r.seed, () => performance.now());
