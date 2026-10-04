@@ -52,6 +52,8 @@ export interface PlayerHandle<F extends Frame = Frame> {
   play(): void;
   /** Change playback speed (0.5, 1, 2 or 4), e.g. so a long Show me plays faster. */
   setSpeed(v: number): void;
+  /** Show frame k (e.g. so Show me can start just before the interesting part). */
+  goTo(k: number): void;
   frames(): F[];
 }
 
@@ -113,7 +115,7 @@ export function makePlayer<F extends Frame>(o: PlayerOpts<F>): PlayerHandle<F> {
     algoSel,
     inputRow,
     h('div', { class: 'dp-main' },
-      h('div', { class: 'dp-left' }, stage, note, controls),
+      h('div', { class: 'dp-left' }, stage, h('div', { class: 'dp-swipe' }, 'Swipe the picture sideways to see all of it.'), note, controls),
       h('div', { class: 'dp-right' }, h('div', { class: 'dp-code-h' }, 'Pseudocode'), codeBox)));
 
   function paintCode() {
@@ -179,6 +181,7 @@ export function makePlayer<F extends Frame>(o: PlayerOpts<F>): PlayerHandle<F> {
       else runNow();
     },
     play,
+    goTo: (k: number) => go(k),
     setSpeed(v: number) {
       speed = v;
       if (speedSel) speedSel.value = String(v);

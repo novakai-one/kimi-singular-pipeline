@@ -21,7 +21,7 @@ const plural = (n: number, one: string, many = one + 's') => `${n} ${n === 1 ? o
 
 function render(stage: HTMLElement, f: BstFrame) {
   const g = geometry(f.order.length, f.levels);
-  const svg = s('svg', { viewBox: `0 0 ${g.W} ${g.H}`, class: 'bst-svg', role: 'img',
+  const svg = s('svg', { viewBox: `0 0 ${g.W} ${g.H}`, class: 'bst-svg', 'data-wide': 'true', role: 'img',
     'aria-label': `A binary search tree with ${plural(f.count, 'node')} on ${plural(f.height, 'level')}` });
 
   // levels: a number at the left of each row, and a faint guide line

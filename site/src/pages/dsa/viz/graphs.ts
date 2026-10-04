@@ -16,7 +16,7 @@ const NODE_CLASS: Record<NodeState, string> = { '': 'dv-node', wait: 'dv-node fr
 function drawGraph(f: GraphFrame): SVGSVGElement {
   const { g, lay } = f;
   const { W, H, R } = lay;
-  const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img',
+  const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'data-wide': 'true',
     'aria-label': `A graph with ${g.nodes.length} nodes and ${g.edges.length} edges` });
   // plain edges first, highlighted ones on top
   const orderOf = (st: string) => (st === 'follow' ? 3 : st === 'route' ? 2 : st === 'tree' ? 1 : 0);

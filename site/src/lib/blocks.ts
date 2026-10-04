@@ -45,6 +45,7 @@ export function predict(o: PredictOpts): HTMLElement {
     revealBox.innerHTML = guessLine + md(text);
     revealBox.hidden = false;
     skipped.hidden = true;
+    skipBtn.hidden = true;                 // nothing left to skip once the answer is showing
     o.onReveal?.(choice);
   };
   const showBtn = h('button', { class: 'btn small primary', type: 'button', onclick: show }, 'Show me');

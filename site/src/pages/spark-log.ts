@@ -22,9 +22,29 @@ const page = mountLayout({ crumbs: [{ label: 'Spark Log' }] });
 
 // ---------------------------------------------------------------- saving
 const status = h('span', { class: 'sl-status', 'aria-live': 'polite' });
+const dirty = new Set<string>();                    // fields edited in this tab since the last save
+const refreshers = new Map<string, () => void>();  // redraw one card from `log`
 let storageOk = save(KEY, log);
+/** Take entries edited in another tab (they are in storage), keep this tab's own edits. */
+function mergeFromStorage() {
+  const stored = load<Log>(KEY, {});
+  for (const f of reg.fields) {
+    const other = stored[f.slug];
+    if (!other || dirty.has(f.slug)) continue;
+    const mine = log[f.slug];
+    if (other.surprised !== mine.surprised || other.next !== mine.next || other.score !== mine.score) {
+      log[f.slug] = { ...empty(), ...other };
+      refreshers.get(f.slug)?.();
+    }
+  }
+}
+let pending: number | undefined;
+function persistSoon() { window.clearTimeout(pending); pending = window.setTimeout(persist, 300); }
 function persist() {
+  window.clearTimeout(pending);
+  mergeFromStorage();
   storageOk = save(KEY, log);
+  if (storageOk) dirty.clear();
   status.textContent = storageOk
     ? 'Saved in this browser.'
     : 'This browser is not saving (a private window, or storage is blocked). Export before you close the page.';
@@ -34,7 +54,13 @@ function persist() {
 }
 function touch(slug: string) {
   log[slug].updated = new Date().toISOString().slice(0, 10);
+  dirty.add(slug);
 }
+// save at once when the tab is hidden or closed, so the last keystrokes are kept
+window.addEventListener('pagehide', () => { if (dirty.size) persist(); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && dirty.size) persist(); });
+// another tab saved: show its changes here (this tab's unsaved edits win)
+window.addEventListener('storage', (e) => { if (e.key === KEY) { mergeFromStorage(); renderRanking(); renderCount(); } });
 
 // ---------------------------------------------------------------- export
 function toMarkdown(): string {
@@ -47,8 +73,9 @@ function toMarkdown(): string {
     const e = log[f.slug];
     lines.push('', `## Field ${f.num}: ${f.title}`, '');
     lines.push(`- **Excitement:** ${e.score ?? 'not rated'}${e.score ? '/10' : ''}`);
-    lines.push(`- **What surprised me:** ${e.surprised.trim() || '(empty)'}`);
-    lines.push(`- **What I'd want to know next:** ${e.next.trim() || '(empty)'}`);
+    const block = (t: string) => t.trim().split(/\r?\n/).join('\n  ') || '(empty)';     // keep later lines inside the bullet
+    lines.push(`- **What surprised me:** ${block(e.surprised)}`);
+    lines.push(`- **What I'd want to know next:** ${block(e.next)}`);
     if (e.updated) lines.push(`- *Last edited ${e.updated}*`);
   }
   return lines.join('\n') + '\n';
@@ -94,7 +121,7 @@ page.append(
       h('button', { class: 'btn primary', type: 'button', onclick: download }, 'Export as Markdown'),
       copyBtn,
       h('a', { class: 'btn ghost', href: '#ranking' }, 'See the ranking'))),
-  h('p', { class: 'c-muted sl-privacy' }, 'Your notes stay in this browser on this device. Nothing is sent anywhere. Export them to keep a copy or move to another device.'),
+  h('p', { class: 'c-muted sl-privacy' }, 'Your notes stay in this browser on this device. Nothing is sent anywhere. Export them to keep a copy. (The site can\'t read an export back in.)'),
 );
 
 // ---------------------------------------------------------------- one card per field
@@ -109,8 +136,9 @@ for (const f of reg.fields) {
     const v = k + 1;
     const b = h('button', { class: 'sl-score-btn', type: 'button', 'aria-pressed': String(e.score === v), 'aria-label': `Excitement ${v} out of 10` }, String(v));
     b.addEventListener('click', () => {
-      e.score = e.score === v ? null : v;                     // a second click clears it
-      scoreBtns.forEach((bb, kk) => bb.setAttribute('aria-pressed', String(e.score === kk + 1)));
+      const cur = log[f.slug];
+      cur.score = cur.score === v ? null : v;                 // a second click clears it
+      scoreBtns.forEach((bb, kk) => bb.setAttribute('aria-pressed', String(cur.score === kk + 1)));
       touch(f.slug); persist();
     });
     return b;
@@ -119,13 +147,16 @@ for (const f of reg.fields) {
     const id = `sl-${f.slug}-${key}`;
     const ta = h('textarea', { id, rows: 3, placeholder: hint });
     ta.value = e[key];
-    let t: number | undefined;
     ta.addEventListener('input', () => {
-      e[key] = ta.value; touch(f.slug);
-      window.clearTimeout(t);
-      t = window.setTimeout(persist, 300);
+      log[f.slug][key] = ta.value; touch(f.slug);
+      persistSoon();
     });
     return h('div', { class: 'sl-q' }, h('label', { for: id }, label), ta);
+  });
+  refreshers.set(f.slug, () => {
+    const cur = log[f.slug];
+    QUESTIONS.forEach(([key], k) => { (fields[k].querySelector('textarea') as HTMLTextAreaElement).value = cur[key]; });
+    scoreBtns.forEach((bb, kk) => bb.setAttribute('aria-pressed', String(cur.score === kk + 1)));
   });
   cards.append(
     h('section', { class: `card sl-card ${f.idea}`, id: f.slug },

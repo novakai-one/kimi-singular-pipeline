@@ -39,7 +39,7 @@ function render(stage: HTMLElement, f: HeapFrame) {
   const H = arcTop + 52;
   const n = f.heap.length;
 
-  const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': n ? `Min-heap holding ${f.heap.join(', ')}` : 'An empty heap' });
+  const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'data-wide': 'true', 'aria-label': n ? `Min-heap holding ${f.heap.join(', ')}` : 'An empty heap' });
   const cls = (i: number) => `heap-shape${f.state[i] ? ' ' + f.state[i] : ''}`;
   const linkKind = (a: number, b: number) => f.links.find((l) => l.a === a && l.b === b)?.kind ?? '';
 
@@ -155,7 +155,7 @@ const viz: Viz = (el, api) => {
           ? `Show me: inserting ${best.value} needs ${best.swaps} swaps. It starts at position ${best.from}, on the 4th level, and is smaller than every item above it. Now try your own numbers.`
           : 'Show me needs at least one insertion.');
       } else if (best && most >= GOAL_SWAPS) {
-        api.win(`Inserting ${best.value} needed ${best.swaps} swaps. It started at position ${best.from}, on the 4th level, and climbed one level per swap to the top.`);
+        api.win(`Inserting ${best.value} needed ${best.swaps} swaps. It started at position ${best.from}, on the 4th level, and climbed one level per swap to the top. A heap with 4 levels holds at most 15 items, so 3 swaps is the most any insertion can need. A million items need about 20 levels, so at most about 20 swaps: the prediction above.`);
       } else {
         api.feedback(`The most swaps in one insertion: **${most}**. The goal is ${GOAL_SWAPS}.`
           + (levels < 4 ? ` Your heap reached ${levels} level${levels === 1 ? '' : 's'}. Each swap moves an item up one level.` : ' Your heap is tall enough. Which new number would climb all the way up?'));
@@ -173,6 +173,12 @@ const viz: Viz = (el, api) => {
     async showMe() {
       showing = true;
       player.setInput(SHOW_ME);
+      // skip the inserts that need no swaps: start just before the last insertion
+      const fr = player.frames();
+      const lastOp = Math.max(...fr.map((f) => f.op));
+      const start = fr.findIndex((f) => f.op === lastOp);
+      if (start > 0) player.goTo(start - 1);
+      player.setSpeed(2);
       await sleep(400);
       player.play();
     },

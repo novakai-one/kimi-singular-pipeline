@@ -22,7 +22,7 @@ function render(stage: HTMLElement, f: SortFrame) {
   const maxV = Math.max(...f.arr, 1);
   const base = 170;
   const bh = (v: number) => 16 + (v / maxV) * 130;
-  const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': `Bars for the numbers ${f.arr.join(', ')}` });
+  const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'data-wide': 'true', 'aria-label': `Bars for the numbers ${f.arr.join(', ')}` });
 
   if (f.range) {
     const [lo, hi] = f.range;

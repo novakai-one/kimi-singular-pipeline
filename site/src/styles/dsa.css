@@ -14,6 +14,7 @@
 .dp-note { min-height: 3.1em; font-size: 14.5px; margin-top: 8px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }
 .dp-controls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
 .dp-btn { min-width: 38px; }
+.dp-swipe { display: none; font-size: 12.5px; color: var(--muted); margin-top: 4px; }
 .dp-counter { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; margin: 0 4px; }
 .dp-speed { font-size: 13px; color: var(--muted); margin-left: auto; }
 .dp-speed select { padding: 4px 6px; font-size: 13px; }
@@ -47,6 +48,10 @@
 
 @media (max-width: 800px) {
   .dp-main { grid-template-columns: 1fr; }
+  /* wide drawings keep a readable size on phones; swipe the picture sideways */
+  .dp-stage { overflow-x: auto; justify-content: flex-start; }
+  .dp-stage svg[data-wide] { min-width: 540px; }
+  .dp-left:has(svg[data-wide]) .dp-swipe { display: block; }
   .dp-speed { margin-left: 0; }
   .dp-btn { min-height: 44px; min-width: 44px; }
 }

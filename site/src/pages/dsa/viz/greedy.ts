@@ -40,7 +40,7 @@ function render(stage: HTMLElement, f: ChangeFrame) {
   const tableTop = panelBottom + 34;
   const tableRows = Math.ceil((f.amount + 1) / PER_ROW);
   const H = tableTop + tableRows * ROW_PITCH + 4;
-  const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img',
+  const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'data-wide': 'true',
     'aria-label': `Coins ${f.coins.slice().reverse().join(', ')}, amount ${f.amount}. Biggest first: ${f.gStack.join(' + ') || 'no coins yet'}. Fewest possible: ${f.bStack.join(' + ') || 'not traced yet'}.` });
 
   // ---------------- coin chips and the amount

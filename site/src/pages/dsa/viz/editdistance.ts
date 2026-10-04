@@ -25,7 +25,7 @@ function render(stage: HTMLElement, f: EdFrame) {
   const cy = (i: number) => y0 + (i + 1) * c; // top edge of table row i
   const base = (y: number) => y + c / 2 + fs * 0.36;
 
-  const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, class: 'editdistance-svg', role: 'img',
+  const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, class: 'editdistance-svg', 'data-wide': 'true', role: 'img',
     'aria-label': `Edit distance table: "${a}" down the side, "${b}" along the top` });
   svg.append(s('defs', null,
     s('marker', { id: 'editdistance-arrow', viewBox: '0 0 10 10', refX: 7, refY: 5, markerWidth: 3.6, markerHeight: 3.6, orient: 'auto' },
@@ -111,8 +111,8 @@ const viz: Viz = (el, api) => {
   const editsR = readout('Edits found');
   const legend = h('div', { class: 'legend' },
     ([
-      ['var(--search)', 'the three cells being read (+1 or +0 is what each adds)'],
-      ['var(--yellow)', 'the cell being filled'],
+      ['var(--search)', 'the three cells being read (+1 or +0 is what each adds), and the two letters being compared'],
+      ['var(--yellow)', 'the cell being filled; in the walk back, the cell it has reached'],
       ['var(--red)', 'the walk back; filled red = an edit (k→s change, +g insert, −x delete)'],
       ['var(--green)', 'the answer'],
     ] as const).map(([col, t]) => h('span', null, h('span', { class: 'sw', style: `background:${col}` }), t)));
