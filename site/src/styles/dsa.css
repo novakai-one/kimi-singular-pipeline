@@ -54,3 +54,16 @@
 .dv-range { fill: var(--yellow-soft); opacity: .45; }
 .dv-mark { fill: var(--text); font-size: 12.5px; font-weight: 650; }
 .dv-faded { opacity: .45; }
+
+/* DSA overview */
+.di-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.di-card { display: flex; gap: 14px; align-items: flex-start; text-decoration: none; color: var(--text); padding: 14px 16px; height: 100%; box-sizing: border-box; }
+.di-card:hover { border-color: var(--accent); }
+.di-num { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); font-weight: 700; font-size: 14px; }
+.di-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.di-used { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 4px; }
+.di-chip { font-size: 12.5px; }
+.di-chip.search { border-color: var(--search); }
+.di-chip.learn { border-color: var(--learn); }
+.di-chip.act { border-color: var(--act); }
+@media (max-width: 800px) { .di-list { grid-template-columns: 1fr; } }

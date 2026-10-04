@@ -76,7 +76,7 @@ page.append(
 
 // ------------------------------------------------------------------ practise more
 const SITES = [
-  { label: 'CSES Problem Set', url: 'https://cses.fi/problemset/', note: 'about 400 short problems, grouped by topic, with an online judge' },
+  { label: 'CSES Problem Set', url: 'https://cses.fi/problemset/', note: 'several hundred short problems, grouped by topic, with an online judge' },
   { label: 'USACO Guide', url: 'https://usaco.guide/', note: 'free modules from Bronze to Platinum, each with practice problems' },
   { label: 'LeetCode', url: 'https://leetcode.com/problemset/', note: 'filter by topic tag; the style of many job interviews' },
 ];

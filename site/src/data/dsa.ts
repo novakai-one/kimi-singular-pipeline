@@ -378,8 +378,8 @@ export const DSA: DsaContent[] = [
     },
     viz: {
       title: 'Make change',
-      goal: 'Find coins and an amount where biggest-first uses more coins than needed.',
-      detail: 'Enter the coin values and the amount, like "1 3 4; 6".',
+      goal: 'Find coins and an amount where biggest-first uses more coins than needed. The example from the prediction (1, 3, 4 and 6) doesn\'t count.',
+      detail: 'Enter the coin values, a semicolon, then the amount, like "1 5 10 25; 30".',
     },
     explain: {
       see: 'Left: biggest-first, taking the largest coin that still fits, again and again. Right: the fewest coins possible, found by checking every smaller amount first (the method of the next topic). When the two stacks differ, biggest-first was wrong.',
