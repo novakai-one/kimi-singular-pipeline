@@ -92,7 +92,7 @@ test('big-o: with cost c·n², doubling n gives 4 times the time, and Show me\'s
   // the default run starts with no guesses, so it does not meet the goal by itself
   assert.ok(makeFrames(sizes, 2)[0].run.guesses.every((g) => g === null));
   // notes use the numbers of the run
-  assert.match(noteFor(run, 1), /n = 2,000 is 2 times n = 1,000\. Every pair took \*\*8\.0 ms\*\*, 4\.0 times as long\. Sorting took 2\.2 times as long, one pass 2\.0 times\./);
+  assert.equal(noteFor(run, 1), 'At n = 2,000 (2 times n = 1,000), every pair took **8.0 ms**, 4.0 times as long; sorting took 2.2 times as long, and one pass 2.0 times.');
 });
 
 test('big-o: the goal\'s 30% window', () => {

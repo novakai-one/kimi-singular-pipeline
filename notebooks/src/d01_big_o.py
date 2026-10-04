@@ -30,7 +30,7 @@ def build() -> None:
             4. **Make a slow repeat check fast** with a set.
             5. **Solve 5 practice problems.** Each has checks you can run, and a solution one click away.
 
-            Running every cell takes a few seconds. The site's *Big-O* page times the same three programs in your browser.
+            Running every cell takes under a minute. The site's *Big-O* page times the same three programs in your browser.
         """,
     )
     nb.md("""
@@ -183,6 +183,7 @@ for i, n in enumerate(SIZES):
     """)
     nb.code('''
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 
 COLOURS = {"one pass": "#0b8a7f", "sorting": "#7442d6", "every pair": "#d03a3a"}
 MARKERS = {"one pass": "o", "sorting": "s", "every pair": "^"}
@@ -204,6 +205,7 @@ left.legend(loc="upper left", frameon=False)
 right.set_title("Each grid line up is 10 times longer")
 right.set_xscale("log", base=2)
 right.set_yscale("log")
+right.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}"))   # 0.01, 0.1, 1, 10 ...
 right.set_xticks(SIZES, [f"{n:,}" for n in SIZES])
 right.minorticks_off()
 for name in PROGRAMS:
@@ -215,6 +217,7 @@ plt.show()
     nb.md("""
         🐍 `plt.subplots(1, 2)` makes a figure with 2 charts side by side. `ax.plot(x, y)` draws a line through the points.
         `set_yscale("log")` spaces the grid by multiplying (1, 10, 100, ...) instead of adding.
+        `lambda v, _: f"{v:g}"` is a one-line function: it prints each grid number in its plain short form, like `0.01`.
 
         **What you see:** on the left, every pair shoots up and the other two stay flat near 0.
         On the right, all three are close to straight lines, and **the every-pair line climbs about twice as steeply** as one pass.
@@ -256,8 +259,8 @@ for n in [8_000, 16_000, 32_000, 64_000]:
     prev = t
 ''')
     nb.md("""
-        **What you see:** on bigger lists, sorting takes a little more than 2 times as long per doubling.
-        The last column is what $n \\log_2 n$ predicts: doubling $n$ doubles the $n$ and adds 1 to $\\log_2 n$.
+        **What you see:** on bigger lists, the sorting ratio stays close to 2.
+        The last column is what $n \\log_2 n$ predicts: a little more than 2, because doubling $n$ doubles the $n$ and adds 1 to $\\log_2 n$.
 
         **What it means:** if the time is about $c \\cdot n^k$, doubling $n$ multiplies it by $2^k$.
         So a ratio of 2 means $k = 1$, and a ratio of 4 means $k = 2$. In general $k = \\log_2(\\text{ratio})$, which is what the last lines print.

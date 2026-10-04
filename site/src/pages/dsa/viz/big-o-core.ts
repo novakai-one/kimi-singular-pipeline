@@ -344,7 +344,7 @@ export function noteFor(run: RunState, k: number): string {
   }
   const grow = fmtTimes(run.sizes[k] / run.sizes[k - 1]);
   const r = (key: ProgKey) => fmtRatio(ratioAt(run, k, key)!);
-  return `n = ${n} is ${grow} times n = ${fmtN(run.sizes[k - 1])}. Every pair took **${fmtMs(t.pair)} ms**, ${r('pair')} times as long. Sorting took ${r('sort')} times as long, one pass ${r('one')} times.`;
+  return `At n = ${n} (${grow} times n = ${fmtN(run.sizes[k - 1])}), every pair took **${fmtMs(t.pair)} ms**, ${r('pair')} times as long; sorting took ${r('sort')} times as long, and one pass ${r('one')} times.`;
 }
 
 /** One frame per size. Each note reads the shared run, so it shows the times once they are measured. */
