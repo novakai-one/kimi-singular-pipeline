@@ -43,10 +43,10 @@ for (const width of [1440, 390]) {
     // challenge 1: repeat at low temperature (the student's own run, not Show me)
     let won = false;
     for (let k = 0; k < 4 && !won; k++) {
-      await page.evaluate(async () => { window.__tinylm.setT(0.1); window.__tinylm.restart(); await window.__tinylm.write(300); });
+      await page.evaluate(async () => { window.__tinylm.setT(0.05); window.__tinylm.restart(); await window.__tinylm.write(300); });
       won = await page.evaluate(() => [...document.querySelectorAll('.challenge')][0].classList.contains('done'));
     }
-    ok(won, 'repeat challenge won at temperature 0.1');
+    ok(won, 'repeat challenge won at temperature 0.05');
     won = false;
     for (let k = 0; k < 4 && !won; k++) {
       await page.evaluate(async () => { window.__tinylm.setT(2); window.__tinylm.restart(); await window.__tinylm.write(300); });

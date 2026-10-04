@@ -293,7 +293,7 @@ export const DSA: DsaContent[] = [
     viz: {
       title: 'Keep the smallest on top',
       goal: 'Make a single insertion need 3 swaps.',
-      detail: 'Enter numbers to insert, and x to remove the smallest. The counter shows swaps for each operation.',
+      detail: 'Enter numbers to insert, and x to remove the smallest. The readout "Swaps in this operation" counts them.',
     },
     explain: {
       see: 'The same heap twice: as a tree and as an array. A new item goes into the first free spot at the bottom, then swaps with its parent while it is smaller. Removing the top moves the last item up to the top, then swaps it down with its smaller child.',
@@ -301,7 +301,7 @@ export const DSA: DsaContent[] = [
       called: 'This is a *binary heap*; with the smallest on top, a *min-heap*. Stored in an array, the children of position $i$ sit at $2i + 1$ and $2i + 2$. A heap is the usual way to build a *priority queue*: add and remove-smallest in $O(\\log n)$, look at the smallest in $O(1)$.',
       formula: 'Children of position $i$: $2i + 1$ and $2i + 2$. Parent of position $i$: $\\lfloor (i - 1) / 2 \\rfloor$.',
     },
-    inAI: 'Dijkstra and A* (Field 8) keep their waiting squares in a priority queue, so the most promising comes out next. Beam search in language models and "top k" selection use heaps too.',
+    inAI: 'A* (Field 8) and Dijkstra (DSA topic 8) keep the places still to check in a priority queue, so the most promising one comes out next. Keeping the k best items of a long stream, such as the k most likely next words, can use a heap of size k.',
     practice: [
       { q: 'Insert 5, 3, 8, 1 into an empty min-heap. **Write the array after each insert.**', a: '[5] → [3, 5] → [3, 5, 8] → [1, 3, 8, 5].' },
       { q: 'In an array heap, **what are the children of position 4? Its parent?**', a: 'Children at 9 and 10. Parent at $\\lfloor 3/2 \\rfloor = 1$.' },
@@ -411,7 +411,7 @@ export const DSA: DsaContent[] = [
     problem: `
       A spell-checker suggests "receive" when you type "recieve".
       **How many single-letter edits (insert, delete or change a letter) turn one word into another?**
-      Trying every sequence of edits explodes. But the answer for whole words can be built from the answers for their beginnings.
+      There are far too many edit sequences to try them all. But the answer for whole words can be built from the answers for their beginnings.
     `,
     predict: {
       prompt: '**How many edits turn "kitten" into "sitting"?**',
@@ -420,21 +420,21 @@ export const DSA: DsaContent[] = [
     },
     viz: {
       title: 'Fill the table',
-      goal: 'Find two different words, each at least 5 letters long, with an edit distance of exactly 1.',
-      detail: 'Enter two words separated by a comma, like "kitten, sitting".',
+      goal: 'Find two words of the same length (at least 4 letters) that need fewer edits than the number of positions where their letters differ.',
+      detail: 'Enter two words separated by a comma, like "kitten, sitting". Compare them letter by letter first, then fill the table.',
     },
     explain: {
-      see: 'Row $i$, column $j$ holds the number of edits needed to turn the first $i$ letters of one word into the first $j$ letters of the other. Each cell looks at three cells already filled: left (insert a letter), above (delete one), and diagonal (change one, or free if the letters match).',
+      see: 'Row $i$, column $j$ holds the number of edits needed to turn the first $i$ letters of the side word into the first $j$ letters of the top word. Each cell is worked out from three cells already filled: left (insert a letter), above (delete one), and diagonal (change one, or free if the letters match).',
       means: 'Each cell reuses answers already in the table, so nothing is worked out twice. **The bottom-right cell is the answer for the whole words.** Following the arrows back from it gives the list of edits.',
       called: 'Storing the answers to smaller problems and building up from them is *dynamic programming* (DP). The rule linking a cell to smaller cells is the *recurrence*. This distance is the *edit distance* (also called Levenshtein distance). Filling the table takes $O(nm)$ for words of lengths $n$ and $m$.',
-      formula: 'For each cell: $D[i][j] = \\min\\big(D[i-1][j] + 1,\\; D[i][j-1] + 1,\\; D[i-1][j-1] + c\\big)$\n\nHere $c = 0$ if the $i$-th letter of the first word matches the $j$-th letter of the second, and $c = 1$ if not.',
+      formula: 'For each cell: $$D[i][j] = \\min \\begin{cases} D[i-1][j] + 1 & \\text{delete} \\\\ D[i][j-1] + 1 & \\text{insert} \\\\ D[i-1][j-1] + c & \\text{change, or keep} \\end{cases}$$\n\nHere $c = 0$ if the $i$-th letter of the side word matches the $j$-th letter of the top word, and $c = 1$ if not.',
     },
     inAI: 'Value iteration in reinforcement learning is dynamic programming over states (Field 6). Spell-checkers and DNA comparison use edit distance. Speech recognition lines sounds up with words using DP.',
     practice: [
-      { q: 'You climb stairs 1 or 2 steps at a time. **In how many ways can you climb 5 stairs?**', a: 'Ways($n$) = Ways($n$−1) + Ways($n$−2), starting 1, 1: then 2, 3, 5, **8**.' },
+      { q: 'You climb stairs 1 or 2 steps at a time. **In how many ways can you climb 5 stairs?**', a: 'Ways($n$) = Ways($n$−1) + Ways($n$−2). There is 1 way to climb 1 stair and 2 ways to climb 2; then 3, 5, **8**.' },
       { q: 'Coins 1, 3, 4. **Fill a table of the fewest coins for every amount from 0 to 6.**', a: '0:0, 1:1, 2:2, 3:1, 4:1, 5:2, 6:**2** (3 + 3). Each entry is 1 + the best of (amount − coin) over the coins.' },
       { q: '**What is the edit distance between "cat" and "cut"? Between "cat" and "cast"?**', a: '1 (change a to u) and 1 (insert s).' },
-      { q: 'In 3, 1, 4, 1, 5, 9, 2, 6, **what is the longest run of numbers you can pick, keeping their order, so each is bigger than the one before?**', a: 'Length **4**, for example 1, 4, 5, 9 or 3, 4, 5, 6.' },
+      { q: 'In 3, 1, 4, 1, 5, 9, 2, 6, **what is the longest run of numbers you can pick, keeping their order, so each is bigger than the one before?**', a: 'Length **4**, for example 1, 4, 5, 9 or 3, 4, 5, 6. The longest run ending at each number: 1, 1, 2, 1, 3, 4, 2, 4. Each is 1 + the longest run ending at a smaller number before it.' },
     ],
     cues: [
       ['"number of ways" or "best total", built from smaller versions of the same question', 'dynamic programming'],

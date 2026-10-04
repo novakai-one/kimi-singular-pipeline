@@ -3,8 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  editDistance, editFrames, editList, editTable, meetsGoal, parseInput, randomPair, traceBack, wordChain,
-} from '../../site/src/pages/dsa/viz/editdistance-core.ts';
+  editDistance, editFrames, editList, editTable, meetsGoal, parseInput, randomPair, traceBack, wordChain, differingPositions } from '../../site/src/pages/dsa/viz/editdistance-core.ts';
 import { dsaContent } from '../../site/src/data/dsa.ts';
 
 const c = dsaContent('dynamic-programming');
@@ -121,7 +120,7 @@ test('practice: climbing 5 stairs 1 or 2 at a time: 8 ways', () => {
   // brute force: count step sequences that add up to 5
   const count = (n: number): number => (n < 0 ? 0 : n === 0 ? 1 : count(n - 1) + count(n - 2));
   assert.equal(count(5), 8);
-  assert.ok(plain(c.practice[0].a).includes('starting 1, 1: then 2, 3, 5, 8'));
+  assert.ok(plain(c.practice[0].a).includes('1 way to climb 1 stair and 2 ways to climb 2; then 3, 5, 8'));
 });
 
 test('practice: coins 1, 3, 4: fewest coins for 0 to 6', () => {
@@ -161,15 +160,17 @@ test('practice: longest increasing run in 3 1 4 1 5 9 2 6 has length 4', () => {
 });
 
 test('challenge: reachable, Show me reaches it, the default does not', () => {
-  assert.match(c.viz.goal, /two different words, each at least 5 letters long, with an edit distance of exactly 1/);
+  assert.match(c.viz.goal, /same length .* fewer edits than the number of positions where their letters differ/);
   const def = parseInput('kitten, sitting');
   assert.equal(meetsGoal(def.a, def.b), false, 'default input must not win');
-  const show = parseInput('house, horse');
+  const show = parseInput('stone, tones');
+  assert.equal(differingPositions('stone', 'tones'), 5);
+  assert.equal(editDistance('stone', 'tones'), 2);
   assert.equal(meetsGoal(show.a, show.b), true, 'Show me wins');
-  assert.deepEqual(editList('house', 'horse'), ['change u to r']);
+  assert.equal(meetsGoal('house', 'horse'), false, 'a change only: edits = differing positions');
   assert.equal(meetsGoal('house', 'house'), false, 'same word');
-  assert.equal(meetsGoal('cat', 'cut'), false, 'too short');
-  assert.equal(meetsGoal('plane', 'planet'), true, 'an insert also counts');
+  assert.equal(meetsGoal('plane', 'planet'), false, 'different lengths');
+  assert.equal(meetsGoal('recieve', 'receive'), false, 'preset: 2 positions, 2 edits');
   const r = lcg(3);
   for (let k = 0; k < 300; k++) { const p = parseInput(randomPair(r)); assert.ok(!meetsGoal(p.a, p.b) && p.a !== p.b); }
 });

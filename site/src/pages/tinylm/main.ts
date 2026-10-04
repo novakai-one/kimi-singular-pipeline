@@ -38,7 +38,7 @@ page.append(
   predict({
     prompt: 'At each step the model gives every character a probability. **If it always takes the most likely one, what will the text look like?**',
     choices: ['Normal sentences', 'It repeats itself', 'Random letters'],
-    reveal: '**It repeats itself.** The same text always leads to the same top choice, so the model falls into a loop. Set the temperature to 0.1 below and press Write to check.',
+    reveal: '**It repeats itself.** The same text always leads to the same top choice, so the model falls into a loop. Set the temperature to 0.05 below and press Write to check.',
   }),
 );
 
@@ -88,7 +88,7 @@ function build(model: TinyModel, known: Set<string>, info: TrainInfo) {
   const barsContext = h('div', { class: 'tl-context' });
   const bars = h('div', { class: 'tl-bars' });
   const barsNote = h('div', { class: 'tl-note' });
-  const tSlider = h('input', { type: 'range', min: '0.1', max: '2', step: '0.05', value: String(T), 'aria-label': 'Temperature' });
+  const tSlider = h('input', { type: 'range', min: '0.05', max: '2', step: '0.05', value: String(T), 'aria-label': 'Temperature' });
   const tValue = h('span', { class: 'tl-t-value' }, T.toFixed(2));
 
   // ---------------------------------------------------------------- panel 3: attention
@@ -106,7 +106,7 @@ function build(model: TinyModel, known: Set<string>, info: TrainInfo) {
     showMe: () => demo('repeat'),
   });
   const chRamble = challenge({
-    goal: `Now make it ramble: write ${CHALLENGE.minChars} characters in which more than half of the words are made up.`,
+    goal: `Now make it ramble: write ${CHALLENGE.minChars} characters in which at least ${Math.round(CHALLENGE.ramble.share * 100)}% of the words are made up.`,
     detail: 'A made-up word is one that never appears in the 1.1 million characters the model learned from.',
     showMe: () => demo('ramble'),
   });
@@ -137,7 +137,7 @@ function build(model: TinyModel, known: Set<string>, info: TrainInfo) {
           barsTitle, barsContext, bars, barsNote,
           h('div', { class: 'tl-temp' },
             h('label', null, 'Temperature ', tValue), tSlider,
-            h('div', { class: 'tl-temp-ends' }, h('span', null, '0.1: safest guess'), h('span', null, '2: wild guesses')))),
+            h('div', { class: 'tl-temp-ends' }, h('span', null, '0.05: safest guess'), h('span', null, '2: wild guesses')))),
         panel(3, 'Attention', 'Which earlier characters did it look at?',
           h('div', { class: 'btn-row' }, layerSel, headSel),
           attNote))),
@@ -297,7 +297,7 @@ function build(model: TinyModel, known: Set<string>, info: TrainInfo) {
     if (ram.win) {
       if (showing === 'ramble') chRamble.feedback(ramMsg + ' Now try it yourself.');
       else chRamble.win(ramMsg + ' A high temperature flattens the probabilities, so unlikely characters get picked and words fall apart.');
-    } else if (showing !== 'repeat') chRamble.feedback(`Made-up words: ${Math.round(ram.share * 100)}%. The goal is more than ${Math.round(CHALLENGE.ramble.share * 100)}%.`);
+    } else if (showing !== 'repeat') chRamble.feedback(`Made-up words: ${Math.round(ram.share * 100)}%. The goal is at least ${Math.round(CHALLENGE.ramble.share * 100)}%.`);
     showing = null;
   }
 
@@ -305,7 +305,7 @@ function build(model: TinyModel, known: Set<string>, info: TrainInfo) {
     stopAsked = true;
     while (running) await sleep(20);
     showing = kind;
-    setT(kind === 'repeat' ? 0.1 : 2);
+    setT(kind === 'repeat' ? 0.05 : 2);
     restart();
     await write(CHALLENGE.minChars);
   }
@@ -364,6 +364,14 @@ function lossChart(info: TrainInfo) {
   return svg;
 }
 
+function lossCaption(info: TrainInfo) {
+  const best = info.curve.reduce((a, c) => (c.val < a.val ? c : a));
+  const base = 'Loss falls as training goes on. Held-out text is text the model never trained on.';
+  return info.final.val - best.val > 0.02
+    ? `${base} After about step ${best.step.toLocaleString('en')}, the held-out loss stops falling while the training loss keeps going down: the model starts to memorise its training text.`
+    : base;
+}
+
 function explain(model: TinyModel, info: TrainInfo) {
   const seen = Math.round((info.iters * info.batch * model.cfg.block) / 1e6);
   const step = (n: number, label: string, text: string) =>
@@ -404,7 +412,7 @@ function explain(model: TinyModel, info: TrainInfo) {
           h('a', { class: 'btn primary', href: colabUrl(NOTEBOOK), target: '_blank', rel: 'noopener' }, 'Retrain it in Colab'),
           h('a', { class: 'btn', href: githubUrl(NOTEBOOK), target: '_blank', rel: 'noopener' }, 'View the notebook on GitHub'),
           h('a', { class: 'btn ghost', href: url('fields/language-models.html') }, 'Field 3: Language models →'))),
-      h('figure', { class: 'card tl-loss-card' }, lossChart(info), h('figcaption', { class: 'c-muted' }, 'Loss falls as training goes on. Held-out text is text the model never trained on.'))),
+      h('figure', { class: 'card tl-loss-card' }, lossChart(info), h('figcaption', { class: 'c-muted' }, lossCaption(info)))),
     cue([
       ['"generate text one piece at a time"', 'a language model: score, pick, repeat'],
       ['"make the output more varied" or "more predictable"', 'raise or lower the temperature'],

@@ -3,7 +3,7 @@
 import { h, s } from '../../../lib/dom';
 import { readout, sleep, type Viz } from '../../fieldviz/kit';
 import { makePlayer, type Algorithm } from '../player';
-import { CODE, GOAL_LEN, editFrames, meetsGoal, parseInput, randomPair, type EdFrame } from './editdistance-core';
+import { CODE, GOAL_LEN, editFrames, meetsGoal, parseInput, randomPair, type EdFrame, differingPositions } from './editdistance-core';
 import './editdistance.css';
 
 const W = 640;
@@ -146,15 +146,19 @@ const viz: Viz = (el, api) => {
       const f = frames[frames.length - 1];
       const { a, b, dist } = f;
       if (meetsGoal(a, b)) {
-        if (showing) api.feedback(`"${a}" and "${b}" are 1 edit apart (${f.edits[0]}). Now find a pair of your own.`);
-        else api.win(`"${a}" and "${b}" are 1 edit apart: ${f.edits[0]}.`);
+        const diff = differingPositions(a, b);
+        const msg = `"${a}" and "${b}": ${diff} positions have different letters, but ${dist} edits are enough (${f.edits.join(', ')}). `
+          + 'Deleting and inserting shift the letters along, so comparing column by column overcounts.';
+        if (showing) api.feedback(msg + ' Now find a pair of your own.');
+        else api.win(msg);
       } else if (a === b) {
         api.feedback('The two words are the same, so the distance is 0. The goal needs two different words.');
-      } else if (dist === 1) {
-        const short = a.length < GOAL_LEN ? a : b;
-        api.feedback(`Distance 1, but "${short}" has only ${short.length} letter${short.length === 1 ? '' : 's'}. Each word needs at least ${GOAL_LEN}.`);
+      } else if (a.length !== b.length) {
+        api.feedback(`"${a}" → "${b}": distance ${dist}. The goal needs two words of the same length.`);
+      } else if (a.length < GOAL_LEN) {
+        api.feedback(`The goal needs words of at least ${GOAL_LEN} letters.`);
       } else {
-        api.feedback(`"${a}" → "${b}": distance ${dist}. The goal is distance 1, with two different words of at least ${GOAL_LEN} letters.`);
+        api.feedback(`"${a}" → "${b}": ${differingPositions(a, b)} positions differ and ${dist} edits are needed. The goal is fewer edits than differing positions.`);
       }
       showing = false;
     },
@@ -170,7 +174,7 @@ const viz: Viz = (el, api) => {
   return {
     async showMe() {
       showing = true;
-      player.setInput('house, horse');
+      player.setInput('stone, tones');
       await sleep(400);
       player.play();
     },

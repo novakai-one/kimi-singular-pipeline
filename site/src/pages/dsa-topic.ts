@@ -34,7 +34,20 @@ page.append(
 // ------------------------------------------------------------------ visualiser + explanation
 const vizBox = h('div', { class: 'dt-viz' });
 let handle: VizHandle | null = null;
-const ch = challenge({ goal: c.viz.goal, detail: c.viz.detail, showMe: () => handle?.showMe() });
+// Feedback only after the student acts (or presses Show me): the automatic first run must not
+// answer the prediction above or describe a picture the student hasn't seen yet.
+let acted = false;
+for (const ev of ['pointerdown', 'keydown']) vizBox.addEventListener(ev, () => { acted = true; }, true);
+const ch = challenge({
+  goal: c.viz.goal, detail: c.viz.detail,
+  showMe: () => {
+    acted = true;
+    vizCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    handle?.showMe();
+  },
+});
+
+const vizCard = h('div', { class: 'viz dt-viz-card' }, vizBox);
 
 const stepBox = (n: number, label: string, text: string) =>
   h('section', { class: 'fc-step' },
@@ -44,7 +57,7 @@ const stepBox = (n: number, label: string, text: string) =>
 append(page, [
   h('h2', null, c.viz.title),
   ch.el,
-  h('div', { class: 'viz dt-viz-card' }, vizBox),
+  vizCard,
   h('div', { class: 'grid-3 dt-steps' },
     stepBox(1, 'What you see', c.explain.see),
     stepBox(2, 'What it means', c.explain.means),
@@ -60,7 +73,7 @@ if (load) {
   vizBox.append(h('div', { class: 'c-muted', style: 'padding:40px;text-align:center' }, 'Loading the visualiser…'));
   load().then((m) => {
     vizBox.replaceChildren();
-    handle = m.default(vizBox, { win: (msg) => ch.win(msg), feedback: (msg) => ch.feedback(msg) });
+    handle = m.default(vizBox, { win: (msg) => ch.win(msg), feedback: (msg) => { if (acted) ch.feedback(msg); } });
   });
 } else {
   vizBox.append(h('div', { class: 'note-building' }, 'This visualiser is being built.'));

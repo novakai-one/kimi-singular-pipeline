@@ -185,9 +185,14 @@ export function editFrames(a: string, b: string): EdFrame[] {
   return frames;
 }
 
-/** The challenge: two different words, each at least 5 letters, exactly 1 edit apart. */
-export const GOAL_LEN = 5;
-export const meetsGoal = (a: string, b: string) => a !== b && a.length >= GOAL_LEN && b.length >= GOAL_LEN && editDistance(a, b) === 1;
+/** Positions where two same-length words have different letters. */
+export const differingPositions = (a: string, b: string) => [...a].filter((c, i) => c !== b[i]).length;
+
+/** The challenge: two words of the same length (at least GOAL_LEN letters) that need fewer edits than
+ *  the number of positions where their letters differ. Comparing column by column overcounts them. */
+export const GOAL_LEN = 4;
+export const meetsGoal = (a: string, b: string) =>
+  a !== b && a.length === b.length && a.length >= GOAL_LEN && editDistance(a, b) < differingPositions(a, b);
 
 /** Word list for the Random button. */
 export const WORDS = [

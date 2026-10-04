@@ -7,23 +7,138 @@
   },
   {
    "step": 250,
-   "train": 2.3528,
-   "val": 2.3485
+   "train": 2.3028,
+   "val": 2.3038
+  },
+  {
+   "step": 500,
+   "train": 1.8862,
+   "val": 1.9986
+  },
+  {
+   "step": 750,
+   "train": 1.6655,
+   "val": 1.816
+  },
+  {
+   "step": 1000,
+   "train": 1.554,
+   "val": 1.7199
+  },
+  {
+   "step": 1250,
+   "train": 1.4831,
+   "val": 1.6572
+  },
+  {
+   "step": 1500,
+   "train": 1.4333,
+   "val": 1.642
+  },
+  {
+   "step": 1750,
+   "train": 1.4012,
+   "val": 1.5929
+  },
+  {
+   "step": 2000,
+   "train": 1.373,
+   "val": 1.5713
+  },
+  {
+   "step": 2250,
+   "train": 1.3614,
+   "val": 1.562
+  },
+  {
+   "step": 2500,
+   "train": 1.3129,
+   "val": 1.5491
+  },
+  {
+   "step": 2750,
+   "train": 1.3071,
+   "val": 1.5485
+  },
+  {
+   "step": 3000,
+   "train": 1.2666,
+   "val": 1.532
+  },
+  {
+   "step": 3250,
+   "train": 1.2537,
+   "val": 1.5164
+  },
+  {
+   "step": 3500,
+   "train": 1.2533,
+   "val": 1.5307
+  },
+  {
+   "step": 3750,
+   "train": 1.2328,
+   "val": 1.5362
+  },
+  {
+   "step": 4000,
+   "train": 1.2094,
+   "val": 1.5348
+  },
+  {
+   "step": 4250,
+   "train": 1.1914,
+   "val": 1.5186
+  },
+  {
+   "step": 4500,
+   "train": 1.1812,
+   "val": 1.518
+  },
+  {
+   "step": 4750,
+   "train": 1.1706,
+   "val": 1.5265
+  },
+  {
+   "step": 5000,
+   "train": 1.1612,
+   "val": 1.5169
+  },
+  {
+   "step": 5250,
+   "train": 1.1377,
+   "val": 1.5381
+  },
+  {
+   "step": 5500,
+   "train": 1.1297,
+   "val": 1.5337
+  },
+  {
+   "step": 5750,
+   "train": 1.1236,
+   "val": 1.5402
+  },
+  {
+   "step": 6000,
+   "train": 1.1203,
+   "val": 1.5586
   }
  ],
  "samples": {
-  "0.2": "ROMEO:\nAnd I the son me the so the me the the the the the the the the the so thean the the thean sthe the there the the ore the thean the sousth the there the theare the meare the there theare the\nThe there the there the thean the the thean the the the shean the theare the the thean se theand\nAn the thean ",
-  "0.8": "ROMEO:\nBure; the an Tom uspl, thartie, by faces.\n\nBUMORGDUELA:\nSTARI maver, irare.\nO, arof foganee, he sin, grathof fongor dere therind atsses, otheserd\n\nPs meay arest ade, samy be isour areris telf thit reand mon y thead, han.\nCalterend,\nFith hipte WAnous mime, thearchells I hanesinsuen tee,\nHils aigut be",
-  "1.6": "ROMEO:\nBCaw;stqWerenTme uagl,', pavje,oZo f cem.\nBowin'sacvy ceeactic heeWotir. mIoxp; roalfngaiee, h\nFs'd, gritoofZu?\nJor d:\nB thetiRbeatss?hilot tsErdv$es,, Ry! ULut-udmhcrmO s b izutitie'dfNLOLFft, itprshn'cellvel,\nIAd, vafod, atereizogeDih jl;\nJYWAks,\nS:!\n3aet waHcNKl,shIs, CSuinsuen. uO,\nKRTMB\n\nUzukin"
+  "0.2": "ROMEO:\nWhat say you this?\n\nBENVOLIO:\nNo, marry, my lord.\n\nLEONTES:\nI will tell you to your grace and the great do\nin the proportion of your honour to have me\nThat we have writ the prince of your honour,\nAnd therefore you shall be a brain,\nTo see you and the common of the war,\nAnd so well the world of the p",
+  "0.8": "ROMEO:\nWhat stay and me? I love them not a king.\n\nBUCKINGHAM:\nUpon their motion misxent of the heavy\nThat man, though your duke the noble sister\nWhen revenge, that you have said 'banish'd them?'\n\nFLORIZEL:\nWe'll not plead, walk not are too comes pluck to such\nan other never for their unnatural heart\nThe be",
+  "1.6": "ROMEO:\n\nCaw;\n\nquerenT Ciciil,--\nMay'r, by my misery: nay, virtue Sain Geor$f!\n\nCLIFORD:\nPalantagener:\nWhat, gratisful?\n\nJULIET:\nPleaseby?\n\nJULIET:\nVeErdones,--Tyiall, dumph!\nBut but sweet Ravghaferfu, like Cntre's Blushy,\nNine do attrend,\nForgive; weadest am!\n3 KINGaH:\nKleach lune! When I unchiever\nAguedin"
  },
- "minutes": 1.0,
- "iters": 250,
+ "minutes": 26.7,
+ "iters": 6000,
  "batch": 32,
  "params": 1016320,
  "characters": 1115394,
  "final": {
-  "step": 250,
-  "train": 2.3528,
-  "val": 2.3485
+  "step": 6000,
+  "train": 1.1203,
+  "val": 1.5586
  }
 }

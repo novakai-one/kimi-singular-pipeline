@@ -35,8 +35,8 @@ export function madeUp(text: string, known: Set<string>): { total: number; unkno
 /** Challenge thresholds (set from sampling the trained model at many temperatures; see DECISIONS.md). */
 export const CHALLENGE = {
   minChars: 300,
-  repeat: { length: 20, times: 3 },
-  ramble: { share: 0.5 },
+  repeat: { length: 12, times: 3 },
+  ramble: { share: 0.4 },
 };
 
 export function isRepetitive(generated: string) {
@@ -47,5 +47,5 @@ export function isRepetitive(generated: string) {
 export function isRambling(generated: string, known: Set<string>) {
   const m = madeUp(generated, known);
   const share = m.total ? m.unknown / m.total : 0;
-  return { ...m, share, win: generated.length >= CHALLENGE.minChars && m.total >= 10 && share > CHALLENGE.ramble.share };
+  return { ...m, share, win: generated.length >= CHALLENGE.minChars && m.total >= 10 && share >= CHALLENGE.ramble.share };
 }
