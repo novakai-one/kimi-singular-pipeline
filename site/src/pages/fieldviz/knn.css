@@ -1,0 +1,4 @@
+/* Field 2 interactive (knn.ts): legend under the plot. */
+.knn-legend { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 8px; font-size: 13.5px; color: var(--muted); }
+.knn-key { display: inline-flex; align-items: center; gap: 6px; }
+.knn-key svg { flex: none; }

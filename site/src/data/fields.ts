@@ -113,7 +113,7 @@ One step, with learning rate $\\eta$: $\\cr{w} \\leftarrow \\cr{w} - \\eta\\,\\d
       detail: 'The training score uses the points the model learned from. The test score uses points it never saw.',
     },
     explain: {
-      see: `Filled dots are training points. Hollow dots are test points, held back. The shaded background shows which colour a new point at that spot would get. With $k = 1$ the shading is patchy, with small islands around single points. With a large $k$ it is smooth, and it starts to ignore real bends.`,
+      see: `Filled dots are training points. Hollow dots are test points, held back; a cross marks a test point that gets the wrong colour. The shaded background shows which colour a new point at that spot would get. With $k = 1$ the shading is patchy, with small islands around single points. With a large $k$ it is smooth, and it starts to ignore real bends.`,
       means: `Each new point takes the most common colour among its $k$ nearest training points. Small $k$ follows every detail, noise included. Large $k$ averages too much. **The test score tells you which is better, because those points played no part in building the model.**`,
       called: `This model is *k-nearest neighbours* (kNN). Following noise too closely is *overfitting*; smoothing away real structure is *underfitting*. Keeping test data separate is a *train/test split*. Repeating the split several different ways and averaging the scores is *cross-validation*.`,
       formula: `Distance between points $\\cg{a}$ and $\\cg{b}$: $d = \\sqrt{(a_1 - b_1)^2 + (a_2 - b_2)^2}$
