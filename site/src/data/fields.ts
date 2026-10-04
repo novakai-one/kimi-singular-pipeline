@@ -266,7 +266,7 @@ $\\cy{\\text{shadow}} = \\cg{\\mathbf{h}} \\cdot \\cr{\\mathbf{w}} = h_1 w_1 + h
       ['"how much does this point go in that direction?"', 'a dot product (projection)'],
       ['"more concepts than neurons"', 'superposition: directions that overlap'],
     ],
-    buildsOn: ['how-models-learn', 'language-models', 'computer-vision'],
+    buildsOn: ['language-models', 'computer-vision'],
     maths: ['la'],
   },
 
@@ -619,7 +619,7 @@ $\\cg{x_0}$ = the clean point, $\\epsilon$ = random Gaussian noise, $\\bar\\alph
       ['"undo a corruption one small step at a time"', 'denoising, step by step'],
       ['Gaussian noise added to a value', '$x_t = \\sqrt{\\bar\\alpha}\\,x_0 + \\sqrt{1 - \\bar\\alpha}\\,\\epsilon$'],
     ],
-    buildsOn: ['how-models-learn', 'computer-vision'],
+    buildsOn: ['computer-vision'],
     maths: ['prob'],
   },
 ];
