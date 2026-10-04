@@ -12,3 +12,4 @@ shots/
 *.log
 notebooks/**/data/
 notebooks/**/export/
+notebooks/**/model.json
