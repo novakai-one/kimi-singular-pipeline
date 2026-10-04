@@ -39,6 +39,8 @@ function niceStep(raw: number) {
   return 10 * p;
 }
 const fmtGuess = (g: number) => String(Number(g.toPrecision(4)));
+/** 1000 → "1k", 1500 → "1.5k", 500 → "500" (short x-axis labels on a phone). */
+const fmtK = (n: number) => (n < 1000 ? String(n) : `${Number((n / 1000).toFixed(1))}k`);
 /** "7.5", "7,5" or "1,200" → a number of ms, or null. */
 function parseGuess(text: string): number | null {
   let t = text.trim().replace(/\s/g, '').replace(/ms$/i, '');
@@ -67,7 +69,8 @@ const viz: Viz = (el, api) => {
     const narrow = stage.clientWidth > 0 && stage.clientWidth < 540;
     const W = narrow ? 420 : 640, H = narrow ? 290 : 300;
     lastW = W;
-    const x0 = narrow ? 50 : 62, x1 = W - (narrow ? 88 : 104), y0 = 34, y1 = H - 48;
+    let x0 = 40;
+    const x1 = W - (narrow ? 88 : 104), y0 = 34, y1 = H - 48;
     const sizes = r.sizes, n0 = sizes[0], nL = sizes[sizes.length - 1];
 
     // values on screen: measured times up to size k, and guesses (with their 30% windows)
@@ -99,7 +102,10 @@ const viz: Viz = (el, api) => {
       for (let v = 0; v <= top + step / 2; v += step) yTicks.push({ v, label: fmtMs(v === 0 ? 0 : v).replace(/^0\.0$/, '0') });
     }
 
-    const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': ariaFor(r, k) });
+    // room on the left for the longest time label
+    x0 = Math.max(x0, Math.max(...yTicks.map((t) => t.label.length)) * 7.8 + 14);
+
+    const svg = s('svg', { viewBox: `0 0 ${W} ${H}`, class: 'big-o-chart', role: 'img', 'aria-label': ariaFor(r, k) });
     // grid and axes
     for (const t of yTicks) {
       const y = Y(t.v);
@@ -113,7 +119,7 @@ const viz: Viz = (el, api) => {
       s('text', { x: 8, y: 18, class: 'big-o-title' }, 'time (ms)'),
       s('text', { x: W - 8, y: 18, 'text-anchor': 'end', class: 'big-o-title' },
         scale === 'log' ? (narrow ? 'each line up: 10 times longer' : 'each grid line up is 10 times longer') : 'evenly spaced grid'),
-      s('text', { x: (x0 + x1) / 2, y: H - 8, 'text-anchor': 'middle', class: 'big-o-title' }, 'n, the number of items'));
+      s('text', { x: (x0 + x1) / 2, y: H - 8, 'text-anchor': 'middle', class: 'big-o-title' }, narrow ? 'n, the number of items (1k = 1,000)' : 'n, the number of items'));
 
     // the size this frame shows (yellow band)
     svg.append(s('rect', { x: X(sizes[k]) - 13, y: y0 - 4, width: 26, height: y1 - y0 + 4, rx: 6, class: 'big-o-cur' }));
@@ -122,8 +128,8 @@ const viz: Viz = (el, api) => {
     let lastX = Infinity;
     for (let j = sizes.length - 1; j >= 0; j--) {
       const x = X(sizes[j]);
-      const text = fmtN(sizes[j]);
-      const wText = text.length * 7.6;
+      const text = narrow ? fmtK(sizes[j]) : fmtN(sizes[j]);
+      const wText = text.length * 8.2;
       if (x + wText / 2 > lastX - 6) continue;
       lastX = x - wText / 2;
       svg.append(s('text', { x, y: y1 + 20, 'text-anchor': 'middle', class: 'big-o-tick' + (j > k ? ' later' : '') }, text));
@@ -168,7 +174,11 @@ const viz: Viz = (el, api) => {
       if (prev && e.y - prev.y < 17) prev.text += ', ' + text;
       else labels.push({ x: e.x + 11, y: e.y, text });
     }
-    for (const l of labels) svg.append(s('text', { x: l.x, y: l.y + 5, class: 'big-o-lab' }, l.text));
+    for (const l of labels) {
+      // a label that would run off the right edge goes to the left of its point, a little higher
+      const off = l.x + l.text.length * 8.4 > W - 2;
+      svg.append(s('text', { x: off ? l.x - 22 : l.x, y: off ? l.y - 9 : l.y + 5, 'text-anchor': off ? 'end' : 'start', class: 'big-o-lab' }, l.text));
+    }
 
     // timing in progress
     if (r.measuring) {
@@ -176,7 +186,7 @@ const viz: Viz = (el, api) => {
         `Measuring… ${Math.round(r.progress * 100)}%`));
     }
 
-    stage.append(h('div', { class: 'big-o-wrap' }, svg, table(r, k)));
+    stage.append(h('div', { class: 'big-o-wrap' }, svg, table(r, k, narrow)));
   }
 
   function ariaFor(r: RunState, k: number) {
@@ -185,14 +195,17 @@ const viz: Viz = (el, api) => {
       : `Chart of time against n. Measuring n = ${fmtN(r.sizes[k])}.`;
   }
 
-  function table(r: RunState, k: number) {
+  /** The table: one row per size. On a phone, each program's ratio sits under its time, so every column fits. */
+  function table(r: RunState, k: number, narrow: boolean) {
+    const span = narrow ? 1 : 2;
+    const ratioTitle = 'this size\'s time ÷ the time at the size before';
     const head1 = h('tr', null,
       h('th', { rowspan: 2, class: 'n' }, 'n'),
-      KEYS.map((key) => h('th', { colspan: 2 }, swatch(SERIES[key].shape, SERIES[key].color), SERIES[key].label)),
-      h('th', { rowspan: 2 }, 'Your guess'));
-    const head2 = h('tr', null, KEYS.map(() => [
-      h('th', null, 'ms'),
-      h('th', { title: 'this size\'s time ÷ the time at the size before' }, 'ratio')]));
+      KEYS.map((key) => h('th', { colspan: span }, swatch(SERIES[key].shape, SERIES[key].color), SERIES[key].label)),
+      h('th', { rowspan: 2 }, narrow ? 'Guess' : 'Your guess'));
+    const head2 = h('tr', null, KEYS.map(() => narrow
+      ? h('th', { title: ratioTitle }, 'ms', h('br'), 'ratio')
+      : [h('th', null, 'ms'), h('th', { title: ratioTitle }, 'ratio')]));
     const rows = r.sizes.map((n, j) => {
       const t = j <= k ? r.times[j] : null;
       const cells: Node[] = [];
@@ -200,10 +213,13 @@ const viz: Viz = (el, api) => {
         const cls = key === 'pair' ? 'pair' : '';
         if (t) {
           const q = ratioAt(r, j, key);
-          cells.push(h('td', { class: cls }, fmtMs(t[key])), h('td', { class: 'ratio' }, q === null ? '–' : `×${fmtRatio(q)}`));
+          const ratio = q === null ? '–' : `×${fmtRatio(q)}`;
+          if (narrow) cells.push(h('td', { class: cls }, fmtMs(t[key]), h('span', { class: 'big-o-r' }, ratio)));
+          else cells.push(h('td', { class: cls }, fmtMs(t[key])), h('td', { class: 'ratio' }, ratio));
         } else {
           const txt = j <= k && r.measuring ? '…' : '?';
-          cells.push(h('td', { class: 'later' }, txt), h('td', { class: 'later' }, ''));
+          cells.push(h('td', { class: 'later' }, txt));
+          if (!narrow) cells.push(h('td', { class: 'later' }, ''));
         }
       }
       let guessCell: Node;
@@ -218,7 +234,7 @@ const viz: Viz = (el, api) => {
         h('td', { class: 'n' + (j > k ? ' later' : '') }, fmtN(n)), cells, guessCell);
     });
     return h('div', { class: 'big-o-table-wrap' },
-      h('table', { class: 'big-o-table' }, h('thead', null, head1, head2), h('tbody', null, rows)));
+      h('table', { class: 'big-o-table' + (narrow ? ' narrow' : '') }, h('thead', null, head1, head2), h('tbody', null, rows)));
   }
 
   // ---------------------------------------------------------------- redraw outside the player (while timing runs)

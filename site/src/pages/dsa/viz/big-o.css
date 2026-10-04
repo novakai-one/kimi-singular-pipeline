@@ -1,6 +1,6 @@
 /* DSA 1, Big-O: timing chart, table and guess box */
 .big-o-wrap { width: 100%; display: grid; gap: 8px; }
-.big-o-wrap svg { width: 100%; height: auto; display: block; }
+.big-o-wrap svg.big-o-chart { width: 100%; height: auto; display: block; }
 .big-o-grid { stroke: var(--border); stroke-width: 1; }
 .big-o-axis { stroke: var(--faint); stroke-width: 1; }
 .big-o-tick { fill: var(--muted); font-size: 13.5px; font-variant-numeric: tabular-nums; }
@@ -30,7 +30,13 @@
 .big-o-table tr.cur td { background: var(--yellow-soft); }
 .big-o-table .ok { color: var(--green); font-weight: 650; }
 .big-o-table .no { color: var(--red); font-weight: 650; }
-.big-o-sw { display: inline-block; vertical-align: -1px; margin-right: 5px; }
+.big-o-table.narrow { font-size: 12.5px; }
+.big-o-table.narrow th, .big-o-table.narrow td { padding: 4px 3px; }
+.big-o-table.narrow th { white-space: normal; font-size: 12px; line-height: 1.25; }
+.big-o-table.narrow th:first-child, .big-o-table.narrow td:first-child { padding-left: 6px; }
+.big-o-table.narrow th:last-child, .big-o-table.narrow td:last-child { padding-right: 6px; }
+.big-o-table .big-o-r { display: block; color: var(--muted); font-weight: 400; font-size: 12px; }
+.viz .big-o-sw { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; margin-right: 5px; }
 
 .big-o-guess { display: grid; gap: 6px; margin-top: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
 .big-o-guess-label { font-weight: 650; font-size: 14.5px; }
