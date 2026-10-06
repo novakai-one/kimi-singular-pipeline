@@ -404,7 +404,7 @@ export const p4: PuzzleDef = {
 export const p5: PuzzleDef = {
   id: 'c09-p5',
   title: 'For which gain k does it work?',
-  goal: 'Type row 2 − 2 × row 1. Then drag $k$ and the right side to find **all three** cases: one point, a whole line, no point.',
+  goal: 'Type row 2 − 2 × row 1. Then two dials appear: drag $k$ and the right side to find **all three** cases: one point, a whole line, no point.',
   subgoals: ['Type $R_2 - 2R_1$', 'One solution', 'Infinitely many solutions', 'No solution'],
   hints: [
     'Row 2 − 2 × row 1: $2 - 2(1)$, then $k - 2(2)$, then the right side $6 - 2(3)$.',
@@ -437,9 +437,9 @@ export const p5: PuzzleDef = {
       { prompt: 'Second number: $k - 2(2) = k - $', answer: 4, mistakes: [[2, 'Twice row 1\'s second number is $2 \\times 2 = 4$.']] },
       { prompt: 'Right side: $6 - 2(3) =$', answer: 0 },
     ];
-    const ws = new StepWorksheet(p, { steps, onDone: () => tick(0) });
-    p.dock().append(sk.el, sc.el);
-    paint(false);
+    // the dials appear once the new row is typed, so the three cases come from the reduced row, not from dragging
+    r.note('Type the new row 2 first. Then two dials appear: the gain $k$ and the right side.');
+    const ws = new StepWorksheet(p, { steps, onDone: () => { tick(0); r.note(null); p.dock().append(sk.el, sc.el); paint(false); } });
     const go = async (kk: number, cc: number, ms: number) => { k = kk; c = cc; sk.set(k, false); sc.set(c, false); p.move(); upd(true); await wait(ms); };
     return {
       async showMe() { await ws.showMe(400); await go(2, 6, 900); await go(4, 6, 1100); await go(4, 7, 1100); },
