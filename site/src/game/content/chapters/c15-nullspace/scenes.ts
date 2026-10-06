@@ -316,8 +316,7 @@ export async function close(g: Game): Promise<void> {
     sc.set.check();
     panel.append(lineEl(`Landed on the origin: **${onLine}** of ${sc.debris.length}`));
     sfx.success();
-    void g.say(mine ? S.closeMine : S.closeBackup);
-    await g.say(S.close);
+    await g.say([...(mine ? S.closeMine : S.closeBackup), ...S.close]);
     sc.set.check();
     panel.remove();
     // Vell

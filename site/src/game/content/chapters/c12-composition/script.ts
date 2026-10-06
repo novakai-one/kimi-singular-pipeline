@@ -22,11 +22,11 @@ export const S: Record<string, Line[]> = {
     { who: 'bram', text: 'So some moves cancel each other out. I will remember that.' },
   ],
   sensor: [
-    { who: 'lantern', text: 'The hull sensor now feeds a second sensor. Two rules in a row: two rows of three, after three rows of two.' },
+    { who: 'lantern', text: 'The bow sensor now feeds a second sensor. Two rules in a row: two rows of three, after three rows of two.' },
     { who: 'bram', text: 'Work out the single rule by hand, Nav. Every entry.' },
   ],
   p3Win: [
-    { who: 'lantern', text: 'Single rule found: columns (5, 2) and (2, 13). Each column is the first rule applied to a column of the second.', say: 'Single rule found: columns five, two and two, thirteen. Each column is the first rule applied to a column of the second.' },
+    { who: 'lantern', text: 'Single rule found: columns (5, 2) and (2, 13). Each column is A, the second sensor’s rule, applied to a column of B, the bow sensor’s.', say: 'Single rule found: columns five, two and two, thirteen. Each column is A, the second sensor’s rule, applied to a column of B, the bow sensor’s.' },
   ],
   across: [
     { who: 'bram', text: 'LANTERN checks every reading with dot products. Sometimes a move sits inside one.' },
@@ -61,7 +61,7 @@ export const S: Record<string, Line[]> = {
     { who: 'bram', text: 'Brief me, Nav. Then LANTERN gets one matrix per forecast.' },
   ],
   install: [
-    { who: 'lantern', text: 'Fused forecast online. Pulse, then stabiliser, as one matrix.' },
+    { who: 'lantern', text: 'Fused forecast online for the hull. Pulse, then stabiliser, as one matrix.' },
   ],
   installMine: [
     { who: 'lantern', text: 'Fused with your matmul. Ghosts placed.' },
@@ -73,7 +73,7 @@ export const S: Record<string, Line[]> = {
     { who: 'lantern', text: 'Your matmul disagreed with my backup. Using the backup for this forecast.' },
   ],
   landed: [
-    { who: 'lantern', text: 'Pulse, then stabiliser. Every buoy landed on the fused forecast.' },
+    { who: 'lantern', text: 'Pulse, then stabiliser. Every hull point landed on the fused forecast.' },
     { who: 'bram', text: 'Good. Now the bad news. Three years of pulses have left the bow frames leaning.' },
     { who: 'wren', text: 'Then we straighten them. Can a move be undone?' },
     { who: 'bram', text: 'That is the next question.' },

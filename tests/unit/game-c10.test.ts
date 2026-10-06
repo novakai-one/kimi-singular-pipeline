@@ -3,11 +3,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { fmat } from '../../site/src/game/math/frac.ts';
-import { gaussJordanSteps, isRREF } from '../../site/src/game/math/rref.ts';
+import { applyOp, gaussJordanSteps, isRREF } from '../../site/src/game/math/rref.ts';
 import {
-  D_FREE_COUNTER, D_FREE_START, D_ONE_COUNTER, D_ONE_START, D_RHS_START, LAW_C10, P1, P2, P3, P4, P6, R1_COUNTER, R1_START,
+  D_FREE_COUNTER, D_FREE_START, D_ONE_COUNTER, D_ONE_START, D_RHS_START, LAW_C10, P1, P2, P3, P4, P6, PAR, R1_COUNTER, R1_START,
   R2_START, R3_START, R4_SHOW, R4_START, SP, distToP2Line, flowsAt, freeColumns, freeCount, freeFromZeroHolds, freeRandom,
-  oneAnswerHolds, oneRandom, p1Won, p3Consistent, p3Rows, p4Point, p5Reduced, p5Rows, p6Won, pipesOk, r1Holds, r1Random,
+  oneAnswerHolds, oneRandom, p1Won, p3Consistent, p3Press, p3Presses, p3Rows, p4Point, p5Reduced, p5Rows, p6Won, pipesOk, r1Holds, r1Random,
   r2Holds, r2Random, r3Holds, r3Random, r4Holds, r4Random, reachableCrew, rhsPivot, rhsPivotHolds, rhsRandom, rrefCrew,
   solveCrew, spBurn, spConsistent, spDroneWon, spFlowsOk, spHit, totalLoad, zeroRows,
 } from '../../site/src/game/content/chapters/c10-rref/logic.ts';
@@ -43,12 +43,65 @@ test('p2: the flows (3 + t, 1 + t, t); pipes within 0..5 exactly for t in [0, 2]
   assert.equal(P2.par, gaussJordanSteps(fmat(P2.aug), 3).ops.length);
 });
 
+test('p2: the dial starts off the legal range, on every step grid; the nearest legal setting is t = 0, the least load', () => {
+  const { start, min, max, step } = P2.dial;
+  assert.ok(!pipesOk(start), 'the dial does not start on a winning setting');
+  for (const d of ['cadet', 'navigator', 'commander']) {
+    const s = step[d];
+    const onGrid = (v: number) => Math.abs((v - min) / s - Math.round((v - min) / s)) < 1e-9;
+    assert.ok(onGrid(start) && onGrid(0), `${d}: start and 0 are dial settings`);
+    const grid = Array.from({ length: Math.round((max - min) / s) + 1 }, (_, i) => min + i * s);
+    const legal = grid.filter((v) => pipesOk(v));
+    const nearest = legal.reduce((a, v) => (Math.abs(v - start) < Math.abs(a - start) ? v : a));
+    assert.equal(nearest, 0, `${d}: the nearest legal setting`);
+    assert.equal(Math.min(...legal.map(totalLoad)), totalLoad(0), `${d}: t = 0 has the least load`);
+  }
+});
+
+test('par: reachable on every difficulty (checked lines, picks and tile submits count a move)', () => {
+  // p2: board steps + (navigator: the column pick; commander: the worksheet's last line) + one dial drag
+  const p2Min = { cadet: P2.par + 1, navigator: P2.par + 2, commander: P2.par + 2 };
+  assert.equal(PAR.p2, Math.max(...Object.values(p2Min)));
+  // p4: fewest single-dial changes to visit the three marked points from (0, 0), in any order
+  const perms = (a: number[][]): number[][][] => (a.length <= 1 ? [a] : a.flatMap((x, i) => perms([...a.slice(0, i), ...a.slice(i + 1)]).map((r) => [x, ...r])));
+  const dialMoves = Math.min(...perms(P4.dials).map((order) => order.reduce((acc, q, i) => {
+    const prev = i ? order[i - 1] : [0, 0];
+    return acc + (q[0] !== prev[0] ? 1 : 0) + (q[1] !== prev[1] ? 1 : 0);
+  }, 0)));
+  assert.equal(dialMoves, 4);
+  const p4Min = { cadet: dialMoves, navigator: 3 + dialMoves, commander: 1 + dialMoves };
+  assert.equal(PAR.p4, Math.max(...Object.values(p4Min)));
+  // p6: one drag; navigator checks 3 lines; commander submits the tiles and checks 1 line
+  const p6Min = { cadet: 1, navigator: 1 + 3, commander: 1 + 1 + 1 };
+  assert.equal(PAR.p6, Math.max(...Object.values(p6Min)));
+});
+
 test('p3: meter three at 4 reduces to 0 = 1; any single meter fixed gives solutions', () => {
   assert.ok(!p3Consistent(P3.b));
   const end = gaussJordanSteps(fmat(p3Rows(P3.b)), 3).states.at(-1)!;
   assert.ok(hasFalseRow(end));
   assert.ok(p3Consistent([2, 1, 3]) && p3Consistent([3, 1, 4]) && p3Consistent([2, 2, 4]));
   assert.ok(!p3Consistent([2, 1, 5]));
+});
+
+test('p3: Show me presses meter buttons until the meters agree, from any readings', () => {
+  assert.deepEqual(p3Presses(P3.b), [4], 'from the start: meter three down once');
+  for (let a = 0; a <= 6; a++) for (let b = 0; b <= 6; b++) for (let c = 0; c <= 6; c++) {
+    const presses = p3Presses([a, b, c]);
+    const end = presses.reduce((m, i) => p3Press(m, i), [a, b, c]);
+    assert.ok(p3Consistent(end), `from (${a}, ${b}, ${c}) → (${end})`);
+    assert.ok(presses.length <= 12);
+  }
+  assert.deepEqual(p3Presses([2, 1, 5]), [4, 4]);
+  assert.deepEqual(p3Presses([6, 2, 5]), [0, 0, 0], 'meter one down to 3');
+});
+
+test('p3: replaying every step so far on new meter readings keeps the board reduced', () => {
+  // the player's reduction, then two meter changes: the second replay must still use every step, not an empty history
+  const ops = gaussJordanSteps(fmat(p3Rows(P3.b)), 3).ops;
+  const replay = (b: number[]) => ops.reduce((m, op) => applyOp(m, op), fmat(p3Rows(b))).map((r) => r.map((x) => x.value()));
+  assert.deepEqual(replay([2, 1, 5]).at(-1), [0, 0, 0, 2]);
+  assert.deepEqual(replay([2, 1, 3]).at(-1), [0, 0, 0, 0], 'the bottom row reads 0 = 0 again');
 });
 
 test('p4 [H]: x + 2y − z = 4 is (4, 0, 0) + s(−2, 1, 0) + t(1, 0, 1); the dials reach the marked points', () => {

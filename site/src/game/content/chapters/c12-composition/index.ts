@@ -47,7 +47,7 @@ const ch: ChapterDef = {
         saw: '(1, 0) landed on (0, 1) for shear then turn, and on (1, 1) for turn then shear. Two flips over $y = x$ put every point back where it started.',
         means: 'Swapping the order of two moves can change where the grid ends up. Some pairs cancel and leave the grid as it was.',
         name: 'The **identity matrix** $I$ leaves every point where it is: its columns are $\\mathbf e_1$ and $\\mathbf e_2$. The matrix product is **non-commutative**: $AB$ and $BA$ can differ.',
-        formula: 'I = \\begin{bmatrix}\\cg{1}&\\htmlClass{c-red}{0}\\\\\\cg{0}&\\htmlClass{c-red}{1}\\end{bmatrix} \\qquad FF = I \\qquad AB \\ne BA \\text{ in general}',
+        formula: '\\begin{gathered}I = \\begin{bmatrix}\\cg{1}&\\htmlClass{c-red}{0}\\\\\\cg{0}&\\htmlClass{c-red}{1}\\end{bmatrix} \\qquad AB \\ne BA \\text{ in general} \\\\[6pt] \\underbrace{\\begin{bmatrix}0&1\\\\1&0\\end{bmatrix}\\begin{bmatrix}0&1\\\\1&0\\end{bmatrix}}_{\\text{flip over } y = x \\text{, twice}} = I\\end{gathered}',
         why: 'Shear then turn has columns (0, 1) and (−1, 1). Turn then shear has columns (1, 1) and (−1, 0). Different columns, different moves.',
         cue: 'When you see two moves swapped, think **check the order: it usually matters**.',
         use: 'In a game engine, “turn, then move forward” and “move forward, then turn” put a ship in different places.',

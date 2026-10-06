@@ -8,7 +8,7 @@ import { SystemView } from '../../../kit/system';
 import { StepWorksheet, TileOrder, type Step } from '../../../kit/steps';
 import { VectorHandle } from '../../../kit/handle';
 import { fmat, Frac } from '../../../math/frac';
-import { applyOp, gaussJordanSteps } from '../../../math/rref';
+import { applyOp, gaussJordanSteps, type RowOp } from '../../../math/rref';
 import { Slider } from '../../../ui/widgets';
 import { h } from '../../../ui/ui';
 import { C } from '../../../core/theme';
@@ -23,7 +23,7 @@ import { PlaneSet } from '../c08-systems/planes';
 import { hasFalseRow, kindOf, num, pt, somePoint } from '../c08-systems/act3';
 import { watchSteps } from '../c09-elimination/puzzles';
 import {
-  P1, P2, P3, P4, P6, PAR, SP, flowsAt, p1Won, p3Consistent, p3Rows, p4Point, p5Reduced, p5Rows, p6Won, pipesOk, spBurn,
+  P1, P2, P3, P4, P6, PAR, SP, flowsAt, p1Won, p3Consistent, p3Presses, p3Rows, p4Point, p5Reduced, p5Rows, p6Won, pipesOk, spBurn,
   spConsistent, spDroneWon, spFlowsOk, spHit, totalLoad, distToP2Line,
 } from './logic';
 import { S } from './script';
@@ -226,10 +226,13 @@ export const p3: PuzzleDef = {
     const r = p.readout('Meters');
     const box = h('div', { class: 'c10-meters' });
     r.el.insertBefore(box, r.el.children[1] ?? null);
+    // every row operation so far: set() clears the board's history, so each replay banks what was done since the last one
+    let ops: RowOp[] = [];
     const replay = () => {
       // the same row operations, applied to the board with the new meter readings
+      ops = ops.concat(board.history());
       let m = fmat(p3Rows(b));
-      for (const op of board.history()) m = applyOp(m, op);
+      for (const op of ops) m = applyOp(m, op);
       board.set(m);
     };
     const steppers = b.map((_, i) => {
@@ -255,7 +258,14 @@ export const p3: PuzzleDef = {
       if (!done[0]) await board.play(gaussJordanSteps(board.get(), 3).ops, ms ? 700 : 30);
       while (!done[0]) await wait(10);
       if (ms) await wait(500);
-      (box.querySelectorAll('button')[4] as HTMLButtonElement).click(); // meter three, one down: back to 3
+      // press the real meter buttons until the meters agree (b₃ = b₁ + b₂), from whatever they read now;
+      // from the start (2, 1, 4) that is one press: meter three down to 3
+      const btns = box.querySelectorAll('button');
+      for (const i of p3Presses(b)) {
+        if (p.won) break;
+        (btns[i] as HTMLButtonElement).click();
+        if (ms) await wait(350);
+      }
     };
     return { showMe: () => run(1), solve: () => run(0) };
   },
@@ -273,7 +283,7 @@ export const p4: PuzzleDef = {
     'Raise y by 1 (z stays 0): x falls by 2. Direction (−2, 1, 0). Raise z by 1: x rises by 1. Direction (1, 0, 1).',
     'The marked points need dials (1, 0), (0, 2) and (1, −2).',
   ],
-  par: 6,
+  par: PAR.p4, // fewest moves: cadet 4, navigator 7, commander 5 (each checked line counts one)
   view: '3d',
   onWin: S.p4Win,
   setup(p) {
@@ -353,22 +363,34 @@ export const p5: PuzzleDef = {
     const done = [false, false, false, false];
     const tick = (i: number) => { if (!done[i]) { done[i] = true; p.subgoal(i); } if (done.every(Boolean)) { sfx.success(); p.win(); } };
     const r = p.readout('The reduced last row');
+    // until the row is typed, the readout keeps it in symbols and the dials stay hidden: the numbers would give it away
+    let typed = false;
     const paint = (moved: boolean) => {
       const red = p5Reduced(k, m);
-      r.row('row', 'last row', `[ 0  0  ${num(red[2])} | ${num(red[3])} ]`, C.u);
+      r.row('row', 'last row', typed ? `[ 0  0  ${num(red[2])} | ${num(red[3])} ]` : '[ 0  0  k − ? | m − ? ]', C.u);
       const kind = kindOf(p5Rows(k, m));
       r.row('kind', 'The planes meet', kind === 'one' ? `at ${pt(somePoint(p5Rows(k, m))!)}` : kind === 'many' ? 'along a line' : 'nowhere', C.result);
       if (moved) tick(kind === 'one' ? 1 : kind === 'many' ? 2 : 3);
     };
     const upd = (moved: boolean) => { void planes.setRows(p5Rows(k, m), 300); paint(moved); };
-    const sk = new Slider({ label: '$k$', min: 2, max: 8, step: 0.5, value: k, onInput: (v) => { k = v; p.move(); upd(true); } });
-    const sm = new Slider({ label: '$m$', min: 0, max: 6, step: 1, value: m, onInput: (v) => { m = v; p.move(); upd(true); } });
+    const sk = new Slider({ label: '$k$', min: 2, max: 8, step: 0.5, value: k, onInput: (v) => { if (!typed) return; k = v; p.move(); upd(true); } });
+    const sm = new Slider({ label: '$m$', min: 0, max: 6, step: 1, value: m, onInput: (v) => { if (!typed) return; m = v; p.move(); upd(true); } });
     const steps: Step[] = [
       { prompt: 'Third number: $k - \\_$', answer: 5, mistakes: [[1, 'After R3 − R1 the entry is $k - 1$; then R3 − 2R2 takes away $2 \\times 2 = 4$ more.']] },
       { prompt: 'Right side: $m - \\_$', answer: 3 },
     ];
-    const ws = new StepWorksheet(p, { steps, onDone: () => tick(0) });
-    p.dock().append(sk.el, sm.el);
+    const dock = p.dock();
+    const ws = new StepWorksheet(p, {
+      steps,
+      onDone: () => {
+        typed = true;
+        tick(0);
+        dock.append(sk.el, sm.el);
+        r.note(null);
+        paint(false);
+      },
+    });
+    r.note('Type the reduced last row first. Then the $k$ and $m$ dials appear.');
     paint(false);
     const go = async (kk: number, mm: number, ms: number) => { k = kk; m = mm; sk.set(k, false); sm.set(m, false); p.move(); upd(true); await wait(ms); };
     return {
@@ -400,7 +422,7 @@ export const p6: PuzzleDef = {
     'Put the tip on any point of the yellow line. Try (3, 1, 0).',
     'At (3, 1, 0) every equation reads its right side; along the white line every equation reads 0. Adding the two keeps the right side.',
   ],
-  par: 2,
+  par: PAR.p6, // fewest moves: cadet 1, navigator 4, commander 3 (each checked line and the tile submit count one)
   view: '3d',
   onWin: S.p6Win,
   setup(p) {
@@ -507,8 +529,27 @@ export const setPiece: PuzzleDef = {
       r.row('k', 'The planes meet', kind === 'none' ? 'nowhere' : kind === 'many' ? 'along a line' : 'at one point', C.result);
     };
     paintMeter();
-    // phase 1: the meter
-    const sm = new Slider({ label: 'damaged meter $m$', min: 0, max: 6, step: 1, value: m, onInput: (v) => { m = v; p.move(); void planes.setRows(SP.rows(m), 400); paintMeter(); if (spConsistent(m)) { tick(0); window.setTimeout(startFlows, 450); } } });
+    // The next phase starts a moment after the player lets go of a dial on a good value, and only if the value is
+    // still good then and the puzzle is still mounted (dragging passes through good values; Skip may come first).
+    let disposed = false;
+    let pending = 0;
+    p.onDispose(() => { disposed = true; window.clearTimeout(pending); });
+    const schedule = (fn: () => void, ms: number, still: () => boolean) => {
+      window.clearTimeout(pending);
+      pending = window.setTimeout(() => { pending = 0; if (!disposed && still()) fn(); }, ms);
+    };
+    /** Run fn when the slider is let go (pointer released, or each key press). */
+    const onRelease = (sl: Slider, fn: (v: number) => void) => {
+      const input = sl.el.querySelector('input')!;
+      input.addEventListener('change', () => fn(parseFloat(input.value)));
+    };
+    // phase 1: the meter (the live preview follows the drag; the check waits for the release)
+    const sm = new Slider({ label: 'damaged meter $m$', min: 0, max: 6, step: 1, value: m, onInput: (v) => { m = v; p.move(); void planes.setRows(SP.rows(m), 400); paintMeter(); } });
+    onRelease(sm, (v) => {
+      m = v;
+      if (spConsistent(m)) { tick(0); schedule(startFlows, 450, () => spConsistent(m)); }
+      else { window.clearTimeout(pending); if (done[0]) { done[0] = false; p.subgoal(0, false); } }
+    });
     dock.append(sm.el);
     // phase 2: the flows
     let t = 0.8;
@@ -516,12 +557,12 @@ export const setPiece: PuzzleDef = {
     let dot: Dot | null = null;
     let st: Slider | null = null;
     let flowsStarted = false;
+    /** Paint the flows at t (no checks). */
     const moveT = (v: number) => {
       t = v;
       const f = SP.flows(t);
       dot?.at([f[0], f[1], f[2]]);
       bars?.paint(f);
-      if (spFlowsOk(t) && !done[1]) { tick(1); window.setTimeout(startDrone, 700); }
     };
     function startFlows(): void {
       if (flowsStarted) return;
@@ -533,6 +574,11 @@ export const setPiece: PuzzleDef = {
       p.add(dot);
       const step = d === 'cadet' ? 0.25 : d === 'navigator' ? 0.1 : 0.05;
       st = new Slider({ label: 'dial $t$: flows $(t,\\ 1 - 2t,\\ t)$', min: -0.5, max: 1, step, value: t, onInput: (v) => { p.move(); moveT(v); } });
+      onRelease(st, (v) => {
+        moveT(v);
+        if (spFlowsOk(t)) { tick(1); schedule(startDrone, 700, () => spFlowsOk(t)); }
+        else { window.clearTimeout(pending); if (done[1]) { done[1] = false; p.subgoal(1, false); } }
+      });
       dock.append(st.el);
       moveT(t);
     }
@@ -596,8 +642,14 @@ export const setPiece: PuzzleDef = {
     }
     let dials: [Slider, Slider] | null = null;
     const run = async (ms: number) => {
-      if (!done[0]) { sm.set(3, false); m = 3; void planes.setRows(SP.rows(m), ms ? 600 : 0); paintMeter(); tick(0); startFlows(); if (ms) await wait(900); }
-      if (!done[1]) { st?.set(0.25, false); moveT(0.25); }
+      if (!flowsStarted) {
+        if (!spConsistent(m)) { sm.set(3, false); m = 3; void planes.setRows(SP.rows(m), ms ? 600 : 0); paintMeter(); }
+        tick(0); startFlows(); if (ms) await wait(900);
+      }
+      if (!droneStarted) {
+        if (!spFlowsOk(t)) { st?.set(0.25, false); moveT(0.25); }
+        tick(1);
+      }
       startDrone();
       if (ms) await wait(900);
       a = 1; b = 2; dials?.[0].set(1, false); dials?.[1].set(2, false); p.move(); paintDrone();

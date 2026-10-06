@@ -67,6 +67,9 @@ export const p5: PuzzleDef = {
     p.add(origin);
     let cur: SetId = 'shifted';
     let rowsUp = false;
+    // the stage-2 timer and the arrow grow can outlive this puzzle (Skip, Reset): stop at disposal
+    let gone = false;
+    p.onDispose(() => { gone = true; });
     let op: TestOp = 'add';
     let k = -1;
     const status: Record<SetId, 'open' | 'broken' | 'held'> = { plane: 'open', line: 'open', shifted: 'open', axes: 'open', quarter: 'open' };
@@ -142,7 +145,7 @@ export const p5: PuzzleDef = {
           paintChips();
           const left = IMPOSTORS.filter((s) => status[s] !== 'broken').length;
           p.bark('lantern', left ? `Broken: ${SET_NAMES[cur]}. ${left} to go.` : 'All three impostors broken.');
-          if (!left) { p.subgoal(0); window.setTimeout(() => void toRows(), p.g.headless ? 10 : 1300); }
+          if (!left) { p.subgoal(0); window.setTimeout(() => { if (!gone) void toRows(); }, p.g.headless ? 10 : 1300); }
         }
       } else {
         resTag.set('✓ still in the set');
@@ -162,7 +165,7 @@ export const p5: PuzzleDef = {
     let tilesOk = d(p) !== 'commander';
     const marks: RightAngle[] = [];
     const toRows = async () => {
-      if (rowsUp) return;
+      if (rowsUp || gone) return;
       rowsUp = true;
       SET_IDS.forEach((s) => vis[s].show(s === 'line'));
       [ua, va, res].forEach((a) => a.setOpacity(0));
@@ -174,6 +177,7 @@ export const p5: PuzzleDef = {
       p.setGoal('Why is the violet line a landing set too? Its arrows are the starts that land on the origin. Show that each **row** of $C_2$ reads 0 against $(1, 1, -1)$.');
       const rows = C2.map((row, i) => room.arrow(row, { color: [C.v, C.w, C.u][i], label: `$\\text{row } ${i + 1}$` }));
       await Promise.all(rows.map((a) => a.grow(600)));
+      if (gone) return;
       const mount = h('div', {});
       p.dock().replaceChildren(mount);
       const startWs = () => {
@@ -191,7 +195,7 @@ export const p5: PuzzleDef = {
         const tmount = h('div', {});
         mount.appendChild(tmount);
         tiles = new TileOrder(p, {
-          mount: tmount, tiles: P5_TILES, decoys: P5_DECOYS, title: 'First: why the starts sent to the origin are closed', submitLabel: 'Check',
+          mount: tmount, tiles: P5_TILES, decoys: P5_DECOYS, title: 'First: why the starts sent to the origin keep every sum and every stretch', submitLabel: 'Check',
           onSubmit: (o) => {
             p.move();
             if (p5OrderOk(o)) { tilesOk = true; sfx.success(); tmount.remove(); startWs(); }

@@ -305,7 +305,7 @@ export const teo: TeoDef = {
   id: 'c22-teo',
   ask: 'My suit antenna gives one reading per heading. How do I point it at your ship?',
   title: 'Teach Teo: point the antenna at the Lantern',
-  brief: 'Order the steps of a short message. LANTERN plays it the way Teo would follow it, word for word. His suit dial shows three heading arrows: $(2, 0)$, $(1, 1)$ and $(0, 1)$. A reading is the dot product of the signal with the heading.',
+  brief: 'Order the steps; LANTERN plays them as Teo would. His dial’s headings: $(2, 0)$, $(1, 1)$, $(0, 1)$. A reading is the signal dotted with a heading.',
   tiles: TEO_TILES,
   decoys: TEO_DECOYS,
   reference: TEO_REF,

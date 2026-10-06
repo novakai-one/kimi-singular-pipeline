@@ -3,7 +3,7 @@
 import type { PuzzleDef, PuzzleCtx, V3 } from '../../../game/types';
 import { Lattice3D, Parallelepiped } from '../../../gfx/shapes';
 import { VectorHandle } from '../../../kit/handle';
-import { StepWorksheet, TileOrder } from '../../../kit/steps';
+import { StepWorksheet, TileOrder, type Step } from '../../../kit/steps';
 import { MatrixInput } from '../../../ui/widgets';
 import { h, button, inline } from '../../../ui/ui';
 import { tex } from '../../../../lib/md';
@@ -11,7 +11,7 @@ import { C } from '../../../core/theme';
 import { animate, ease, wait } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
 import { rng } from '../../../game/lawcheck';
-import { col, det, fromCols, rrefNum, type Mat } from '../../../math/la';
+import { col, det, fromCols, rrefNum, transpose, type Mat } from '../../../math/la';
 import { GlowLine, Room, Sheet, tv } from '../c15-nullspace/space';
 import { Counter } from './counter';
 import { COL_COLORS } from './puzzles';
@@ -65,8 +65,9 @@ export const p5: PuzzleDef = {
     const lat = new Lattice3D(p.g.stage, { extent: 2, color: '#59e1ff', opacity: 0.16 });
     lat.object.scale.setScalar(room.s);
     p.add(lat);
+    // the basis arrows are 1, t and t² until they land; only then are they D(1), D(t), D(t²)
     const names = ['$D(1)$', '$D(t)$', '$D(t^2)$'];
-    const basis = [0, 1, 2].map((j) => room.arrow([0, 1, 2].map((k) => (k === j ? 1 : 0)), { color: COL_COLORS[j], label: names[j] }));
+    const basis = [0, 1, 2].map((j) => room.arrow([0, 1, 2].map((k) => (k === j ? 1 : 0)), { color: COL_COLORS[j], label: ['$1$', '$t$', '$t^2$'][j] }));
     const nul = new GlowLine(room, P5_NULL, { half: 2.6 });
     nul.setOpacity(0);
     const r = p.readout('Strut bend');
@@ -80,21 +81,35 @@ export const p5: PuzzleDef = {
         lat.to(D, ms),
         ...basis.map((a, j) => animate(ms, (k) => room.setArrow(a, [0, 1, 2].map((i) => (i === j ? 1 : 0) + (P5_LANDS[j][i] - (i === j ? 1 : 0)) * k)), ease.inOut)),
       ]);
-      basis.forEach((a, j) => a.setOpacity(len(P5_LANDS[j]) > 1e-9 ? 1 : 0));
+      basis.forEach((a, j) => { a.setLabel(names[j]); a.setOpacity(len(P5_LANDS[j]) > 1e-9 ? 1 : 0); });
     };
     // cadet and navigator watch the basis land first; commander builds the matrix without it
     const intro = d(p) === 'commander' ? Promise.resolve() : (async () => { await wait(700); await landing(2000); })();
-    const ws = new StepWorksheet(p, {
-      steps: [
-        { prompt: 'Where does $1$ land? (its rate of bend, as $(a, b, c)$)', answer: P5_LANDS[0], mistakes: [[[1, 0, 0], 'A constant does not bend at a rate: its rate is 0.']] },
-        { prompt: 'Where does $t$ land?', answer: P5_LANDS[1] },
-        { prompt: 'Where does $t^2$ land?', answer: P5_LANDS[2], mistakes: [[[0, 0, 2], 'The rate of $t^2$ is $2t$: that is $b = 2$, stored second.'], [[2, 0, 0], 'The rate of $t^2$ is $2t$, not 2: the 2 goes with $t$.']] },
-        { prompt: 'So the rule’s matrix $D$ is', answer: D },
-        { prompt: '$D$ applied to $5 - 3t + 2t^2$, as numbers:', answer: P5_RATE, mistakes: [[[-3, 2, 0], 'The $t^2$ part gives $2 \\cdot 2 = 4$ in the $t$ slot.']] },
-        { prompt: 'A profile with no rate of bend, first number 1:', answer: P5_NULL },
-        { prompt: 'Determinant of the columns for $1 + t$, $t + t^2$, $1 + t^2$:', answer: P5_DET, mistakes: [[0, 'Those columns are $(1, 1, 0)$, $(0, 1, 1)$, $(1, 0, 1)$. Expand along the first row: $1 \\cdot 1 - 0 + 1 \\cdot 1$.']] },
-      ],
-      onDone: () => void finish(),
+    const steps: Step[] = [
+      { prompt: 'Where does $1$ land? (its rate of bend, as $(a, b, c)$)', answer: P5_LANDS[0], mistakes: [[[1, 0, 0], 'A constant does not bend at a rate: its rate is 0.']] },
+      { prompt: 'Where does $t$ land?', answer: P5_LANDS[1] },
+      { prompt: 'Where does $t^2$ land?', answer: P5_LANDS[2], mistakes: [[[0, 0, 2], 'The rate of $t^2$ is $2t$: that is $b = 2$, stored second.'], [[2, 0, 0], 'The rate of $t^2$ is $2t$, not 2: the 2 goes with $t$.']] },
+      { prompt: 'So the rule’s matrix $D$ is', answer: D, mistakes: [[transpose(D), 'The columns are where $1$, $t$ and $t^2$ land, not the rows.']] },
+      { prompt: '$D$ applied to $5 - 3t + 2t^2$, as numbers:', answer: P5_RATE, mistakes: [[[-3, 2, 0], 'The $t^2$ part gives $2 \\cdot 2 = 4$ in the $t$ slot.']] },
+      { prompt: 'A profile with no rate of bend, first number 1:', answer: P5_NULL },
+      { prompt: 'Determinant of the columns for $1 + t$, $t + t^2$, $1 + t^2$:', answer: P5_DET, mistakes: [[0, 'Those columns are $(1, 1, 0)$, $(0, 1, 1)$, $(1, 0, 1)$. Expand along the first row: $1 \\cdot 1 - 0 + 1 \\cdot 1$.']] },
+    ];
+    // A worksheet on Commander checks only its last row. D, its action, its null space and the basis check
+    // must each be right before the subgoals tick, so on Commander each of them ends a sheet of its own;
+    // where 1, t and t² land stays the player's own unchecked working above D.
+    const groups = d(p) === 'commander' ? [[0, 1, 2, 3], [4], [5], [6]] : [[0, 1, 2, 3, 4, 5, 6]];
+    const stack = h('div', { class: 'ws-stack', style: 'display:flex;flex-direction:column;gap:8px' });
+    p.dock().appendChild(stack);
+    let pending = groups.length;
+    const sheets = groups.map((g, k) => {
+      const ws = new StepWorksheet(p, {
+        steps: g.map((i) => steps[i]),
+        mount: stack,
+        title: d(p) === 'commander' ? 'By hand · only D and the answers below it are checked' : undefined,
+        onDone: () => { if (--pending === 0) void finish(); },
+      });
+      if (k) ws.el.querySelector('.kicker')?.remove();
+      return ws;
     });
     const finish = async () => {
       flags.forEach((_, i) => { if (!flags[i]) { flags[i] = true; p.subgoal(i); } });
@@ -108,9 +123,9 @@ export const p5: PuzzleDef = {
       r.note(`$\\htmlClass{c-green}{5 - 3t + 2t^2}$ has rate of bend $\\htmlClass{c-yellow}{-3 + 4t}$. The constant profiles, $${tv('(a, 0, 0)')}$, are flattened.`);
     };
     return {
-      async showMe() { await ws.showMe(380); },
-      solve() { ws.solve(); },
-      wrong() { ws.wrong(); },
+      async showMe() { for (const ws of sheets) await ws.showMe(380); },
+      solve() { sheets.forEach((ws) => ws.solve()); },
+      wrong() { sheets.forEach((ws) => ws.wrong()); },
     };
   },
 };

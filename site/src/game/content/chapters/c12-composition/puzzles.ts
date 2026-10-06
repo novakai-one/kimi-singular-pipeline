@@ -51,6 +51,7 @@ export const p1: PuzzleDef = {
     p.g.stage.view2D({ center: [0.3, 0.5], height: 7.5, ms: 0 });
     const tol = tolFor(p.difficulty);
     const blind = p.difficulty === 'commander';
+    if (blind) p.setGoal('The rail holds the shear (on the right: it acts first) and the quarter turn. Build **one** matrix that does both and **Fuse**. Then **Play the rail** to compare.');
     const v = view(p);
     const bench = new Bench2(p, { draggable: p.difficulty === 'cadet', input: true, live: true, inputLabel: 'M =' });
     const tracer = new Tracer(p);
@@ -63,11 +64,8 @@ export const p1: PuzzleDef = {
     const gap = new Gap(p);
     let played = false, busy = false, committed = false;
     const showBench = (on: boolean) => { bench.arrow(0).object.visible = on; bench.arrow(1).object.visible = on; };
-    const playIt = async (fast = false) => {
-      if (busy) return;
-      if (blind && !committed) { sfx.miss(); p.bark('lantern', 'Commander: enter your single matrix and Fuse first. Then play the rail to compare.'); return; }
-      busy = true;
-      p.move();
+    // the rail's animation alone: no busy check and no move counted (the caller holds `busy`)
+    const runRail = async (fast: boolean) => {
       showBench(false);
       tracer.show(true);
       await playRail(v, rail, rail.matrices(), { ms: fast ? 0 : p.difficulty === 'cadet' ? 1900 : 1300, tracer, pause: fast ? 0 : 300 });
@@ -76,6 +74,13 @@ export const p1: PuzzleDef = {
       tracer.a1.object.visible = false; tracer.a2.object.visible = false;
       v.grid!.set(bench.get());
       showBench(true);
+    };
+    const playIt = async (fast = false) => {
+      if (busy) return;
+      if (blind && !committed) { sfx.miss(); p.bark('lantern', 'Commander: enter your single matrix and Fuse first. Then play the rail to compare.'); return; }
+      busy = true;
+      p.move();
+      await runRail(fast);
       busy = false;
     };
     const fuseIt = async (fast = false) => {
@@ -101,7 +106,8 @@ export const p1: PuzzleDef = {
         const swapped = meqTol(M, P1_AB, tol);
         p.bark('lantern', swapped ? 'That matrix does the turn first, then the shear. The rail does the shear first.'
           : `The dashed grid is the rail’s result. Your column ${j + 1} is ${fmtV(col(M, j))}; the rail sends $\\mathbf e_${j + 1}$ to ${fmtV(col(P1_BA, j))}.`);
-        if (!played && !blind) await playIt(fast);
+        // still busy: the button cannot be pressed again during the replay, and it is not a move
+        if (!played && !blind) await runRail(fast);
       }
       busy = false;
     };
@@ -174,7 +180,8 @@ export const p2: PuzzleDef = {
           p.subgoal(0);
           sfx.success();
           enterFlip();
-        } else p.bark('lantern', 'The origin lands on the origin both ways. Try another point.');
+        } else if (Math.hypot(a[0], a[1]) < 1e-9) p.bark('lantern', 'The origin lands on the origin both ways. Try another point.');
+        else p.bark('lantern', 'They do land in different places, but too close together to see. Try a point further from the origin.');
       } else if (a && b) p.bark('lantern', 'Play both orders with the same point.');
       busy = false;
     };
@@ -278,7 +285,7 @@ export const p4: PuzzleDef = {
   hints: [
     'Try $\\mathbf x = \\mathbf e_1$ and $\\mathbf y = \\mathbf e_2$: the left side is entry (2, 1) of $B$, the right side is entry (1, 2) of $M$.',
     'Every entry of $M$ is an entry of $B$ from the mirrored place: rows of $B$ become columns of $M$.',
-    '$M$ has rows (1, 0) and (2, 1). For $AB$, the matrices come in the other order: the mover of $B$, then the mover of $A$.',
+    '$M$ has rows (1, 0) and (2, 1). For $AB$, the movers come in the other order: the mover of $B$ times the mover of $A$, $M_B M_A$ (so $M_A$ acts on $\\mathbf y$ first).',
   ],
   par: 6,
   onWin: S.p4Win,
@@ -357,7 +364,7 @@ export const p4: PuzzleDef = {
           title: 'Move AB across', tiles: P4_TILES, decoys: P4_DECOYS, submitLabel: 'Check order',
           onSubmit: (o) => {
             p.move();
-            if (o.join() === P4_ORDER.join()) { tiles?.el.remove(); ws = new StepWorksheet(p, { steps: [steps[2]], onDone: done }); }
+            if (o.join() === P4_ORDER.join()) { tiles?.el.remove(); tiles = null; ws = new StepWorksheet(p, { steps: [steps[2]], onDone: done }); }
             else { sfx.miss(); p.bark('lantern', o.includes('same') ? 'Each move crosses on its own: A first, because it is outside.' : 'Start from the left side, move A across, then B.'); }
           },
         });
@@ -369,7 +376,7 @@ export const p4: PuzzleDef = {
     const solveAll = async (fast: boolean) => {
       if (stage === 'mover') { M = P4_MOVER; input.set(M); upd(); await shake(fast); }
       if (stage === 'twice') {
-        if (tiles) { tiles.set(P4_ORDER); tiles.el.remove(); ws = new StepWorksheet(p, { steps: [steps[2]], onDone: done }); }
+        if (tiles) { tiles.set(P4_ORDER); tiles.el.remove(); tiles = null; ws = new StepWorksheet(p, { steps: [steps[2]], onDone: done }); }
         if (fast) ws?.solve(); else await ws?.showMe(350);
       }
     };

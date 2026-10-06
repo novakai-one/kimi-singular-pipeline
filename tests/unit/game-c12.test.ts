@@ -27,6 +27,13 @@ test('p2: (1, 0) lands apart in the two orders; only the origin agrees; two flip
   assert.ok(L.ordersApart([1, 0]));
   assert.ok(!L.ordersApart([0, 0]));
   for (const p of [[1, 1], [-2, 1], [0, 3], [0.5, -0.5]]) assert.ok(L.ordersApart(p), JSON.stringify(p));
+  // the two landings are |p| apart, so a point one Commander snap from the origin lands apart, but too
+  // close to see: LANTERN must not call it the origin
+  for (const p of [[0.25, 0], [0, 0.25], [-0.25, 0]]) {
+    const a = matVec(L.P1_BA, p), b = matVec(L.P1_AB, p);
+    assert.ok(Math.abs(Math.hypot(a[0] - b[0], a[1] - b[1]) - Math.hypot(p[0], p[1])) < 1e-12, JSON.stringify(p));
+    assert.ok(!L.ordersApart(p) && Math.hypot(p[0], p[1]) > 1e-9, JSON.stringify(p));
+  }
   assert.ok(L.flipTwiceHome([L.FLIP, L.FLIP]));
   assert.ok(!L.flipTwiceHome([L.FLIP]));
   assert.ok(!L.flipTwiceHome([L.FLIP, L.TURN]));
@@ -93,6 +100,8 @@ test('Law: “In AB x, B moves the grid first, always” survives 500 cases; eve
 test('Doubts: shear/turn order and AB = 0 are false (the Shake breaks them); grouping is true', () => {
   // (F) order: the canonical counterexample, and the edge cases where it happens to hold
   assert.equal(L.d1Holds({ k: 1, deg: 90, p: [1, 0] }), false);
+  // the doubt opens with no shear (briefing.ts): the claim holds there, so the player must build the case
+  assert.equal(L.d1Holds({ k: 0, deg: 90, p: [1, 0] }), true);
   assert.equal(L.d1Holds({ k: 0, deg: 60, p: [2, 1] }), true);
   assert.equal(L.d1Holds({ k: 1.5, deg: 180, p: [1, 2] }), true);
   const r = rng(21);

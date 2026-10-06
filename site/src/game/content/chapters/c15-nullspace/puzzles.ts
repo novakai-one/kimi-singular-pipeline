@@ -158,8 +158,8 @@ export const p1: PuzzleDef = {
 export const p2: PuzzleDef = {
   id: 'c15-p2',
   title: 'Which beacons can the pulse reach?',
-  goal: 'Set the three amounts and **Land** a test buoy on each beacon the pulse can reach. One ping is off the landing plane: show its **gap** to the plane.',
-  subgoals: ['Land on (1, 2, 3)', 'Land on (0, 0, 0)', 'Land on (2, −1, 1)', 'Show the gap from (1, 1, 1) to the plane'],
+  goal: 'Set the three amounts and **Land** a test buoy on each beacon the pulse can reach. One ping is off the landing plane: show how far it sits **below** the plane, straight up.',
+  subgoals: ['Land on (1, 2, 3)', 'Land on (0, 0, 0)', 'Land on (2, −1, 1)', 'Show how far (1, 1, 1) sits below the plane, straight up'],
   predict: {
     prompt: 'Which ping can no start reach?',
     choices: [{ id: 'a', text: '$(1, 2, 3)$' }, { id: 'b', text: '$(1, 1, 1)$' }, { id: 'c', text: '$(0, 0, 0)$' }, { id: 'd', text: '$(2, -1, 1)$' }],
@@ -169,7 +169,7 @@ export const p2: PuzzleDef = {
   hints: [
     'The landing is $x_1$ of column 1, then $x_2$ of column 2, then $x_3$ of column 3, tip to tail. Column 3 is columns 1 and 2 together, so you can leave $x_3 = 0$.',
     'For $(1, 2, 3)$: 1 of $(1, 0, 1)$ and 2 of $(0, 1, 1)$. For $(2, -1, 1)$: 2 and $-1$. For the origin: nothing at all.',
-    'Above $(1, 1)$ the plane is at height $1 + 1 = 2$. Slide the gap arrow up from $(1, 1, 1)$ until it touches: a gap of 1.',
+    'Above $(1, 1)$ the plane is at height $1 + 1 = 2$. Slide the gap arrow straight up from $(1, 1, 1)$ until it touches: 1 straight up.',
   ],
   par: 7,
   view: '3d',
@@ -268,7 +268,7 @@ export const p2: PuzzleDef = {
       if (d(p) === 'commander') window.setTimeout(() => { if (!p.won) draw(false); }, 1600);
     };
     const gapSlider = new Slider({
-      label: 'gap from $(1, 1, 1)$', min: 0, max: 2, step: d(p) === 'commander' ? 0.05 : 0.25, value: 0,
+      label: 'straight up from $(1, 1, 1)$', min: 0, max: 2, step: d(p) === 'commander' ? 0.05 : 0.25, value: 0,
       onInput: (v) => { gap = v; drawGap(); },
     });
     const drawGap = () => {
@@ -277,7 +277,7 @@ export const p2: PuzzleDef = {
       gapLine.setOpacity(gap > 0.01 ? 0.9 : 0);
       gapTag.show(gap > 0.01);
       gapTag.at(room.w(top));
-      gapTag.set(`gap ${fmtN(gap)}`);
+      gapTag.set(`${fmtN(gap)} straight up`);
       r.row('g', 'plane above $(1, 1)$', `height ${fmtN(planeHeight(1, 1))}`);
     };
     gapSlider.el.querySelector('input')!.addEventListener('change', () => {
@@ -285,7 +285,7 @@ export const p2: PuzzleDef = {
       if (p2GapOk(gap, tol)) {
         if (!flags[3]) {
           gapLine.setColor(C.white, 1.6);
-          gapTag.set('gap 1: the ping is 1 below the plane');
+          gapTag.set('1 straight up: the ping is 1 below the plane');
           const echo = pings.find((q) => keyOf(q.t) === '1,1,1')!;
           echo.dot.setColor('#8f9bb3'); echo.halo.material.opacity = 0.15; echo.tag.set('(1, 1, 1) · echo'); echo.tag.el.classList.add('dim');
           sfx.success();
@@ -397,7 +397,9 @@ export const p3: PuzzleDef = {
       probe.knob.setEnabled(false);
       probe.knob.setColor(VIOLET);
       draw();
-      window.setTimeout(() => { if (!p.won && !boardUp) void toBoard(); }, p.g.headless ? 10 : 1600);
+      // the board must not come up on the next beat or a reset puzzle (Skip, Reset): cancel at disposal
+      const timer = window.setTimeout(() => { if (!p.won && !boardUp) void toBoard(); }, p.g.headless ? 10 : 1600);
+      p.onDispose(() => window.clearTimeout(timer));
     };
     p.dock().append(h('div', { class: 'act5-row' }, h('span', { class: 'k' }, 'Probe'), input.el),
       h('div', { class: 'act5-msg' }, 'Drag the green probe (Shift-drag for height), or type a start.'));
@@ -434,7 +436,7 @@ export const p3: PuzzleDef = {
         steps: [
           { prompt: 'Row 1 reads $x + z = 0$. Set the free variable $z = 1$: $x =$', answer: P3_READ.x, mistakes: [[1, 'Move $z$ across: $x = -z$.']] },
           { prompt: 'Row 2 reads $y + z = 0$. With $z = 1$: $y =$', answer: P3_READ.y, mistakes: [[1, 'Move $z$ across: $y = -z$.']] },
-          { prompt: 'Every start that lands on the origin is $t$ times', answer: [...P3_READ.dir], mistakes: [[[1, 1, -1], 'That is the same line, but read it with $z = 1$: $(-1, -1, 1)$.']] },
+          { prompt: 'Every start that lands on the origin is $t$ times the start with $z = 1$:', answer: [...P3_READ.dir], mistakes: [[[1, 1, -1], 'That is the same line, but read it with $z = 1$: $(-1, -1, 1)$.']] },
         ],
         onDone: () => { tick(2); },
       });

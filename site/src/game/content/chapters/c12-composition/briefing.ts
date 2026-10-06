@@ -55,7 +55,7 @@ export const doubtOrder: DoubtDef = {
   setup(p) {
     p.g.stage.view2D({ center: [0.3, 0.5], height: 8, ms: 0 });
     const v = moveView(p);
-    let k = 1, deg = 90;
+    let k = 0, deg = 90;
     const pt = new VectorHandle(p, { to: [1, 0, 0], color: C.white, label: '$\\mathbf p$', snap: 0.5, limit: 3, planar: true, countMoves: false });
     const dots = [new Dot([0, 0, 0], { color: C.result, size: 0.11, label: 'shear, then turn', labelOffset: [0, -22] }), new Dot([0, 0, 0], { color: C.white, size: 0.1, label: 'turn, then shear', labelOffset: [0, 22] })];
     dots.forEach((d) => d.setOpacity(0));

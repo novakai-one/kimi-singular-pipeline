@@ -77,6 +77,9 @@ export const p2Hit = (x: readonly number[], target: readonly number[], tol = 0.0
 export const planeHeight = (x: number, y: number): number => x + y;
 /** The vertical gap from (1, 1, 1) up to the plane is 1: the gap arrow of length g touches the plane at g = 1. */
 export const p2GapOk = (g: number, tol = 0.05): boolean => Math.abs(P2_GAP_TARGET[2] + g - planeHeight(P2_GAP_TARGET[0], P2_GAP_TARGET[1])) <= tol;
+/** Signed height of a point above the plane z = x + y, measured straight up (negative below). Chapter 15
+ *  measures the gap to the landing plane this way everywhere; the perpendicular distance waits for c21. */
+export const aboveLandingPlane = (p: readonly number[]): number => p[2] - planeHeight(p[0], p[1]);
 
 // ------------------------------------------------------------------ p3 [H] Land on the origin
 

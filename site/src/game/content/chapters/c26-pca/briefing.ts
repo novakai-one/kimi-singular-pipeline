@@ -342,7 +342,7 @@ const reviewCond: DoubtDef = {
   goal: 'Drag $\\mathbf b$ (green) and its error (red, from the tip of $\\mathbf b$). The readout compares how much the relative error grew with the condition number. **Back it** (Ilse will shake it) or **Challenge it**.',
   view: '2d',
   setup(p) {
-    void p.g.stage.view2D({ center: [0.8, 0.8], height: 8, ms: 0 });
+    void p.g.stage.view2D({ center: [0.6, 1.6], height: 9, ms: 0 });   // b stays below the claim panel
     p.grid({ main: 0.16, base: 0, axis: 0.42 });
     let A: Mat = [[2, 1], [1, 1.2]];
     let db: Vec = [0.3, -0.4];
@@ -387,7 +387,7 @@ const reviewSym: DoubtDef = {
   goal: 'Set a symmetric matrix with the sliders. **Back it** (Ilse will shake it) or **Challenge it**.',
   view: '2d',
   setup(p) {
-    void p.g.stage.view2D({ center: [0.4, 0.4], height: 8, ms: 0 });
+    void p.g.stage.view2D({ center: [0.8, 2.4], height: 10, ms: 0 });   // the arrows stay below the claim panel
     const r = p.readout('Eigenvalues and singular values');
     let S: Mat = [[1, 1.41], [1.41, 2.004]];
     const mv = new MatrixView(p, { M: S, labels: true, grid: { main: 0.3, base: 0.08, axis: 0.5 } });

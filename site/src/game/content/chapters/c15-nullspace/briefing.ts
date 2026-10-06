@@ -15,7 +15,7 @@ import { rint } from '../../../game/lawcheck';
 import { col, cross, matVec, rank, vsub } from '../../../math/la';
 import { C2 } from '../../truth';
 import {
-  NULL_DIR, TEO_DECOYS, TEO_ENDS, TEO_NODE, TEO_REF, TEO_TILES, anywhereHolds, fmtN, fmtV, land, lawCore, len, offPlane,
+  NULL_DIR, TEO_DECOYS, TEO_ENDS, TEO_NODE, TEO_REF, TEO_TILES, aboveLandingPlane, anywhereHolds, fmtN, fmtV, land, lawCore, len,
   planeIsSubspace, runTeo, sameLandingHolds, type P3, type SolveCase,
 } from './logic';
 import { GlowLine, Probe, Room, Sheet, VIOLET, inWorld, tv, twinView } from './space';
@@ -63,14 +63,14 @@ export const doubtAnywhere: DoubtDef = {
       tag.el.classList.toggle('y', ok);
       r.row('t', 'target', fmtV(t));
       r.row('s', 'a start that lands there', ok ? fmtV([t[0], t[1], 0]) : 'none', ok ? C.result : undefined);
-      r.row('o', 'off the landing plane by', fmtN(offPlane(t)));
+      r.row('o', 'straight up or down to the landing plane', fmtN(Math.abs(aboveLandingPlane(t))));
     };
     const probe = new Probe(p, room, t, { color: C.white, label: 'target', countMoves: false, onMove: (x) => { t = x; draw(); } });
     draw();
     const setT = (x: P3) => { t = x; probe.set(x); draw(); };
     return {
       holds: () => anywhereHolds(t),
-      describe: () => (anywhereHolds(t) ? `target ${fmtV(t)}: the start ${fmtV([t[0], t[1], 0])} lands there` : `target ${fmtV(t)}: it is ${fmtN(offPlane(t))} off the landing plane, so no start lands there`),
+      describe: () => (anywhereHolds(t) ? `target ${fmtV(t)}: the start ${fmtV([t[0], t[1], 0])} lands there` : `target ${fmtV(t)}: it is ${fmtN(Math.abs(aboveLandingPlane(t)))} ${aboveLandingPlane(t) < 0 ? 'below the landing plane, straight up' : 'above the landing plane, straight down'}, so no start lands there`),
       randomize(rr, edge) {
         const edges: P3[] = [[1, 1, 1], [0, 0, 1]];
         if (edge !== undefined) { setT(edges[edge]); return; }
@@ -108,7 +108,17 @@ export const doubtPlane: DoubtDef = {
     };
     const draw = () => {
       const l = len(n);
-      if (l < 1e-9) { patch.object.visible = false; return; }
+      if (l < 1e-9) {
+        // 0x + 0y + 0z = c is not a plane (all of space when c = 0, nothing otherwise)
+        patch.object.visible = false;
+        miss.setOpacity(0);
+        tag.at(room.w([0, 0, 0]));
+        tag.set('no plane');
+        tag.el.classList.remove('g');
+        r.row('eq', 'plane', 'none: the normal is 0');
+        r.row('o', 'contains the origin', '—');
+        return;
+      }
       patch.object.visible = true;
       const foot = n.map((x) => (x * c) / (l * l)) as P3;
       patch.set(room.w(foot), n);
@@ -129,7 +139,9 @@ export const doubtPlane: DoubtDef = {
     const normals: P3[] = [[0, 0, 1], [1, 1, -1], [1, 0, 0], [1, 2, 1], [0, 1, -1], [2, -1, 1]];
     return {
       holds: () => planeIsSubspace(n, c),
-      describe: () => `the plane ${eq()} ${planeIsSubspace(n, c) ? 'passes through the origin' : 'misses the origin, so it is not a subspace'}`,
+      describe: () => (len(n) < 1e-9
+        ? `no plane: the normal is the zero vector (0x + 0y + 0z = ${fmtN(c)} is ${Math.abs(c) < 1e-9 ? 'all of space' : 'empty'})`
+        : `the plane ${eq()} ${planeIsSubspace(n, c) ? 'passes through the origin' : 'misses the origin, so it is not a subspace'}`),
       randomize(rr, edge) {
         const edges: [P3, number][] = [[[0, 0, 1], 1], [[1, 1, -1], 1]];
         if (edge !== undefined) { set(...edges[edge]); return; }
@@ -245,14 +257,14 @@ export const law: LawDef<SolveCase> = {
     options: [
       { id: 'a', text: '$A\\mathbf x = x_1\\mathbf a_1 + \\dots + x_n\\mathbf a_n$ is a mix of the columns. A solution gives weights that make $\\mathbf b$; weights that make $\\mathbf b$ are a solution.', right: true, why: 'Yes. Solving $A\\mathbf x = \\mathbf b$ asks which mix of the columns makes $\\mathbf b$. The column space is every mix.' },
       { id: 'b', text: 'If $A$ sends $\\mathbf b$ to the origin, a solution exists.', right: false, why: 'That is about $\\mathbf b$ as an input. The question is whether $\\mathbf b$ is an output. For a 2 × 3 matrix, $\\mathbf b$ is not even the right size to be an input.' },
-      { id: 'c', text: 'A matrix with no zero entries reaches every point.', right: false, why: 'The two-decimal model has no zero row and still misses $(1, 1, 1)$. Reach is the span of the columns, not the entries.' },
+      { id: 'c', text: 'A matrix with no zero entries reaches every point.', right: false, why: '$\\begin{bmatrix}1 & 1\\\\ 1 & 1\\end{bmatrix}$ has no zero entries, but both columns are $(1, 1)$, so it only reaches the line $y = x$ and misses $(1, 0)$. Reach is the span of the columns, not the entries.' },
     ],
   },
 };
 
 export const compare: CompareDef = {
   id: 'c15',
-  page: 'The **column space** $\\operatorname{Col} A$ is the span of the columns: every point $A\\mathbf x$ can reach. So $A\\mathbf x = \\mathbf b$ has a solution **exactly when $\\mathbf b$ is in $\\operatorname{Col} A$**.\n\nThe **null space** $\\operatorname{Nul} A$ is every input the matrix sends to the origin: the solutions of $A\\mathbf x = \\mathbf 0$. Reduce $A$ and read one arrow per free variable.\n\nIf $A\\mathbf a = A\\mathbf b$, then $A(\\mathbf a - \\mathbf b) = A\\mathbf a - A\\mathbf b = \\mathbf 0$. So two solutions of $A\\mathbf x = \\mathbf b$ always differ by a null space vector, and every solution set is **one solution plus the null space**: one point, a line or a plane.\n\nBoth are **subspaces**: each contains $\\mathbf 0$ and every sum and stretch of its vectors.',
+  page: 'The **column space** $\\operatorname{Col} A$ is the span of the columns: every point $A\\mathbf x$ can reach. So $A\\mathbf x = \\mathbf b$ has a solution **exactly when $\\mathbf b$ is in $\\operatorname{Col} A$**.\n\nThe **null space** $\\operatorname{Nul} A$ is every input the matrix sends to the origin: the solutions of $A\\mathbf x = \\mathbf 0$. Reduce $A$ and read one arrow per free variable.\n\nIf $A\\mathbf a = A\\mathbf b$, then $A(\\mathbf a - \\mathbf b) = A\\mathbf a - A\\mathbf b = \\mathbf 0$. So two solutions of $A\\mathbf x = \\mathbf b$ always differ by a null space vector. When $\\mathbf b$ is in $\\operatorname{Col} A$, the solution set is **one solution plus the null space**: one point, a line, a plane or all of space. When it is not, there is no solution.\n\nBoth are **subspaces**: each contains $\\mathbf 0$ and every sum and stretch of its vectors.',
   formula: '\\mathbf x = \\cy{\\mathbf p} + \\tv{\\mathbf n}, \\qquad A\\tv{\\mathbf n} = \\mathbf 0'.replace(/\\tv\{([^}]*)\}/g, (_, s: string) => tv(s)),
   keyIdeas: [
     'Did you say the difference of two solutions lands on the origin?',

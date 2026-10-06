@@ -36,6 +36,20 @@ export const freeColumns = (m: Aug): number[] => {
 export const P3 = { b: [2, 1, 4] };
 export const p3Rows = (b: number[]): Aug => [[1, -1, 0, b[0]], [0, 1, -1, b[1]], [1, 0, -1, b[2]]];
 export const p3Consistent = (b: number[]): boolean => kindOf(p3Rows(b)) !== 'none';
+/** The meter buttons, in the order the readout lists them: meter one −, +, meter two −, +, meter three −, +. Readings stay in 0..6. */
+export const p3Press = (b: number[], i: number): number[] => b.map((x, k) => (k === i >> 1 ? Math.max(0, Math.min(6, x + (i % 2 ? 1 : -1))) : x));
+/**
+ * p3's Show me, from any readings: the buttons to press so that b₃ = b₁ + b₂. If b₁ + b₂ fits on meter three (at most 6),
+ * step meter three to it; otherwise first step meter one down to max(0, b₃ − b₂), then meter three if still needed.
+ */
+export function p3Presses(start: number[]): number[] {
+  let b = start.slice();
+  const out: number[] = [];
+  const press = (i: number) => { out.push(i); b = p3Press(b, i); };
+  if (b[0] + b[1] > 6) { const want = Math.max(0, b[2] - b[1]); while (b[0] > want) press(0); }
+  while (b[2] !== b[0] + b[1]) press(b[2] > b[0] + b[1] ? 4 : 5);
+  return out;
+}
 
 /** p4 [H]: x + 2y − z = 4: (4, 0, 0) + s(−2, 1, 0) + t(1, 0, 1). Three marked points. */
 export const P4 = {

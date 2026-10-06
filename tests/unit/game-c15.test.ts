@@ -42,6 +42,17 @@ test('p2: three targets reachable, (1, 1, 1) is not; its gap to the plane is 1',
   vclose(L.land([1, 2, 0]), [1, 2, 3]);
 });
 
+test('c15 measures the gap to the landing plane straight up: (1, 1, 1) is 1 below, matching p2', () => {
+  close(L.aboveLandingPlane([1, 1, 1]), -1);
+  assert.ok(L.p2GapOk(-L.aboveLandingPlane(L.P2_GAP_TARGET)), 'the p2 gap slider wins at the straight-up gap');
+  close(L.aboveLandingPlane([1, 2, 3]), 0);
+  close(L.aboveLandingPlane([0, 0, 1]), 1, 1e-12);
+  close(L.aboveLandingPlane([1, 1, 0]), -2);
+  // the perpendicular distance (taught in c21) is a different number; c15 does not show it as the gap
+  close(L.offPlane([1, 1, 1]), 1 / Math.sqrt(3));
+  for (const t of L.P2_TARGETS) assert.equal(L.reachable(t), Math.abs(L.aboveLandingPlane(t)) < 1e-9, `${t}`);
+});
+
 test('p3: (1, 1, −1) and its multiples land on the origin; the origin and near misses do not count', () => {
   assert.ok(L.p3Won([1, 1, -1]) && L.p3Won([-2, -2, 2]) && L.p3Won([0.5, 0.5, -0.5]));
   assert.ok(!L.p3Won([0, 0, 0]), 'the zero start is not an answer');

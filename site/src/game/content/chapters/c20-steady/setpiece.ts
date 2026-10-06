@@ -70,7 +70,7 @@ export const sp: PuzzleDef = {
       p.add(L.object); p.onDispose(() => L.dispose()); lineObjs.push(L);
       ptag(p, `× ${fmtN(SP_LINES[i][1])}`, v3(normalize(SP_LINES[i][0]).map((x) => x * 5.2)), 'vi');
       sfx.snap();
-      if (found.size === 3) { tick(0); r.row('l', 'lines that hold', '(1, 1, 1) × 1 · (1, −1, 0) × 0.5 · (1, 1, −2) × 0.2', C.violet); msg('Three lines: everything else is turned towards $(1, 1, 1)$.', 'good'); next(); }
+      if (found.size === 3) { tick(0); r.row('l', 'lines', '(1, 1, 1) ×1 · (1, −1, 0) ×0.5 · (1, 1, −2) ×0.2', C.violet); msg('Three lines: everything else is turned towards $(1, 1, 1)$.', 'good'); next(); }
       else render();
     };
     // 2 · coordinates

@@ -76,7 +76,7 @@ const ch: ChapterDef = {
         formula: '\\mathbf x = \\cy{\\mathbf p} + \\mathbf h, \\qquad A\\text{-rows at } \\mathbf p \\text{ read } \\mathbf b, \\quad \\text{at } \\mathbf h \\text{ read } \\mathbf 0',
         why: 'Each equation adds: at $\\mathbf p + \\mathbf h$ it reads $b + 0 = b$. And at the difference of two answers it reads $b - b = 0$.',
         cue: 'When you see "describe all solutions", think **one particular solution plus the homogeneous ones**.',
-        use: 'With more weights than data points, a model has a whole line (or plane) of perfect fits: one fit plus anything the data cannot see.',
+        use: 'With more weights than data points, a model that can fit the data exactly has a whole line (or plane) of perfect fits: one fit plus anything the data cannot see.',
       },
     },
     { kind: 'scene', id: 'brief', lines: S.brief, setup: bridgeShot },
@@ -89,7 +89,7 @@ const ch: ChapterDef = {
     {
       kind: 'card', id: 'why', card: {
         kind: 'why', visual: bay, title: 'Why it matters',
-        body: 'When a model has more weights than data points, infinitely many weight settings fit the data perfectly: one fit plus a whole free direction. Training needs a **rule to pick one**.\n\nYou used such a rule on the pod bay flows: of all the routings, $t = 0$ gave the least total load. Machine learning\'s rules (keep the weights small, prefer the simplest fit) play the same part.',
+        body: 'When a model has more weights than data points and the data do not contradict each other, infinitely many weight settings fit the data perfectly: one fit plus a whole free direction. (Two identical inputs with different targets cannot both be fit; more weights allow a line of fits, they do not promise one.) Training needs a **rule to pick one**.\n\nYou used such a rule on the pod bay flows: of all the routings, $t = 0$ gave the least total load. Machine learning\'s rules (keep the weights small, prefer the simplest fit) play the same part.',
         cue: 'When you see “how many solutions” or “describe all solutions”, think **reduce, then count pivots**.',
       },
     },

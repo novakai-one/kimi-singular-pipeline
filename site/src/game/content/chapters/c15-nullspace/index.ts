@@ -66,7 +66,7 @@ const NAME_ONE: Beat = {
   kind: 'name', id: 'name-one', entry: {
     id: 'one-to-one', term: 'one-to-one transformation', question: 'Can two different starts land together?', nodes: ['N17'],
     saw: '$(2, 0, 1)$ and $(3, 1, 0)$ both landed on $(3, 1, 4)$. Their difference $(1, 1, -1)$ is on the violet line. Every start on the line through $(1, 2, 0)$ along $(1, 1, -1)$ landed on $(1, 2, 3)$.',
-    means: 'If $A\\mathbf a = A\\mathbf b$ then $A(\\mathbf a - \\mathbf b) = \\mathbf 0$. Two starts land together **exactly when they differ by a null space vector**, so every solution set is one solution plus the null space.',
+    means: 'If $A\\mathbf a = A\\mathbf b$ then $A(\\mathbf a - \\mathbf b) = \\mathbf 0$. Two starts land together **exactly when they differ by a null space vector**, so whenever $A\\mathbf x = \\mathbf b$ has a solution, its solution set is one solution plus the null space.',
     name: 'A linear transformation is **one-to-one** when no two different starts land together: its null space is only $\\mathbf 0$. The two-decimal model is not one-to-one.',
     formula: `\\text{one-to-one} \\iff \\operatorname{Nul} A = \\{\\mathbf 0\\} \\iff \\text{a pivot in every column} \\qquad \\mathbf x = \\cy{\\mathbf p} + t\\,${tv('\\mathbf n')}`,
     why: 'A free variable gives a whole line of solutions to $A\\mathbf x = \\mathbf 0$. With a pivot in every column there is no free variable, so $\\mathbf 0$ is the only one.',
