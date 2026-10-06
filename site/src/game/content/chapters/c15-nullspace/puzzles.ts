@@ -69,7 +69,7 @@ export const p1: PuzzleDef = {
   onWin: S.p1Win,
   setup(p) {
     const room = new Room(p, { extent: 4, floor: true });
-    void p.g.stage.view3D({ target: [0, 0, 0.4], distance: 13.5, azimuth: -60, elevation: 20, ms: 0 });
+    void p.g.stage.view3D({ target: [0.2, 0.2, 1.1], distance: 14, azimuth: -60, elevation: 18, ms: 0 });
     const starts = ballStarts(2000);
     const landed = starts.map(land);
     const cloud = new LandCloud(p, room, starts);

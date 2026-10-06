@@ -42,9 +42,9 @@ export const doubtAnywhere: DoubtDef = {
   view: '3d',
   setup(p) {
     const room = new Room(p, { extent: 3 });
-    void p.g.stage.view3D({ target: [0.4, 0.4, 0.8], distance: 12, azimuth: -60, elevation: 20, ms: 0 });
-    const sheet = new Sheet(room, [1, 1, -1], { color: C.result, size: 6.5, opacity: 0.12 });
-    sheet.setOpacity(0.7);
+    void p.g.stage.view3D({ target: [0.4, 0.4, 1.7], distance: 12.5, azimuth: -60, elevation: 18, ms: 0 });
+    const sheet = new Sheet(room, [1, 1, -1], { color: C.result, size: 6, opacity: 0.12 });
+    sheet.setOpacity(0.35);
     const r = p.readout('Target');
     const reachA = room.arrow([0, 0, 0], { color: C.result, width: 0.04 });
     const gap = new FatLine(p.g.stage, [[0, 0, 0], [0, 0, 0]], { color: C.white, width: 1.8, opacity: 0.85, dashed: true, dashSize: 0.1, gapSize: 0.07 });
@@ -92,7 +92,7 @@ export const doubtPlane: DoubtDef = {
   view: '3d',
   setup(p) {
     const room = new Room(p, { extent: 3 });
-    void p.g.stage.view3D({ target: [0.3, 0.3, 0.6], distance: 12, azimuth: -58, elevation: 22, ms: 0 });
+    void p.g.stage.view3D({ target: [0.3, 0.3, 1.4], distance: 12.5, azimuth: -58, elevation: 20, ms: 0 });
     const st = p.g.stage;
     const patch = room.own(new PlanePatch(st, [0, 0, 0], [0, 0, 1], { color: '#9fd8ff', size: 6.5, opacity: 0.14 }));
     const o = new Dot(room.w([0, 0, 0]), { color: C.white, size: 0.09, label: 'origin', labelOffset: [0, 22] });
@@ -157,7 +157,7 @@ export const doubtSame: DoubtDef = {
   setup(p) {
     const left = new Room(p, { origin: [-3.9, 0, 0], scale: 0.7, extent: 3, title: 'starts' });
     const right = new Room(p, { origin: [3.9, 0, 0], scale: 0.7, extent: 3, title: 'landings' });
-    void twinView(p, { distance: 15.5 });
+    void twinView(p, { distance: 15.5, target: [0, 0, 1.4] });
     const sheet = new Sheet(right, [1, 1, -1], { color: C.result, size: 5, opacity: 0.1 });
     sheet.setOpacity(0.3);
     const nul = new GlowLine(left, NULL_DIR, { opacity: 0.45 });

@@ -45,7 +45,7 @@ export const p5: PuzzleDef = {
   onWin: S.p5Win,
   setup(p) {
     const room = new Room(p, { extent: 3, scale: 0.95 });
-    void p.g.stage.view3D({ target: [0.2, 0.3, 0.6], distance: 12.5, azimuth: -55, elevation: 22, ms: 0 });
+    void p.g.stage.view3D({ target: [0.2, 0.3, 1.3], distance: 13, azimuth: -55, elevation: 20, ms: 0 });
     const st = p.g.stage;
     const snap = p.snap() ?? 0.25;
     // the five candidates
@@ -352,10 +352,10 @@ export const p7: PuzzleDef = {
   onWin: S.p7Win,
   setup(p) {
     p.grid({ base: 0.12, main: 0.35, axis: 0.5 });
-    p.g.stage.view2D({ center: [1.6, 2.2], height: 8.5, ms: 0 });
+    p.g.stage.view2D({ center: [1.7, 2.5], height: 9.6, ms: 0 });
     const st = p.g.stage;
     const reach = new InfLine(st, [0, 0, 0], [1, 2, 0], { color: C.result, width: 2.5, opacity: 0.55, dashed: true });
-    const reachTag = new Label('every reach of the spare arm', [-0.6, -2.0, 0], { className: 'act5-pt y' });
+    const reachTag = new Label('every reach of the spare arm', [1.55, 3.1, 0], { className: 'act5-pt y', offset: [-130, 0] });
     const cols = [[1, 2], [2, 4], [3, 6]].map((c, i) => new Arrow([0, 0, 0], [c[0], c[1], 0.02 + i * 0.01], { color: [C.v, C.w, C.u][i], width: 0.05 - i * 0.01, label: `$\\mathbf a_${i + 1}$` }));
     p.add(reach, reachTag, ...cols);
     p.onDispose(() => reach.dispose());
