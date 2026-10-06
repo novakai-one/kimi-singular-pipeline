@@ -9,15 +9,27 @@ import { audio } from '../audio/audio';
 import { music } from '../audio/music';
 import { sfx } from '../audio/sfx';
 import { loadVoiceManifest, setVoiceEnabled } from '../audio/voice';
-import { loadSave, save, S, chapterSave, resetSave, exportSave, type Difficulty } from '../core/save';
+import { loadSave, save, S, chapterSave, resetSave, exportSave, type Difficulty, type CodeHelp } from '../core/save';
+import { exportLibrary, exportTests } from './build';
 import { setAnimSpeed, wait } from '../core/tween';
 import { Hud } from './hud';
 import { Runner, nameCard } from './runner';
-import { CHAPTERS, ACTS, act, chapter as findChapter, nextChapter } from './registry';
+import { CHAPTERS, ACTS, chapter as findChapter, nextChapter, chapterName } from './registry';
 import type { ChapterDef, CodexEntry, Game } from './types';
 import { TitleScene } from './title';
 import { installDebug } from './debug';
 import { caseBoardScreen } from './caseboard';
+import { manualView, libraryView } from './manual';
+
+/** Save text as a file (the browser's download). */
+export function download(name: string, text: string, type = 'text/plain'): void {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type }));
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  window.setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
 
 export class App implements Game {
   readonly stage: Stage;
@@ -107,7 +119,7 @@ export class App implements Game {
     const lastCh = last ? findChapter(last.chapter) : undefined;
     const choice = await this.title.menu({
       canContinue: !!lastCh,
-      continueLabel: lastCh ? `Continue · Chapter ${lastCh.num}` : 'Continue',
+      continueLabel: lastCh ? `Continue · ${chapterName(lastCh)}` : 'Continue',
     });
     this.title.dispose();
     this.title = null;
@@ -126,8 +138,7 @@ export class App implements Game {
     this.playing = true;
     this.stage.clearWorld();
     this.hud.setVisible(true);
-    const a = act(ch.act);
-    const res = await this.runner.playChapter(ch, beat, a ? `Act ${a.num}` : '');
+    const res = await this.runner.playChapter(ch, beat);
     if (res === 'aborted') return;
     await this.chapterEnd(ch);
   }
@@ -140,11 +151,11 @@ export class App implements Game {
     this.hud.hideObjective();
     let go: 'next' | 'map' | 'title' = 'map';
     await openModal(this.ui, (close) => [
-      h('div', { class: 'kicker' }, `Chapter ${ch.num} complete`),
+      h('div', { class: 'kicker' }, `${chapterName(ch)} complete`),
       h('h2', { html: inline(ch.title) }),
       h('p', { class: 'c-muted' }, `Stars: ${stars} of ${puzzles * 3}. Replay any puzzle from the chapter map to raise them.`),
       h('div', { style: 'display:flex;gap:10px;flex-wrap:wrap;margin-top:18px' },
-        next ? button(`Next · Chapter ${next.num}`, () => { go = 'next'; close(); }, { cls: 'primary' }) : null,
+        next ? button(`Next · ${chapterName(next)}`, () => { go = 'next'; close(); }, { cls: 'primary' }) : null,
         button('Chapter map', () => { go = 'map'; close(); }),
         button('Title screen', () => { go = 'title'; close(); }, { cls: 'ghost' })),
     ]);
@@ -266,12 +277,23 @@ export class App implements Game {
       b.addEventListener('click', () => { s.difficulty = d; save(); diff.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); sfx.click(); });
       return b;
     }));
+    const helps: [CodeHelp, string][] = [['off', 'Off'], ['assemble', 'Assemble'], ['fill', 'Fill'], ['write', 'Write']];
+    const help = h('div', { class: 'seg' }, ...helps.map(([k, label]) => {
+      const b = h('button', { class: 'btn small', type: 'button', 'aria-pressed': String(s.codeHelp === k) }, label);
+      b.addEventListener('click', () => { s.codeHelp = k; save(); help.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); sfx.click(); });
+      return b;
+    }));
     await openModal(this.ui, () => [
       h('div', { class: 'kicker' }, 'Settings'),
       h('h2', null, 'Settings'),
       h('div', { class: 'settings-grid' },
         h('section', null, h('h3', null, 'Difficulty'), diff,
           h('p', { class: 'c-muted', style: 'font-size:13px' }, 'Takes effect from the next puzzle. Cadet snaps to whole numbers, Navigator to halves, Commander does not snap.')),
+        h('section', null, h('h3', null, 'Code'), help,
+          h('p', { class: 'c-muted', style: 'font-size:13px' }, 'How much help the Python builds give. Assemble: put given lines in order. Fill: fill a few blanks. Write: write the body yourself. Off: skip the builds; no maths is lost.'),
+          h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' },
+            button('Download lantern.py', () => download('lantern.py', exportLibrary(), 'text/x-python'), { cls: 'small' }),
+            button('Download test_lantern.py', () => download('test_lantern.py', exportTests(), 'text/x-python'), { cls: 'ghost small' }))),
         h('section', null, h('h3', null, 'Sound'), slider('Master', 'master'), slider('Music', 'music'), slider('Effects', 'sfx'), slider('Voices', 'voice'), toggle('Voice acting', 'voiceOn')),
         h('section', null, h('h3', null, 'Story'), toggle('Advance dialogue automatically after each line', 'autoAdvance'), toggle('Reduce motion (faster, calmer animations)', 'reduceMotion')),
         h('section', null, h('h3', null, 'Save'),
@@ -282,30 +304,53 @@ export class App implements Game {
     ]);
   }
 
-  async codexScreen(): Promise<void> {
+  async codexScreen(tab: 'ideas' | 'manual' | 'library' = 'ideas'): Promise<void> {
     const entries: { e: CodexEntry; ch: ChapterDef }[] = [];
     for (const ch of CHAPTERS) for (const b of ch.beats) if (b.kind === 'name') entries.push({ e: b.entry, ch });
     await openModal(this.ui, () => {
-      const detail = h('div', { class: 'codex-detail' });
-      const list = h('div', { class: 'codex-list' });
-      const show = (x: { e: CodexEntry; ch: ChapterDef }) => {
-        detail.replaceChildren(nameCard(x.e));
-        const note = h('textarea', { class: 'own-words', rows: 3, placeholder: 'Your own notes on this idea (saved in this browser).' }) as HTMLTextAreaElement;
-        note.value = S().codex[x.e.id]?.note ?? '';
-        note.addEventListener('input', () => { S().codex[x.e.id] = { ...(S().codex[x.e.id] ?? { at: Date.now() }), note: note.value }; save(); });
-        detail.append(h('div', { class: 'kicker', style: 'margin-top:14px' }, 'Your notes'), note);
+      const pane = h('div', { class: 'codex-pane' });
+      const ideas = () => {
+        const detail = h('div', { class: 'codex-detail' });
+        const list = h('div', { class: 'codex-list' });
+        const show = (x: { e: CodexEntry; ch: ChapterDef }) => {
+          detail.replaceChildren(nameCard(x.e));
+          const note = h('textarea', { class: 'own-words', rows: 3, placeholder: 'Your own notes on this idea (saved in this browser).' }) as HTMLTextAreaElement;
+          note.value = S().codex[x.e.id]?.note ?? '';
+          note.addEventListener('input', () => { S().codex[x.e.id] = { ...(S().codex[x.e.id] ?? { at: Date.now() }), note: note.value }; save(); });
+          note.addEventListener('keydown', (e) => e.stopPropagation());
+          detail.append(h('div', { class: 'kicker', style: 'margin-top:14px' }, 'Your notes'), note);
+        };
+        // an idea not yet met shows only its chapter's plain question: no term before it is earned
+        const seenList = entries.filter((x) => S().codex[x.e.id]);
+        for (const x of entries) {
+          const seen = !!S().codex[x.e.id];
+          const b = h('button', { class: `codex-item ${seen ? '' : 'unseen'}`, type: 'button', disabled: seen ? null : true, html: `<span class="c-muted">${x.ch.num}</span> ${inline(seen ? x.e.term : x.ch.title)}` });
+          if (seen) b.addEventListener('click', () => { list.querySelectorAll('.codex-item').forEach((n) => n.removeAttribute('aria-current')); b.setAttribute('aria-current', 'true'); show(x); sfx.click(); });
+          list.appendChild(b);
+        }
+        if (seenList[0]) show(seenList[0]); else detail.append(h('p', { class: 'c-muted' }, 'Each idea appears here once you have named it in the story.'));
+        return entries.length ? h('div', { class: 'codex' }, list, detail) : h('p', null, 'Nothing here yet.');
       };
-      for (const x of entries) {
-        const seen = !!S().codex[x.e.id];
-        const b = h('button', { class: `codex-item ${seen ? '' : 'unseen'}`, type: 'button', html: `<span class="c-muted">${x.ch.num}</span> ${inline(seen ? x.e.term : x.e.term)}` });
-        b.addEventListener('click', () => { list.querySelectorAll('.codex-item').forEach((n) => n.removeAttribute('aria-current')); b.setAttribute('aria-current', 'true'); show(x); sfx.click(); });
-        list.appendChild(b);
+      const tabs = h('div', { class: 'seg codex-tabs', role: 'tablist' });
+      const views: [typeof tab, string, () => HTMLElement][] = [
+        ['ideas', 'Ideas', ideas],
+        ['manual', 'Field Manual', () => manualView(download)],
+        ['library', 'lantern.py', () => libraryView(download)],
+      ];
+      const open = (t: typeof tab) => {
+        tabs.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tab === t)));
+        pane.replaceChildren(views.find((v) => v[0] === t)![2]());
+      };
+      for (const [t, label] of views) {
+        const b = h('button', { class: 'btn small', type: 'button', role: 'tab', 'data-tab': t }, label);
+        b.addEventListener('click', () => { sfx.click(); open(t); });
+        tabs.append(b);
       }
-      if (entries[0]) show(entries[0]);
+      open(tab);
       return [
         h('div', { class: 'kicker' }, 'Codex'),
-        h('h2', null, 'Every idea, in plain words'),
-        entries.length ? h('div', { class: 'codex' }, list, detail) : h('p', null, 'Nothing here yet.'),
+        h('div', { class: 'codex-head' }, h('h2', null, 'Every idea, in plain words'), tabs),
+        pane,
       ];
     }, { wide: true });
   }

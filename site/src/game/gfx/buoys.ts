@@ -9,6 +9,8 @@ import type { Stage, V3 } from '../core/stage';
 import { animate, ease } from '../core/tween';
 import { interpMat2, mlerp, type Mat } from '../math/la';
 
+const CORE_DIM = 0.7, CORE_LIT = 1.8;
+
 const haloVert = /* glsl */`
 attribute vec3 aColor; attribute float aGlow;
 varying vec2 vUv; varying vec3 vColor; varying float vGlow;
@@ -21,7 +23,7 @@ void main(){
 }`;
 const haloFrag = /* glsl */`
 varying vec2 vUv; varying vec3 vColor; varying float vGlow;
-void main(){ vec2 d = vUv - 0.5; float a = exp(-dot(d,d) * 22.0) * (0.35 + 0.65 * vGlow); if (a < 0.01) discard; gl_FragColor = vec4(vColor * a, a); }`;
+void main(){ vec2 d = vUv - 0.5; float a = exp(-dot(d,d) * 16.0) * (0.3 + 0.7 * vGlow); if (a < 0.01) discard; gl_FragColor = vec4(vColor * a, a); }`;
 
 export interface BuoyOpts {
   /** Whole-number positions from -extent..extent on each axis. */
@@ -60,8 +62,11 @@ export class BuoyField {
     this.M = this.dims === 2 ? [[1, 0], [0, 1]] : [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
     this.baseColor = new Color(o.color ?? '#9fd8ff');
     const s = o.size ?? 0.06;
-    this.cores = new InstancedMesh(new SphereGeometry(s, 10, 8), new MeshBasicMaterial({ color: this.baseColor.clone().multiplyScalar(1.6) }), pts.length);
+    // Plain buoys stay just under the bloom threshold (their own halo is the glow): three's bloom blur
+    // is box-shaped, so a whole lattice of blooming points shows soft squares. Lit buoys bloom.
+    this.cores = new InstancedMesh(new SphereGeometry(s, 10, 8), new MeshBasicMaterial({ color: '#ffffff' }), pts.length);
     this.cores.instanceMatrix.setUsage(DynamicDrawUsage);
+    for (let i = 0; i < pts.length; i++) this.cores.setColorAt(i, this.baseColor.clone().multiplyScalar(CORE_DIM));
     this.colors = new Float32Array(pts.length * 3);
     this.glows = new Float32Array(pts.length);
     for (let i = 0; i < pts.length; i++) { this.colors.set([this.baseColor.r, this.baseColor.g, this.baseColor.b], i * 3); this.glows[i] = 0; }
@@ -114,7 +119,9 @@ export class BuoyField {
   /** Light some points in a colour (glow 0..1). Pass null colour to reset to the base colour. */
   highlight(idx: number[], color: string | null, glow = 1): void {
     const c = color ? new Color(color) : this.baseColor;
-    for (const i of idx) { this.colors.set([c.r, c.g, c.b], i * 3); this.glows[i] = color ? glow : 0; }
+    const core = c.clone().multiplyScalar(color ? CORE_DIM + (CORE_LIT - CORE_DIM) * glow : CORE_DIM);
+    for (const i of idx) { this.colors.set([c.r, c.g, c.b], i * 3); this.glows[i] = color ? glow : 0; this.cores.setColorAt(i, core); }
+    if (this.cores.instanceColor) this.cores.instanceColor.needsUpdate = true;
     (this.halos.geometry.getAttribute('aColor') as InstancedBufferAttribute).needsUpdate = true;
     (this.halos.geometry.getAttribute('aGlow') as InstancedBufferAttribute).needsUpdate = true;
   }

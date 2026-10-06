@@ -5,7 +5,27 @@ import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
+import type { InterleavedBufferAttribute } from 'three';
 import type { Stage, V3 } from '../core/stage';
+
+/** Write new positions into the existing buffer when the size matches (no allocation per frame). */
+function updateInPlace(g: LineSegmentsGeometry, flat: number[]): boolean {
+  const attr = g.getAttribute('instanceStart') as InterleavedBufferAttribute | undefined;
+  const buf = attr?.data;
+  if (!buf || buf.array.length !== flat.length) return false;
+  (buf.array as Float32Array).set(flat);
+  buf.needsUpdate = true;
+  g.computeBoundingBox();
+  g.computeBoundingSphere();
+  return true;
+}
+
+/** Segment pairs for a polyline, as LineGeometry.setPositions builds them. */
+function polylinePairs(points: V3[]): number[] {
+  const out: number[] = [];
+  for (let i = 0; i < points.length - 1; i++) out.push(...points[i], ...points[i + 1]);
+  return out;
+}
 
 export interface LineOpts { color?: string; width?: number; intensity?: number; opacity?: number; dashed?: boolean; dashSize?: number; gapSize?: number; depthTest?: boolean }
 
@@ -46,6 +66,10 @@ export class FatLine {
   }
 
   setPoints(points: V3[]): void {
+    if (points.length > 1 && updateInPlace(this.object.geometry, polylinePairs(points))) {
+      if (this.material.dashed) this.object.computeLineDistances();
+      return;
+    }
     const g = new LineGeometry();
     g.setPositions(points.flat());
     this.object.geometry.dispose();
@@ -81,6 +105,10 @@ export class FatSegments {
   }
 
   setSegments(segments: [V3, V3][]): void {
+    if (segments.length && updateInPlace(this.object.geometry, segments.flatMap(([a, b]) => [...a, ...b]))) {
+      if (this.material.dashed) this.object.computeLineDistances();
+      return;
+    }
     const g = new LineSegmentsGeometry();
     g.setPositions(segments.flatMap(([a, b]) => [...a, ...b]));
     this.object.geometry.dispose();

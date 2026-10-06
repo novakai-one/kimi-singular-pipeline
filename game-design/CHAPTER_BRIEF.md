@@ -21,11 +21,12 @@ naming beats, the [D] and [H] puzzles, the Briefing (sayit → doubts → law �
 card with the cue, the builds (GDD §5.5), and the story-out beat (Case Board pin/answer as listed in GDD §2.3).
 Where the GDD is vague, decide, following the house rules. Use the GDD's puzzle numbers and story numbers from `truth.ts`.
 
-**Engine status.** The Briefing beats (`card`, `sayit`, `doubt`, `law`, `compare`, `procedure`) are defined in
-`types.ts`; the lead is building their engines now. Write the data, and **unit-test it** (law: the target survives and
+**Engine status.** Every beat kind works today, including the Briefing (`card`, `sayit`, `doubt`, `law`, `compare`,
+`procedure`): the flow test drives them all. Still **unit-test** the Briefing data (law: the target survives and
 near-misses break; doubts: the canonical construction gives the right verdict and the Shake finds the breaking case;
-procedures: the reference order succeeds and dropping each key step fails). If the flow test shows those beats doing
-nothing yet, that is expected; do not build your own engine for them. Puzzles, names, scenes, cinematics and builds work today.
+procedures: the reference order succeeds and dropping each key step fails). The geometry and data kits are finished
+(`kit/geom.ts`: `Knob`, `RightAngle`, `AngleArc`, `Shadow`, `Sweep`, `UnitCircleImage`; `kit/data.ts`: `PointCloud`,
+`FitLine`, `Projector3D`, `PCAView`); the dev chapter `c92-kit-geom` shows each one in use.
 
 ## Craft standards
 - The picture does the teaching. Keep scenes uncluttered: at most ~4 arrows, labels never overlapping, readouts for exact numbers.
@@ -55,5 +56,6 @@ The machine is shared (4 CPU cores, software rendering), so browser tests are sl
   Need a reusable component that does not exist? Put it in your chapter folder. Do not edit shared files (kit, engine,
   types, truth, other chapters). If a shared file has a bug or needs a feature, work around it locally and say so.
 - Do not commit. The lead reviews and commits.
+- The scratchpad is shared with other agents: prefix every scratch file and folder with your chapter id (`c13-flow.mjs`).
 - Final report (concise): files; each puzzle with its win condition and solve result per difficulty; codex entries;
   Briefing data written; builds; anything not done; recommended shared-file changes.

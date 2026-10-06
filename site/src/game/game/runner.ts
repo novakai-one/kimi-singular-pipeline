@@ -1,6 +1,7 @@
 // Plays chapters beat by beat. Owns the puzzle loop (goal, hints, Show me, Skip, stars),
 // the naming moment, explain-back and the builder terminal.
 import type { Object3D } from 'three';
+import { chapterKicker } from './registry';
 import type { Beat, ChapterDef, CodexEntry, ExplainDef, Game, PuzzleCtx, PuzzleDef, PuzzleRuntime, BuildDef } from './types';
 import type { Hud } from './hud';
 import { h, inline, md, button } from '../ui/ui';
@@ -86,10 +87,10 @@ export class Runner {
     });
   }
 
-  async playChapter(ch: ChapterDef, start = 0, actTitle = ''): Promise<'done' | 'aborted'> {
+  async playChapter(ch: ChapterDef, start = 0): Promise<'done' | 'aborted'> {
     this.aborted = false;
     this.chapter = ch;
-    this.hud.setChapter(`${actTitle ? `${actTitle} · ` : ''}Chapter ${ch.num}`, ch.title);
+    this.hud.setChapter(chapterKicker(ch), ch.title);
     this.hud.hideObjective();
     if (ch.palette) void this.g.bg.setPalette(ch.palette as never, 1800);
     this.g.mood(ch.music ?? 'explore');
@@ -134,6 +135,8 @@ export class Runner {
       case 'name': return this.runName(beat.entry);
       case 'explain': return this.runExplain(beat.explain);
       case 'build': {
+        // Code help Off: the code thread is optional and never gates (GDD §5.1); LANTERN keeps its backup.
+        if (S().settings.codeHelp === 'off') return;
         this.hud.hideObjective();
         await this.backdrop();
         await this.guard(runBuild(this.g, beat.build as BuildDef, this.hud));

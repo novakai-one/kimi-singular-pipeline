@@ -209,7 +209,8 @@ const stillPuzzle: PuzzleDef = {
     p.add(b);
     const ghosts = new BuoyField(p.g.stage, { extent: 7, color: '#3a5a86', size: 0.035 });
     p.add(ghosts);
-    const segs: [V3, V3][] = b.base.map((q, i) => [[q[0], q[1], -0.01], [...b.pos(i).slice(0, 2), -0.01] as V3]);
+    // near the Anchor only: far buoys moved so far that their lines would cover the picture
+    const segs: [V3, V3][] = b.base.flatMap((q, i) => (Math.hypot(q[0], q[1]) <= 3.2 ? [[[q[0], q[1], -0.01], [...b.pos(i).slice(0, 2), -0.01] as V3] as [V3, V3]] : []));
     // each buoy's old spot joined to its new spot
     const fs = new FatSegments(p.g.stage, segs, { color: '#6f8fbf', width: 1, opacity: 0.45 });
     p.add(fs.object);

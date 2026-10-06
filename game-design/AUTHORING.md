@@ -17,7 +17,11 @@ site/src/game/content/chapters/cNN-slug/
   puzzles.ts    PuzzleDef objects + their pure win checks (exported functions of plain state)
   briefing.ts   SayItDef, DoubtDefs, LawDef, CompareDef, (ProcedureDef)
   build.ts      BuildDefs
+  logic.ts      pure win checks, law cores, doubt predicates (no three, no DOM; import with `.ts` suffixes)
 ```
+- `logic.ts` is what the unit test imports (`node --experimental-strip-types --test`). Put every rule that decides a
+  win, a doubt verdict or a law case there, and import it from `puzzles.ts` / `briefing.ts`. Use `game/lawcheck.ts`
+  (`rng`, `checkLaw`, `rint`) to test that the target law survives 500 seeded cases and each near-miss breaks.
 - The registry picks up `content/chapters/*/index.ts` automatically. Never edit shared files.
 - `id` is `cNN` (Prologue `c00`, Epilogue `c27`); `act` and `num` from GDD §6.1. Puzzle ids `cNN-pM` as in the GDD.
 - **Story numbers come from `content/truth.ts`** (TT1–TT22, computed and unit-tested). Never retype them.

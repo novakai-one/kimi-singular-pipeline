@@ -1,6 +1,7 @@
 // window.__game: the test harness drives the game through this (list chapters, jump anywhere,
 // solve the current puzzle, read state). Also handy in the browser console.
 import type { App } from './app';
+import { buildTest } from './build';
 import { CHAPTERS, DEV_CHAPTERS, chapter } from './registry';
 import { S } from '../core/save';
 import { normLine, spoken, voiceId, type Line } from '../content/lines';
@@ -10,6 +11,8 @@ import { setAnimSpeed } from '../core/tween';
 
 export function installDebug(app: App): void {
   const api = {
+    /** Post-processing switches for visual debugging. */
+    fx: (o: { bloom?: boolean; finish?: boolean }) => { if (o.bloom !== undefined) app.stage.bloom.enabled = o.bloom; if (o.finish !== undefined) app.stage.finish.enabled = o.finish; },
     chapters: (dev = false) => (dev ? DEV_CHAPTERS : CHAPTERS).map((c) => ({ id: c.id, act: c.act, num: c.num, title: c.title, beats: c.beats.map((b) => ({ id: b.id, kind: b.kind, puzzle: b.kind === 'puzzle' ? b.puzzle.id : undefined })) })),
     /** Start a chapter at a beat (does not wait for it to finish). */
     goto: (id: string, beat = 0) => {
@@ -32,6 +35,14 @@ export function installDebug(app: App): void {
     solve: () => app.runner.solveCurrent(),
     /** Resolve the current Briefing step (card, say it, doubt, law, compare, procedure) the right way. */
     briefing: () => (briefingTest.solve ? briefingTest.kind : null),
+    /** The open builder: switch code-help mode, run Show me, report whether it passed. */
+    solveBuild: async (mode?: 'assemble' | 'fill' | 'write') => {
+      const b = buildTest.current;
+      if (!b) return null;
+      if (mode) b.setMode(mode);
+      await b.showMe();
+      return { mode: b.mode(), ok: b.passed() };
+    },
     solveBriefing: async () => (briefingTest.solve ? { kind: briefingTest.kind, ok: await briefingTest.solve() } : null),
     /** Animation speed multiplier (tests). */
     setAnimSpeed: (x: number) => setAnimSpeed(x),

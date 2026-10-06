@@ -46,6 +46,18 @@ for (const i of beats) {
     await frames(10);
     await p.screenshot({ path: `${out}/${tag}-solved.png` });
     console.log(`beat ${i} ${kind}: solve → ${r ? r.ok : 'no briefing step found'}`);
+  } else if (kind === 'build') {
+    // each code-help mode in turn: Show me must pass the tests (and the swarm) in every mode
+    await p.waitForFunction(() => window.__game.solveBuild !== undefined, null, { timeout: 5000 }).catch(() => {});
+    const modes = [];
+    for (const m of ['assemble', 'fill', 'write']) {
+      const r = await p.evaluate((mm) => window.__game.solveBuild(mm), m);
+      modes.push(r ? `${r.mode} ${r.ok}` : 'no builder');
+      if (m === 'assemble') { await frames(4); await p.screenshot({ path: `${out}/${tag}-assemble.png` }); }
+    }
+    await frames(6);
+    await p.screenshot({ path: `${out}/${tag}-solved.png` });
+    console.log(`beat ${i} build ${ch.beats[i].id}: ${modes.join(', ')}`);
   }
 }
 console.log(errors.length ? `ERRORS:\n${errors.join('\n')}` : 'no console errors');

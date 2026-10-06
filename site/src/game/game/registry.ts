@@ -23,4 +23,16 @@ export function nextChapter(id: string): ChapterDef | undefined {
   const i = CHAPTERS.findIndex((c) => c.id === id);
   return i >= 0 ? CHAPTERS[i + 1] : undefined;
 }
+const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
+/** "Act IV" (or "" for the Prologue, Epilogue and dev chapters). */
+export function actLabel(n: number): string { return ROMAN[n] ? `Act ${ROMAN[n]}` : ''; }
+/** "Prologue", "Epilogue" or "Chapter 7". */
+export function chapterName(ch: ChapterDef): string {
+  return ch.num === 0 && ch.act === 0 ? 'Prologue' : ch.act === 10 ? 'Epilogue' : ch.dev ? `Test ${ch.num}` : `Chapter ${ch.num}`;
+}
+/** HUD kicker: "Act II · Chapter 5", or "Prologue". */
+export function chapterKicker(ch: ChapterDef): string {
+  const a = actLabel(ch.act);
+  return a && ch.act !== 10 ? `${a} · ${chapterName(ch)}` : chapterName(ch);
+}
 export { ACTS };

@@ -131,7 +131,9 @@ export class Stage {
     this.composer.renderTarget1.texture.type = HalfFloatType;
     this.composer.renderTarget2.texture.type = HalfFloatType;
     this.composer.addPass(new RenderPass(this.scene, this.camera));
-    this.bloom = new UnrealBloomPass(new Vector2(256, 256), low ? 0.4 : 0.6, 0.45, 0.7);
+    this.bloom = new UnrealBloomPass(new Vector2(256, 256), low ? 0.4 : 0.6, 0.2, 0.7);
+    // Weight the coarse mips down: on dense lattices their large texels show as soft squares.
+    this.bloom.compositeMaterial.uniforms.bloomFactors.value = [1.0, 0.9, 0.62, 0.3, 0.1];
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());
     this.finish = new ShaderPass(FinishShader);

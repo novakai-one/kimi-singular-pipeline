@@ -268,6 +268,9 @@ const NAME_LENGTH: Beat = {
       },
     };
 
+/** A random whole-number vector for the build swarms. */
+const vec = (r: () => number, n: number): number[] => Array.from({ length: n }, () => Math.floor(r() * 21) - 10);
+
 const BUILD_ADD: Beat = {
       kind: 'build', id: 'build-add', build: {
         id: 'c01-add', fn: 'add', title: 'Add two moves',
@@ -280,6 +283,8 @@ const BUILD_ADD: Beat = {
           { name: 'three numbers: `add([1, 2, 3], [4, 5, 6])`', args: [[1, 2, 3], [4, 5, 6]], expect: [5, 7, 9] },
           { name: 'adding zero changes nothing', args: [[2, 5], [0, 0]], expect: [2, 5] },
         ],
+        swarm: { gen: (r) => { const n = r() < 0.7 ? 2 : 3; return [vec(r, n), vec(r, n)]; }, crew: (v, w) => (v as number[]).map((x, i) => x + (w as number[])[i]) },
+        docPrompt: 'Why does adding matching parts give the move “v, then w”? Write it the way you would tell Bram.',
         payoff: 'LANTERN adds burns with your `add` from now on.',
       },
     };
@@ -298,6 +303,7 @@ const BUILD_SCALE: Beat = {
       { name: 'zero gives the zero vector', args: [0, [5, -7]], expect: [0, 0] },
       { name: 'three parts: `scale(0.5, [2, 4, 6])`', args: [0.5, [2, 4, 6]], expect: [1, 2, 3] },
     ],
+    swarm: { gen: (r) => [Math.round((r() * 8 - 4) * 2) / 2, vec(r, r() < 0.7 ? 2 : 3)], crew: (c, v) => (v as number[]).map((x) => (c as number) * x) },
     payoff: 'The dials on the burn planner use your `scale` from now on.',
   },
 };
@@ -314,6 +320,7 @@ const BUILD_LENGTH: Beat = {
           { name: 'three parts: `length([1, 2, 2])` is 3', args: [[1, 2, 2]], expect: 3 },
           { name: 'the zero vector has length 0', args: [[0, 0]], expect: 0 },
         ],
+        swarm: { gen: (r) => [vec(r, r() < 0.7 ? 2 : 3)], crew: (v) => Math.hypot(...(v as number[])), tol: 1e-9 },
         payoff: 'The distance readouts use your `length` from now on.',
       },
     };
