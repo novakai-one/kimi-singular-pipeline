@@ -112,7 +112,7 @@ export const p6: PuzzleDef = {
       r.row('a', 'part along the hum', fmtV([P6_D[0] * t, P6_D[1] * t]), C.result);
     };
     const dl = new DropLine(p, {
-      dir: v3(P6_D), target: v3(P6_S), t0: 2, step: stepFor(p, 0.4, 0.2), magnet: p.difficulty === 'cadet' ? 0.3 : 0, range: [-1, 7], lineColor: C.w,
+      dir: v3(P6_D), target: v3(P6_S), t0: 0.8, step: stepFor(p, 0.4, 0.2), magnet: p.difficulty === 'cadet' ? 0.3 : 0, range: [-1, 7], lineColor: C.w,
       onMove: (t) => show(t),
     });
     show(dl.t);
@@ -194,7 +194,7 @@ export const p7: PuzzleDef = {
     const px = new Arrow([0, 0, 0.02], [0, 0, 0.02], { color: C.result, label: '$P\\mathbf x$' });
     p.add(px);
     const x = new VectorHandle(p, {
-      to: [1, 1, 0], color: C.v, label: '$\\mathbf x$', limit: 4,
+      to: [-2, -1, 0], color: C.v, label: '$\\mathbf x$', limit: 4,
       onChange: (tip) => {
         const q = matVec(P7, [tip[0], tip[1]]);
         px.set([0, 0, 0.02], v3(q, 0.02));
@@ -209,7 +209,7 @@ export const p7: PuzzleDef = {
         }
       },
     });
-    x.set([1, 1, 0]);
+    x.set([-2, -1, 0]);
     const apply = async () => {
       p.move();
       const from = M, to = matMul(P7, M);

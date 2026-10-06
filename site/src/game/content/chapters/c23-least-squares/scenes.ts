@@ -59,9 +59,9 @@ export async function residualBeat(g: Game): Promise<void> {
   try {
     g.stage.clearWorld();
     g.mood('tension');
-    await g.stage.view2D({ center: [0, 0.9], height: 7.2, ms: 0 });
+    await g.stage.view2D({ center: [0, 1.0], height: 7.2, ms: 0 });
     const W = g.stage.world;
-    const SP = 0.18, AMP = 230;
+    const SP = 0.18, AMP = 180;
     const sx = (i: number) => (i + 0.5 - 30) * SP;
     const axis = new FatLine(g.stage, [[sx(-0.5), 0, 0], [sx(59.5), 0, 0]], { color: C.white, width: 1.2, opacity: 0.5 });
     axis.object.userData.dispose = () => axis.dispose();
@@ -85,7 +85,7 @@ export async function residualBeat(g: Game): Promise<void> {
       await g.say(who === 'yours' ? S.installMine : S.installBackup);
       // the residual plot from this fit, bar by bar, the knock tapping as it appears
       const res = leftoverOf(F);
-      const bars = new FatSegments(g.stage, [[[0, 0, 0], [0, 0, 0]]], { color: C.accent, width: 4, intensity: 1.2 });
+      const bars = new FatSegments(g.stage, [[[0, 0, 0], [0, 0, 0]]], { color: C.accent, width: 13, intensity: 1.1 });
       bars.object.userData.dispose = () => bars.dispose();
       W.add(bars.object);
       const segs: [V3, V3][] = [];
@@ -96,7 +96,7 @@ export async function residualBeat(g: Game): Promise<void> {
         await wait(g.headless ? 1 : 90);
         if (!alive()) throw new Gone();
       }
-      const lab = new Label('three short · three long · three short', [sx(30), 3.4, 0], { className: 'a8-pt y' });
+      const lab = new Label('three short · three long · three short', [sx(30), 3.2, 0], { className: 'a8-pt y' });
       W.add(lab.object);
       await g.say(S.residual);
       answer('teo', 'Alive, inside the flattened stern. His knocks are in the leftover of the Collapse fit: three short, three long, three short, every ninety seconds, in time with our messages.', 'c23');

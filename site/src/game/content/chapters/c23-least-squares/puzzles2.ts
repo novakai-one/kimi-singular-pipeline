@@ -128,7 +128,7 @@ export const p5: PuzzleDef = {
 
 // ------------------------------------------------------------------ p6 What's left over
 
-const SP = 0.18, AMP = 230;
+const SP = 0.18, AMP = 180;
 const sx = (b: number) => (b - 30) * SP;           // a sample boundary (0..60) on the axis
 const sampleX = (i: number) => sx(i + 0.5);
 
@@ -151,16 +151,16 @@ export const p6: PuzzleDef = {
   onWin: S.p6Win,
   setup(p) {
     p.grid({ base: 0.06, main: 0.12, axis: 0.3 });
-    void p.g.stage.view2D({ center: [0, 0.9], height: 7.2, ms: 0 });
+    void p.g.stage.view2D({ center: [0, 1.0], height: 7.2, ms: 0 });
     const d = p.difficulty;
     const tol = d === 'commander' ? 0 : 1;
-    const bars = new FatSegments(p.g.stage, LEFTOVER.map((e, i) => [[sampleX(i), 0, 0.01], [sampleX(i), e * AMP, 0.01]] as [V3, V3]), { color: C.accent, width: 4, intensity: 1.2 });
+    const bars = new FatSegments(p.g.stage, LEFTOVER.map((e, i) => [[sampleX(i), 0, 0.01], [sampleX(i), e * AMP, 0.01]] as [V3, V3]), { color: C.accent, width: 13, intensity: 1.1 });
     const axis = new FatLine(p.g.stage, [[sx(0), 0, 0], [sx(60), 0, 0]], { color: C.white, width: 1.2, opacity: 0.5 });
     p.add(bars, axis);
     tag(p, 'sample 0', [sx(0), -0.35, 0], 'dim', [20, 8]);
     tag(p, 'sample 59', [sx(60), -0.35, 0], 'dim', [-24, 8]);
     tag(p, 'noise size 0.002', [sx(5), 0.002 * AMP + 0.2, 0], 'dim', [30, -6]);
-    const shade = new Parallelogram(p.g.stage, [1, 0, 0], [0, 4.2, 0], { color: C.result, opacity: 0.08, origin: [sx(10), -0.5, -0.01] });
+    const shade = new Parallelogram(p.g.stage, [1, 0, 0], [0, 3.6, 0], { color: C.result, opacity: 0.08, origin: [sx(10), -0.5, -0.01] });
     p.add(shade);
     let a = 10, b = 50;
     const r = p.readout('Your marks');
@@ -172,7 +172,7 @@ export const p6: PuzzleDef = {
     });
     let done = false;
     const draw = () => {
-      shade.set([sx(b) - sx(a), 0, 0], [0, 4.2, 0], [sx(a), -0.5, -0.01]);
+      shade.set([sx(b) - sx(a), 0, 0], [0, 3.6, 0], [sx(a), -0.5, -0.01]);
       r.row('s', 'from sample', String(a), C.result);
       r.row('e', 'to sample', String(b - 1), C.result);
     };
@@ -187,7 +187,7 @@ export const p6: PuzzleDef = {
     const kA = mk(true), kB = mk(false);
     draw();
     // play the leftover as sound: a playhead runs across; every tall bar taps
-    const head = new FatLine(p.g.stage, [[sx(0), -0.4, 0.02], [sx(0), 3.6, 0.02]], { color: C.white, width: 1.5, opacity: 0 });
+    const head = new FatLine(p.g.stage, [[sx(0), -0.4, 0.02], [sx(0), 3.0, 0.02]], { color: C.white, width: 1.5, opacity: 0 });
     p.add(head);
     let playing = false;
     const play = async () => {
@@ -196,7 +196,7 @@ export const p6: PuzzleDef = {
       p.move();
       head.setOpacity(0.7);
       for (let i = 0; i < 60; i++) {
-        head.setPoints([[sampleX(i), -0.4, 0.02], [sampleX(i), 3.6, 0.02]]);
+        head.setPoints([[sampleX(i), -0.4, 0.02], [sampleX(i), 3.0, 0.02]]);
         if (Math.abs(LEFTOVER[i]) > 0.006) sfx.tick(KNOCK[i - KNOCK_START] === 'L' ? 1 : 4);
         await wait(p.g.headless ? 1 : 110);
       }

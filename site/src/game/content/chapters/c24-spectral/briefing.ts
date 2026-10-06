@@ -164,9 +164,9 @@ export const doubtReal: DoubtDef = {
   goal: 'Drag the grid arrows to set a matrix. The sweep lights every line it keeps. **Challenge it** (a real matrix with no real eigenvalue) or **Back it**.',
   view: '2d',
   setup(p) {
-    void p.g.stage.view2D({ center: [0.4, 0.2], height: 7.6, ms: 0 });
+    void p.g.stage.view2D({ center: [0.4, 0.4], height: 10, ms: 0 });
     const r = p.readout('Its eigenvalues');
-    const sw = new Sweep(p, { M: [[2, 1], [1, 2]], radius: 1.1, start: krad(120), labels: { x: '$\\mathbf x$', mx: '$A\\mathbf x$' }, trace: false });
+    const sw = new Sweep(p, { M: [[2, 1], [1, 2]], radius: 1.4, start: krad(120), labels: false, trace: false });
     const paint = (M: Mat) => {
       sw.setM(M);
       const e = eig2(M);

@@ -234,12 +234,6 @@ export const p4: PuzzleDef = {
   title: 'When will the drift pass 380 metres?',
   goal: 'Six hourly readings of the stern sheet’s drift. Fit the best line (drag its two handles), then drag the forecast marker along it to where the drift reaches **380 m**.',
   subgoals: ['Fit the best line to the six readings', 'Forecast the hour the line reaches 380 m'],
-  predict: {
-    prompt: 'A curve can pass exactly through all six readings. Will it forecast better than the best line?',
-    choices: [{ id: 'better', text: 'Better: it fits every reading' }, { id: 'worse', text: 'Worse' }, { id: 'same', text: 'About the same' }],
-    answer: 'worse',
-    reveal: 'Worse. The degree-5 curve through all six readings swings wildly beyond them: at hour 10 it forecasts −316 m. Fitting the noise exactly is not the same as finding the trend.',
-  },
   hints: [
     'The readings drop about 1 metre an hour. Tilt the line to follow them.',
     'The best line is $y \\approx 411.98 - 1.006t$. Drag the marker along it to the dashed 380 m level.',
@@ -264,7 +258,7 @@ export const p4: PuzzleDef = {
     let ghost: FatLine | null = null;
     let fitted = false, hour = 6, done = false;
     const fl: FitLine = new FitLine(p, {
-      points: pts, m: 0, c: SY * (409 - Y0), squares: false, handleX: [0, 9.6],
+      points: pts, m: (SY * -0.5) / SX, c: SY * (409 - Y0), squares: false, handleX: [0, 7.2],
       onChange: (m, c) => { const f = fromWorld(m, c); r.row('line', 'line', `$y = ${fmtN(f.c0)} ${f.c1 < 0 ? '-' : '+'} ${fmtN(Math.abs(f.c1), 3)}t$`, C.result); placeMarker(); },
       onCommit: (m, c) => {
         const f = fromWorld(m, c);

@@ -65,12 +65,6 @@ export const p1: PuzzleDef = {
   title: 'Can two skewed arrows become a square pair?',
   goal: 'From $\\cg{\\mathbf b_1} = (3, 4)$ and $\\cr{\\mathbf b_2} = (2, 1)$, build $\\mathbf q_1$ and $\\mathbf q_2$: one unit long and at a right angle.',
   subgoals: ['Scale $\\mathbf b_1$ to length 1: that is $\\mathbf q_1$', 'Subtract the shadow of $\\mathbf b_2$ on $\\mathbf q_1$', 'Scale what is left to length 1: that is $\\mathbf q_2$'],
-  predict: {
-    prompt: 'After the shadow on $\\mathbf q_1$ is subtracted, how long is what is left of $\\mathbf b_2$?',
-    choices: [{ id: 'one', text: 'Exactly 1' }, { id: 'less', text: 'Less than 1' }, { id: 'more', text: 'More than 1' }],
-    answer: 'one',
-    reveal: '$(2, 1) - 2(0.6, 0.8) = (0.8, -0.6)$, and $0.8^2 + 0.6^2 = 1$. It happens to be one unit long already, so the last step changes nothing.',
-  },
   hints: [
     '$\\mathbf b_1$ is 5 long. One fifth of it is one unit long: drag its tip onto the dashed unit circle.',
     'The shadow of $\\mathbf b_2$ on $\\mathbf q_1$ is $(\\mathbf b_2\\cdot\\mathbf q_1)\\,\\mathbf q_1$, and $\\mathbf b_2\\cdot\\mathbf q_1 = 1.2 + 0.8 = 2$.',
