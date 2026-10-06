@@ -377,11 +377,11 @@ export const p3: PuzzleDef = {
     for (const [dir, lab] of [[[1, 0], 'λ = 3 · (1, 0)'], [[1, -1], 'λ = 2 · (1, −1)']] as [Vec, string][]) {
       const L = new InfLine(p.g.stage, [0, 0, 0.002], v3(dir), { color: C.violet, width: 1.8, opacity: 0.55, dashed: true });
       p.add(L.object); p.onDispose(() => L.dispose());
-      ptag(p, lab, v3(dir.map((x) => x * 2.4 / Math.hypot(dir[0], dir[1]))), 'vi', [0, -18]);
+      ptag(p, lab, v3(dir.map((x) => x * 3.4 / Math.hypot(dir[0], dir[1]))), 'vi', [0, -18]);
     }
     const x = new Dot([1, 1, 0.04], { color: C.result, size: 0.1 });
     p.add(x);
-    ptag(p, '(1, 1)', [1, 1, 0], 'y', [18, -14]);
+    ptag(p, '(1, 1)', [1, 1, 0], 'y', [44, 4]);
     const a1 = new Arrow([0, 0, 0.02], [0, 0, 0.02], { color: C.v, width: 0.045, label: `$${fmtN(P3_C[0])}\\,\\mathbf p_1$` });
     const a2 = new Arrow([0, 0, 0.02], [0, 0, 0.02], { color: C.w, width: 0.045, label: `$${fmtN(P3_C[1])}\\,\\mathbf p_2$` });
     p.add(a1, a2);

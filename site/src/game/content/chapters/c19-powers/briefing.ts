@@ -228,7 +228,7 @@ const TEO_EQS = TEO_AUG.map((r) => {
 export function teoReply(ids: readonly string[]): { ok: boolean; message: string } {
   const r = runTeo(ids);
   const set = r.x ? fmtV(r.x.map((t) => Math.round(t * 100) / 100)) : '';
-  if (r.ok) return { ok: true, message: `Teo cleared below each pivot, whole rows, then read up from the bottom: $z = 3$, $y = 2$, $x = 1$. ${r.checked ? 'All three gauges read right.' : 'The gauges read right.'}` };
+  if (r.ok) return { ok: true, message: `Bottom row first: $z = 3$, $y = 2$, $x = 1$. ${r.checked ? 'All three gauges read right.' : 'The gauges read right.'}` };
   switch (r.fault) {
     case 'stuck': return { ok: false, message: 'He looks at the bottom gauge, $x + 2y + 3z = 14$: three unknowns. He cannot read anything off it. Your message never says how to clear the rows below each pivot.' };
     case 'rhs': return { ok: false, message: `He clears the left-hand numbers and leaves the right-hand side as it was. His valves come out at ${set}, and the gauges read ${fmtV(r.gauges!.map((t) => Math.round(t * 10) / 10))}, not (6, 11, 14). A row operation has to change the whole row, right side included.` };
