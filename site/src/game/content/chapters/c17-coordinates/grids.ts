@@ -97,22 +97,31 @@ export function tag(text: string, at: V3, kind = 'w', offset: [number, number] =
 /**
  * The Anchor's path to a point: c₁ of the first arm (green) from the origin, then c₂ of the second
  * arm (red) from its tip, and a yellow dot where it ends. Arms are the columns of M (default the Anchor's).
+ * Each segment's label sits on its right-hand side (seen along the arrow), so the two never share a spot.
  */
 export class AnchorPath {
   readonly a1: Arrow;
   readonly a2: Arrow;
   readonly end: Dot;
   readonly endTag: Label;
+  private readonly l1: Label;
+  private readonly l2: Label;
+  private readonly names: [string, string];
+  private readonly showTag: boolean;
+  private visible = true;
   c: number[] = [0, 0];
-  constructor(p: PuzzleCtx, private M: Mat, o: { labels?: [string, string]; tagKind?: string; showTag?: boolean } = {}) {
-    this.a1 = new Arrow([0, 0, 0], [0, 0, 0], { color: C.v, width: 0.045, label: o.labels?.[0] ?? ' ', labelAt: 'mid' });
-    this.a2 = new Arrow([0, 0, 0], [0, 0, 0], { color: C.w, width: 0.045, label: o.labels?.[1] ?? ' ', labelAt: 'mid' });
+  constructor(p: PuzzleCtx, private M: Mat, o: { names?: [string, string]; tagKind?: string; showTag?: boolean } = {}) {
+    this.names = o.names ?? ['\\mathbf b_1', '\\mathbf b_2'];
+    this.showTag = o.showTag !== false;
+    this.a1 = new Arrow([0, 0, 0], [0, 0, 0], { color: C.v, width: 0.045 });
+    this.a2 = new Arrow([0, 0, 0], [0, 0, 0], { color: C.w, width: 0.045 });
+    this.l1 = new Label('', [0, 0, 0], { color: C.v, className: 'g-label-vec c17-seg' });
+    this.l2 = new Label('', [0, 0, 0], { color: C.w, className: 'g-label-vec c17-seg' });
     this.end = new Dot([0, 0, 0.03], { color: C.result, size: 0.1 });
     this.endTag = tag('', [0, 0, 0], o.tagKind ?? 'y', [0, 26]);
-    this.endTag.show(o.showTag !== false);
     p.add(this.a1, this.a2, this.end);
-    p.add(this.endTag.object);
-    p.onDispose(() => this.endTag.dispose());
+    p.add(this.endTag.object, this.l1.object, this.l2.object);
+    p.onDispose(() => { this.endTag.dispose(); this.l1.dispose(); this.l2.dispose(); });
     this.set([0, 0]);
   }
   setGrid(M: Mat): void { this.M = M; this.set(this.c); }
@@ -120,14 +129,9 @@ export class AnchorPath {
   get tip(): V3 { const [u, v] = [col(this.M, 0), col(this.M, 1)]; return [this.c[0] * u[0] + this.c[1] * v[0], this.c[0] * u[1] + this.c[1] * v[1], 0]; }
   set(c: readonly number[]): void {
     this.c = [c[0], c[1]];
-    const u = col(this.M, 0);
-    const m: V3 = [c[0] * u[0], c[0] * u[1], 0.02];
-    const t = this.tip;
-    this.a1.set([0, 0, 0.02], m);
-    this.a2.set(m, [t[0], t[1], 0.02]);
     this.labels(c);
-    this.end.at([t[0], t[1], 0.04]);
-    this.endTag.at([t[0], t[1], 0]);
+    this.place(col(this.M, 0), col(this.M, 1));
+    const t = this.tip;
     this.endTag.set(`${fmtN(t[0])}, ${fmtN(t[1])}`);
   }
   /** Walk the path: the first arm grows, then the second from its tip. */
@@ -141,8 +145,8 @@ export class AnchorPath {
     this.set(c);
   }
   private labels(c: readonly number[]): void {
-    this.a1.setLabel(`$${texNum(c[0])}\\,\\mathbf b_1$`);
-    this.a2.setLabel(`$${texNum(c[1])}\\,\\mathbf b_2$`);
+    this.l1.set(`$${texNum(c[0])}\\,${this.names[0]}$`);
+    this.l2.set(`$${texNum(c[1])}\\,${this.names[1]}$`);
   }
   private place(u: number[], v: number[]): void {
     const m: V3 = [this.c[0] * u[0], this.c[0] * u[1], 0.02];
@@ -151,6 +155,19 @@ export class AnchorPath {
     this.a2.set(m, t);
     this.end.at([t[0], t[1], 0.04]);
     this.endTag.at([t[0], t[1], 0]);
+    // labels: halfway along each segment, pushed to its right-hand side
+    const side = (a: V3, b: V3, l: Label) => {
+      const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy);
+      l.show(this.visible && L > 0.25);
+      if (L > 1e-6) l.at([(a[0] + b[0]) / 2 + (dy / L) * 0.34, (a[1] + b[1]) / 2 - (dx / L) * 0.34, 0.02]);
+    };
+    side([0, 0, 0], m, this.l1);
+    side(m, t, this.l2);
   }
-  show(v: boolean): void { for (const o of [this.a1.object, this.a2.object, this.end.object]) o.visible = v; this.endTag.show(v); }
+  show(v: boolean): void {
+    this.visible = v;
+    for (const o of [this.a1.object, this.a2.object, this.end.object]) o.visible = v;
+    this.endTag.show(v && this.showTag);
+    this.place(col(this.M, 0), col(this.M, 1));
+  }
 }

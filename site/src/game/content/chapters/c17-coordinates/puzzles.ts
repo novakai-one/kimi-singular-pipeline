@@ -5,7 +5,6 @@ import type { PuzzleCtx, PuzzleDef, V3 } from '../../../game/types';
 import { Arrow } from '../../../gfx/arrow';
 import { Dot } from '../../../gfx/markers';
 import { FatLine } from '../../../gfx/lines';
-import { Label } from '../../../gfx/label';
 import { VectorInput } from '../../../ui/widgets';
 import { h, button } from '../../../ui/ui';
 import { StepWorksheet } from '../../../kit/steps';
@@ -35,11 +34,11 @@ export function anchorBench(p: PuzzleCtx, o: { center?: [number, number]; height
     arms.push(new Arrow([0, 0, 0.01], v3(B2, 0.01), { color: C.w, width: 0.06, label: '$\\mathbf b_2$' }));
     p.add(...arms);
   }
-  const cap = new Label('the Anchor’s grid', [-2.6, -1.35, 0], { className: 'c17-cap cu' });
-  p.add(cap.object);
-  p.onDispose(() => cap.dispose());
-  return { copper, arms, cap };
+  return { copper, arms, dim: (on: boolean) => arms.forEach((a) => a.setOpacity(on ? 0.35 : 1)) };
 }
+
+/** The key to the two grids, at the foot of a readout. */
+const legend = (r: { note(md: string | null): void }) => r.note('<span class="c17-cu">Copper dashed lines</span>: the Anchor’s grid. Pale lines: ours.');
 
 /** Typed Anchor numbers plus a Walk button and a message line (all levels). */
 function numbersEntry(p: PuzzleCtx, o: { label: string; onWalk: (c: number[]) => void | Promise<void> }) {
@@ -80,7 +79,7 @@ export const p1: PuzzleDef = {
   par: 2,
   onWin: S.p1Win,
   setup(p) {
-    anchorBench(p);
+    const bench = anchorBench(p);
     const buoy = new Dot(v3(P1_SHIP, 0.05), { color: C.result, size: 0.12 });
     const bt = tag(`ours ${fmtV(P1_SHIP)}`, v3(P1_SHIP), 'y', [0, -26]);
     p.add(buoy, bt.object);
@@ -96,11 +95,15 @@ export const p1: PuzzleDef = {
       r.row('reach', 'the Anchor’s path ends at', c ? fmtV(reach(c)) : '·', C.result);
     };
     paint(live ? [0, 0] : null);
+    legend(r);
     let won = false;
+    let follow: (() => void) | null = null;
     const finish = () => { if (won) return; won = true; sfx.success(); gap.hide(); bt.set(`ours ${fmtV(P1_SHIP)} · Anchor ${fmtV(P1_ANCHOR)}`); p.win(); };
     const tryC = async (c: number[], animate = true) => {
       p.move();
+      bench.dim(true);
       if (animate) await path.walk(c, p.g.headless ? 10 : 520); else { path.show(true); path.set(c); }
+      follow?.();
       paint(c);
       if (p1Won(c, tol(p))) { finish(); return; }
       sfx.miss();
@@ -119,6 +122,8 @@ export const p1: PuzzleDef = {
       const handle = new Dot([0, 0, 0.06], { color: C.result, size: 0.16 });
       const ring = new Arrow([0, 0, 0.06], [0, 0, 0.06], { color: C.result, handle: true });
       p.add(handle, ring);
+      bench.dim(true);
+      follow = () => { const t = path.tip; handle.at([t[0], t[1], 0.06]); ring.set([t[0], t[1], 0.06], [t[0], t[1], 0.06]); };
       p.g.drag.add({
         target: ring.grab, getPos: () => new Vector3(...path.tip), snap: () => null,
         constrain: (q) => { const c = anchorOf([q.x, q.y])!.map((x) => Math.max(-6, Math.min(6, Math.round(x)))); const t = reach(c); return new Vector3(t[0], t[1], 0.06); },
@@ -151,7 +156,7 @@ export const p2: PuzzleDef = {
   par: 2,
   onWin: S.p2Win,
   setup(p) {
-    anchorBench(p, { center: [1.2, 0.2] });
+    const bench = anchorBench(p, { center: [1.2, 0.2] });
     const marker = new Dot([0, -2.5, 0.06], { color: C.result, size: 0.13 });
     const ring = new Arrow([0, -2.5, 0.06], [0, -2.5, 0.06], { color: C.result, handle: true });
     const mt = tag('', [0, -2.5, 0], 'y', [0, 26]);
@@ -173,6 +178,7 @@ export const p2: PuzzleDef = {
     let won = false;
     const check = async (fast = false) => {
       p.move();
+      bench.dim(true);
       await path.walk(P2_ANCHOR, fast || p.g.headless ? 10 : 520);
       if (p2Won(at, tol(p))) { if (!won) { won = true; gap.hide(); sfx.success(); msg.className = 'c17-msg good'; msg.textContent = `The Anchor’s path ends on your marker: ${fmtV(P2_SHIP)}.`; p.win(); } return; }
       sfx.miss();
@@ -195,6 +201,7 @@ export const p2: PuzzleDef = {
       onEnd: () => { p.move(); if (live && p2Won(at, 0.05)) void check(); },
     });
     paint();
+    legend(r);
     return {
       async showMe() { await ring.moveTo(v3(P2_SHIP, 0.06), 700); place(P2_SHIP); await check(); },
       async solve() { place(P2_SHIP); await check(true); },
@@ -225,19 +232,15 @@ export const p3: PuzzleDef = {
   par: 4,
   onWin: S.p3Win,
   setup(p) {
-    const { copper, cap } = anchorBench(p, { center: [1.4, 0.6], height: 8.5, arms: false });
+    const { copper } = anchorBench(p, { center: [1.4, 0.6], height: 8.5, arms: false });
     const vg = vellGrid(p);
-    const vcap = new Label('Vell’s grid', [-2.6, -1.85, 0], { className: 'c17-pt vell' });
-    p.add(vcap.object);
-    p.onDispose(() => vcap.dispose());
-    vcap.show(false);
     const point = new Dot(v3(P3_SHIP, 0.05), { color: C.result, size: 0.12 });
     const pt = tag(`Anchor ${fmtV(P3_ANCHOR)}`, v3(P3_SHIP), 'cu', [0, -26]);
     p.add(point, pt.object);
     p.onDispose(() => pt.dispose());
     point.setOpacity(0); pt.show(false);
     const anc = new AnchorPath(p, P2, { showTag: false });
-    const vel = new AnchorPath(p, PC, { showTag: false });
+    const vel = new AnchorPath(p, PC, { showTag: false, names: ['\\mathbf c_1', '\\mathbf c_2'] });
     anc.show(false); vel.show(false);
     const r = p.readout('Three sets of numbers, one point');
     const paint = (k: number) => {
@@ -246,6 +249,7 @@ export const p3: PuzzleDef = {
       r.row('v', 'Vell’s', k >= 2 ? fmtV(P3_VELL) : '?', VELL_GRID);
     };
     paint(0);
+    legend(r);
     const done = [false, false, false];
     const tick = (i: number) => { if (!done[i]) { done[i] = true; p.subgoal(i); } };
     const ms = () => (p.g.headless ? 10 : 480);
@@ -263,10 +267,10 @@ export const p3: PuzzleDef = {
       if (k >= 1) { tick(0); paint(1); point.setOpacity(1); pt.show(true); await anc.walk(P3_ANCHOR, ms()); pt.set(`Anchor ${fmtV(P3_ANCHOR)} · ours ${fmtV(P3_SHIP)}`); }
       if (k >= 2) {
         anc.show(false);
-        void copper.fade(0.25, ms()); vcap.show(true); cap.show(false);
+        void copper.fade(0.25, ms());
+        r.note('<span class="c17-cu">Copper</span>: the Anchor’s grid, faded. <span style="color:#efe2c4">Dotted</span>: Vell’s grid.');
         await vg.fade(0.75, ms());
         await vel.walk(P3_VELL, ms());
-        vel.a1.setLabel(`$${P3_VELL[0]}\\,\\mathbf c_1$`); vel.a2.setLabel(`$${P3_VELL[1]}\\,\\mathbf c_2$`);
         pt.set(`ours ${fmtV(P3_SHIP)} · Vell ${fmtV(P3_VELL)}`);
         tick(1); paint(2);
       }
@@ -275,12 +279,11 @@ export const p3: PuzzleDef = {
     const ws = new StepWorksheet(p, {
       steps,
       onDone: () => {
-        void show(2).then(() => {
-          tick(2);
-          r.eq(`P_C^{-1}P_B = \\begin{bmatrix} \\tfrac12 & 1 \\\\ -\\tfrac12 & 0 \\end{bmatrix}, \\quad \\begin{bmatrix} \\tfrac12 & 1 \\\\ -\\tfrac12 & 0 \\end{bmatrix}\\begin{bmatrix} 2 \\\\ 1 \\end{bmatrix} = \\begin{bmatrix} 2 \\\\ -1 \\end{bmatrix}`);
-          r.note('One matrix, Anchor numbers in, Vell’s numbers out. No stop in our grid needed.');
-          p.win();
-        });
+        tick(0); tick(1); tick(2); paint(2);
+        r.eq(`P_C^{-1}P_B = \\begin{bmatrix} \\tfrac12 & 1 \\\\ -\\tfrac12 & 0 \\end{bmatrix}, \\quad \\begin{bmatrix} \\tfrac12 & 1 \\\\ -\\tfrac12 & 0 \\end{bmatrix}\\begin{bmatrix} 2 \\\\ 1 \\end{bmatrix} = \\begin{bmatrix} 2 \\\\ -1 \\end{bmatrix}`);
+        r.note('One matrix, Anchor numbers in, Vell’s numbers out. No stop in our grid needed.');
+        p.win();
+        void show(2);
       },
     });
     ws.el.addEventListener('change', watch);

@@ -38,8 +38,10 @@ varying vec2 vUv; varying float vA;
 void main(){
   float r2 = dot(vUv, vUv);
   if (r2 >= 1.0) discard;
-  float k = 1.0 - r2;
-  float a = exp(-r2 * 2.4) * k * k * vA * uGain;
+  // a small bright core (the point the tip visited) inside a wide faint halo (the glow of the set)
+  float core = exp(-r2 * 30.0);
+  float halo = exp(-r2 * 3.2) * (1.0 - r2);
+  float a = (0.95 * core + 0.2 * halo) * vA * uGain;
   if (a < 0.003) discard;
   gl_FragColor = vec4(uColor, a);
 }`;
@@ -93,12 +95,12 @@ export class ReachGlow {
     g.setAttribute('aCoef', this.coef);
     g.setAttribute('aBorn', this.born);
     g.instanceCount = 0;
-    this.baseGain = o.gain ?? 0.11;
+    this.baseGain = o.gain ?? 0.42;
     const mat = new ShaderMaterial({
       vertexShader: vert, fragmentShader: frag, transparent: true, depthWrite: false, blending: AdditiveBlending,
       uniforms: {
         uA0: { value: new Vector3(1, 0, 0) }, uA1: { value: new Vector3(0, 1, 0) }, uA2: { value: new Vector3(0, 0, 1) },
-        uOrigin: { value: new Vector3() }, uTime: { value: 0 }, uSize: { value: o.size ?? this.cellWorld * 2.6 }, uLife: { value: o.life ?? 0 },
+        uOrigin: { value: new Vector3() }, uTime: { value: 0 }, uSize: { value: o.size ?? this.cellWorld * 3.2 }, uLife: { value: o.life ?? 0 },
         uColor: { value: new Color(o.color ?? '#ffd166').multiplyScalar(o.intensity ?? 1.15) }, uGain: { value: this.baseGain },
       },
     });
@@ -191,7 +193,7 @@ export class ReachGlow {
     const spread = o.spread ?? 1.4;
     let s = o.seed ?? 7;
     const rnd = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
-    const jit = o.jitter ?? 1;
+    const jit = o.jitter ?? 0.7;
     const counts = ranges.map(([lo, hi], i) => Math.max(1, Math.floor((hi - lo) / steps[i]) + 1));
     const total = counts.reduce((p, x) => p * x, 1);
     let maxR = 1e-6;

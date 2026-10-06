@@ -460,8 +460,10 @@ export const p4: PuzzleDef = {
         const x = solve3(M);
         if (x) pts.push([x[0], x[1], x[2]]);
       }
-      if (pts.length === 3) { tri.setPoints([...pts, pts[0]]); tri.setOpacity(0.7); }
+      if (pts.length === 3) { tri.setPoints([...pts, pts[0]]); tri.setOpacity(0.7); mid = [0, 1, 2].map((k) => (pts[0][k] + pts[1][k] + pts[2][k]) / 3) as V3; }
     };
+    let mid: V3 = [1, 0, 2];
+    const ELEV = (Math.asin(2 / Math.sqrt(6)) * 180) / Math.PI;
     const minus = h('button', { class: 'btn small', type: 'button', onclick: () => { p.move(); setB(b3 - 1); } }, '−');
     const plus = h('button', { class: 'btn small', type: 'button', onclick: () => { p.move(); setB(b3 + 1); } }, '+');
     const eq = h('span', { html: 'Plane 3: &nbsp;2x + z = <b>4</b>' });
@@ -472,14 +474,20 @@ export const p4: PuzzleDef = {
       const cam = stage.camera.position.clone().sub(stage.target);
       return lookingDown([cam.x, cam.y, cam.z]);
     };
-    const winNow = () => { if (done[1]) return; done[1] = true; p.subgoal(1); sfx.success(); tri.setColor('#ffd166', 1.4); p.win(); };
+    const winNow = () => {
+      if (done[1]) return;
+      done[1] = true; p.subgoal(1); sfx.success(); tri.setColor('#ffd166', 1.4);
+      // move in along the lines so the three-walled tube fills the view
+      void stage.view3D({ target: mid, distance: 7, azimuth: -135, elevation: ELEV, ms: 1400 });
+      p.win();
+    };
     p.tick((dt) => {
       if (done[1] || b3 !== 5) return;
       if (aligned()) { held += dt; if (held > 0.35) winNow(); } else held = 0;
     });
     const lookDown = async (ms: number) => {
       // camera on the line through the focus along −(1, 1, −2): azimuth −135°, elevation asin(2/√6)
-      await stage.view3D({ target: [1, 0, 2], distance: 20, azimuth: -135, elevation: (Math.asin(2 / Math.sqrt(6)) * 180) / Math.PI, ms });
+      await stage.view3D({ target: [1, 0, 2], distance: 20, azimuth: -135, elevation: ELEV, ms });
     };
     return {
       async showMe() { if (b3 !== 5) { setB(5); await wait(700); } await lookDown(1600); await wait(500); if (aligned()) winNow(); },

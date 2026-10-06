@@ -180,7 +180,7 @@ export const p2: PuzzleDef = {
   view: '3d',
   onWin: S.p2Win,
   async setup(p) {
-    await p.g.stage.view3D({ target: [0.8, 1.2, 1.2], distance: 14, azimuth: -70, elevation: 32, ms: 0 });
+    await p.g.stage.view3D({ target: [0.6, 1.0, 2.6], distance: 19, azimuth: -70, elevation: 24, ms: 0 });
     p.grid({ base: 0.1, main: 0.18, axis: 0.4 });
     const v = v3(P1_V), w = v3(P1_W);
     panel(p, v, w, 0.14);

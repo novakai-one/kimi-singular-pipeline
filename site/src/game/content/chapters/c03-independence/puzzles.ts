@@ -233,7 +233,7 @@ export const p4: PuzzleDef = {
     const bolted = [true, true, true, true];
     const arrows = PRUNE.map((v, i) => new Arrow(ORIGIN, to3(v), { color: PRUNE_COLORS[i], label: `$${fmtV(v).replace(/−/g, '-')}$` }));
     p.add(...arrows);
-    const glow = new ReachGlow(p.g.stage, { cell: 0.2, size: 0.34, gain: 0.13 });
+    const glow = new ReachGlow(p.g.stage, { cell: 0.2, size: 0.55, gain: 0.32 });
     p.add(glow);
     const box: [number, number] = [-2.6, 2.6];
     const r = p.readout('Thrusters on the rack');
