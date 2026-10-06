@@ -10,7 +10,6 @@ import { PointCloud } from '../../../kit/data';
 import { MatrixView } from '../../../kit/matrixview';
 import { VectorHandle } from '../../../kit/handle';
 import { Slider } from '../../../ui/widgets';
-import { h } from '../../../ui/ui';
 import { C } from '../../../core/theme';
 import { wait } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
