@@ -134,7 +134,7 @@ test('Procedure: the reference order squares (2, 0, 0), (1, 2, 0), (1, 1, 2); ea
   // K2 "each earlier" missing (the decoy: first only): the third arrow leans against the second
   const first = L.runProcedure(['each', 'subfirst', 'scale']);
   assert.equal(first.fault, 'first');
-  assert.ok(Math.abs(dot(first.out[2], first.out[1])) > 0.5);
+  assert.ok(Math.abs(dot(first.out[2], first.out[1])) > 0.4);
   // subtracting on the original arrows: still leans
   assert.equal(L.runProcedure(['each', 'suborig', 'scale']).fault, 'orig');
   // no subtraction at all

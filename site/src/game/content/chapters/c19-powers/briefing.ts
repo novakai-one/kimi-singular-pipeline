@@ -243,24 +243,24 @@ export const teo: TeoDef = {
     const res = runTeo(ids);
     const reply = teoReply(ids);
     g.stage.clearWorld();
-    await g.stage.view2D({ center: [0, 0.9], height: 8, ms: 400 });
+    await g.stage.view2D({ center: [0.4, 1.2], height: 8, ms: 400 });
     const W = g.stage.world;
-    const board = new Label(augTex(TEO_AUG), [0, 3.1, 0], { className: 'a7-board' });
-    const step = new Label('Teo’s three gauges', [0, 4.25, 0], { className: 'a7-board step' });
+    const board = new Label(augTex(TEO_AUG), [-1.6, 2.6, 0], { className: 'a7-board' });
+    const step = new Label('Teo’s three gauges', [0.4, 4.3, 0], { className: 'a7-board step' });
     W.add(board.object, step.object);
     for (const s of res.steps) { step.set(s.label); board.set(augTex(s.aug)); sfx.tick(1); await wait(g.headless ? 2 : 650); }
     // three valves: his settings (bars) against the right ones (rings)
-    const xs = [-2, 0, 2];
+    const xs = [1.9, 2.8, 3.7], base = 0.9;
     TEO_X.forEach((t, i) => {
-      W.add(new Dot([xs[i], t * 0.6 - 1.4, 0.02], { color: '#7d8aa5', size: 0.07 }).object);
-      W.add(new Label(['x', 'y', 'z'][i], [xs[i], -1.8, 0], { className: 'a7-tag dim' }).object);
+      W.add(new Dot([xs[i], base + t * 0.6, 0.02], { color: '#7d8aa5', size: 0.07 }).object);
+      W.add(new Label(['x', 'y', 'z'][i], [xs[i], base - 0.35, 0], { className: 'a7-tag dim' }).object);
     });
     if (res.x) {
       for (let i = 0; i < 3; i++) {
-        const v = Math.max(-2, Math.min(4.5, res.x[i]));
-        const a = new Arrow([xs[i], -1.4, 0.01], [xs[i], -1.4, 0.01], { color: res.ok ? C.good : C.orange, width: 0.08 });
+        const v = Math.max(-1.2, Math.min(4.5, res.x[i]));
+        const a = new Arrow([xs[i], base, 0.01], [xs[i], base, 0.01], { color: res.ok ? C.good : C.orange, width: 0.08 });
         W.add(a.object);
-        await a.moveTo([xs[i], v * 0.6 - 1.4, 0.01], g.headless ? 1 : 450);
+        await a.moveTo([xs[i], base + v * 0.6, 0.01], g.headless ? 1 : 450);
       }
     }
     step.set(res.ok ? 'Valves set. The mix holds.' : 'Teo’s reply');

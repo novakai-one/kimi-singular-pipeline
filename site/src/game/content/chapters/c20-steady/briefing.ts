@@ -231,9 +231,9 @@ export const procedure: ProcedureDef = {
   async run(g, ids) {
     const res = runProc(ids);
     g.stage.clearWorld();
-    await g.stage.view2D({ center: [0, 0.8], height: 6.4, ms: 300 });
+    await g.stage.view2D({ center: [0, -1.45], height: 7.5, ms: 300 });
     const W = g.stage.world;
-    const step = new Label('LANTERN runs your steps', [0, 3.2, 0], { className: 'a7-board step' });
+    const step = new Label('LANTERN runs your steps', [0, 1.75, 0], { className: 'a7-board step' });
     W.add(step.object);
     // three bars, redrawn for each pass
     const bars = STATIONS.map((s, i) => {
@@ -242,7 +242,7 @@ export const procedure: ProcedureDef = {
       return bar;
     });
     const scaleOf = (x: Vec) => { const s = x.reduce((a, b) => a + b, 0); return s > 2 ? 1 / TOTAL : 1; };
-    const show = (x: Vec) => bars.forEach((b, i) => b.setTo([-2 + 2 * i, -1.2 + Math.max(0.001, x[i] * scaleOf(x) * 3.6), 0]));
+    const show = (x: Vec) => bars.forEach((b, i) => b.setTo([-2 + 2 * i, -1.2 + Math.max(0.001, x[i] * scaleOf(x) * 2.2), 0]));
     const shown = res.trace.slice(0, 14);
     for (const [k, x] of shown.entries()) {
       show(x);

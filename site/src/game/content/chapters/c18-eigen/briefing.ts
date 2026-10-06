@@ -233,11 +233,11 @@ export const procedure: ProcedureDef = {
   async run(g, ids) {
     const res = runProc(ids);
     g.stage.clearWorld();
-    await g.stage.view2D({ center: [0, 0.6], height: 9.5, ms: 300 });
+    await g.stage.view2D({ center: [0, -1.6], height: 12, ms: 300 });
     const grid = new Grid2D(g.stage, { main: 0.5, base: 0.12, axis: 0.7 });
     hideLandingLine(grid);
     grid.mesh.userData.dispose = () => grid.dispose();
-    const board = new Label('', [0, 3.6, 0], { className: 'a7-board step' });
+    const board = new Label('', [0, 3.9, 0], { className: 'a7-board step' });
     g.stage.world.add(grid.object, board.object);
     grid.set(PROC_A);
     const ms = g.headless ? 5 : 650;
@@ -258,10 +258,12 @@ export const procedure: ProcedureDef = {
     }
     if (res.ok) {
       for (const [i, v] of [[1, 1], [2, -1]].entries()) {
-        const a = new Arrow([0, 0, 0.02], v3(v, 0.02), { color: C.v, width: 0.05 });
-        const b = new Arrow([0, 0, 0.01], v3(matVec(PROC_A, v), 0.01), { color: C.result, width: 0.035, opacity: 0.85 });
+        const u = v.map((x) => (x * 0.9) / Math.hypot(v[0], v[1]));
+        const lam = [4, 1][i];
+        const a = new Arrow([0, 0, 0.02], v3(u, 0.02), { color: C.v, width: 0.05 });
+        const b = new Arrow([0, 0, 0.01], v3(u.map((x) => x * lam), 0.01), { color: C.result, width: 0.035, opacity: 0.85 });
         g.stage.world.add(a.object, b.object);
-        g.stage.world.add(new Label(`λ = ${fmtN([4, 1][i])}`, v3(matVec(PROC_A, v)), { className: 'a7-tag vi', offset: [0, -20] }).object);
+        g.stage.world.add(new Label(`λ = ${fmtN(lam)} · ${fmtV(v)}`, v3(u.map((x) => x * Math.max(lam, 1.6))), { className: 'a7-tag vi', offset: [0, -20] }).object);
       }
       board.set('Every eigenvalue, each with its line. No zero arrow.');
       sfx.success();
