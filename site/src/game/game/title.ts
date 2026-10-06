@@ -12,7 +12,7 @@ import { Vector3, type Object3D } from 'three';
 import { makeAnchor } from '../content/common/set';
 import { loadModel } from '../gfx/models';
 
-export type TitleChoice = 'new' | 'continue' | 'chapters' | 'codex' | 'settings';
+export type TitleChoice = 'new' | 'continue' | 'chapters' | 'codex' | 'settings' | 'viva';
 
 // Each pose is a real 3x3 move of the whole lattice. One of them flattens space onto a plane
 // (its third row is zero): the title's quiet promise, paid off in Chapter 13.
@@ -87,7 +87,7 @@ export class TitleScene {
     }
   }
 
-  menu(o: { canContinue: boolean; continueLabel: string }): Promise<TitleChoice> {
+  menu(o: { canContinue: boolean; continueLabel: string; canViva?: boolean }): Promise<TitleChoice> {
     return new Promise((resolve) => {
       const pick = (c: TitleChoice) => { audio.unlock(); resolve(c); };
       this.el = h('div', { class: 'title-screen' },
@@ -100,6 +100,7 @@ export class TitleScene {
             button(o.canContinue ? 'New game' : 'Begin', () => pick('new'), { cls: o.canContinue ? '' : 'primary' }),
             button('Chapter map', () => pick('chapters')),
             button('Codex', () => pick('codex'), { cls: 'ghost' }),
+            o.canViva ? button('Viva: revise every claim', () => pick('viva'), { cls: 'ghost' }) : null,
             button('Settings', () => pick('settings'), { cls: 'ghost' }))),
         h('div', { class: 'title-foot c-muted' }, 'Headphones recommended · Mouse and keyboard'));
       this.el.style.pointerEvents = 'auto';

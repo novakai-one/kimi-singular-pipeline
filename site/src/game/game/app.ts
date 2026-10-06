@@ -14,8 +14,8 @@ import { exportLibrary, exportTests } from './build';
 import { setAnimSpeed, wait } from '../core/tween';
 import { Hud } from './hud';
 import { Runner, nameCard } from './runner';
-import { CHAPTERS, ACTS, chapter as findChapter, nextChapter, chapterName } from './registry';
-import type { ChapterDef, CodexEntry, Game } from './types';
+import { CHAPTERS, ACTS, chapter as findChapter, nextChapter, chapterName, actLabel } from './registry';
+import type { ChapterDef, CodexEntry, DoubtDef, Game } from './types';
 import { TitleScene } from './title';
 import { installDebug } from './debug';
 import { caseBoardScreen } from './caseboard';
@@ -126,6 +126,7 @@ export class App implements Game {
     const choice = await this.title.menu({
       canContinue: !!lastCh,
       continueLabel: lastCh ? `Continue · ${chapterName(lastCh)}` : 'Continue',
+      canViva: this.vivaPool().length > 0,
     });
     this.title.dispose();
     this.title = null;
@@ -137,6 +138,50 @@ export class App implements Game {
     } else if (choice === 'chapters') await this.chapterSelect();
     else if (choice === 'codex') { await this.codexScreen(); await this.titleScreen(); }
     else if (choice === 'settings') { await this.settingsScreen(); await this.titleScreen(); }
+    else if (choice === 'viva') await this.viva();
+  }
+
+  /** Doubt and Review claims from every chapter the player has opened (no term before it is earned). */
+  private vivaPool(): { ch: ChapterDef; d: DoubtDef; act: number }[] {
+    const out: { ch: ChapterDef; d: DoubtDef; act: number }[] = [];
+    for (const ch of CHAPTERS) {
+      if (!chapterSave(ch.id).done.length) continue;
+      for (const b of ch.beats) {
+        if (b.kind === 'doubt') out.push({ ch, d: b.doubt, act: ch.act });
+        if (b.kind === 'review') for (const d of b.review.claims) out.push({ ch, d: { ...d, who: b.review.who }, act: ch.act });
+      }
+    }
+    return out;
+  }
+
+  /** Viva: pick an act (or all), then every claim in random order, answered by construction. */
+  async viva(): Promise<void> {
+    const pool = this.vivaPool();
+    const acts = [...new Set(pool.map((x) => x.act))].sort((a, b) => a - b);
+    let chosen: number | 'all' | null = null;
+    await openModal(this.ui, (close) => [
+      h('div', { class: 'kicker' }, 'Viva'),
+      h('h2', null, 'Revise every claim'),
+      h('p', { class: 'c-muted' }, `${pool.length} claims from the chapters you have opened, mixed. Challenge or back each one by building a case. No puzzles.`),
+      h('div', { class: 'pause-list' },
+        button('All acts', () => { chosen = 'all'; close(); }, { cls: 'primary' }),
+        ...acts.map((a) => button(`${actLabel(a) || 'Prologue'} only (${pool.filter((x) => x.act === a).length})`, () => { chosen = a; close(); }))),
+    ]);
+    if (chosen === null) { await this.titleScreen(); return; }
+    const items = pool.filter((x) => chosen === 'all' || x.act === chosen);
+    for (let i = items.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [items[i], items[j]] = [items[j], items[i]]; }
+    this.playing = true;
+    this.stage.clearWorld();
+    this.hud.setVisible(true);
+    const res = await this.runner.playViva(items);
+    if (res === 'aborted') return;
+    await openModal(this.ui, (close) => [
+      h('div', { class: 'kicker' }, 'Viva complete'),
+      h('h2', null, `${res.right} of ${res.total} first calls right`),
+      h('p', { class: 'c-muted' }, 'Every claim was settled by a case you built. The reasons are in your Field Manual.'),
+      h('div', { class: 'pause-list' }, button('Title screen', () => close(), { cls: 'primary' })),
+    ]);
+    await this.titleScreen();
   }
 
   async play(ch: ChapterDef, beat = 0): Promise<void> {

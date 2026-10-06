@@ -2,7 +2,7 @@
 // the naming moment, explain-back and the builder terminal.
 import type { Object3D } from 'three';
 import { chapterKicker, chapterName, CHAPTERS } from './registry';
-import type { Beat, ChapterDef, CodexEntry, ExplainDef, Game, PuzzleCtx, PuzzleDef, PuzzleRuntime, BuildDef } from './types';
+import type { Beat, ChapterDef, DoubtDef, CodexEntry, ExplainDef, Game, PuzzleCtx, PuzzleDef, PuzzleRuntime, BuildDef } from './types';
 import type { Hud } from './hud';
 import { h, inline, md, button } from '../ui/ui';
 import { Readout, ChoiceCards } from '../ui/widgets';
@@ -104,6 +104,31 @@ export class Runner {
     const list = missing.map((c) => `- ${chapterName(c)}: *${c.title}*`).join('\n');
     const body = `${ch.catchup ? `${ch.catchup}\n\n` : ''}This chapter builds on:\n\n${list}\n\nYou can play on. Any function you have not written yet runs on LANTERN's backup.`;
     await runCard(this.host(ch), { kind: 'catchup', title: 'Before you start', body });
+  }
+
+  /**
+   * Viva (exam revision): Doubt and Review claims in a given order, answered by construction, no puzzles.
+   * Returns how many first calls were right.
+   */
+  async playViva(items: { ch: ChapterDef; d: DoubtDef }[]): Promise<{ right: number; total: number } | 'aborted'> {
+    this.aborted = false;
+    this.chapter = null;
+    this.hud.setChapter('Viva', 'Every claim, mixed');
+    this.hud.hideObjective();
+    this.g.mood('puzzle');
+    let right = 0, total = 0;
+    try {
+      for (let i = 0; i < items.length; i++) {
+        const { ch, d } = items[i];
+        await this.guard(this.g.say([[d.who, d.claim]]));
+        const r = await runDoubt(this.host(ch), d, { kicker: `Viva · ${i + 1} of ${items.length} · ${chapterName(ch)}` });
+        if (!r.skipped) { total++; if (r.right) right++; }
+      }
+    } catch (e) {
+      if (e instanceof Aborted) return 'aborted';
+      throw e;
+    }
+    return { right, total };
   }
 
   async playChapter(ch: ChapterDef, start = 0): Promise<'done' | 'aborted'> {
