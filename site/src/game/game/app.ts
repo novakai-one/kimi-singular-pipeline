@@ -96,6 +96,8 @@ export class App implements Game {
     dialogueSettings.autoAdvance = s.autoAdvance || this.headless || navigator.webdriver;
     dialogueSettings.textSpeed = s.textSpeed;
     if (!this.headless) setAnimSpeed(s.reduceMotion ? 4 : 1);
+    document.documentElement.style.setProperty('--ui-zoom', String(s.textScale ?? 1));
+    document.documentElement.classList.toggle('hc', !!s.highContrast);
   }
 
   // ------------------------------------------------------------ flow
@@ -272,7 +274,7 @@ export class App implements Game {
       inp.addEventListener('input', () => { s[key] = parseFloat(inp.value); this.applySettings(); save(); });
       return h('label', { class: 'slider-row' }, h('span', null, label), inp, h('span', { class: 'val' }, ''));
     };
-    const toggle = (label: string, key: 'voiceOn' | 'autoAdvance' | 'reduceMotion') => {
+    const toggle = (label: string, key: 'voiceOn' | 'autoAdvance' | 'reduceMotion' | 'highContrast') => {
       const inp = h('input', { type: 'checkbox', checked: s[key] || null }) as HTMLInputElement;
       inp.addEventListener('change', () => { s[key] = inp.checked; this.applySettings(); save(); sfx.click(); });
       return h('label', { class: 'toggle-row' }, inp, h('span', null, label));
@@ -280,6 +282,11 @@ export class App implements Game {
     const diff = h('div', { class: 'seg' }, ...(['cadet', 'navigator', 'commander'] as Difficulty[]).map((d) => {
       const b = h('button', { class: 'btn small', type: 'button', 'aria-pressed': String(s.difficulty === d) }, d[0].toUpperCase() + d.slice(1));
       b.addEventListener('click', () => { s.difficulty = d; save(); diff.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); sfx.click(); });
+      return b;
+    }));
+    const sizes = h('div', { class: 'seg' }, ...[1, 1.25, 1.5].map((z) => {
+      const b = h('button', { class: 'btn small', type: 'button', 'aria-pressed': String((s.textScale ?? 1) === z) }, `${Math.round(z * 100)}%`);
+      b.addEventListener('click', () => { s.textScale = z; this.applySettings(); save(); sizes.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); sfx.click(); });
       return b;
     }));
     const helps: [CodeHelp, string][] = [['off', 'Off'], ['assemble', 'Assemble'], ['fill', 'Fill'], ['write', 'Write']];
@@ -301,6 +308,7 @@ export class App implements Game {
             button('Download test_lantern.py', () => download('test_lantern.py', exportTests(), 'text/x-python'), { cls: 'ghost small' }))),
         h('section', null, h('h3', null, 'Sound'), slider('Master', 'master'), slider('Music', 'music'), slider('Effects', 'sfx'), slider('Voices', 'voice'), toggle('Voice acting', 'voiceOn')),
         h('section', null, h('h3', null, 'Story'), toggle('Advance dialogue automatically after each line', 'autoAdvance'), toggle('Reduce motion (faster, calmer animations)', 'reduceMotion')),
+        h('section', null, h('h3', null, 'Display'), h('div', { class: 'c-muted', style: 'font-size:13px;margin-bottom:6px' }, 'Text size'), sizes, toggle('High contrast panels', 'highContrast')),
         h('section', null, h('h3', null, 'Save'),
           h('p', { class: 'c-muted', style: 'font-size:13px' }, 'Progress is saved in this browser.'),
           h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' },

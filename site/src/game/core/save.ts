@@ -14,6 +14,10 @@ export interface Settings {
   codeHelp: CodeHelp;
   /** Live result preview while dragging (null = follow difficulty). */
   preview: boolean | null;
+  /** Interface text size: 1, 1.25 or 1.5 (GDD §7 accessibility). */
+  textScale: number;
+  /** Opaque panels and brighter secondary text. */
+  highContrast: boolean;
 }
 
 /** A Field Manual page: the player's own words, then the key ideas they ticked after comparing. */
@@ -43,7 +47,7 @@ const KEY = 'la-game-v1';
 
 export const DEFAULT_SETTINGS: Settings = {
   difficulty: 'navigator', master: 0.8, music: 0.5, sfx: 0.7, voice: 1, voiceOn: true,
-  autoAdvance: false, textSpeed: 1, reduceMotion: false, quality: 'high', codeHelp: 'fill', preview: null,
+  autoAdvance: false, textSpeed: 1, reduceMotion: false, quality: 'high', codeHelp: 'fill', preview: null, textScale: 1, highContrast: false,
 };
 
 function fresh(): SaveData {
