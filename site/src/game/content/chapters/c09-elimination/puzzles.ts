@@ -130,7 +130,7 @@ export const p2: PuzzleDef = {
     hideSolutionLabel(p);
     const board = new RowOpsBoard(p, { aug: P1.staircase, n: 3, title: 'The staircase', showSolution: false, keyHelp: false });
     board.setEnabled(false);
-    board.el.classList.add('c09-static');
+    board.el.classList.add('c09-static', 'c10-norref');
     new SystemView(p, { n: 3, aug: P1.staircase, board });
     const light = genLamps(p);
     const steps: Step[] = [
@@ -166,6 +166,7 @@ export const p3: PuzzleDef = {
   setup(p) {
     hideSolutionLabel(p);
     const board = new RowOpsBoard(p, { aug: P3.aug, n: 3, showSolution: false });
+    board.el.classList.add('c10-norref');
     new SystemView(p, { n: 3, aug: P3.aug, board });
     stepsReadout(p, board, P3.par, 'A swap changes the order of the equations. Each plane stays exactly where it is.');
     let typed: number[] | null = null;
@@ -538,6 +539,7 @@ export const p6: PuzzleDef = {
     if (p.difficulty === 'cadet') {
       // Cadet: LANTERN computes each new row; the player chooses the operations
       const board = new RowOpsBoard(p, { aug: P1.aug, n: 3, title: 'The power board · LANTERN computes', showSolution: false });
+      board.el.classList.add('c10-norref');
       new SystemView(p, { n: 3, aug: P1.aug, board });
       board.subscribe(() => { const m = board.get(); p.subgoal(0, p1Won(m)); if (p1Won(m)) { if (noFractions(num2(m))) p.bark('bram', 'And not one fraction on the board. Tidy.'); p.win(); } });
       return {

@@ -240,7 +240,7 @@ export const p3: PuzzleDef = {
   par: 5,
   onWin: S.p3Win,
   setup(p) {
-    p.g.stage.view2D({ center: [3.4, 5.6], height: 16, ms: 0 });
+    p.g.stage.view2D({ center: [2.2, 7.1], height: 16.4, ms: 0 });
     p.grid({ base: 0.3, main: 0, axis: 0.8 });
     const cols = [0, 1, 2].map((j) => v3(col(P3_A, j)));
     const colors = [C.v, C.w, C.u];
@@ -272,7 +272,7 @@ export const p3: PuzzleDef = {
 
 export const p4: PuzzleDef = {
   id: 'c12-p4',
-  title: 'Which matrix moves $B$ to the other side of a dot product?',
+  title: 'Which matrix moves B to the other side of a dot product?',
   goal: 'Type a matrix $M$ so that $(B\\mathbf x)\\cdot\\mathbf y = \\mathbf x\\cdot(M\\mathbf y)$ for **every** $\\mathbf x$ and $\\mathbf y$. Drag $\\mathbf x$ and $\\mathbf y$ to test it. Then let Bram shake 200 pairs.',
   subgoals: ['Find the matrix that moves B across', 'Survive Bram’s 200 pairs', 'Move AB across: use the rule twice'],
   hints: [
@@ -289,8 +289,8 @@ export const p4: PuzzleDef = {
     let M: Mat = identity(2);
     const x = new VectorHandle(p, { to: [2, 1, 0], color: C.v, label: '$\\mathbf x$', snap: 1, limit: 4, planar: true, onChange: () => upd() });
     const y = new VectorHandle(p, { to: [0, 2, 0], color: C.w, label: '$\\mathbf y$', snap: 1, limit: 4, planar: true, onChange: () => upd() });
-    const bx = new Arrow([0, 0, 0], [0, 0, 0], { color: C.v, opacity: 0.55, width: 0.035, label: '$B\\mathbf x$' });
-    const my = new Arrow([0, 0, 0], [0, 0, 0], { color: C.w, opacity: 0.55, width: 0.035, label: '$M\\mathbf y$' });
+    const bx = new Arrow([0, 0, 0], [0, 0, 0], { color: C.v, opacity: 0.55, width: 0.035, label: '$B\\mathbf x$', labelAt: 'mid' });
+    const my = new Arrow([0, 0, 0], [0, 0, 0], { color: C.w, opacity: 0.55, width: 0.035, label: '$M\\mathbf y$', labelAt: 'mid' });
     p.add(bx, my);
     const r = p.readout('Both sides');
     r.eq(`B = ${texMat(P4_B)}`);

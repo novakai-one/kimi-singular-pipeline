@@ -293,7 +293,7 @@ export const p3: PuzzleDef = {
   view: '3d',
   onWin: S.p3Win,
   async setup(p) {
-    await p.g.stage.view3D({ target: [1, 1.1, 2.0], distance: 17, azimuth: -38, elevation: 16, ms: 0 });
+    await p.g.stage.view3D({ target: [1, 1.2, 2.6], distance: 19, azimuth: 0, elevation: 24, ms: 0 });
     floor(p);
     const d = p.difficulty;
     let k = 1;
@@ -302,7 +302,7 @@ export const p3: PuzzleDef = {
     const ac = new Arrow([0, 0, 0], c(), { color: BLUE, label: '$\\mathbf c$' });
     p.add(ac);
     const box = new StrutBox(p, v3(C_A), v3(C_B), c(), { numbers: d === 'cadet' });
-    const plane = new PlanePatch(p.g.stage, [0.8, 0.9, 0.6], v3(C_AB), { color: '#9fb6d8', size: 6, opacity: 0.08 });
+    const plane = new PlanePatch(p.g.stage, [0.8, 0.9, 0.6], v3(C_AB), { color: '#9fb6d8', size: 5, opacity: 0.08 });
     plane.setOpacity(0.5);
     p.add(plane);
     if (d === 'commander') { box.show(false); plane.setOpacity(0); }
@@ -326,7 +326,7 @@ export const p3: PuzzleDef = {
         won = true;
         // the old flat strut stays as a ghost: half of a plus half of b
         p.add(new Arrow([0, 0, 0], v3(C_C0), { color: BLUE, opacity: 0.3, width: 0.025 }));
-        lab(p, 'old $\\mathbf c = \\tfrac12\\mathbf a + \\tfrac12\\mathbf b$', [1.25, 1.35, 0.85], { className: 'small', color: '#9fc8ff' });
+        lab(p, 'old $\\mathbf c = \\tfrac12\\mathbf a + \\tfrac12\\mathbf b$', [1.6, 0.9, 1.25], { className: 'small', color: '#9fc8ff' });
         plane.setOpacity(0.35);
         flourish(p, c(), BLUE);
         p.win();
@@ -388,7 +388,7 @@ export const p4: PuzzleDef = {
     p.add(...trapArrows);
     const trapBox = new StrutBox(p, v3(CL_Q), v3(CL_R), v3(CL_S), { opacity: 0.1 });
     trapBox.box.setColor(C.orange);
-    const trapLab = lab(p, `from the origin: $Q\\cdot(R\\times S) = ${num(CL_TRAP).replace('−', '-')}$`, [-0.6, -0.4, 0.2], { className: 'small', color: C.orange });
+    const trapLab = lab(p, `from the origin: $Q\\cdot(R\\times S) = ${num(CL_TRAP).replace('−', '-')}$`, [1.3, -0.9, 0], { className: 'small', color: C.orange });
     const fadeTrap = () => animate(900, (k) => { trapArrows.forEach((a) => a.setOpacity(0.55 * (1 - k) + 0.15 * k)); trapBox.group.visible = k < 0.6; trapLab.el.style.opacity = String(1 - 0.6 * k); }, ease.inOut);
     // the edge arrows from P (the right way)
     const eCols = [C.v, C.w, BLUE];
@@ -418,6 +418,7 @@ export const p4: PuzzleDef = {
       if (phase !== 0) return;
       phase = 1;
       p.subgoal(0);
+      trapArrows.forEach((a) => a.setOpacity(0)); trapBox.group.visible = false; trapLab.show(false);
       fromP.show(true);
       await anim(600, (k) => plane.setOpacity(k * 0.9), ease.out);
       dots.forEach((dt) => dt.setColor(C.good));

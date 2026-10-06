@@ -39,6 +39,7 @@ export const sayit: SayItDef = {
 /** A board in the dock with the planes beside it, the planes following the board by row identity. */
 function boardScene(p: Parameters<DoubtDef['setup']>[0], aug: Aug, o: ConstructorParameters<typeof RowOpsBoard>[1] extends infer T ? Partial<T> : never) {
   const board = new RowOpsBoard(p, { aug, n: 3, showSolution: false, ...o });
+  board.el.classList.add('c10-norref'); // the reduced form is Chapter 10's
   const planes = new PlaneSet(p, { n: 3, rows: aug });
   void planes.frame({ distance: 23 });
   board.subscribe((m, _op, ms) => { void planes.setRows(byId(nums(m), board.order()), ms); if (ms > 0) planes.pulse(); });
@@ -195,6 +196,7 @@ export const procedure: ProcedureDef = {
     active = { ctx, el, off };
     const board = new RowOpsBoard(ctx, { aug: PROC_CASE, n: 3, mount: el, title: 'LANTERN runs your steps', showSolution: false, keyHelp: false });
     board.setEnabled(false);
+    board.el.classList.add('c10-norref');
     const caption = h('div', { class: 'c09-caption' });
     el.appendChild(caption);
     const planes = new PlaneSet(ctx, { n: 3, rows: PROC_CASE });

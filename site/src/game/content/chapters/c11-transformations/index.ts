@@ -140,7 +140,7 @@ const ch: ChapterDef = {
     { kind: 'doubt', id: 'd-origin', doubt: doubtOrigin },
     { kind: 'law', id: 'law', law },
     { kind: 'compare', id: 'compare', compare },
-    { kind: 'card', id: 'why-card', card: { kind: 'why', title: 'Why it matters', body: 'One layer of a neural network computes $W\\mathbf x$: the input $\\mathbf x$ mixes the columns of $W$. Stack millions of these and you have a model.\n\nThe pulse forecast is the same product, run on every buoy at once. Write `matvec` and the forecast runs on yours.', cue: 'When you see a **matrix**, ask **where do the grid arrows land?**' } },
+    { kind: 'card', id: 'why-card', card: { kind: 'why', title: 'Why it matters', body: 'One layer of a neural network computes $W\\mathbf x$: the input $\\mathbf x$ mixes the columns of $W$. A network stacks many such layers.\n\nThe pulse forecast is the same product, run on every buoy at once. Write `matvec` and the forecast runs on yours.', cue: 'When you see a **matrix**, ask **where do the grid arrows land?**' } },
     { kind: 'build', id: 'build-matvec', build: buildMatvec },
     { kind: 'cinematic', id: 'install', run: installForecast },
   ],

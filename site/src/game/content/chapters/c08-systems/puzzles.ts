@@ -229,7 +229,7 @@ export const p2: PuzzleDef = {
   onWin: S.p2Win,
   setup(p) {
     const d = diff(p);
-    const planes = new PlaneSet(p, { n: 3, rows: P2.rows, showSolution: false, size: 9, focus: P2.pod });
+    const planes = new PlaneSet(p, { n: 3, rows: P2.rows, showSolution: false, solutionLabel: false, size: 9, focus: P2.pod });
     void planes.frame({ distance: 23 });
     const off = offReadout(p, 'How far off each equation is', P2.rows);
     let won = false;
@@ -245,8 +245,8 @@ export const p2: PuzzleDef = {
       sfx.success();
       p.win();
     };
-    const marker = new Marker3D(p, { pos: [3, 1, 0], onMove: update, onEnd: check });
-    const inp = placeInput(p, 'Marker (x, y, z)', 3, [3, 1, 0], (v) => { marker.set(v); update(v); check(v); });
+    const marker = new Marker3D(p, { pos: P2.start, onMove: update, onEnd: check });
+    const inp = placeInput(p, 'Marker (x, y, z)', 3, P2.start, (v) => { marker.set(v); update(v); check(v); });
     p.dock().append(inp.el, h('div', { class: 'c08-hint' }, 'Drag the marker across. Hold Shift and drag to move it up or down. Or type the point and press Enter.'));
     update(marker.pos);
     return {
@@ -298,11 +298,11 @@ export const p3: PuzzleDef = {
       const onA = onAll(P3.rows, A, glowTol(d)), onB = onAll(P3.rows, B, glowTol(d));
       markers[0].setColor(onA ? C.result : '#e8f1ff');
       markers[1].setColor(onB ? C.result : '#e8f1ff');
-      r.row('a', 'A', `${pt(A)} ${onA ? '· on all three' : ''}`, onA ? C.result : undefined);
-      r.row('b', 'B', `${pt(B)} ${onB ? '· on all three' : ''}`, onB ? C.result : undefined);
+      r.row('a', 'A', `${pt(A)}${onA ? ' ✓ all 3' : ''}`, onA ? C.result : undefined);
+      r.row('b', 'B', `${pt(B)}${onB ? ' ✓ all 3' : ''}`, onB ? C.result : undefined);
       if (phase !== 'place') {
         const Cp = p3C(A, B, t);
-        r.row('c', 'C', `${pt(Cp)} · ${onAll(P3.rows, Cp, 4 * tol) ? 'on all three' : 'off'}`, C.result);
+        r.row('c', 'C', `${pt(Cp)} ${onAll(P3.rows, Cp, 4 * tol) ? '✓ all 3' : 'off'}`, C.result);
         r.row('t', 'C = A + t(B − A)', `t = ${num(t)}`);
       }
     };

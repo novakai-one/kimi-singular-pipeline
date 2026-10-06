@@ -4,7 +4,7 @@ import type { Line } from '../../lines';
 import {
   ARK, ARK_AFTER, ARK_CLEAR, ARM_ANGLE, B2_LEN, BOW3_REAL, BOW_REAL, CLEARANCE, P1_ANCHOR, P1_SHIP, P2_ANCHOR, P2_SHIP, P3_ANCHOR,
   P3_SHIP, P3_VELL, PC, fmtV,
-} from './logic';
+} from './logic.ts';
 
 const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
 /** A number read aloud: "minus one", "one point four one". */

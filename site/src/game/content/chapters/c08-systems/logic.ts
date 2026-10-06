@@ -17,7 +17,7 @@ export const p1Weights = (q: number[]): number[] => [(q[0] + q[1]) / 2, (q[0] - 
 export const p1Won = (xy: number[], tol: number): boolean => near(xy, P1.answer, tol) && near(p1Tip(xy[0], xy[1]), P1.b, tol * 2);
 
 /** c08-p2: the three fan-beam planes and Teo's pod. */
-export const P2 = { rows: [[1, 1, 1, 6], [0, 2, 5, -4], [2, 5, -1, 27]] as Aug, pod: [5, 3, -2], start: [1, 1, 1] };
+export const P2 = { rows: [[1, 1, 1, 6], [0, 2, 5, -4], [2, 5, -1, 27]] as Aug, pod: [5, 3, -2], start: [4, 2, -4] };
 export const p2Won = (x: number[], tol: number): boolean => onAll(P2.rows, x, tol);
 
 /** c08-p3: three planes that share a line, (0, −1, 4) + t(1, 1, −2). Wren's "exactly two spots". */

@@ -18,7 +18,7 @@ import { Slider, VectorInput } from '../../../ui/widgets';
 import { VectorHandle } from '../../../kit/handle';
 import { AngleArc, RightAngle } from '../../../kit/geom';
 import { StepWorksheet } from '../../../kit/steps';
-import { angle, cross, dot, norm, type Vec } from '../../../math/la';
+import { angle, cross, dot, norm } from '../../../math/la';
 import { nice } from '../../../math/frac';
 import { makeLantern } from '../../common/set';
 import { Gauge, addGauges, chime, fmtNum } from '../c04-dot/meter';
