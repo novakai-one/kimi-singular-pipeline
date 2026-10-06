@@ -63,8 +63,8 @@ export const p4: PuzzleDef = {
   id: 'c01-p4',
   title: 'From P to Q: what is the burn, and how long is the tether?',
   goal: 'The ship is at **P = (1, 4)**; the dock is at **Q = (6, 1)**. Work out the burn by hand, then **Fire**. Then drop markers halfway and a quarter of the way.',
-  subgoals: ['Work out Q − P and its length', 'Fly to the dock', 'Drop the halfway marker', 'Drop the quarter-way marker'],
-  hints: ['Each part of the burn is end minus start: across 6 − 1, up 1 − 4.', 'The length is √(5² + (−3)²) = √34.', 'Halfway is P + ½(Q − P); a quarter of the way is P + ¼(Q − P).'],
+  subgoals: ['Work out Q − P and how long the tether must be', 'Fly to the dock', 'Drop the halfway marker', 'Drop the quarter-way marker'],
+  hints: ['Each part of the burn is end minus start: across 6 − 1, up 1 − 4.', 'The tether runs along the straight side of the triangle: √(5² + (−3)²) = √34.', 'Halfway is P + ½(Q − P); a quarter of the way is P + ¼(Q − P).'],
   par: 6,
   onWin: S.p4Win,
   setup(p) {

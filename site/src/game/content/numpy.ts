@@ -5,9 +5,9 @@ import type { CardDef } from '../game/types';
 
 export const NUMPY_CARDS: Record<number, CardDef> = {
   1: {
-    kind: 'numpy', title: 'Arrows in NumPy',
-    body: 'NumPy stores a vector as an **array** and does the part-by-part work for you, in compiled code.\n\n- `v + w` adds matching parts: your `add`.\n- `3 * v` scales every part: your `scale`.\n- `np.linalg.norm(v)` is the length: your `length`.\n\n**Yours and theirs:** the same arithmetic. NumPy runs it on a million arrows in the time your loop takes for a few thousand.',
-    code: 'import numpy as np\nv = np.array([4, -1]); w = np.array([-1, 3])\nprint(v + w, 3 * v, np.linalg.norm(v))',
+    kind: 'numpy', title: 'In NumPy: the reach question',
+    body: 'Stack the thrusters as the columns of one array: `T = np.column_stack([v, w, u])`.\n\n- `np.linalg.matrix_rank(T)` counts the independent directions: **2** for the first two thrusters, **3** once the new mount is on. Add the spare and it stays 3: the spare adds nothing.\n- `np.linalg.solve(T, b)` returns the dials that reach `b`, in one call.\n- `v + w`, `3 * v` and `np.linalg.norm(v)` are your `add`, `scale` and `length`.\n\n**Yours and theirs:** your `reachable` tries 40,401 dial settings and stops at −10 to 10. NumPy solves for the dials directly in compiled code, with row swaps for accuracy, and handles any size. You will build that method yourself in Chapter 10.',
+    code: 'import numpy as np\nT = np.column_stack([[1, 0, 1], [0, 1, 1], [0, 0, 2]])\nprint(np.linalg.matrix_rank(T), np.linalg.solve(T, [1, 1, 0]))',
   },
   2: {
     kind: 'numpy', title: 'Measuring in NumPy',

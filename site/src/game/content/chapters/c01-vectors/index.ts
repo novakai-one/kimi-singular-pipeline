@@ -356,7 +356,7 @@ const ch: ChapterDef = {
     { kind: 'doubt', id: 'd-order', doubt: doubtOrder },
     { kind: 'law', id: 'law', law },
     { kind: 'compare', id: 'compare', compare },
-    { kind: 'card', id: 'why', card: { kind: 'why', title: 'Why it matters', body: 'Every game engine moves things with one line: `position += velocity * dt`. It adds a small arrow to a position, many times a second. The burn planner you just used does exactly that.\n\nData is arrows too: a 28 × 28 image is **one arrow with 784 parts**.', cue: 'When you see **“from here to there”**, think **end minus start**.' } },
+    { kind: 'card', id: 'why', card: { kind: 'why', title: 'Why it matters', body: 'Every game engine moves things with one line: `position += velocity * dt`. It adds a small arrow to a position, many times a second. The burn planner you flew with does exactly that.\n\nData is arrows too: a 28 × 28 image is **one arrow with 784 parts**.', cue: 'When you see **“from here to there”**, think **end minus start**.' } },
     BUILD_ADD,
     BUILD_SCALE,
     BUILD_LENGTH,

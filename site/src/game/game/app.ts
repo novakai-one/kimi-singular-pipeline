@@ -262,7 +262,8 @@ export class App implements Game {
               h('button', { class: 'map-ch-main', type: 'button' },
                 h('span', { class: 'map-num' }, String(c.num)),
                 h('span', { class: 'map-title', html: inline(c.title) }),
-                h('span', { class: 'map-sub c-muted', html: inline(c.subtitle ?? '') }),
+                // the topic's name appears once the chapter is finished: no term before it is earned
+                h('span', { class: 'map-sub c-muted', html: inline(doneAll ? (c.subtitle ?? '') : '') }),
                 h('span', { class: 'map-stars' }, puzzles ? `★ ${stars}/${puzzles * 3}` : '')),
               h('details', { class: 'map-beats' }, h('summary', null, 'Jump to a part'),
                 h('div', { class: 'map-beat-list' }, ...c.beats.map((b, i) => {

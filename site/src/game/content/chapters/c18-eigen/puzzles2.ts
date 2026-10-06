@@ -135,7 +135,7 @@ export const p6: PuzzleDef = {
     p.add(lat, latV);
     const L = 2.6;
     const probe = new Arrow([0, 0, 0], [L, 0, 0], { color: C.white, width: 0.05, label: '$\\mathbf x$' });
-    const img = new Arrow([0, 0, 0], [L, 0, 0], { color: C.result, width: 0.045, label: '$V\\mathbf x$' });
+    const img = new Arrow([0, 0, 0], v3(matVec(P6_V, [1, 0, 0]).map((t) => t * L)), { color: C.result, width: 0.045, label: '$V\\mathbf x$' });
     p.add(probe, img);
     const shown: InfLine[] = [];
     let x: Vec = [1, 0, 0];
@@ -236,11 +236,11 @@ export const p6: PuzzleDef = {
 export const p7: PuzzleDef = {
   id: 'c18-p7',
   title: 'What happens to the stretches if you row reduce first?',
-  goal: '$A = \\begin{bmatrix} 4 & 1 \\\\ 2 & 3 \\end{bmatrix}$ has stretches 5 and 2. **Row reduce** it, then sweep the result and lock its lines. Are they $A$’s?',
-  subgoals: ['Row reduce: $R_2 \\to R_2 - \\tfrac12 R_1$', 'Lock both lines of the row-reduced matrix'],
+  goal: '$A = \\begin{bmatrix} 4 & 1 \\\\ 2 & 3 \\end{bmatrix}$ has stretches 5 and 2. **Row reduce** it to $U$, then sweep $U$ and lock its lines. Are they $A$’s?',
+  subgoals: ['Row reduce: $R_2 \\to R_2 - \\tfrac12 R_1$', 'Lock both lines of $U$'],
   hints: [
     'Press the row operation. It clears the 2 under the first pivot.',
-    'Then sweep: the row-reduced matrix is triangular, so its stretches are its diagonal, 4 and 2.5.',
+    'Then sweep: $U$ is triangular, so its stretches are its diagonal, 4 and 2.5.',
     'Its lines are $(1, 0)$ and $(2, -3)$, not $A$’s $(1, 1)$ and $(1, -2)$.',
   ],
   par: 3,
@@ -259,7 +259,7 @@ export const p7: PuzzleDef = {
     }
     const r = p.readout('Row reduced or not');
     r.row('a', 'stretches of $A$', '5 and 2', C.violet);
-    r.row('u', 'stretches of the row-reduced matrix', '?', C.result);
+    r.row('u', 'stretches of $U$', '?', C.result);
     let hunt: LineHunt | null = null;
     let reduced = false, won = false;
     const box = h('div', { style: 'display:flex;flex-direction:column;gap:8px' });
@@ -271,13 +271,13 @@ export const p7: PuzzleDef = {
       await animate(fast ? 1 : 1200, (k) => grid.set(mlerp(P3_A, P7_U, k)), ease.inOut);
       grid.set(P7_U);
       sg(p, 0);
-      r.row('m', 'row-reduced', `$${texM(P7_U)}$`);
-      hunt = new LineHunt(p, { M: P7_U, radius: 1.2, autoLock: true, typedStretch: false, tolDeg: 3, mount: box, title: 'Sweep the row-reduced matrix', onChange: () => check() });
+      r.row('m', '$U$, row-reduced', `$${texM(P7_U)}$`);
+      hunt = new LineHunt(p, { M: P7_U, radius: 1.2, autoLock: true, typedStretch: false, tolDeg: 3, mount: box, title: 'Sweep U', onChange: () => check() });
       btn.disabled = true;
     };
     const check = () => {
       if (!hunt) return;
-      if (hunt.rows.length) r.row('u', 'stretches of the row-reduced matrix', hunt.rows.map((x) => fmtN(x.line.value)).join(' and '), C.result);
+      if (hunt.rows.length) r.row('u', 'stretches of $U$', hunt.rows.map((x) => fmtN(x.line.value)).join(' and '), C.result);
       if (hunt.done && !won) { won = true; sg(p, 1); sfx.success(); hunt.say('Different lines, different stretches. Row operations change the move.', 'good'); p.win(); }
     };
     const btn = button('Row reduce: R₂ → R₂ − ½ R₁', () => void reduce(), { cls: 'primary small' });

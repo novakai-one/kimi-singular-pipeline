@@ -132,6 +132,7 @@ export class Beacon {
   readonly group = new Group();
   private readonly core: Mesh<SphereGeometry, MeshStandardMaterial>;
   private readonly beam: Mesh<CylinderGeometry, MeshBasicMaterial>;
+  private beamOn = true;
   private readonly halo: Sprite;
   readonly label: Label | null = null;
   private off: () => void;
@@ -142,7 +143,8 @@ export class Beacon {
     this.halo = glowSprite(color, 1.3, 0.6);
     this.beam = new Mesh(new CylinderGeometry(0.015, 0.015, 1, 8, 1, true), new MeshBasicMaterial({ color: new Color(color), transparent: true, opacity: 0.35, depthWrite: false }));
     this.beam.rotation.x = Math.PI / 2;
-    this.beam.visible = o.beam !== false;
+    this.beamOn = o.beam !== false;
+    this.beam.visible = this.beamOn;
     this.group.add(this.core, this.halo, this.beam);
     if (o.label) {
       this.label = new Label(o.label, [0, 0, 0.45], { className: 'tag' });
@@ -156,7 +158,7 @@ export class Beacon {
   at(p: V3): void {
     this.group.position.set(...p);
     const h = Math.abs(p[2]);
-    this.beam.visible = h > 0.05;
+    this.beam.visible = this.beamOn && h > 0.05;
     this.beam.scale.set(1, Math.max(h, 0.001), 1);
     this.beam.position.set(0, 0, -p[2] / 2);
   }

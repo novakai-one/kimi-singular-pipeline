@@ -70,7 +70,7 @@ export function installDebug(app: App): void {
       let order = 0;
       const add = (where: string, t: string | undefined) => { if (t) out.push({ where, text: t, order }); };
       for (const c of CHAPTERS) {
-        add(`${c.id} title`, c.title); add(`${c.id} subtitle`, c.subtitle);
+        add(`${c.id} title`, c.title);
         for (const b of c.beats) {
           order++;
           const w = `${c.id}/${b.id}`;
@@ -106,6 +106,8 @@ export function installDebug(app: App): void {
           if (b.kind === 'procedure') { add(`${w} title`, b.procedure.title); add(`${w} brief`, b.procedure.brief); b.procedure.tiles.forEach((t) => add(`${w} tile`, t.text)); }
         }
         for (const [k, ls] of Object.entries(c.script ?? {})) ls.map(normLine).forEach((l, i) => add(`${c.id} script.${k} ${i}`, l.text));
+        // the subtitle (the topic's name) is shown only once the chapter is finished
+        order++; add(`${c.id} subtitle`, c.subtitle);
         // the act's NumPy card follows its last chapter
         const next = CHAPTERS[CHAPTERS.indexOf(c) + 1];
         const np = !next || next.act !== c.act ? NUMPY_CARDS[c.act] : undefined;

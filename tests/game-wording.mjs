@@ -5,7 +5,7 @@ import { readFileSync, existsSync } from 'node:fs';
 const only = process.argv.slice(2);
 const inScope = (where) => !only.length || only.some((o) => where.startsWith(o));
 const RULES = [
-  ['banned word', /\b(simply|just|obviously|clearly|trivially|trivial(?! solution))\b/gi],
+  ['banned word', /\b(simply|just|obviously|clearly|trivially|trivial(?! (solution|combination)))\b/gi],
   ['banned phrase', /\b(it'?s easy to see|easy to see|recall that|note that|it turns out|as you know)\b/gi],
   ['filler opening', /\b(in this (lesson|chapter|level) we'?ll|we'?ll explore|fascinating world|let'?s dive|dive into|deep dive)\b/gi],
   ['hype', /\b(amazing|incredible|magic|magical|awesome|mind-?blowing|revolutionary|super ?powerful)\b/gi],

@@ -18,7 +18,7 @@ import { dot, normalize, type Mat } from '../../../math/la';
 import { LineHunt } from '../c18-eigen/parts';
 import { Surface, ptag, tag, v3 } from './act9';
 import {
-  P1_DECOYS, P1_LINES, P1_NONSYM, P1_NONSYM_LINES, P1_ORDER, P1_S, P1_TILES, P2_S, P3_BOWL, P3_SADDLE, P4_S,
+  P1_DECOYS, P1_NONSYM, P1_NONSYM_LINES, P1_ORDER, P1_S, P1_TILES, P2_S, P3_BOWL, P3_SADDLE, P4_S,
   RIM, SHAPE_WORD, fmt2, fmtN, fmtV, formIn, lineDeg, lines2, p2Won, p3EscapeWon, p3SettleWon, rad, randSym2,
   shapeOf, symEig, texSmall, type Shape,
 } from './logic';

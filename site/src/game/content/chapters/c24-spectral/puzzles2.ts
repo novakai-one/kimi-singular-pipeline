@@ -2,7 +2,7 @@
 // about one of its principal axes and hold it for ten simulated minutes (p6), and the optional surfaces:
 // an upside-down bowl, a trough, the stress block's lowest point on a sphere (p7 [S]).
 import { Group, Quaternion, Vector3 } from 'three';
-import type { PuzzleCtx, PuzzleDef, V3 } from '../../../game/types';
+import type { PuzzleDef, V3 } from '../../../game/types';
 import { Arrow } from '../../../gfx/arrow';
 import { FatLine } from '../../../gfx/lines';
 import { Knob } from '../../../kit/geom';
