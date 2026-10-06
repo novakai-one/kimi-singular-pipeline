@@ -202,6 +202,18 @@ test('Teo T2: the reference reports (1, 3); a missing key step fails as listed',
   // the decoys are the misconceptions
   assert.ok(veq(L.runTeo(['base', 'cols', 'mul', 'send']).report!, L.TEO_WRONG));
   assert.ok(!L.runTeo(['base', 'rows', 'solve', 'send']).ok);
+  // every outcome's picture fits in the strip right of the 820 px message panel (1440 × 900)
+  for (const ids of [L.TEO_REF, ...L.TEO_REF.map((k) => L.TEO_REF.filter((x) => x !== k)), ['base', 'cols', 'mul', 'send'], ['base', 'rows', 'solve', 'send']]) {
+    const r = L.runTeo(ids);
+    const pts: number[][] = [[0, 0], [...L.TEO_POS], [...L.TEO_HATCH]];
+    if (r.arrow) { const f = r.from === 'hatch' ? L.TEO_HATCH : [0, 0]; pts.push([f[0] + r.arrow[0], f[1] + r.arrow[1]]); }
+    if (r.reached) pts.push([...r.reached]);
+    const v = L.teoView(1440, 900, pts), s = 900 / v.height;
+    for (const p of pts) {
+      const x = 720 + (p[0] - v.center[0]) * s, y = 450 - (p[1] - v.center[1]) * s;
+      assert.ok(x >= 1130 + 40 && x <= 1440 - 50 && y >= 120 && y <= 780, `${ids.join(',')}: (${p}) at ${x.toFixed(0)}, ${y.toFixed(0)}`);
+    }
+  }
 });
 
 // ------------------------------------------------------------------ builds in CPython
