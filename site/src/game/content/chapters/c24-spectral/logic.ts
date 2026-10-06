@@ -13,9 +13,10 @@ import { rint } from '../../../game/lawcheck.ts';
 
 /** A number for the player: exact fractions where simple, else up to two decimals. Minus as −. */
 export const fmtN = (x: number): string => {
-  const r = Math.round(x * 1e6) / 1e6;
-  const s = Math.abs(r - Math.round(r)) < 1e-9 ? String(Math.round(r)) : nice(r, 12);
-  return s.replace(/^-/, '−').replace('-', '−');
+  if (Math.abs(x) < 1e-9) return '0';
+  const r = Math.round(x * 100) / 100;
+  const s = Math.abs(x - Math.round(x)) < 1e-9 ? String(Math.round(x)) : Math.abs(x - r) < 1e-9 ? String(r) : nice(x, 12);
+  return s.replace(/-/g, '−');
 };
 export const fmtV = (v: readonly number[]): string => `(${v.map(fmtN).join(', ')})`;
 /** Fixed decimals, with a proper minus sign. */
@@ -92,7 +93,7 @@ export const P1_LINES: { dir: Vec; value: number }[] = [{ dir: [1, 1], value: 4 
 export const P1_NONSYM: Mat = [[4, 1], [2, 3]];
 export const P1_NONSYM_LINES: Vec[] = [[1, 1], [1, -2]];
 /** The angle between Chapter 18's two lines (degrees, as lines). */
-export const P1_NONSYM_ANGLE = 90 - lineDeg([1, 1], [1, -2]) > 0 ? lineDeg([1, 1], [1, -2]) : lineDeg([1, 1], [1, -2]);
+export const P1_NONSYM_ANGLE = lineDeg([1, 1], [1, -2]);
 
 /** The two real eigen-lines of a 2 × 2 (null when complex or a repeated root). */
 export function lines2(M: Mat): [Vec, Vec] | null {

@@ -17,7 +17,7 @@ import { P2, R2, T } from '../../truth';
 import { col, det, fromCols, matVec, type Mat } from '../../../math/la';
 import { AnchorPath, COPPER, CopperGrid, SHIP_GRID, tag } from './grids';
 import {
-  B1, B2, P1_SHIP, PC, TEO_HATCH, TEO_POS, TEO_REF, anchorOf, fmtN, fmtV, inGrid, lawCore, motionIn, namesPoints,
+  B1, B2, P1_SHIP, PC, TEO_HATCH, TEO_POS, TEO_REF, teoView, anchorOf, fmtN, fmtV, inGrid, lawCore, motionIn, namesPoints,
   needsRightHolds, runTeo, sameMotionHolds, similarAreaHolds, texSmall, type GridCase,
 } from './logic';
 
@@ -253,7 +253,7 @@ export const compare: CompareDef = {
 // ------------------------------------------------------------------ Teach Teo T2 (GDD §4.4)
 
 export const TEO_TILES = [
-  { id: 'base', text: 'Measure from the Anchor’s base, the point that never moves: your arrow is your position minus the base, $(0, 0)$.' },
+  { id: 'base', text: 'Measure from the Anchor’s base $(0, 0)$, the point that never moves: your arrow is your position minus the base.' },
   { id: 'cols', text: 'Write the Anchor’s arms $\\mathbf b_1 = (1, 0)$ and $\\mathbf b_2 = (1, 1)$ as the columns of $P$.' },
   { id: 'solve', text: '$P$ turns the Anchor’s numbers into ours. Go the other way: solve $P\\mathbf c$ = your arrow.' },
   { id: 'send', text: 'Send back $\\mathbf c$: how many of $\\mathbf b_1$, then how many of $\\mathbf b_2$.' },
@@ -291,8 +291,11 @@ export const teo: TeoDef = {
     const res = runTeo(ids);
     const reply = teoReply(ids);
     g.stage.clearWorld();
-    // drawn small on the right, beside the message panel
-    await g.stage.view2D({ center: [-7.4, 1.4], height: 15.5, ms: 500 });
+    // drawn on the right, beside the message panel, framed to the points this reply uses
+    const pts: number[][] = [[0, 0], [...TEO_POS], [...TEO_HATCH]];
+    if (res.arrow) { const f = res.from === 'hatch' ? TEO_HATCH : [0, 0]; pts.push([f[0] + res.arrow[0], f[1] + res.arrow[1]]); }
+    if (res.reached) pts.push([...res.reached]);
+    await g.stage.view2D({ ...teoView(g.stage.size.x, g.stage.size.y, pts), ms: 500 });
     const W = g.stage.world;
     const grid = new Grid2D(g.stage, SHIP_GRID);
     grid.mesh.userData.dispose = () => grid.dispose();
@@ -304,8 +307,8 @@ export const teo: TeoDef = {
     const hatch = new Pad(g.stage, v3(TEO_HATCH), { color: '#59e1ff', radius: 0.22 });
     const labels = [
       new Label(`Teo ${fmtV(TEO_POS)}`, v3(TEO_POS), { className: 'c17-pt w', offset: [0, -26] }),
-      new Label('stern hatch', v3(TEO_HATCH), { className: 'c17-pt dim', offset: [0, 26] }),
-      new Label('Anchor’s base', [0, 0, 0], { className: 'c17-pt cu', offset: [0, 26] }),
+      new Label('stern hatch', v3(TEO_HATCH), { className: 'c17-pt dim', offset: [-6, -24] }),
+      new Label('Anchor’s base', [0, 0, 0], { className: 'c17-pt cu', offset: [26, 24] }),
     ];
     W.add(lamp, teoDot.object, hatch.object, ...labels.map((l) => l.object));
     for (const l of labels) l.object.userData.dispose = () => l.dispose();

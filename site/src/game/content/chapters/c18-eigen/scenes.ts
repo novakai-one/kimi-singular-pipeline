@@ -235,13 +235,13 @@ export async function coda(g: Game): Promise<void> {
     const offs: (() => void)[] = [];
     root.userData.dispose = () => offs.splice(0).forEach((f) => f());
     const alive = () => !!root.parent;
-    const lat = new Lattice3D(g.stage, { extent: 2, opacity: 0.3, color: C.violet });
+    const lat = new Lattice3D(g.stage, { extent: 1, opacity: 0.4, color: C.violet });
     root.add(lat.object);
     lat.object.userData.dispose = () => lat.dispose();
     const tagL = new Label('', [0, 0, 3.4], { className: 'a7-board' });
     root.add(tagL.object);
     tagL.object.userData.dispose = () => tagL.dispose();
-    orbit(g, { tick: (fn) => offs.push(g.stage.tick(fn)) }, [0, 0, 0.4], 13, 22, -50, 3);
+    orbit(g, { tick: (fn) => offs.push(g.stage.tick(fn)) }, [0, 0, 0.3], 15, 24, -50, 3);
     await letterbox(g, true, 400);
     const shiftC2 = (l: number): Mat => C2.map((r, i) => r.map((x, j) => x - (i === j ? l : 0)));
     const show = (l: number) => { lat.set(shiftC2(l)); tagL.set(`λ = ${l.toFixed(2)} · det(C₂ − λI) = ${det(shiftC2(l)).toFixed(2)}`); };
@@ -249,7 +249,8 @@ export async function coda(g: Game): Promise<void> {
     await g.say(S.coda.slice(0, 1));
     if (!alive()) return;
     await animate(g.headless ? 10 : 3200, (k) => show(0.6 * (1 - k)), ease.inOut);
-    show(0);
+    lat.set(C2);
+    tagL.set('λ = 0 · det(C₂ − 0I) = det C₂ = 0 · the two-decimal model');
     sfx.collapse();
     g.stage.flash(0.15, 400);
     const L = new InfLine(g.stage, [0, 0, 0], normalize([1, 1, -1]) as V3, { color: C.violet, width: 3, opacity: 0.95, length: 8 });

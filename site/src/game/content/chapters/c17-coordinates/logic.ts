@@ -251,6 +251,17 @@ export const LAW_NEAR_MISSES: Record<string, string>[] = [
 // ------------------------------------------------------------------ Teach Teo T2 (GDD §4.4)
 
 /** Teo's position in the ship's grid, and the stern hatch his suit measures from (TT16, ground layer). */
+/** A 2-D view that puts `pts` in the strip right of the centred message panel (820 px wide), or centred if too narrow. */
+export function teoView(W: number, H: number, pts: readonly number[][]): { center: [number, number]; height: number } {
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const left = W / 2 + Math.min(410, W / 2 - 20) + 50, right = W - 55, room = right - left;
+  if (room < 160) return { center: [(x0 + x1) / 2, (y0 + y1) / 2], height: Math.max(8, y1 - y0 + 3) };
+  const s = Math.min(room / Math.max(1, x1 - x0), (H * 0.6) / Math.max(1, y1 - y0), 70);
+  const extra = room - (x1 - x0) * s;
+  return { center: [x0 - (left - W / 2 + extra / 2) / s, (y0 + y1) / 2], height: H / s };
+}
+
 export const TEO_POS: Vec = [4, 3];
 export const TEO_HATCH: Vec = [HATCH[0], HATCH[1]];
 export const TEO_SUIT: Vec = [TEO_POS[0] - TEO_HATCH[0], TEO_POS[1] - TEO_HATCH[1]];  // (3, 2): the arrow his suit shows
