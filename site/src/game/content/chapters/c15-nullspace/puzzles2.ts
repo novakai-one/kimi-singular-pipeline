@@ -266,7 +266,7 @@ export const p6: PuzzleDef = {
     pipe.position.set(PIPE.c[0], PIPE.c[1], -0.01);
     const ringPts: V3[] = Array.from({ length: 65 }, (_, i) => [PIPE.c[0] + PIPE.r * Math.cos((i / 64) * Math.PI * 2), PIPE.c[1] + PIPE.r * Math.sin((i / 64) * Math.PI * 2), 0.01]);
     const ring = new FatLine(st, ringPts, { color: '#ffb347', width: 2.2, intensity: 1.3 });
-    const pipeTag = new Label('coolant pipe', [PIPE.c[0] - 0.95, PIPE.c[1] - 0.3, 0], { className: 'act5-note' });
+    const pipeTag = new Label('coolant pipe', [PIPE.c[0], -0.42, 0], { className: 'act5-note' });
     const handle = new FatLine(st, [[HANDLE[0] - 0.05, HANDLE[1] + 0.28, 0], [HANDLE[0] + 0.05, HANDLE[1] - 0.28, 0]], { color: '#c8d0e0', width: 7, intensity: 1.2 });
     const handleTag = new Label('hatch handle', [HANDLE[0] + 0.85, HANDLE[1] + 0.32, 0], { className: 'act5-note' });
     p.add(pipe, ring, pipeTag, handle, handleTag);
@@ -274,7 +274,7 @@ export const p6: PuzzleDef = {
     // the arm: three telescoping segments, tip to tail, coloured like the columns they push along
     const segs = [C.v, C.w, C.u].map((c) => new Arrow([0, 0, 0], [1, 0, 0], { color: c, width: 0.07 }));
     const joints = [0, 1, 2].map(() => new Dot([0, 0, 0], { color: '#c8d0e0', size: 0.075 }));
-    const base = new Dot([0, 0, 0], { color: '#8f9bb3', size: 0.14, label: 'base', labelOffset: [0, 22] });
+    const base = new Dot([0, 0, 0], { color: '#8f9bb3', size: 0.14, label: 'base', labelOffset: [0, 30] });
     const claw = new FatLine(st, [[0, 0, 0], [0, 0, 0]], { color: '#e8f1ff', width: 3, intensity: 1.4 });
     const slip = new FatLine(st, [[0, 0, 0], [0, 0, 0]], { color: C.white, width: 1.6, opacity: 0.85, dashed: true, dashSize: 0.08, gapSize: 0.06 });
     p.add(...segs, ...joints, base, claw, slip);

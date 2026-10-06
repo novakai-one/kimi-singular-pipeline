@@ -403,7 +403,7 @@ export const p6: PuzzleDef = {
     p.add(axes.object, realGlow.object, real.object, zero.object, moved.object);
     p.onDispose(() => { axes.dispose(); real.dispose(); realGlow.dispose(); zero.dispose(); moved.dispose(); });
     const tagReal = new Label('answers of the pod bay flows', [P2.particular[0] + 2.6, P2.particular[1] + 2.6, 2.6], { className: 'c08-pt' });
-    const tagZero = new Label('answers with every meter at 0', [-2.4, -2.4, -2.4], { className: 'c08-pt off' });
+    const tagZero = new Label('answers with every meter at 0', [2.2, 2.2, 2.2], { className: 'c08-pt off', offset: [-130, 0] }); // up the line, clear of the dock
     p.add(tagReal, tagZero);
     void st.view3D({ target: [1.5, 0.5, 0.5], distance: 20, azimuth: -100, elevation: 22, ms: 700 });
     const done = [false, false];

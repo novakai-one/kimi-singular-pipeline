@@ -98,7 +98,7 @@ export const p1: PuzzleDef = {
     legend(r);
     let won = false;
     let follow: (() => void) | null = null;
-    const finish = () => { if (won) return; won = true; sfx.success(); gap.hide(); bt.set(`ours ${fmtV(P1_SHIP)} · Anchor ${fmtV(P1_ANCHOR)}`); p.win(); };
+    const finish = () => { if (won) return; won = true; sfx.success(); gap.hide(); bt.set(`ours ${fmtV(P1_SHIP)} · Anchor ${fmtV(P1_ANCHOR)}`); entry.say(`The Anchor’s path ends on the buoy. In the Anchor’s numbers it is ${fmtV(P1_ANCHOR)}.`, 'good'); p.win(); };
     const tryC = async (c: number[], animate = true) => {
       p.move();
       bench.dim(true);
@@ -157,9 +157,9 @@ export const p2: PuzzleDef = {
   onWin: S.p2Win,
   setup(p) {
     const bench = anchorBench(p, { center: [1.2, 0.2] });
-    const marker = new Dot([0, -2.5, 0.06], { color: C.result, size: 0.13 });
-    const ring = new Arrow([0, -2.5, 0.06], [0, -2.5, 0.06], { color: C.result, handle: true });
-    const mt = tag('', [0, -2.5, 0], 'y', [0, 26]);
+    const marker = new Dot([-1, -2, 0.06], { color: C.result, size: 0.13 });
+    const ring = new Arrow([-1, -2, 0.06], [-1, -2, 0.06], { color: C.result, handle: true });
+    const mt = tag('', [-1, -2, 0], 'y', [0, 26]);
     p.add(marker, ring, mt.object);
     p.onDispose(() => mt.dispose());
     const path = new AnchorPath(p, P2, { showTag: false });
@@ -167,7 +167,7 @@ export const p2: PuzzleDef = {
     const gap = gapLine(p);
     const r = p.readout('The listed piece');
     const live = p.difficulty === 'cadet';
-    let at: number[] = [0, -2.5];
+    let at: number[] = [-1, -2];
     const paint = () => {
       r.row('anc', 'listed in the Anchor’s numbers', fmtV(P2_ANCHOR), COPPER);
       r.row('ship', 'your marker, our numbers', fmtV(at), C.result);

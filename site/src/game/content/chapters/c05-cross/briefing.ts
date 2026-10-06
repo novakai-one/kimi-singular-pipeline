@@ -100,8 +100,8 @@ export const doubtDouble: DoubtDef = {
     par2.setOpacity(0, 0);
     p.add(n1, n2, v2, par2);
     const r = p.readout('Lengths');
-    const g1 = new Gauge('$\\|\\mathbf v\\times\\mathbf w\\|$', { max: 60 });
-    const g2 = new Gauge('$\\|(2\\mathbf v)\\times\\mathbf w\\|$', { max: 60 });
+    const g1 = new Gauge('$\\|\\mathbf v\\times\\mathbf w\\|$', { max: 40 });
+    const g2 = new Gauge('$\\|(2\\mathbf v)\\times\\mathbf w\\|$', { max: 40 });
     addGauges(r, g1, g2);
     const upd = () => {
       const a = v3(cross(e.st.v, e.st.w)), b = v3(cross(e.st.v.map((x) => 2 * x), e.st.w));

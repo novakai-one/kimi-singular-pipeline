@@ -518,7 +518,7 @@ export const p6: PuzzleDef = {
         dots[i].at([s[0], s[1], 0.05]);
         lands[i].at([L[0], L[1], 0.06]);
         links[i].setPoints([[s[0], s[1], 0.03], [L[0], L[1], 0.03]]);
-        r2.row(`s${i}`, `${i === 0 ? 'green' : 'red'} start ${fmtV(s)} lands at`, fmtV(L), colours[i]);
+        r2.row(`s${i}`, `${i === 0 ? 'green' : 'red'} start ${fmtV([s[0], s[1]])} lands at`, fmtV(L), colours[i]);
       });
       if (phase === 'probe' && p6Won(starts[0], starts[1], tol)) {
         const L = matVec(P6_A, [starts[0][0], starts[0][1]]);

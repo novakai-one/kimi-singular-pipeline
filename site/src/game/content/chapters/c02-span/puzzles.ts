@@ -387,7 +387,8 @@ export const p6: PuzzleDef = {
       r.row('t', '$t$', fmtN(t));
       r.row('R', '$R$', fmtV(Rpos(t).slice(0, 2)), C.result);
       r.row('d', 'dials of $R$', `(${fmtN(dl[0])}, ${fmtN(dl[1])})`, C.result);
-      r.eq('R = P + t\\,(Q - P) = (1 - t)\\,\\cg{\\mathbf v} + t\\,\\cr{\\mathbf w}');
+      r.eq('R = (1 - t)\\,\\cg{\\mathbf v} + t\\,\\cr{\\mathbf w}');
+      r.note('$R = P + t\\,(Q - P)$: each dial changes steadily with $t$, so $R$ stays reachable.');
     };
     const setT = (tt: number) => { const t0 = t; t = tt; glow1.trail(p6Dials(t0), p6Dials(t)); show1(); };
     show1();

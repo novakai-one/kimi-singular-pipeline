@@ -103,7 +103,7 @@ export async function installFused(g: Game): Promise<void> {
   await animate(700, (k) => ghosts.object.scale.setScalar(Math.max(0.001, k)), ease.out);
   await g.say(who === 'mine' ? S.installMine : who === 'crew' ? S.installCrew : S.installMismatch);
   await pulseThenTurn(g, (W) => b.set(W), 2000);
-  b.highlight([...b.base.keys()], C.result, 0.9);
+  b.highlight([...b.base.keys()], C.result, 0.45);
   sfx.success();
   await g.say(S.landed);
 }

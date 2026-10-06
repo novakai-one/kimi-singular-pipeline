@@ -13,7 +13,11 @@ import { rint, type LawCore } from '../../../game/lawcheck.ts';
 // ------------------------------------------------------------------ formatting
 
 /** A number for display: whole numbers as they are, simple fractions as a/b, a real minus sign. */
-export const fmtN = (x: number): string => nice(x).replace(/^-/, '−');
+export const fmtN = (x: number): string => {
+  const q = Math.round(x * 4);
+  const t = Math.abs(x * 4 - q) < 1e-9 && !Number.isInteger(x) ? String(q / 4) : nice(x);
+  return t.replace(/^-/, '−');
+};
 export const fmtV = (v: readonly number[]): string => `(${v.map(fmtN).join(', ')})`;
 /** A matrix as TeX (rows). */
 export const texM = (M: Mat): string => `\\begin{bmatrix}${M.map((r) => r.map((x) => nice(x)).join(' & ')).join(' \\\\ ')}\\end{bmatrix}`;

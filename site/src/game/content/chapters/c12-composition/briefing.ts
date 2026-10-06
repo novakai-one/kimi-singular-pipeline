@@ -169,7 +169,7 @@ export const doubtGroup: DoubtDef = {
       },
       randomize(r, edge) {
         const edges: Mat[][] = [[[[1, 2], [2, 4]], CARDS.turn.M, CARDS.shear.M], [[[0, 0], [0, 0]], CARDS.flip.M, CARDS.stretch.M], [CARDS.flip.M, CARDS.flip.M, PX]];
-        const pick = edge !== undefined ? edges[edge] : [0, 1, 2].map(() => [[rint(r, -2, 2), rint(r, -2, 2)], [rint(r, -2, 2), rint(r, -2, 2)]]);
+        const pick = edge !== undefined ? edges[edge] : [0, 1, 2].map(() => [[rint(r, -1, 1), rint(r, -1, 1)], [rint(r, -1, 1), rint(r, -1, 1)]]);
         pick.forEach((M, i) => { Ms[i] = M; inputs[i].set(M); });
       },
       edgeCases: 3,

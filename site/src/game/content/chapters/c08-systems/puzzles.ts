@@ -460,9 +460,8 @@ export const p4: PuzzleDef = {
         const x = solve3(M);
         if (x) pts.push([x[0], x[1], x[2]]);
       }
-      if (pts.length === 3) { tri.setPoints([...pts, pts[0]]); tri.setOpacity(0.7); mid = [0, 1, 2].map((k) => (pts[0][k] + pts[1][k] + pts[2][k]) / 3) as V3; }
+      if (pts.length === 3) { tri.setPoints([...pts, pts[0]]); tri.setOpacity(0.7); }
     };
-    let mid: V3 = [1, 0, 2];
     const ELEV = (Math.asin(2 / Math.sqrt(6)) * 180) / Math.PI;
     const minus = h('button', { class: 'btn small', type: 'button', onclick: () => { p.move(); setB(b3 - 1); } }, '−');
     const plus = h('button', { class: 'btn small', type: 'button', onclick: () => { p.move(); setB(b3 + 1); } }, '+');
@@ -476,9 +475,11 @@ export const p4: PuzzleDef = {
     };
     const winNow = () => {
       if (done[1]) return;
-      done[1] = true; p.subgoal(1); sfx.success(); tri.setColor('#ffd166', 1.4);
-      // move in along the lines so the three-walled tube fills the view
-      void stage.view3D({ target: mid, distance: 7, azimuth: -135, elevation: ELEV, ms: 1400 });
+      done[1] = true; p.subgoal(1); sfx.success();
+      // the cross-section: a bright triangle, the planes dimmed around it (moving closer only widens the walls)
+      tri.setColor('#ffd166', 1.6);
+      tri.material.linewidth = 3.2;
+      planes.setFade(0.55);
       p.win();
     };
     p.tick((dt) => {
