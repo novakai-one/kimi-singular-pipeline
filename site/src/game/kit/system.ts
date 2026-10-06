@@ -317,7 +317,8 @@ export class SystemView {
       const c = projectTo(h, this.focus);
       const [u, v] = planeFrame(h.n);
       const at = (ab: [number, number]) => st.toScreen(this.v3(add(c, add(scale(u, ab[0] * this.half), scale(v, ab[1] * this.half)))));
-      const pick = cands.find((ab) => { const q = at(ab); return free(q.x, q.y, bw, bh); }) ?? this.labelAB.get(g.id) ?? cands[0];
+      const cur = this.labelAB.get(g.id);
+      const pick = (cur ? [cur, ...cands] : cands).find((ab) => { const q = at(ab); return free(q.x, q.y, bw, bh); }) ?? cur ?? cands[0];
       this.labelAB.set(g.id, pick);
       const q = at(pick);
       placed.push({ x: q.x, y: q.y, w: bw, h: bh });
@@ -359,7 +360,8 @@ export class SystemView {
         if (blocks.some((r) => x + bw / 2 > r.left - 8 && x - bw / 2 < r.right + 8 && y + bh / 2 > r.top - 8 && y - bh / 2 < r.bottom + 8)) return false;
         return placed.every((q) => Math.abs(q[0] - x) > bw * 0.8 || Math.abs(q[1] - y) > bh * 1.4);
       };
-      const t = cands.find(fits) ?? this.labelT.get(g.id) ?? 2.8;
+      const cur = this.labelT.get(g.id);
+      const t = (cur !== undefined ? [cur, ...cands] : cands).find(fits) ?? cur ?? 2.8;
       this.labelT.set(g.id, t);
       placed.push(toPx(add(p0, scale(d, t))));
     }

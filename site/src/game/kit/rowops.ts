@@ -155,7 +155,9 @@ export class RowOpsBoard {
     this.rowsBox = h('div', { class: 'rob-rows' },
       h('div', { class: 'rob-brk rob-brk-l' }), h('div', { class: 'rob-brk rob-brk-r' }), this.swapBox, this.rowList);
 
-    this.compHost = h('div', { class: 'rob-comp-host' });
+    // the composer and the drag hint float beside the matrix, next to the target row (no layout shift)
+    this.compHost = h('div', { class: 'rob-pop' });
+    this.compHost.hidden = true;
     this.readEl = h('div', { class: 'rob-read', 'aria-live': 'polite' });
     this.readEl.hidden = true;
 
@@ -630,7 +632,7 @@ export class RowOpsBoard {
     });
     applyBtn.addEventListener('click', (e) => { e.stopPropagation(); void this.applyComposer(); });
     cancel.addEventListener('click', (e) => { e.stopPropagation(); this.closeComposer(); });
-    this.compHost.replaceChildren(el);
+    this.showPop(el, target);
     el.animate?.([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: this.dur(220), easing: 'ease-out' });
     if (kind === 'add') this.setSource(source); else this.fillK();
     input.focus();
@@ -712,8 +714,21 @@ export class RowOpsBoard {
     this.comp = null;
     for (const r of this.rowEls) r.classList.remove('rob-target', 'rob-source');
     had.el.remove();
+    this.hidePop();
     if (sound) sfx.back();
   }
+
+  /** Show content in the floating box beside the matrix, its notch level with row `pos`. */
+  private showPop(content: HTMLElement, pos: number): void {
+    const host = this.compHost;
+    host.replaceChildren(content);
+    host.hidden = false;
+    const row = this.rowEls[this.ids[pos]];
+    const top = row.getBoundingClientRect().top - this.el.getBoundingClientRect().top + row.offsetHeight / 2;
+    host.style.setProperty('--rob-pop-y', `${Math.round(top)}px`);
+  }
+
+  private hidePop(): void { this.compHost.hidden = true; this.compHost.replaceChildren(); }
 
   // ------------------------------------------------------------------ dragging a row onto another
 
@@ -726,7 +741,7 @@ export class RowOpsBoard {
     let over = -1;
     const pid = e.pointerId;
     try { row.setPointerCapture(pid); } catch { /* synthetic events */ }
-    const clearDrop = () => { for (const r of this.rowEls) { r.classList.remove('rob-drop'); r.removeAttribute('data-drop'); } };
+    const clearDrop = () => { for (const r of this.rowEls) r.classList.remove('rob-drop'); };
     const move = (ev: PointerEvent) => {
       if (!dragging) {
         if (Math.hypot(ev.clientX - sx, ev.clientY - sy) < 5) return;
@@ -743,6 +758,7 @@ export class RowOpsBoard {
         this.dragGhost = g;
         row.classList.add('rob-dragging');
         this.el.classList.add('rob-is-dragging');
+        this.showPop(h('div', { class: 'rob-draghint' }, `Drop R${this.ids.indexOf(id) + 1} on another row to add a multiple of it to that row.`), this.ids.indexOf(id));
         sfx.click();
       }
       this.dragGhost!.style.transform = `translate(${ev.clientX - sx}px, ${ev.clientY - sy}px) rotate(-0.6deg)`;
@@ -750,13 +766,15 @@ export class RowOpsBoard {
       if (t !== over) {
         clearDrop();
         over = t;
+        const s = this.ids.indexOf(id);
         if (t >= 0) {
           const tr = this.rowEls[this.ids[t]];
-          const s = this.ids.indexOf(id);
           const sug = suggestAddK(this.m, t, s, this.n);
           tr.classList.add('rob-drop');
-          tr.dataset.drop = opLabel({ kind: 'add', i: t, j: s, k: sug.k });
+          this.showPop(h('div', { class: 'rob-draghint on', html: `Release to set up ${tex(opTex({ kind: 'add', i: t, j: s, k: sug.k }))}<span class="rob-draghint-sub">You can change the number before you apply it.</span>` }), t);
           sfx.tick(t);
+        } else {
+          this.showPop(h('div', { class: 'rob-draghint' }, `Drop R${s + 1} on another row to add a multiple of it to that row.`), s);
         }
       }
     };
@@ -767,6 +785,7 @@ export class RowOpsBoard {
       try { row.releasePointerCapture(pid); } catch { /* already released */ }
       clearDrop();
       if (!dragging) { row.focus(); return; }
+      this.hidePop();
       this.dragGhost?.remove();
       this.dragGhost = null;
       row.classList.remove('rob-dragging');
