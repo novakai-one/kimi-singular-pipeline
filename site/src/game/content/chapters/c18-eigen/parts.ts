@@ -305,7 +305,7 @@ export class CardRail {
 export class LineGrid {
   readonly group = new Group();
   readonly segs: FatSegments;
-  constructor(stage: Stage, private P: Mat, private readonly o: { color?: string; half?: number; n?: number; opacity?: number; width?: number } = {}) {
+  constructor(stage: Stage, P: Mat, private readonly o: { color?: string; half?: number; n?: number; opacity?: number; width?: number } = {}) {
     this.segs = new FatSegments(stage, [], { color: o.color ?? C.violet, width: o.width ?? 1.4, opacity: o.opacity ?? 0.7, dashed: true, dashSize: 0.18, gapSize: 0.12, intensity: 1.1 });
     this.segs.object.renderOrder = 1;
     this.group.add(this.segs.object);
@@ -314,7 +314,7 @@ export class LineGrid {
   }
   get object(): Group { return this.group; }
   set(P: Mat): void {
-    this.P = P.map((r) => r.slice());
+
     const half = this.o.half ?? 8, n = this.o.n ?? 16;
     const a = [P[0][0], P[1][0]], b = [P[0][1], P[1][1]];
     const segs: [V3, V3][] = [];

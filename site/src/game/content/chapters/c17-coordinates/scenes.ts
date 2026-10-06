@@ -35,7 +35,11 @@ function newSet(g: Game): Set6 {
   const offs: (() => void)[] = [];
   root.userData.dispose = () => offs.splice(0).forEach((f) => f());
   const alive = () => !!root.parent;
-  return { root, alive, check: () => { if (!alive()) throw new Gone(); }, tick: (f) => { offs.push(g.stage.tick(f)); } };
+  return {
+    root, alive, check: () => { if (!alive()) throw new Gone(); },
+    // a callback whose set has left the world (the player jumped away mid-cinematic) removes itself
+    tick: (f) => { const off = g.stage.tick((dt, t) => { if (!root.parent) { off(); return; } f(dt, t); }); offs.push(off); },
+  };
 }
 
 /** Camera on a slow orbit around a point (z up); stops when the set leaves the world. */
@@ -88,6 +92,7 @@ export async function coldOpen(g: Game): Promise<void> {
     g.mood('explore');
     const st = await groundStage(g, { copper: identity(2) });
     const { set, copper } = st;
+    set.check();
     copper.setOpacity(0);
     drift(g, set, [0.6, 0.5, 0], 8.8, 50, -100, 2.2);
     void fadeBlack(g, false, 1400);
@@ -182,7 +187,7 @@ async function streamStage(g: Game, at: readonly number[] = ARK, turned = false)
   const ark = new Group();
   ark.position.set(ARK[0], ARK[1], 0.15);
   holder.add(ark);
-  void arkModel(0.028).then((m) => { m.rotation.z = Math.PI / 2; ark.add(m); });
+  void arkModel(0.021).then((m) => { m.rotation.z = Math.PI / 2; ark.add(m); });
   const setTurn = (M: Mat) => { holder.matrix.set(M[0][0], M[0][1], M[0][2], 0, M[1][0], M[1][1], M[1][2], 0, M[2][0], M[2][1], M[2][2], 0, 0, 0, 0, 1); holder.matrixWorldNeedsUpdate = true; };
   setTurn(turned ? R : identity(3));
   return { ...st, holder, setTurn };
@@ -206,6 +211,7 @@ export async function reveal(g: Game): Promise<void> {
     g.stage.clearWorld();
     g.mood('void');
     const { set, lamp, copper } = await groundStage(g, { arms: false, lamp: 0.35 });
+    set.check();
     copper.setOpacity(0.35);
     drift(g, set, [0, 0, 0.4], 6.2, 24, -70, 1.4);
     void fadeBlack(g, false, 1600);
@@ -254,6 +260,7 @@ export async function clearCine(g: Game): Promise<void> {
     g.stage.clearWorld();
     g.mood('tension');
     const st = await streamStage(g);
+    st.set.check();
     drift(g, st.set, [1.4, 1.4, 0], 9.5, 36, -128, 1.2);
     void fadeBlack(g, false, 1200);
     await letterbox(g, true, 500);

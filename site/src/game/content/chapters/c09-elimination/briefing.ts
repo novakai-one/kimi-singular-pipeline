@@ -23,7 +23,7 @@ const nums = (m: FMat): Aug => m.map((r) => r.map((x) => x.value()));
 /** Rows by identity (the board keeps a row's colour when it moves), so a swap moves no plane. */
 const byId = (m: Aug, order: number[]): Aug => { const out: Aug = []; order.forEach((id, pos) => { out[id] = m[pos]; }); return out; };
 /** The scale doubt's lines stay inside this frame, below the cards. */
-const D_SCALE_BOX: [number, number, number, number] = [-3.5, -2.1, 5.5, 3.8];
+const D_SCALE_BOX: [number, number, number, number] = [-3.5, -2.1, 5.5, 2.8];
 const meet = (m: Aug) => { const k = kindOf(m); return k === 'one' ? `meet at ${pt(somePoint(m)!)}` : k === 'many' ? 'meet along a line' : 'never all meet'; };
 
 export const sayit: SayItDef = {

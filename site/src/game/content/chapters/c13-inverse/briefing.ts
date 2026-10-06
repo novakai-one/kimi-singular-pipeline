@@ -224,15 +224,17 @@ export const law: LawDef<InvCase> = {
     return `$A = ${texM(c.M)}$: ${lands ? 'two different points land on one spot, so it has no inverse' : 'no two points land together, and it has an inverse'}`;
   },
   draw(g: Game, c: InvCase) {
-    // the Law panel sits in the middle of the screen: draw the case to its right
-    void g.stage.view2D({ center: [-4.6, 0.4], height: 11, ms: 0 });
+    // the Law panel sits in the middle of the screen: draw the case to its right, zoomed to fit it
+    const ext = Math.max(...[[-2.5, -1], [-2.5, 1], [2, -1], [2, 1], [3, 0]].map(([x, y]) => Math.hypot(c.M[0][0] * x + c.M[0][1] * y, c.M[1][0] * x + c.M[1][1] * y)));
+    const hgt = Math.max(11, 2.3 * ext);
+    void g.stage.view2D({ center: [-0.42 * hgt, 0.04 * hgt], height: hgt, ms: 0 });
     const grid = new FlatGrid(g.stage, { extent: 6 });
     grid.set(c.M);
     grid.show(true);
     const plan = new FramePlan(g.stage, {}, 0.01);
     plan.set(c.M);
     const ghost = new FramePlan(g.stage, { color: '#8fa3c4', opacity: 0.5, fill: 0, dashed: true, width: 1.4 }, 0.004);
-    const lab = new Label(`$A = ${texM(c.M)}$`, [0, -3.4, 0], { color: C.white, size: 17 });
+    const lab = new Label(`$A = ${texM(c.M)}$`, [0, -0.31 * hgt, 0], { color: C.white, size: 17 });
     g.stage.world.add(grid.object, plan.object, ghost.object, lab.object);
   },
   reason: {

@@ -346,9 +346,7 @@ export const p4: PuzzleDef = {
     const home = new Outline2D(p.g.stage, PLATE, { color: '#7d8aa5', opacity: 0.05 });
     p.add(home, plate, sq, e1, e2);
     for (const o of [sq.group, e1.group, e2.group, plate.group, home.group]) o.visible = false;
-    let cur: Mat = identity(2);
     const showM = (M: Mat) => {
-      cur = M;
       grid.set(M);
       sq.set([M[0][0], M[1][0], 0], [M[0][1], M[1][1], 0]);
       e1.setTo([M[0][0], M[1][0], 0.01]); e2.setTo([M[0][1], M[1][1], 0.01]);

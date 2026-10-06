@@ -113,13 +113,13 @@ export const sp: PuzzleDef = {
     const streamLine = new FatLine(p.g.stage, [[STREAM_X, -8, 0.01], [STREAM_X, 8, 0.01]], { color: '#c9b49a', width: 1.6, dashed: true, opacity: 0.6, dashSize: 0.25, gapSize: 0.15 });
     p.add(streamLine.object);
     p.onDispose(() => streamLine.dispose());
-    const st = tag('debris stream', [STREAM_X, -4.6, 0], 'dim', [0, 0]);
+    const st = tag('debris stream', [STREAM_X, 5, 0], 'dim', [0, 0]);
     p.add(st.object); p.onDispose(() => st.dispose());
     // the ark miniature at its centre (3, 1, 0), along the stream
     const ark = new Group();
     ark.position.set(...v3(ARK, 0.15));
     root.add(ark);
-    void arkModel(0.028).then((m) => { m.rotation.z = Math.PI / 2; ark.add(m); });
+    void arkModel(0.021).then((m) => { m.rotation.z = Math.PI / 2; ark.add(m); });
     const at = tag(`ark ${fmtV(ARK)}`, v3(ARK), 'w', [0, 30]);
     p.add(at.object); p.onDispose(() => at.dispose());
     // Ilse's original setting, repeated: back into the stream every fourth pulse
@@ -140,7 +140,7 @@ export const sp: PuzzleDef = {
     foot.setOpacity(0); footRing.object.visible = false; ft.show(false);
     let mark: RightAngle | null = null;
     // the unit cube under the setting's move, beside the Anchor
-    const cubeAt: V3 = [-2.6, -2.4, 0];
+    const cubeAt: V3 = [5.4, -0.6, 0];
     const cube = new Parallelepiped(p.g.stage, [1, 0, 0], [0, 1, 0], [0, 0, 1], { color: C.result, opacity: 0.14 });
     cube.group.position.set(...cubeAt);
     p.add(cube);

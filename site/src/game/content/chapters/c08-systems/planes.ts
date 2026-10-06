@@ -527,7 +527,9 @@ export class PlaneSet {
       // centre the drawn piece on the point of the line nearest the focus
       const c = add(p, scale(dir, dot(sub(this.focus, p), dir)));
       const L = this.n === 2 ? 60 : this.half * 1.25;
-      const a = this.v3(sub(c, scale(dir, L)), 0.01), b = this.v3(add(c, scale(dir, L)), 0.01);
+      // 2-D with a box: the solution line stops at the box like the rows do
+      const seg = this.n === 2 && this.o.box ? clipBox(c, dir, this.o.box) : null;
+      const a = this.v3(seg ? seg[0] : sub(c, scale(dir, L)), 0.01), b = this.v3(seg ? seg[1] : add(c, scale(dir, L)), 0.01);
       const glow = new FatLine(stage, [a, b], { color: C.result, width: 14, intensity: 1.3, opacity: 0.22 });
       const line = new FatLine(stage, [a, b], { color: C.result, width: this.n === 2 ? 2.4 : 4, intensity: 2.2, opacity: this.n === 2 ? 0.7 : 0.95 });
       this.root.add(glow.object, line.object);
