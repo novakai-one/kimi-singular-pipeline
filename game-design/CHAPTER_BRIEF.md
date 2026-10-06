@@ -29,7 +29,8 @@ procedures: the reference order succeeds and dropping each key step fails). The 
 `FitLine`, `Projector3D`, `PCAView`); the dev chapter `c92-kit-geom` shows each one in use.
 
 **Also in the engine** (use, do not rebuild): the act **Review** beat (`kind: 'review'`, `ReviewDef`: four claims by one
-speaker, built like doubts) for act-end chapters; the **Broadcast** beat (Epilogue only); **installs** through
+speaker, built like doubts) for act-end chapters; the **Teach Teo** beat (`kind: 'teo'`, `TeoDef` = Procedure + `ask`) for
+callbacks T1–T5 (GDD §4.4); the **Broadcast** beat (Epilogue only; data in `content/broadcast.ts`); **installs** through
 `pylib.map(fn, cases)` / `pylib.call(fn, ...args)` with `isPlayerFn(fn)` to say whose code ran; the Case Board
 `pin` / `answer` and the constellation `lightStar(id)` / `linkStars(a, b)` (game/caseboard.ts, ids in `STARS`).
 The act's NumPy card and the catch-up card are automatic. Builds need a `swarm` (AUTHORING.md §5b).
