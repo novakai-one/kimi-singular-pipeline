@@ -47,7 +47,7 @@ const NAME_DEF: Beat = {
     saw: '$\\begin{bmatrix} 1 & 2 \\\\ 2 & 1 \\end{bmatrix}$ had every entry positive and eigenvalues 3 and $-1$: a saddle, and the probe left along $(1, -1)$. $3x^2 + 4xy + 3y^2$ had eigenvalues 5 and 1: a bowl, and the probe came to rest at the bottom.',
     means: 'The signs of the eigenvalues decide the shape, not the signs of the entries.',
     name: 'A symmetric $S$ is **positive definite** when $\\mathbf x^{\\mathsf T}S\\mathbf x > 0$ for every $\\mathbf x \\neq \\mathbf 0$: all eigenvalues positive, a bowl. **Negative definite**: all negative, an upside-down bowl. **Indefinite**: both signs, a saddle. **Positive semidefinite**: none negative, some may be zero.',
-    formula: '3y_1^2 - y_2^2\\ \\text{(indefinite: a saddle)} \\qquad 5y_1^2 + y_2^2\\ \\text{(positive definite: a bowl)}',
+    formula: '\\underbrace{3y_1^2 - y_2^2}_{\\text{saddle}} \\qquad \\underbrace{5y_1^2 + y_2^2}_{\\text{bowl}} \\qquad \\mathbf x^{\\mathsf T}S\\mathbf x > 0 \\iff \\text{all } \\lambda > 0',
     why: 'In the principal axes each term is $\\lambda_iy_i^2$. If every λ is positive, every direction climbs. One negative λ, and that direction falls.',
     cue: 'When you need **bowl or saddle**, think **signs of the eigenvalues**.',
     use: 'A positive definite matrix of second derivatives marks a true minimum. Saddle points, with eigenvalues of both signs, slow down neural-network training.',

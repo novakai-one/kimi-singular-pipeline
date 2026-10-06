@@ -82,7 +82,7 @@ const NAME_PINV: Beat = {
   },
 };
 
-const WHY = 'A photo is a matrix of brightness. Keep its 50 largest layers and you store a small fraction of the numbers, and the eye cannot tell. **Recommender systems** split a huge table of users and ratings into a few layers of hidden taste. **LoRA** fine-tunes a language model by learning a low-rank update instead of the full weight matrix.\n\nAnd the condition number, $\\sigma_{\\max}/\\sigma_{\\min}$, is how a solver warns you that its answer may be noise.\n\nYour `low_rank` rebuilds Teo’s voice next; your `svd` puts the decimals on the screen.';
+const WHY = 'A photo is a matrix of brightness. Keep its 50 largest layers and you store a small fraction of the numbers, and the eye cannot tell. **Recommender systems** split a huge table of users and ratings into a few layers of hidden taste. **LoRA** fine-tunes a language model by learning a low-rank update instead of the full weight matrix.\n\nAnd the ratio $\\sigma_{\\max}/\\sigma_{\\min}$ is how a solver warns you that its answer may be noise: the set piece names it.\n\nYour `low_rank` rebuilds Teo’s voice next; your `svd` puts the decimals on the screen.';
 
 const ch: ChapterDef = {
   id: 'c25',

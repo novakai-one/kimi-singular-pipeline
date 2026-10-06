@@ -430,7 +430,7 @@ export const p4: PuzzleDef = {
   view: '3d',
   onWin: S.p4Win,
   setup(p) {
-    void p.g.stage.view3D({ target: [0, 0, 0.1], distance: 8.4, azimuth: -38, elevation: 22, ms: 0 });
+    void p.g.stage.view3D({ target: [0.3, 0.4, 0.1], distance: 10, azimuth: -38, elevation: 22, ms: 0 });   // the (1, 1, 1) label clears the readout
     const plane = new PlanePatch(p.g.stage, [0, 0, 0], [1, 1, 1], { color: '#9fb6d8', size: 4.6, opacity: 0.8 });
     p.add(plane);
     ptag(p, 'x + y + z = 0 · eigenvalue 1', [1.9, 1.3, -3.2 + 0.2], 'dim');

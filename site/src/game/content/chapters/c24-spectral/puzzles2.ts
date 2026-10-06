@@ -165,7 +165,7 @@ export const p6: PuzzleDef = {
         if (d === 'cadet') { const tg = tag(`${a.name} · ${fmtN(a.I)}`, v3(u.map((x) => x * 1.08)), 'dim'); tg.object.userData.dispose = () => tg.dispose(); axesG.add(tg.object); void i; }
       });
     }
-    const spinArrow = new Arrow([0, 0, 0], [0, 0, 0.001], { color: C.result, width: 0.028, glow: 0.7, opacity: 0.85, label: '$\\boldsymbol\\omega$' });
+    const spinArrow = new Arrow([0, 0, 0], [0, 0, 0.001], { color: C.result, width: 0.024, glow: 0.3, opacity: 0.7, label: '$\\boldsymbol\\omega$' });
     p.add(spinArrow);
     spinArrow.object.visible = false;
     const trail = new FatLine(p.g.stage, [[0, 0, 0], [0, 0, 0]], { color: C.accent, width: 1.6, opacity: 0.75 });
