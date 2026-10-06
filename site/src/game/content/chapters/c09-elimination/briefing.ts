@@ -179,6 +179,7 @@ function cleanup(): void {
   active.off();
   active.ctx.disposeAll();
   active.el.remove();
+  document.querySelector('.brief.procedure')?.classList.remove('c09-aside');
   active = null;
 }
 
@@ -196,6 +197,8 @@ export const procedure: ProcedureDef = {
     const el = h('div', { class: 'dock glass c09-procdock' });
     el.style.pointerEvents = 'auto';
     g.ui.scene.appendChild(el);
+    // the tile panel moves left while LANTERN's board shows on the right, so neither covers the other
+    document.querySelector('.brief.procedure')?.classList.add('c09-aside');
     const ctx = looseCtx(g, el);
     // tidy up once the Procedure step is gone (the engine lends no dispose hook)
     const off = g.stage.tick(() => { if (!document.querySelector('.brief.procedure')) cleanup(); });
@@ -206,7 +209,7 @@ export const procedure: ProcedureDef = {
     const caption = h('div', { class: 'c09-caption' });
     el.appendChild(caption);
     const planes = new PlaneSet(ctx, { n: 3, rows: PROC_CASE });
-    void planes.frame({ distance: 24, shiftPx: -170, ms: 500 });
+    void planes.frame({ distance: 26, shiftPx: 330, ms: 500 }); // below the board, right of the tile panel
     board.subscribe((m, _op, ms) => { void planes.setRows(byId(nums(m), board.order()), ms); });
     const fast = g.headless;
     for (const st of res.steps) {

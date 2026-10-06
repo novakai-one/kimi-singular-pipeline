@@ -29,6 +29,8 @@ const MINUS = '−';
 /** "(2, −1, 3)" with nice fractions and a real minus sign. */
 export const fmtV = (v: number[]): string => `(${v.map((x) => nice(x).replace('-', MINUS)).join(', ')})`;
 export const fmtN = (x: number): string => nice(x).replace('-', MINUS);
+/** A dial value: whole numbers and two-place decimals as decimals (1.5), anything else as a fraction (1/3). */
+export const fmtDial = (x: number): string => (Math.abs(x * 100 - Math.round(x * 100)) < 1e-9 ? String(Math.round(x * 100) / 100) : nice(x));
 /** A column vector in TeX. */
 export const texV = (v: number[]): string => `\\begin{bmatrix}${v.map((x) => nice(x)).join(' \\\\ ')}\\end{bmatrix}`;
 /** Plain-TeX label for k·sym (labels on the stage use KaTeX without colour macros). */
@@ -282,7 +284,7 @@ export class DialRig {
         'aria-label': `dial ${names[i]}`, style: `width:100%;accent-color:${colors[i]}`,
       }) as HTMLInputElement;
       const cell = o.typed === false ? null : h('input', {
-        class: 'cell', type: 'text', inputmode: 'decimal', value: nice(this.dials[i]), 'aria-label': `dial ${names[i]} value`,
+        class: 'cell', type: 'text', inputmode: 'decimal', value: fmtDial(this.dials[i]), 'aria-label': `dial ${names[i]} value`,
         spellcheck: 'false', style: `width:64px;border-color:${colors[i]}66`,
       }) as HTMLInputElement;
       range?.addEventListener('input', () => {
@@ -447,7 +449,7 @@ export class DialRig {
     this.tipDot.setOpacity(this.previewOn ? 1 : 0);
     if (syncInputs) this.rows.forEach((r, i) => {
       if (r.range) r.range.value = String(this.dials[i]);
-      if (r.cell && document.activeElement !== r.cell) r.cell.value = nice(this.dials[i]);
+      if (r.cell && document.activeElement !== r.cell) r.cell.value = fmtDial(this.dials[i]);
     });
     this.updateReadout();
   }
@@ -462,10 +464,10 @@ export class DialRig {
       r.row(`a${i}`, `$${syms[i]}$`, fmtV(this.o.dims === 2 ? a.slice(0, 2) : a), colors[i]);
       r.hideRow(`a${i}`, !this.bolted[i]);
     });
-    r.row('d', 'dials', this.arrows.map((_, i) => (this.bolted[i] ? `$${names[i]} = ${nice(this.dials[i])}$` : null)).filter(Boolean).join(', '));
+    r.row('d', 'dials', this.arrows.map((_, i) => (this.bolted[i] ? `$${names[i]} = ${fmtDial(this.dials[i])}$` : null)).filter(Boolean).join(', '));
     const tip = this.o.dims === 2 ? this.tip.slice(0, 2) : this.tip;
     r.row('t', this.previewOn ? 'tip lands at' : 'last landing', this.previewOn ? fmtV(tip) : this.landed ? fmtV(this.o.dims === 2 ? this.landed.slice(0, 2) : this.landed) : '?', C.result);
-    const terms = this.arrows.map((a, i) => (this.bolted[i] ? `${nice(this.dials[i])}\\,${MACRO[i]}{${texV(this.o.dims === 2 ? a.slice(0, 2) : a)}}` : null)).filter(Boolean);
+    const terms = this.arrows.map((a, i) => (this.bolted[i] ? `${fmtDial(this.dials[i])}\\,${MACRO[i]}{${texV(this.o.dims === 2 ? a.slice(0, 2) : a)}}` : null)).filter(Boolean);
     const size = terms.length >= 3 ? '\\footnotesize ' : '';
     r.eq(`${size}${terms.join(' + ').replace(/\+ -/g, '- ')} = \\cy{${this.previewOn ? texV(tip) : '?'}}`);
   }

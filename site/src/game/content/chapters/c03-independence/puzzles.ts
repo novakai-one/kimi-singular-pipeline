@@ -16,7 +16,7 @@ import { sfx } from '../../../audio/sfx';
 import { cross } from '../../../math/la';
 import { rng } from '../../../game/lawcheck';
 import { ReachGlow } from '../c02-span/reach';
-import { DialRig, fmtV, to3, tolFor, dialStep } from '../c02-span/rig';
+import { DialRig, fmtV, fmtDial, to3, tolFor, dialStep } from '../c02-span/rig';
 import {
   P1_U, P1_V, P1_W, P1_LOOP, THRUST3, SIGNAL, SPARE_BAD, SPARE_BAD_DIALS, MOUNTS, P3_MOUNT, P3_DIALS, P3_FUEL, PRUNE,
   SP_ARROWS, SP_TARGET, SP_FUEL, SP_DIALS, isLoop, fuel, p2Won, p3Won, p4Won, spWon, spanDim, bramFour, planeLoop,
@@ -185,10 +185,10 @@ export const p3: PuzzleDef = {
       arrows: [T0, T1, to3(MOUNTS[0])], dims: 3, names: ['a', 'b', 'c'], tags: ['thruster two', 'thruster three', 'spare'], dials: [0, 0, 0],
       bolted: [true, true, false], range: [-3, 3], readoutTitle: 'Three thrusters', glow: { cell: 0.12 },
       beforeFire: () => (mount < 0 ? 'Bolt the spare at a mount first.' : null),
-      onChange: (d) => rig?.readout?.row('f', 'fuel', `${nice(fuel(d))} of ${P3_FUEL}`, fuel(d) > P3_FUEL ? C.orange : undefined),
+      onChange: (d) => rig?.readout?.row('f', 'fuel', `${fmtDial(fuel(d))} of ${P3_FUEL}`, fuel(d) > P3_FUEL ? C.orange : undefined),
       onArrive: (end, dials) => {
         if (p3Won(mount, dials, tolFor(p))) { flare(p, to3(SIGNAL)); p.subgoal(1); p.win(); return 'win'; }
-        if (near3(end, SIGNAL, tolFor(p))) { p.bark('lantern', `On the signal, but fuel used: ${nice(fuel(dials))}. The limit is ${P3_FUEL}.`); return 'miss'; }
+        if (near3(end, SIGNAL, tolFor(p))) { p.bark('lantern', `On the signal, but fuel used: ${fmtDial(fuel(dials))}. The limit is ${P3_FUEL}.`); return 'miss'; }
         rig.gap.show(end, to3(SIGNAL));
         p.bark('lantern', mount === 0 ? 'Mount A’s arrow is 2 of thruster two minus 1 of thruster three. Every landing stays on the old plane.' : `Landed at ${fmtV(end)}.`);
         return 'miss';
@@ -484,10 +484,10 @@ export const lift: PuzzleDef = {
       tags: ['thruster two', 'thruster three', 'new mount', 'spare'], dials: [0, 0, 0, 0], range: [-5, 5], step, readoutTitle: 'Thruster rack',
       glow: { cell: 0.14 },
       beforeFire: (): string | null => (rig.bolted.filter(Boolean).length > 3 ? 'Power for three thrusters only. Unbolt one first.' : null),
-      onChange: (d) => rig?.readout?.row('f', 'fuel', `${nice(fuel(d))} of ${SP_FUEL}`, fuel(d) > SP_FUEL ? C.orange : undefined),
+      onChange: (d) => rig?.readout?.row('f', 'fuel', `${fmtDial(fuel(d))} of ${SP_FUEL}`, fuel(d) > SP_FUEL ? C.orange : undefined),
       onArrive: (end, dials) => {
         if (spWon(rig.bolted, dials, tolFor(p))) { won = true; flare(p, to3(SP_TARGET), '#59e1ff'); p.subgoal(1); p.win(); void climb(); return 'win'; }
-        if (near3(end, SP_TARGET, tolFor(p))) { p.bark('lantern', `On the approach point, but fuel used: ${nice(fuel(dials))}. The limit is ${SP_FUEL}.`); return 'miss'; }
+        if (near3(end, SP_TARGET, tolFor(p))) { p.bark('lantern', `On the approach point, but fuel used: ${fmtDial(fuel(dials))}. The limit is ${SP_FUEL}.`); return 'miss'; }
         rig.gap.show(end, to3(SP_TARGET));
         p.bark('lantern', spanDim(SP_ARROWS.filter((_, i) => rig.bolted[i])) < 3 ? 'These three only reach a plane. The approach point is off it.' : `Landed at ${fmtV(end)}.`);
         return 'miss';

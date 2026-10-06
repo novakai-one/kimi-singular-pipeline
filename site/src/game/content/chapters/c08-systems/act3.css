@@ -88,3 +88,5 @@
 .worksheet.c08-tanks .ws-grid { gap: 2px; }
 .worksheet.c08-tanks .ws-cell { width: 50px; height: 26px; font-size: 14px; }
 .worksheet.c08-tanks .ws-bracket { padding: 2px 8px; }
+/* Ch 9 Procedure: while LANTERN runs the tiles, the tile panel sits left of the board */
+.brief.procedure.c09-aside { left: 20px; transform: none; width: min(820px, calc(100vw - 580px)); }
