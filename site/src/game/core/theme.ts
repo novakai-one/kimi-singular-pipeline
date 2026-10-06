@@ -40,5 +40,6 @@ export const ACT_PALETTES: Record<string, ActPalette> = {
   ember: { nebulaA: '#2a0c0c', nebulaB: '#3b1a05', nebulaC: '#1a0a2e', grid: '#e0844a', star: '#ffe6cc' },
   violet: { nebulaA: '#160a33', nebulaB: '#33104a', nebulaC: '#0a1a40', grid: '#9b7bff', star: '#efe2ff' },
   gold: { nebulaA: '#1f1a05', nebulaB: '#2e1f08', nebulaC: '#062a2a', grid: '#d9b44a', star: '#fff6d8' },
+  copper: { nebulaA: '#1e1008', nebulaB: '#2b1410', nebulaC: '#0c1e26', grid: '#d08a5a', star: '#ffe9d6' },
   void: { nebulaA: '#05060c', nebulaB: '#0f0a1c', nebulaC: '#081420', grid: '#6c7cff', star: '#c8d0ff' },
 };

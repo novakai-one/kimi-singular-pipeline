@@ -18,7 +18,7 @@ import { sfx } from '../audio/sfx';
 import { niceTex } from '../math/frac';
 import { mclone, matVec, type Mat } from '../math/la';
 import {
-  add3, arcFrame, arcPts, bisector, eigenDirs2, ellipsePts, labelSpot, len3, lineAngleDist, rad, rightAnglePts,
+  add3, arcFrame, arcPts, bisector, eigenDirs2, ellipsePts, labelSpot, len3, lineAngleDist, markArc, rad, rightAnglePts,
   scale3, shadowFoot, shadowLength, smoothstep, sub3, svdPath, svdRot2, to3, unit3, wrapAngle, type EigenDirs, type Svd2,
 } from './geom-math';
 
@@ -504,17 +504,12 @@ export class Sweep extends Composite {
     }
   }
 
-  private markTrace(prev: number, t: number): void {
-    if (!this.trace) return;
-    const bin = (a: number) => ((Math.floor(((a % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI) / (2 * Math.PI) * TRACE_BINS)) % TRACE_BINS);
-    const d = wrapAngle(t - prev);
-    const steps = Math.max(1, Math.ceil(Math.abs(d) / ((2 * Math.PI) / TRACE_BINS)));
-    let changed = false;
-    for (let i = 0; i <= steps; i++) {
-      const b = bin(prev + (d * i) / steps);
-      if (!this.visited[b]) { this.visited[b] = 1; changed = true; }
-    }
-    if (changed) this.redrawTrace();
+  /** Mark the trace from angle prev to t the short way round (a drag can jump across ±π). */
+  private markTrace(prev: number, t: number): void { this.markRange(prev, wrapAngle(t - prev)); }
+
+  /** Mark the trace over d radians from angle a0 (d may be more than a half turn). */
+  private markRange(a0: number, d: number): void {
+    if (markArc(this.visited, a0, d)) this.redrawTrace();
   }
 
   private redrawTrace(): void {
@@ -560,7 +555,14 @@ export class Sweep extends Composite {
   async animateSweep(ms = 4000, turns = 1): Promise<void> {
     this.job?.cancel();
     const t0 = this.t;
-    const job = animate(ms, (k) => this.setAngle(t0 + turns * 2 * Math.PI * k), ease.linear);
+    let last = t0;
+    const job = animate(ms, (k) => {
+      // a slow frame can skip a long way: mark everything swept since the last frame
+      const t = t0 + turns * 2 * Math.PI * k;
+      this.markRange(last, t - last);
+      last = t;
+      this.setAngle(t);
+    }, ease.linear);
     this.job = job;
     await job;
     if (this.job === job) this.job = null;

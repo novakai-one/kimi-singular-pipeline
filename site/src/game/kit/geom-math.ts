@@ -159,6 +159,23 @@ export function parallelSin(M: Mat, t: number): number {
   return n < 1e-9 ? 0 : cross2(x, y) / n;
 }
 
+/**
+ * Mark the angle bins swept from angle a0 over d radians (d may be negative or more than a turn).
+ * `bins` splits the full turn into bins.length equal bins. Samples every half bin, so no bin is
+ * skipped by rounding. Returns true if any bin was newly marked.
+ */
+export function markArc(bins: Uint8Array, a0: number, d: number): boolean {
+  const n = bins.length, w = TAU / n;
+  const steps = Math.max(1, Math.ceil((Math.abs(d) / w) * 2));
+  let changed = false;
+  for (let i = 0; i <= steps; i++) {
+    const a = a0 + (d * i) / steps;
+    const b = Math.min(n - 1, Math.floor(((((a % TAU) + TAU) % TAU) / TAU) * n));
+    if (!bins[b]) { bins[b] = 1; changed = true; }
+  }
+  return changed;
+}
+
 /** x·Mx for unit x at angle t (equals λ when x is an eigenvector). */
 export const stretchAlong = (M: Mat, t: number): number => dot([Math.cos(t), Math.sin(t)], matVec(M, [Math.cos(t), Math.sin(t)]));
 

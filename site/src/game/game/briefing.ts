@@ -123,7 +123,7 @@ export async function runDoubt(host: BriefingHost, d: DoubtDef): Promise<void> {
   let scene: DoubtScene;
   try { scene = await d.setup(p); } catch (e) { m.done(); throw e; }
   const who = cast(d.who);
-  hud.setObjective(`${who.name}'s doubt`, `*“${d.claim}”*\n\n${d.goal ?? 'Decide: **Challenge it** (build a case where it fails) or **Back it** (build a case where it holds; then Bram shakes it).'}`);
+  hud.setObjective(`${who.name}'s doubt`, `${d.goal ?? 'Decide: **Challenge it** (build a case where it fails) or **Back it** (build a case where it holds; then Bram shakes it).'}`);
   const card = panel('doubt');
   const verdict = h('div', { class: 'doubt-verdict' });
   let stance: 'challenge' | 'back' | null = null;

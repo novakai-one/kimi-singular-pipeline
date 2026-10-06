@@ -181,10 +181,11 @@ export class App implements Game {
     this.hud.setVisible(false);
     let picked: { ch: ChapterDef; beat: number } | null = null;
     await openModal(this.ui, (close) => {
-      const cols = ACTS.map((a) => {
+      const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
+      const cols = ACTS.filter((a) => CHAPTERS.some((c) => c.act === a.num)).map((a) => {
         const chs = CHAPTERS.filter((c) => c.act === a.num);
         return h('div', { class: 'map-act' },
-          h('div', { class: 'kicker' }, `Act ${a.num}`),
+          h('div', { class: 'kicker' }, ROMAN[a.num] ? `Act ${ROMAN[a.num]}` : '\u00a0'),
           h('h3', { class: 'map-act-title' }, a.title),
           h('div', { class: 'c-muted map-act-sub' }, a.subtitle),
           ...chs.map((c) => {

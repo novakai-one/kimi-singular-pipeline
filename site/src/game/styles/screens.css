@@ -159,6 +159,14 @@
 .cine-numbers .grid { display: grid; gap: 10px 34px; padding: 18px 30px; border-left: 2px solid var(--ink-2); border-right: 2px solid var(--ink-2); border-radius: 6px; }
 .cine-numbers .n { font-family: var(--mono); font-size: clamp(28px, 3.6vw, 48px); color: rgba(232, 241, 255, 0.18); text-align: center; min-width: 2.4em; transition: color 0.4s, text-shadow 0.4s; }
 .cine-numbers .n.lit { color: var(--ink); text-shadow: 0 0 18px rgba(170, 184, 255, 0.6); }
+.cine-numbers.corner { inset: auto; right: 4vw; top: 14vh; align-items: flex-end; gap: 10px; }
+.cine-numbers.corner .grid { gap: 6px 22px; padding: 10px 18px; background: rgba(6, 10, 20, 0.45); backdrop-filter: blur(4px); }
+.cine-numbers.corner .n { font-size: clamp(20px, 2.4vw, 32px); }
+.cine-numbers.corner .kicker { font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--ink-2); }
+@media (max-width: 700px) { .cine-numbers.corner { right: 16px; top: 12vh; } }
+.cine-prompt { position: fixed; left: 50%; bottom: 18vh; transform: translateX(-50%); z-index: 9; pointer-events: auto; cursor: pointer; padding: 10px 18px; border-radius: 999px; background: rgba(6, 10, 20, 0.6); border: 1px solid rgba(89, 225, 255, 0.35); color: var(--ink); font-size: 15px; letter-spacing: 0.04em; animation: cine-prompt-pulse 2.2s ease-in-out infinite; }
+.cine-prompt .kbd { font-family: var(--mono); font-size: 12px; border: 1px solid currentColor; border-radius: 4px; padding: 1px 6px; margin: 0 2px; }
+@keyframes cine-prompt-pulse { 0%, 100% { box-shadow: 0 0 0 rgba(89, 225, 255, 0); } 50% { box-shadow: 0 0 22px rgba(89, 225, 255, 0.35); } }
 .cine-stamp { top: auto; bottom: auto; inset: auto; left: 28px; top: 13vh; font-family: var(--display); font-size: 12px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--ink-2); opacity: 0; transition: opacity 0.7s; }
 .cine-stamp.on { opacity: 1; }
 
@@ -207,7 +215,7 @@
 .brief .card-body p, .brief .card-body li { font-size: 16.5px; line-height: 1.6; color: var(--ink-2); }
 .brief.card-inshort, .brief.card-why, .brief.card-numpy, .brief.card-catchup { left: 50%; top: 50%; transform: translate(-50%, -55%); width: min(640px, calc(100vw - 40px)); max-height: calc(100vh - 140px); overflow-y: auto; }
 .brief.card-inshort { border-color: rgba(89, 225, 255, 0.35); }
-.brief.sayit { right: 24px; top: 24px; bottom: 96px; width: min(560px, calc(100vw - 48px)); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.brief.sayit { right: 24px; top: 74px; bottom: 96px; width: min(560px, calc(100vw - 48px)); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
 .sayit-ask { font-size: 17px; line-height: 1.5; font-weight: 500; }
 .slot { display: flex; flex-direction: column; gap: 4px; }
 .slot-label { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
@@ -227,7 +235,7 @@
 .law-status p { margin: 4px 0; }
 .law-reason { display: flex; flex-direction: column; gap: 8px; }
 .law-reason .choice-cards { grid-template-columns: 1fr; }
-.brief.compare { left: 50%; top: 24px; bottom: 96px; transform: translateX(-50%); width: min(1100px, calc(100vw - 48px)); overflow-y: auto; }
+.brief.compare { left: 50%; top: 84px; bottom: 96px; transform: translateX(-50%); width: min(1100px, calc(100vw - 48px)); overflow-y: auto; }
 .cmp-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
 .cmp-mine, .cmp-ilse { display: flex; flex-direction: column; gap: 10px; }
 .cmp-page p, .cmp-page li { font-size: 15.5px; line-height: 1.6; color: var(--ink-2); }

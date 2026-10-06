@@ -1,11 +1,12 @@
-// Prologue: "Where did everything go?" The first pulse moves every buoy at once. The player checks
-// three things with their own hands: straight lines stay straight, even spacing stays even, and one
-// point does not move. Nothing is named yet (linearity is answered in the transformations act).
-import { Vector3 } from 'three';
+// Prologue: "Where did everything go?" (GDD §6.2). Ilse's recording and her nine numbers, the
+// arrival, the lattice of light, the first burn, the first pulse (the routine pulse T, animated as
+// P R(θ) P⁻¹ so the area never changes on the way), and two checks the player builds: straight lines
+// stay straight and even spacing stays even; one point does not move. Nothing is named yet.
+import { Group, Matrix4, Vector3, type Object3D } from 'three';
 import type { ChapterDef, Game, PuzzleDef, V3 } from '../../../game/types';
 import { BuoyField } from '../../../gfx/buoys';
 import { Arrow } from '../../../gfx/arrow';
-import { Dot } from '../../../gfx/markers';
+import { Dot, Pad, glowSprite } from '../../../gfx/markers';
 import { FatLine, FatSegments } from '../../../gfx/lines';
 import { C } from '../../../core/theme';
 import { animate, ease, wait } from '../../../core/tween';
@@ -13,119 +14,83 @@ import { sfx } from '../../../audio/sfx';
 import { music } from '../../../audio/music';
 import { fadeBlack, letterbox, NumberBoard, stamp, titleCard } from '../../../kit/cine';
 import { makeAnchor, makeLantern } from '../../common/set';
+import { loadModel, type Ship } from '../../../gfx/models';
+import { BurnChain } from '../../../kit/flight';
 import { near } from '../../../kit/handle';
-import { S, PULSE0 } from './script';
-import type { Ship } from '../../../gfx/models';
 import { pin } from '../../../game/caseboard';
+import { h } from '../../../ui/ui';
+import { T, Tpartial, PROLOGUE_WHITE, PROLOGUE_CYAN } from '../../truth';
+import type { Mat } from '../../../math/la';
+import { GAME_TITLE } from '../../meta';
+import { S } from './script';
 
+const WHITE = '#e8f1ff';
 const CYAN = '#59e1ff';
-const ORANGE = C.orange;
-/** Reference buoys (positions before the pulse). */
-const LINE3: V3[] = [[1, -1, 0], [2, 1, 0], [3, 3, 0]];
-const EVEN4: V3[] = [[-3, -1, 0], [-2, 0, 0], [-1, 1, 0], [0, 2, 0]];
 const SHIP0: V3 = [-4, -3, 0];
-const apply = (M: number[][], p: V3): V3 => [M[0][0] * p[0] + M[0][1] * p[1], M[1][0] * p[0] + M[1][1] * p[1], p[2]];
+const apply = (M: Mat, p: number[]): V3 => [M[0][0] * p[0] + M[0][1] * p[1], M[1][0] * p[0] + M[1][1] * p[1], 0];
+const W0 = PROLOGUE_WHITE.map((p) => [p[0], p[1], 0] as V3);
+const C0 = PROLOGUE_CYAN.map((p) => [p[0], p[1], 0] as V3);
+/** The routine pulse in 3-D at angle θ (z untouched): P R(θ) P⁻¹. */
+const pulse3 = (theta: number): Matrix4 => {
+  const M = Tpartial(theta);
+  return new Matrix4().set(M[0][0], M[0][1], 0, 0, M[1][0], M[1][1], 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+};
 
-// ------------------------------------------------------------------ the set (shared by the cinematic beats)
+// ------------------------------------------------------------------ the set shared by the cinematic beats
 
-interface Set0 { buoys: BuoyField; ship: Ship; anchor: Promise<unknown> }
+interface Set0 { buoys: BuoyField; ship: Ship; lamp: Object3D }
 let set: Set0 | null = null;
+
+function markRefs(b: BuoyField): void {
+  b.highlight(W0.map((p) => b.indexOf(p)), WHITE, 0.9);
+  b.highlight(C0.map((p) => b.indexOf(p)), CYAN);
+}
 
 function ensureSet(g: Game, pulsed: boolean): Set0 {
   if (set && set.buoys.object.parent === g.stage.world) return set;
-  const buoys = new BuoyField(g.stage, { extent: 8 });
+  const buoys = new BuoyField(g.stage, { extent: 16 });
   g.stage.world.add(buoys.object);
   const ship = makeLantern(g.stage, 0.16);
   g.stage.world.add(ship.object);
-  ship.object.position.set(...(pulsed ? apply(PULSE0, SHIP0) : SHIP0));
+  ship.object.position.set(...(pulsed ? apply(T, SHIP0) : SHIP0));
   ship.object.position.z = 0.3;
   ship.face([1, 0.75, 0]);
-  const anchor = makeAnchor(g.stage, 0.45);
-  if (pulsed) buoys.set(PULSE0);
+  void makeAnchor(g.stage, 0.45);
+  // Ilse's lamp: a faint warm light at the one point no pulse can move
+  const lamp = glowSprite('#ffe9c4', 0.9, 0.35);
+  lamp.position.set(0, 0, 0.05);
+  g.stage.world.add(lamp);
+  if (pulsed) buoys.set(T);
   markRefs(buoys);
-  set = { buoys, ship, anchor };
+  set = { buoys, ship, lamp };
   return set;
 }
 
-function markRefs(b: BuoyField): void {
-  b.highlight(LINE3.map((p) => b.indexOf(p)), CYAN);
-  b.highlight(EVEN4.map((p) => b.indexOf(p)), ORANGE);
-}
+// ------------------------------------------------------------------ c00-p1 First burn
 
-// ------------------------------------------------------------------ puzzles
-
-const linePuzzle: PuzzleDef = {
-  id: 'c00-line',
-  title: 'Are the three still in a line?',
-  goal: 'Lay the straight ruler through all three **cyan** buoys. Drag its two ends; they snap to buoys.',
-  predict: {
-    prompt: 'The pulse moved every buoy. Are the three cyan buoys still on one straight line?',
-    choices: [{ id: 'yes', text: 'Yes, still in a line' }, { id: 'bent', text: 'No, the line bent' }, { id: 'depends', text: 'Only if the pulse was small' }],
-    answer: 'yes',
-    reveal: 'They are still on one line. The pulse moved every buoy, but **in a way that keeps straight lines straight**.',
-  },
-  hints: ['A ruler through two of them is easy. The question is whether the third one is on it too.', 'Put the ends of the ruler on the two outer cyan buoys.'],
-  par: 2,
-  onWin: S.lineWin,
+const firstBurn: PuzzleDef = {
+  id: 'c00-p1',
+  title: 'First burn',
+  goal: 'Drag the **green** arrow onto the beacon. **Fire**.',
+  hints: ['The beacon is 3 steps across and 2 steps up from the ship.', 'Put the arrow tip on the ring, then Fire.'],
+  par: 1,
+  onWin: S.burnWin,
   setup(p) {
-    p.g.stage.view2D({ center: [2, 0], height: 9, ms: 0 });
-    const grid = p.grid({ main: 0, base: 0.12, axis: 0 });
-    void grid;
-    const b = new BuoyField(p.g.stage, { extent: 8 });
-    b.set(PULSE0);
-    markRefs(b);
-    b.highlight(EVEN4.map((q) => b.indexOf(q)), null);
-    p.add(b);
-    const targets = LINE3.map((q) => apply(PULSE0, q));
-    // the ruler: two draggable ends that snap to the nearest buoy
-    const ends: V3[] = [[-1, -3, 0], [-2, 2, 0]].map((q) => apply(PULSE0, q as V3));
-    const ruler = new FatLine(p.g.stage, [[0, 0, 0], [1, 0, 0]], { color: '#e8f1ff', width: 2.5, intensity: 1.4, opacity: 0.9 });
-    const dots = ends.map((e) => new Dot(e, { color: '#e8f1ff', size: 0.11 }));
-    p.add(ruler.object, ...dots);
-    p.onDispose(() => ruler.dispose());
-    const draw = () => {
-      const a = new Vector3(...ends[0]), c = new Vector3(...ends[1]);
-      const d = c.clone().sub(a).normalize().multiplyScalar(30);
-      ruler.setPoints([[a.x - d.x, a.y - d.y, 0.02], [c.x + d.x, c.y + d.y, 0.02]]);
-    };
-    const check = () => {
-      const a = new Vector3(...ends[0]), c = new Vector3(...ends[1]);
-      if (a.distanceTo(c) < 0.5) return false;
-      const dir = c.clone().sub(a).normalize();
-      return targets.every((t) => {
-        const v = new Vector3(...t).sub(a);
-        return Math.abs(v.x * dir.y - v.y * dir.x) < 0.08;
-      });
-    };
-    draw();
-    dots.forEach((dot, k) => {
-      p.g.drag.add({
-        target: dot.mesh, getPos: () => new Vector3(...ends[k]),
-        constrain: (q) => {
-          const i = b.pick(...screenOf(p.g, q), 40);
-          return i >= 0 ? new Vector3(...b.pos(i)) : q;
-        },
-        onMove: (q) => { ends[k] = [q.x, q.y, 0]; dot.at(ends[k]); draw(); },
-        onEnd: () => { p.move(); sfx.snap(); if (check()) { ruler.setColor(CYAN, 1.8); p.win(); } },
-      });
+    p.grid();
+    const pad = new Pad(p.g.stage, [3, 2, 0], { label: 'beacon' });
+    p.add(pad);
+    const chain = new BurnChain(p, {
+      free: [[1, 0, 0]],
+      onArrive: (end) => { if (near(end, [3, 2, 0])) { void pad.hit(); p.win(); return 'win'; } return 'miss'; },
     });
     return {
-      async showMe() {
-        const from = ends.map((e) => [...e] as V3);
-        await animate(900, (k) => {
-          for (let j = 0; j < 2; j++) {
-            const to = targets[j === 0 ? 0 : 2];
-            ends[j] = [from[j][0] + (to[0] - from[j][0]) * k, from[j][1] + (to[1] - from[j][1]) * k, 0];
-            dots[j].at(ends[j]);
-          }
-          draw();
-        }, ease.inOut);
-        ruler.setColor(CYAN, 1.8);
-        p.win();
-      },
+      async showMe() { await chain.moveBurn(0, [3, 2, 0]); await chain.fire(); },
+      async wrong() { chain.setBurn(0, [2, 3, 0]); await chain.fire(); },
     };
   },
 };
+
+// ------------------------------------------------------------------ c00-p2 Call it, then check
 
 /** Client coordinates of a world point (for buoy picking during a drag). */
 function screenOf(g: Game, q: Vector3): [number, number] {
@@ -134,23 +99,62 @@ function screenOf(g: Game, q: Vector3): [number, number] {
   return [s.x + r.left, s.y + r.top];
 }
 
-const evenPuzzle: PuzzleDef = {
-  id: 'c00-even',
-  title: 'Are the four still evenly spaced?',
-  goal: 'Drag the tip of the step arrow from the first **orange** buoy to the second. The game repeats your step twice.',
-  hints: ['The step arrow starts on the first orange buoy. Put its tip on the next orange buoy along.', 'Watch where the two copies of your step land.'],
-  par: 1,
-  onWin: S.evenWin,
+/** Pure check: does the line through a and b pass within tol of every target? */
+export const lineThrough = (a: V3, b: V3, targets: V3[], tol = 0.08) => {
+  const dx = b[0] - a[0], dy = b[1] - a[1];
+  const L = Math.hypot(dx, dy);
+  if (L < 0.5) return false;
+  return targets.every((t) => Math.abs((t[0] - a[0]) * dy - (t[1] - a[1]) * dx) / L < tol);
+};
+
+const checkPuzzle: PuzzleDef = {
+  id: 'c00-p2',
+  title: 'Are they still in a line? Still evenly spaced?',
+  goal: 'Lay the **ruler** through the three white buoys (drag its ends; they snap to buoys). Then lay the **step** arrow from the first cyan buoy to the next one.',
+  subgoals: ['The white buoys: one straight line', 'The cyan buoys: one step fits every gap'],
+  predict: {
+    prompt: 'The pulse moved every buoy. The three white buoys were in a straight line. Are they still?',
+    choices: [{ id: 'line', text: 'Still in one straight line' }, { id: 'curve', text: 'Bent into a curve' }, { id: 'scatter', text: 'Scattered' }],
+    answer: 'line',
+    reveal: 'They are still in one straight line, and the cyan buoys are still evenly spaced. The pulse moved every point, but **in a way that keeps straight lines straight and even spacing even**.',
+  },
+  hints: ['Put the ruler\'s ends on the two outer white buoys.', 'The step arrow starts on the first cyan buoy. Put its tip on the next cyan buoy along.'],
+  par: 3,
+  onWin: S.lineWin,
   setup(p) {
-    p.g.stage.view2D({ center: [-1.5, 1], height: 8, ms: 0 });
-    p.grid({ main: 0, base: 0.12, axis: 0 });
-    const b = new BuoyField(p.g.stage, { extent: 8 });
-    b.set(PULSE0);
-    b.highlight(EVEN4.map((q) => b.indexOf(q)), ORANGE);
+    p.g.stage.view2D({ center: [-0.5, 0.5], height: 11, ms: 0 });
+    p.grid({ main: 0, base: 0.1, axis: 0 });
+    const b = new BuoyField(p.g.stage, { extent: 12 });
+    b.set(T);
+    markRefs(b);
     p.add(b);
-    const pts = EVEN4.map((q) => apply(PULSE0, q));
-    const step = new Arrow(pts[0], [pts[0][0] + 0.6, pts[0][1] - 0.8, 0], { color: '#e8f1ff', handle: true, label: 'step' });
-    const copies = [new Arrow(pts[0], pts[0], { color: ORANGE, opacity: 0.75, width: 0.035 }), new Arrow(pts[0], pts[0], { color: ORANGE, opacity: 0.75, width: 0.035 })];
+    const whites = W0.map((q) => apply(T, q));
+    const cyans = C0.map((q) => apply(T, q));
+    const flags = [false, false];
+    const tick = (i: number) => { if (!flags[i]) { flags[i] = true; p.subgoal(i); } if (flags[0] && flags[1]) p.win(); };
+    // the ruler
+    const ends: V3[] = [apply(T, [-2, -2]), apply(T, [-1, 2])];
+    const ruler = new FatLine(p.g.stage, [[0, 0, 0], [1, 0, 0]], { color: WHITE, width: 2.5, intensity: 1.3, opacity: 0.85 });
+    const dots = ends.map((e) => new Dot(e, { color: WHITE, size: 0.11 }));
+    p.add(ruler.object, ...dots);
+    p.onDispose(() => ruler.dispose());
+    const draw = () => {
+      const a = new Vector3(...ends[0]), c = new Vector3(...ends[1]);
+      const d = c.clone().sub(a).normalize().multiplyScalar(40);
+      ruler.setPoints([[a.x - d.x, a.y - d.y, 0.02], [c.x + d.x, c.y + d.y, 0.02]]);
+    };
+    draw();
+    const snapToBuoy = (q: Vector3) => { const i = b.pick(...screenOf(p.g, q), 40); return i >= 0 ? new Vector3(...b.pos(i)) : q; };
+    dots.forEach((dot, k) => {
+      p.g.drag.add({
+        target: dot.mesh, getPos: () => new Vector3(...ends[k]), constrain: snapToBuoy,
+        onMove: (q) => { ends[k] = [q.x, q.y, 0]; dot.at(ends[k]); draw(); },
+        onEnd: () => { p.move(); sfx.snap(); if (lineThrough(ends[0], ends[1], whites)) { ruler.setColor(WHITE, 2); tick(0); } },
+      });
+    });
+    // the step arrow and its two copies
+    const step = new Arrow(cyans[0], [cyans[0][0] + 0.6, cyans[0][1] - 0.8, 0], { color: CYAN, handle: true, label: 'step' });
+    const copies = [0, 1, 2].map(() => new Arrow(cyans[0], cyans[0], { color: CYAN, opacity: 0.6, width: 0.035 }));
     p.add(step, ...copies);
     const relay = () => {
       const v = new Vector3().subVectors(step.to, step.from);
@@ -158,52 +162,86 @@ const evenPuzzle: PuzzleDef = {
       for (const c of copies) { const nx = at.clone().add(v); c.set(at, nx); at = nx; }
     };
     relay();
-    const done = () => near([step.to.x, step.to.y, 0], pts[1], 0.12);
     p.g.drag.add({
-      target: step.grab, getPos: () => step.to.clone(),
-      constrain: (q) => { const i = b.pick(...screenOf(p.g, q), 40); return i >= 0 ? new Vector3(...b.pos(i)) : q; },
+      target: step.grab, getPos: () => step.to.clone(), constrain: snapToBuoy,
       onMove: (q) => { step.setTo([q.x, q.y, 0]); relay(); sfx.tick(q.y); },
-      onEnd: () => { p.move(); if (done()) { copies.forEach((c) => void c.pulse()); p.win(); } },
+      onEnd: () => { p.move(); if (near([step.to.x, step.to.y, 0], cyans[1], 0.1)) { copies.slice(0, 2).forEach((c) => void c.pulse()); tick(1); } },
     });
     return {
-      async showMe() { await step.moveTo(pts[1], 900); relay(); copies.forEach((c) => void c.pulse()); p.win(); },
+      async showMe() {
+        const from = ends.map((e) => [...e] as V3);
+        await animate(800, (k) => {
+          for (let j = 0; j < 2; j++) {
+            const to = whites[j === 0 ? 0 : 2];
+            ends[j] = [from[j][0] + (to[0] - from[j][0]) * k, from[j][1] + (to[1] - from[j][1]) * k, 0];
+            dots[j].at(ends[j]);
+          }
+          draw();
+        }, ease.inOut);
+        tick(0);
+        await step.moveTo(cyans[1], 700);
+        relay();
+        tick(1);
+      },
+      wrong() {
+        // a ruler through only two of the three: not a win
+        ends[0] = whites[0]; ends[1] = apply(T, [0, 3]); draw();
+        if (lineThrough(ends[0], ends[1], whites)) tick(0);
+      },
     };
   },
 };
 
+// ------------------------------------------------------------------ c00-p3 What did not move?
+
 const stillPuzzle: PuzzleDef = {
-  id: 'c00-still',
+  id: 'c00-p3',
   title: 'What did not move?',
-  goal: 'The faint rings show where each buoy was before the pulse. Click the one buoy that is **still exactly where it was**.',
-  hints: ['Each thin line joins a buoy to where it was. Look for a buoy with no line at all.', 'Look at the middle, under the Anchor.'],
+  goal: 'Toggle **before / after**. Then click the one point that is exactly where it was.',
+  hints: ['Each thin line joins a buoy to where it was. Look for a buoy with no line at all.', 'Look at the middle, under the Anchor. There is a faint light there.'],
   par: 1,
   onWin: S.stillWin,
   setup(p) {
-    p.g.stage.view2D({ center: [0, 0], height: 9, ms: 0 });
+    p.g.stage.view2D({ center: [0, 0], height: 10, ms: 0 });
     p.grid({ main: 0, base: 0.1, axis: 0 });
-    const b = new BuoyField(p.g.stage, { extent: 6 });
-    b.set(PULSE0);
+    const b = new BuoyField(p.g.stage, { extent: 7 });
+    b.set(T);
     p.add(b);
-    const ghosts = new BuoyField(p.g.stage, { extent: 6, color: '#3a5a86', size: 0.035 });
+    const ghosts = new BuoyField(p.g.stage, { extent: 7, color: '#3a5a86', size: 0.035 });
     p.add(ghosts);
     const segs: [V3, V3][] = b.base.map((q, i) => [[q[0], q[1], -0.01], [...b.pos(i).slice(0, 2), -0.01] as V3]);
-    const lines = new FatSegments(p.g.stage, segs, { color: '#6f8fbf', width: 1, opacity: 0.45 });
-    p.add(lines.object);
-    p.onDispose(() => lines.dispose());
+    // each buoy's old spot joined to its new spot
+    const fs = new FatSegments(p.g.stage, segs, { color: '#6f8fbf', width: 1, opacity: 0.45 });
+    p.add(fs.object);
+    p.onDispose(() => fs.dispose());
+    const lamp = glowSprite('#ffe9c4', 0.8, 0.4);
+    lamp.position.set(0, 0, 0.05);
+    p.add(lamp);
+    // before / after toggle: animate the lattice back and forth (honest path: P R(θ) P⁻¹)
+    let after = true;
+    const toggle = h('button', { class: 'btn small', type: 'button' }, 'Show before');
+    toggle.addEventListener('click', async () => {
+      after = !after;
+      toggle.textContent = after ? 'Show before' : 'Show after';
+      sfx.whoosh(0.9);
+      const a0 = after ? 0 : Math.PI / 2, a1 = after ? Math.PI / 2 : 0;
+      await animate(900, (k) => b.set(Tpartial(a0 + (a1 - a0) * k)), ease.inOut);
+    });
+    p.dock().appendChild(toggle);
     const origin = b.indexOf([0, 0, 0]);
-    let wrong = 0;
+    let wrongCount = 0;
     const onClick = (e: PointerEvent) => {
       const i = b.pick(e.clientX, e.clientY, 22);
       if (i < 0 || p.won) return;
       p.move();
       if (i === origin) { b.highlight([i], CYAN); sfx.success(); p.win(); }
       else {
-        wrong++;
+        wrongCount++;
         b.highlight([i], C.orange, 0.6);
         sfx.miss();
         const was = b.base[i];
-        p.bark('lantern', `That buoy moved from (${was[0]}, ${was[1]}).`);
-        if (wrong === 3) p.bark('bram', 'Look for the one with no line from where it was.');
+        p.bark('lantern', `That buoy moved. It started at (${was[0]}, ${was[1]}).`);
+        if (wrongCount === 3) p.bark('bram', 'Look for the one with no line from where it was.');
       }
     };
     p.g.stage.renderer.domElement.addEventListener('pointerdown', onClick);
@@ -219,16 +257,34 @@ const stillPuzzle: PuzzleDef = {
 async function coldOpen(g: Game): Promise<void> {
   await fadeBlack(g, true, 10);
   g.mood('void');
-  void stamp(g, 'Survey tug LANTERN · edge of the region called the Fold', 4200);
-  await wait(1200);
+  void stamp(g, 'Colony ark MERIDIAN · three years ago', 4200);
+  // the ark in nebula light; a pulse front sweeps across it and every box frame leans the same way
+  const ark = await loadModel('meridian');
+  const holder = new Group();
+  holder.matrixAutoUpdate = false;
+  if (ark) { ark.rotation.x = Math.PI / 2; holder.add(ark); }
+  g.stage.world.add(holder);
+  void g.stage.view3D({ target: [0, 0, 0], distance: 85, azimuth: -120, elevation: 16, orbit: false, ms: 0 });
+  await fadeBlack(g, false, 1800);
   const board = new NumberBoard(g, 3, 3, { caption: 'Distress call · colony ark Meridian' });
-  const nums = ['1', '½', '0', '−½', '1', '0', '0', '0', '1'];
+  board.el.classList.add('corner');
+  // R by columns (each spire is one column): cells in reading order are row-major
+  const cells = ['0', '−1', '0', '1', '0', '0', '0', '0', '1'];
+  const byColumn = [0, 3, 6, 1, 4, 7, 2, 5, 8];
   await g.say(S.call, {
-    onLine: (_l, i) => {
-      if (i === 3) nums.forEach((n, k) => window.setTimeout(() => { board.set(k, n); sfx.tick(k % 3); }, 500 + k * 620));
+    onLine: async (_l, i) => {
+      if (i === 3) byColumn.forEach((cell, k) => window.setTimeout(() => { board.set(cell, cells[cell]); sfx.tick(k % 3); }, 400 + k * 520));
+      if (i === 2) {
+        void g.stage.shockwave([0, 0, 0], 2400, 0.8);
+        sfx.whoosh(2.4);
+        void animate(2600, (k) => { holder.matrix.copy(pulse3((k * Math.PI) / 2)); holder.matrixWorldNeedsUpdate = true; }, ease.inOut);
+      }
     },
   });
   await board.hide();
+  await fadeBlack(g, true, 900);
+  holder.removeFromParent();
+  await titleCard(g, '', GAME_TITLE, 2800);
 }
 
 async function arrive(g: Game): Promise<void> {
@@ -243,7 +299,7 @@ async function arrive(g: Game): Promise<void> {
   await fadeBlack(g, false, 1600);
   await letterbox(g, true, 600);
   void titleCard(g, 'Prologue', 'Where did everything go?', 3600);
-  const fly = s.ship.flyTo(SHIP0.map((x, i) => (i === 2 ? 0.3 : x)) as V3, 7000);
+  const fly = s.ship.flyTo([SHIP0[0], SHIP0[1], 0.3], 7000);
   void g.stage.view3D({ target: [-2, -1.5, 0.5], distance: 13, azimuth: -125, elevation: 20, orbit: false, ms: 7000 });
   await g.say(S.arrive);
   await fly;
@@ -254,18 +310,25 @@ async function arrive(g: Game): Promise<void> {
 async function seed(g: Game): Promise<void> {
   const s = ensureSet(g, false);
   s.buoys.set([[1, 0], [0, 1]]);
+  s.buoys.object.visible = false;
+  s.buoys.clearHighlights();
+  // the player seeds the lattice (Space), or it seeds itself after a while
+  const prompt = h('div', { class: 'cine-prompt' }, 'Press ', h('span', { class: 'kbd' }, 'Space'), ' to seed the lattice');
+  g.ui.scene.appendChild(prompt);
+  await new Promise<void>((resolve) => {
+    const go = (e?: KeyboardEvent) => { if (e && e.key !== ' ') return; e?.preventDefault(); document.removeEventListener('keydown', go); window.clearTimeout(t); resolve(); };
+    const t = window.setTimeout(() => go(), g.headless ? 50 : 9000);
+    document.addEventListener('keydown', go);
+    prompt.addEventListener('click', () => go());
+  });
+  prompt.remove();
   s.buoys.object.visible = true;
   s.buoys.object.scale.setScalar(0.001);
-  s.buoys.clearHighlights();
-  await g.say([S.seed[0]], {
-    onLine: async () => {
-      sfx.warp();
-      void g.stage.shockwave([SHIP0[0], SHIP0[1], 0], 1800, 0.5);
-      await animate(1800, (k) => s.buoys.object.scale.setScalar(Math.max(0.001, k)), ease.out);
-    },
-  });
-  await g.stage.view2D({ center: [0, 0], height: 15, ms: 2200 });
-  await g.say(S.seed.slice(1, 2));
+  sfx.warp();
+  void g.stage.shockwave([SHIP0[0], SHIP0[1], 0], 1800, 0.5);
+  void g.stage.view2D({ center: [0, 0], height: 15, ms: 2600 });
+  await animate(2200, (k) => s.buoys.object.scale.setScalar(Math.max(0.001, k)), ease.out);
+  await g.say(S.seed.slice(0, 2));
   markRefs(s.buoys);
   sfx.discover();
   await g.say(S.seed.slice(2));
@@ -273,6 +336,7 @@ async function seed(g: Game): Promise<void> {
 
 async function pulse(g: Game): Promise<void> {
   const s = ensureSet(g, false);
+  void g.stage.view2D({ center: [0, 0], height: 15, ms: 600 });
   s.buoys.set([[1, 0], [0, 1]]);
   s.ship.object.position.set(SHIP0[0], SHIP0[1], 0.3);
   music.stop(0.6);
@@ -281,18 +345,18 @@ async function pulse(g: Game): Promise<void> {
   sfx.collapse();
   g.stage.flash(0.25, 500);
   g.stage.nudge(0.35);
-  void g.stage.shockwave([0, 0, 0], 2200, 1.1);
-  const shipTo = apply(PULSE0, SHIP0);
-  const a = s.ship.object.position.clone();
-  await Promise.all([
-    s.buoys.to(PULSE0, 1900, 'linear'),
-    animate(1900, (k) => {
-      s.ship.object.position.set(a.x + (shipTo[0] - a.x) * k, a.y + (shipTo[1] - a.y) * k, 0.3);
-      s.ship.object.rotation.z += 0.02 * (1 - k);
-    }, ease.inOut),
-  ]);
+  void g.stage.shockwave([0, 0, 0], 2400, 1.1);
+  const start = s.ship.object.position.clone();
+  await animate(2200, (k) => {
+    const M = Tpartial((k * Math.PI) / 2);
+    s.buoys.set(M);
+    const q = apply(M, [start.x, start.y]);
+    s.ship.object.position.set(q[0], q[1], 0.3);
+    s.ship.object.rotation.z += 0.03 * (1 - k);
+  }, ease.inOut);
   sfx.alarm();
-  s.ship.setThrust(0.05);
+  // thrusters two and four go dark
+  s.ship.exhausts.forEach((e, i) => { e.power = i % 2 ? 0 : 0.15; });
   await wait(900);
   g.mood('tension');
 }
@@ -300,10 +364,13 @@ async function pulse(g: Game): Promise<void> {
 async function closing(g: Game): Promise<void> {
   const s = ensureSet(g, true);
   void g.stage.view2D({ center: [0, 0], height: 15, ms: 1200 });
-  s.buoys.set(PULSE0);
+  s.buoys.set(T);
   await g.say(S.close.slice(0, 4));
   sfx.discover();
-  if (pin('linear', 'Why did everything move except the point under the Anchor? Why did straight lines stay straight?', 'c00')) g.toast('Why did everything move except the point under the Anchor?', 'Case board');
+  pin('linear', 'Why did everything move except the point under the Anchor?', 'c00');
+  pin('nine', 'What do Ilse’s nine numbers mean?', 'c00');
+  pin('light', 'What is the light at the point that never moves?', 'c00');
+  g.toast('Three questions pinned', 'Case board');
   await g.say(S.close.slice(4));
 }
 
@@ -316,15 +383,16 @@ const ch: ChapterDef = {
   nodes: ['N12'],
   palette: 'void',
   music: 'void',
+  inShort: 'Something moved every point at once. Lines stayed straight, even spacing stayed even, and one point did not move at all.',
   beats: [
     { kind: 'cinematic', id: 'call', run: coldOpen },
     { kind: 'cinematic', id: 'arrive', run: arrive },
     { kind: 'cinematic', id: 'seed', run: seed },
+    { kind: 'puzzle', id: 'p1', puzzle: firstBurn },
     { kind: 'cinematic', id: 'pulse', run: pulse },
     { kind: 'scene', id: 'after', lines: S.after, view: '2d', setup: (g) => { ensureSet(g, true); } },
-    { kind: 'puzzle', id: 'line', puzzle: linePuzzle },
-    { kind: 'puzzle', id: 'even', puzzle: evenPuzzle },
-    { kind: 'puzzle', id: 'still', puzzle: stillPuzzle },
+    { kind: 'puzzle', id: 'p2', puzzle: checkPuzzle },
+    { kind: 'puzzle', id: 'p3', puzzle: stillPuzzle },
     { kind: 'scene', id: 'close', lines: [], setup: closing },
   ],
   script: S,

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {
   arcFrame, arcPts, bestLine, bisector, blob2, eigenDirs2, ellipsePts, labelSpot, lineAngleDist, lineThrough, noisyLine,
   parallelSin, perpTo, planeSplit, principal, rayPlane, residuals, rightAnglePts, rng, shadowFoot, shadowLength,
-  shadowsOnLine, spreadAlong, ssr, stretchAlong, svdPath, svdRot2, wrapAngle, len3, sub3, rad,
+  shadowsOnLine, spreadAlong, ssr, stretchAlong, svdPath, svdRot2, wrapAngle, len3, sub3, rad, markArc,
 } from '../../site/src/game/kit/geom-math.ts';
 import { det, dot, matMul, matVec, meq, rot2 } from '../../site/src/game/math/la.ts';
 
@@ -50,6 +50,21 @@ test('label spot avoids arrow shafts', () => {
   // another arrow continues past the tip along the same line: go to the side
   const s = labelSpot([1, 0, 0], [1, 0, 0], [[[0, 0], [1, 0]], [[0, 0], [3, 0]]]);
   assert.ok(Math.abs(s[1]) > 0.3, `label moved off the line (${s})`);
+});
+
+test('marking swept angle bins never skips a bin', () => {
+  const full = (a0: number, d: number, n = 360) => { const b = new Uint8Array(n); markArc(b, a0, d); return b.reduce((s, x) => s + x, 0); };
+  // a full turn from awkward starts, both ways, and exact 2π steps (rounding used to skip bins)
+  for (const a0 of [0, 0.349, Math.PI / 9, -2.5, 100]) {
+    assert.equal(full(a0, 2 * Math.PI), 360);
+    assert.equal(full(a0, -2 * Math.PI), 360);
+    assert.equal(full(a0, 4 * Math.PI, 97), 97);
+  }
+  // a quarter turn marks about a quarter of the bins, and reports a change only once
+  const b = new Uint8Array(360);
+  assert.equal(markArc(b, 0, Math.PI / 2), true);
+  assert.ok(Math.abs(b.reduce((s, x) => s + x, 0) - 91) <= 1);
+  assert.equal(markArc(b, 0.1, 0.5), false);
 });
 
 test('eigen-directions of 2×2 matrices', () => {
