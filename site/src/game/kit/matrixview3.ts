@@ -43,7 +43,7 @@ export class MatrixView3 {
       p.add(this.box);
     }
     const colors = [C.v, C.w, C.u];
-    const labels = ['$A\\hat\\imath$', '$A\\hat\\jmath$', '$A\\hat k$'];
+    const labels = ['$A\\mathbf e_1$', '$A\\mathbf e_2$', '$A\\mathbf e_3$'];
     this.cols = [0, 1, 2].map((j) => {
       const label = o.labels === false ? undefined : labels[j];
       if (o.draggable) {

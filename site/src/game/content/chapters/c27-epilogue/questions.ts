@@ -29,8 +29,8 @@ export const q1: DoubtDef = {
   setup(p) {
     p.grid();
     p.g.stage.view2D({ center: [1, 1], height: 10, ms: 0 });
-    const a = new VectorHandle(p, { to: [2, 0, 0], color: C.v, label: '$A\\hat\\imath$', countMoves: false });
-    const b = new VectorHandle(p, { to: [1, 2, 0], color: C.w, label: '$A\\hat\\jmath$', countMoves: false });
+    const a = new VectorHandle(p, { to: [2, 0, 0], color: C.v, label: '$A\\mathbf e_1$', countMoves: false });
+    const b = new VectorHandle(p, { to: [1, 2, 0], color: C.w, label: '$A\\mathbf e_2$', countMoves: false });
     const par = new Parallelogram(p.g.stage, [2, 0, 0], [1, 2, 0], { color: C.result, opacity: 0.16 });
     const lost = new Arrow([0, 0, 0], [1, 0, 0], { color: C.violet, label: 'lands on 0', width: 0.04 });
     p.add(par, lost);
@@ -161,8 +161,8 @@ export const q4: DoubtDef = {
   setup(p) {
     p.grid();
     p.g.stage.view2D({ center: [1, 1.5], height: 11, ms: 0 });
-    const c1 = new VectorHandle(p, { to: [3, 4, 0], color: C.v, label: '$A\\hat\\imath$', countMoves: false });
-    const c2 = new VectorHandle(p, { to: [0, 5, 0], color: C.w, label: '$A\\hat\\jmath$', countMoves: false });
+    const c1 = new VectorHandle(p, { to: [3, 4, 0], color: C.v, label: '$A\\mathbf e_1$', countMoves: false });
+    const c2 = new VectorHandle(p, { to: [0, 5, 0], color: C.w, label: '$A\\mathbf e_2$', countMoves: false });
     const v1 = new Arrow([0, 0, 0], [1, 0, 0], { color: C.result, opacity: 0.45, width: 0.03, label: '$\\mathbf v_1$' });
     const v2 = new Arrow([0, 0, 0], [0, 1, 0], { color: C.u, opacity: 0.45, width: 0.03, label: '$\\mathbf v_2$' });
     const a1 = new Arrow([0, 0, 0], [1, 0, 0], { color: C.result, label: '$A\\mathbf v_1$' });

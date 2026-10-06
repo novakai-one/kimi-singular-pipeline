@@ -167,9 +167,17 @@ self.onmessage = (e) => {
 
 interface TestResult { name: string; ok: boolean; got: string; want: string }
 
+/** Every library function a build may reach: its `uses`, their `uses`, and so on (lincomb needs scale and add). */
+export function usesClosure(def: BuildDef): string[] {
+  const seen = new Set<string>();
+  const visit = (fn: string) => { if (seen.has(fn) || fn === def.fn) return; seen.add(fn); for (const u of DEFS.get(fn)?.uses ?? []) visit(u); };
+  for (const u of def.uses ?? []) visit(u);
+  return [...seen];
+}
+
 export async function runTests(def: BuildDef, code: string, timeoutMs = 2000, tests = def.tests): Promise<{ error?: string; results?: TestResult[]; stdout?: string }> {
   if ((def.lang ?? 'python') === 'python') {
-    const lib = (def.uses ?? []).map((u) => libSource(u)).filter(Boolean).join('\n\n');
+    const lib = usesClosure(def).map((u) => libSource(u)).filter(Boolean).join('\n\n');
     return runPythonTests(lib, code, def.fn, tests, Math.max(timeoutMs, 4000));
   }
   return new Promise((resolve) => {
@@ -183,7 +191,7 @@ export async function runTests(def: BuildDef, code: string, timeoutMs = 2000, te
     const timer = window.setTimeout(() => { w.terminate(); resolve({ error: `Your code ran for more than ${timeoutMs / 1000} s. Is there a loop that never ends?` }); }, timeoutMs);
     w.onmessage = (e) => { window.clearTimeout(timer); w.terminate(); resolve(e.data); };
     w.onerror = (e) => { window.clearTimeout(timer); w.terminate(); resolve({ error: e.message }); };
-    const libSrc = (def.uses ?? []).map((u) => libSource(u)).filter(Boolean).join('\n');
+    const libSrc = usesClosure(def).map((u) => libSource(u)).filter(Boolean).join('\n');
     w.postMessage({ libSrc, code, fn: def.fn, tests });
   });
 }

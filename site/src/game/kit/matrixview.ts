@@ -41,8 +41,8 @@ export class MatrixView {
       this.area = new Parallelogram(p.g.stage, [this.M[0][0], this.M[1][0], 0], [this.M[0][1], this.M[1][1], 0], { color: C.result, opacity: 0.18 });
       p.add(this.area);
     }
-    const l1 = o.labels === false ? undefined : '$A\\hat\\imath$';
-    const l2 = o.labels === false ? undefined : '$A\\hat\\jmath$';
+    const l1 = o.labels === false ? undefined : '$A\\mathbf e_1$';
+    const l2 = o.labels === false ? undefined : '$A\\mathbf e_2$';
     if (o.draggable) {
       const mk = (j: 0 | 1, color: string, label?: string) => new VectorHandle(p, {
         to: [this.M[0][j], this.M[1][j], 0], color, label, snap: o.snap, planar: true, limit: 9,

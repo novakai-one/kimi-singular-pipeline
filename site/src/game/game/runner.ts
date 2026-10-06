@@ -131,7 +131,19 @@ export class Runner {
     return { right, total };
   }
 
+  private running = 0;
+  /** Resolves once no chapter run is in flight (an aborted run unwinds at its next guard). */
+  async idle(maxMs = 15000): Promise<void> {
+    const t0 = performance.now();
+    while (this.running > 0 && performance.now() - t0 < maxMs) await new Promise((r) => setTimeout(r, 20));
+  }
+
   async playChapter(ch: ChapterDef, start = 0): Promise<'done' | 'aborted'> {
+    this.running++;
+    try { return await this.playChapterInner(ch, start); } finally { this.running--; }
+  }
+
+  private async playChapterInner(ch: ChapterDef, start = 0): Promise<'done' | 'aborted'> {
     this.aborted = false;
     this.chapter = ch;
     this.hud.setChapter(chapterKicker(ch), ch.title);

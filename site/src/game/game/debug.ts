@@ -56,6 +56,7 @@ export function installDebug(app: App): void {
       const b = ch.beats[beat];
       if (b.kind !== 'puzzle') throw new Error(`beat ${beat} of ${id} is ${b.kind}`);
       app.runner.abort();
+      await app.runner.idle(); // let an interrupted mount unwind first, or its widgets would double up
       void app.play(ch, beat);
       // up to a minute: on a loaded software-rendered machine a puzzle can take a while to mount
       const t0 = performance.now();

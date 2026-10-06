@@ -1,8 +1,9 @@
 // Wording check for the game (BUILD_BRIEF.md §2a): every string the player reads, from the
-// running game's chapter data. Needs the dev server on :5173.   node tests/game-wording.mjs [chapterId]
+// running game's chapter data. Needs the dev server on :5173.   node tests/game-wording.mjs [chapterId …]
 import { chromium } from 'playwright';
 import { readFileSync, existsSync } from 'node:fs';
-const only = process.argv[2];
+const only = process.argv.slice(2);
+const inScope = (where) => !only.length || only.some((o) => where.startsWith(o));
 const RULES = [
   ['banned word', /\b(simply|just|obviously|clearly|trivially|trivial)\b/gi],
   ['banned phrase', /\b(it'?s easy to see|easy to see|recall that|note that|it turns out|as you know)\b/gi],
@@ -28,7 +29,7 @@ const texts = await p.evaluate(() => window.__game.texts());
 await b.close();
 const hits = [];
 for (const { where, text } of texts) {
-  if (only && !where.startsWith(only)) continue;
+  if (!inScope(where)) continue;
   // ignore maths and code spans
   const prose = text.replace(/\$[^$]*\$/g, ' ').replace(/`[^`]*`/g, ' ');
   for (const [rule, re] of RULES) {
@@ -51,7 +52,7 @@ for (const t of terms) {
   const re = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}s?\\b`, 'i');
   for (const x of texts) {
     if (x.term || x.order >= t.order) continue;
-    if (only && !x.where.startsWith(only)) continue;
+    if (!inScope(x.where)) continue;
     const prose = x.text.replace(/\$[^$]*\$/g, ' ');
     const m = prose.match(re);
     if (m && !termAllow.some((a) => a.term.toLowerCase() === word && (!a.where || x.where.includes(a.where)))) {
@@ -60,5 +61,5 @@ for (const t of terms) {
   }
 }
 for (const h of hits) console.log(`${h.where}  [${h.rule}] "${h.match}"  …${h.ctx}…`);
-console.log(`${texts.length} strings checked, ${hits.length} hits`);
+console.log(`${texts.filter((t) => inScope(t.where)).length} strings checked${only.length ? ` in ${only.join(', ')}` : ''}, ${hits.length} hits`);
 process.exit(hits.length ? 1 : 0);
