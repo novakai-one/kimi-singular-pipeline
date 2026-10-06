@@ -11,7 +11,7 @@ export const NUMPY_CARDS: Record<number, CardDef> = {
   },
   2: {
     kind: 'numpy', title: 'Measuring in NumPy',
-    body: '- `v @ w` (or `np.dot(v, w)`) is the dot product: your `dot`.\n- `np.cross(a, b)` is the cross product: your `cross`.\n- `np.linalg.norm(v)` is the length; `v / np.linalg.norm(v)` makes it one unit long.\n- `np.linalg.det(np.column_stack([a, b, c]))` is the scalar triple product of three struts: your `triple`.\n- A whole strut scan in one line: `np.einsum("ij,ij->i", U, np.cross(V, W))` gives every node's triple product at once.\n\n**Yours and theirs:** `np.linalg.det` does not use the triple-product formula. It uses a method you will meet in Act III, which stays accurate for large matrices.',
+    body: '- `v @ w` (or `np.dot(v, w)`) is the dot product: your `dot`.\n- `np.cross(a, b)` is the cross product: your `cross`.\n- `np.linalg.norm(v)` is the length; `v / np.linalg.norm(v)` makes it one unit long.\n- `np.linalg.det(np.column_stack([a, b, c]))` is the scalar triple product of three struts: your `triple`.\n- A whole strut scan in one line: `np.einsum("ij,ij->i", U, np.cross(V, W))` gives the triple product of every node at once.\n\n**Yours and theirs:** `np.linalg.det` does not use the triple-product formula. It uses a method you will meet in Act III, which stays accurate for large matrices.',
     code: 'import numpy as np\na, b = np.array([1, 0, 0]), np.array([0, 1, 0])\nprint(a @ b, np.cross(a, b))',
   },
   3: {
