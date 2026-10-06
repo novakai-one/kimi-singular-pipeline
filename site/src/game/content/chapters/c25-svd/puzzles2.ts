@@ -354,7 +354,7 @@ export const p7: PuzzleDef = {
         if (p7Won(x, tol)) { done[1] = true; p.subgoal(1); won = true; sfx.success(); msg.say(`$\\mathbf x = (0.5, 0.5)$, length ${fmtD(norm(P7_XPLUS))}: at a right angle to the line of answers.`, 'good'); p.win(); }
       }
     };
-    p.dock().append(msg.el);
+    p.dock().append(h('div', { class: 'a9-note' }, 'Drag the tip of the green input. Its image lands on the dashed line.'), msg.el);
     paint();
     const go = async (to: Vec, ms: number) => { const a = x.slice(); await animate(ms, (k) => { x = [a[0] + (to[0] - a[0]) * k, a[1] + (to[1] - a[1]) * k]; xh.at([x[0], x[1], 0.03]); xArrow.setTo([x[0], x[1], 0.02]); paint(); }, ease.inOut); check(); };
     return {
