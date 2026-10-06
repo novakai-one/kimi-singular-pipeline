@@ -58,7 +58,8 @@ export const doubtSwap: DoubtDef = {
   view: '3d',
   setup(p) {
     let orig = D_SWAP_START;
-    const { board, aim } = boardScene(p, orig, { ops: ['swap'], title: 'The fan-beam board' });
+    // swaps only: the board's add/multiply help would not apply here
+    const { board, aim } = boardScene(p, orig, { ops: ['swap'], title: 'The fan-beam board', keyHelp: false });
     let swapped = false;
     board.subscribe((_m, op) => { if (op?.kind === 'swap') swapped = true; });
     const cur = () => nums(board.get());
