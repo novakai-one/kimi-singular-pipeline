@@ -38,7 +38,7 @@ export function anchorBench(p: PuzzleCtx, o: { center?: [number, number]; height
 }
 
 /** The key to the two grids, at the foot of a readout. */
-const legend = (r: { note(md: string | null): void }) => r.note('<span class="c17-cu">Copper dashed lines</span>: the Anchor’s grid. Pale lines: ours.');
+const legend = (r: { note(md: string | null): void }) => r.note('Dashed copper lines: the Anchor’s grid. Pale lines: ours.');
 
 /** Typed Anchor numbers plus a Walk button and a message line (all levels). */
 function numbersEntry(p: PuzzleCtx, o: { label: string; onWalk: (c: number[]) => void | Promise<void> }) {
@@ -268,7 +268,7 @@ export const p3: PuzzleDef = {
       if (k >= 2) {
         anc.show(false);
         void copper.fade(0.25, ms());
-        r.note('<span class="c17-cu">Copper</span>: the Anchor’s grid, faded. <span style="color:#efe2c4">Dotted</span>: Vell’s grid.');
+        r.note('Faded copper: the Anchor’s grid. Pale dotted lines: Vell’s grid.');
         await vg.fade(0.75, ms());
         await vel.walk(P3_VELL, ms());
         pt.set(`ours ${fmtV(P3_SHIP)} · Vell ${fmtV(P3_VELL)}`);

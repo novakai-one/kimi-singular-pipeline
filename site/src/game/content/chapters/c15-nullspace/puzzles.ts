@@ -176,9 +176,9 @@ export const p2: PuzzleDef = {
   onWin: S.p2Win,
   setup(p) {
     const room = new Room(p, { extent: 3, scale: 0.95 });
-    void p.g.stage.view3D({ target: [0.6, 0.4, 1.0], distance: 12.5, azimuth: -62, elevation: 18, ms: 0 });
-    const sheet = new Sheet(room, [1, 1, -1], { color: C.result, size: 7, opacity: 0.1 });
-    sheet.setOpacity(0.6);
+    void p.g.stage.view3D({ target: [0.7, 0.7, 2.1], distance: 13, azimuth: -62, elevation: 16, ms: 0 });
+    const sheet = new Sheet(room, [1, 1, -1], { color: C.result, size: 6, opacity: 0.1 });
+    sheet.setOpacity(0.38);
     // the four pings
     const keyOf = (t: readonly number[]) => t.join(',');
     const order = ['1,2,3', '0,0,0', '2,-1,1'];

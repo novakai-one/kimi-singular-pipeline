@@ -20,7 +20,7 @@ const texNum = (x: number) => niceTex(x);
 /** The Anchor's colour: copper, used for nothing else. */
 export const COPPER = '#ef9a5c';
 /** The ship's own grid, drawn pale (the white lattice of buoys). */
-export const SHIP_GRID = { color: '#a9b9d6', main: 0.3, base: 0, axis: 0.5, width: 1.2 };
+export const SHIP_GRID = { color: '#b7c6e0', main: 0.4, base: 0, axis: 0.55, width: 1.2 };
 /** Vell's cutter grid: a pale parchment dotted grid (not a maths colour, not a speaker colour). */
 export const VELL_GRID = '#efe2c4';
 

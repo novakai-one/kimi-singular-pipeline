@@ -70,7 +70,7 @@ export const p1: PuzzleDef = {
     const cmd = p.difficulty === 'commander';
     if (cmd) p.setGoal('First, by hand: type the value of $k$ that puts $\\cr{\\mathbf w} = (2, k)$ on the line of $\\cg{\\mathbf v} = (1, 2)$. Then drag the tip of $\\cr{\\mathbf w}$ to it and watch the glow. Then drag the beacon to a point the pair **cannot** reach.');
     const R = 9;
-    const glow = new ReachGlow(p.g.stage, { cell: 0.22, capacity: 34000 });
+    const glow = new ReachGlow(p.g.stage, { cell: 0.34, capacity: 16000 });
     p.add(glow);
     let k = 1;
     let typedOk = !cmd;
@@ -79,11 +79,11 @@ export const p1: PuzzleDef = {
     const gainFor = (kk: number) => {
       const d = Math.abs(P1_V[0] * kk - P1_V[1] * 2);
       const L = 2 * R * (Math.hypot(1, 2) + Math.hypot(2, kk)) * 0.6;
-      return 0.3 * Math.min(1.15, Math.max(d * (2 * R) ** 2, L * 0.4) / (3 * (2 * R) ** 2));
+      return 0.26 * Math.max(0.3, Math.min(1.1, Math.sqrt(Math.max(d * (2 * R) ** 2, L * 0.6) / (3 * (2 * R) ** 2))));
     };
     const place = (kk: number) => { glow.setArrows([to3(P1_V), to3(p1W(kk))]); glow.setGain(gainFor(kk)); };
     place(k);
-    glow.fill([[-R, R], [-R, R]], { step: [0.1, 0.1], spread: 1.6 });
+    glow.fill([[-R, R], [-R, R]], { step: [0.15, 0.15], spread: 1.6 });
     const v = new Arrow([0, 0, 0], to3(P1_V), { color: C.v, label: '$\\mathbf v$' });
     p.add(v);
     const r = p.readout('Two arrows');
