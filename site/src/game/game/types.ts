@@ -202,6 +202,26 @@ export interface SayItDef {
  * Challenge it = build a counterexample (a case where the claim fails).
  * Back it = build a demonstration; then the Shake randomises the scene's free quantities and re-checks.
  */
+/** One Field Manual page in the Broadcast chain (GDD §4.8). */
+export interface BroadcastPage {
+  id: string;
+  /** The idea's name, e.g. "Determinant". */
+  term: string;
+  /** The chapter whose Field Manual page this is (its Say it id). */
+  chapter: string;
+  /** Pages that must come before this one. */
+  needs: string[];
+  /** Ilse's model sentence for "this needs <that>, because …", keyed by the earlier page's id (Help me start). */
+  because?: Record<string, string>;
+}
+
+export interface BroadcastDef {
+  id: string;
+  pages: BroadcastPage[];
+  /** "Down to the arrows": a library path from the top function down, e.g. ['svd', 'sym_eigen', …, 'add']. */
+  down?: string[];
+}
+
 /** The act Review (GDD §4.6): four claims by one speaker, at least one true and one false, in mixed order. */
 export interface ReviewDef {
   id: string;
@@ -351,6 +371,7 @@ export type Beat =
   | { kind: 'sayit'; id: string; sayit: SayItDef }
   | { kind: 'doubt'; id: string; doubt: DoubtDef }
   | { kind: 'review'; id: string; review: ReviewDef }
+  | { kind: 'broadcast'; id: string; broadcast: BroadcastDef }
   | { kind: 'law'; id: string; law: LawDef<any> }
   | { kind: 'compare'; id: string; compare: CompareDef }
   | { kind: 'procedure'; id: string; procedure: ProcedureDef };

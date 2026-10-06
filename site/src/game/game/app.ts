@@ -2,7 +2,7 @@
 import { Stage } from '../core/stage';
 import { DragManager } from '../core/drag';
 import { Backdrop } from '../gfx/background';
-import { UI, h, inline, md, button, openModal } from '../ui/ui';
+import { UI, h, inline, md, button, openModal, download } from '../ui/ui';
 import { Dialogue, setCast, history, dialogueSettings } from '../ui/dialogue';
 import { castMember } from '../content/cast';
 import { audio } from '../audio/audio';
@@ -19,17 +19,9 @@ import type { ChapterDef, CodexEntry, Game } from './types';
 import { TitleScene } from './title';
 import { installDebug } from './debug';
 import { caseBoardScreen } from './caseboard';
-import { manualView, libraryView } from './manual';
+import { manualView, libraryView, honestyPanel } from './manual';
 
-/** Save text as a file (the browser's download). */
-export function download(name: string, text: string, type = 'text/plain'): void {
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([text], { type }));
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  window.setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-}
+export { download };
 
 export class App implements Game {
   readonly stage: Stage;
@@ -67,16 +59,28 @@ export class App implements Game {
     this.runner = new Runner(this, this.hud);
     this.applySettings();
     if (this.headless) setAnimSpeed(8);
+    // automated browsers here render on a starved software GPU, where CSS animations stall at their first frame
+    if (navigator.webdriver) document.documentElement.classList.add('no-anim');
     this.stage.start();
     void loadVoiceManifest();
     installDebug(this);
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && this.playing && !this.dialogue.active && !document.querySelector('.modal-back')) void this.pauseMenu();
       if ((e.key === 'c' || e.key === 'C') && this.playing && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) void this.codexScreen();
+      if ((e.key === 'l' || e.key === 'L') && this.playing && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) this.toggleHonesty();
     });
   }
 
   get settings() { return S().settings; }
+
+  private honesty: HTMLElement | null = null;
+  /** Key L: label what runs on the player's code, LANTERN's backup, or the engine. */
+  toggleHonesty(): void {
+    if (this.honesty) { this.honesty.remove(); this.honesty = null; return; }
+    this.honesty = honestyPanel(this.runner.chapter?.id ?? null);
+    this.ui.hud.appendChild(this.honesty);
+    sfx.click();
+  }
 
   say(lines: Parameters<Dialogue['play']>[0], o?: Parameters<Dialogue['play']>[1]) { return this.dialogue.play(lines, o); }
   toast(text: string, kicker = ''): void { this.ui.toast(text, kicker); }
@@ -213,7 +217,7 @@ export class App implements Game {
               h('details', { class: 'map-beats' }, h('summary', null, 'Jump to a part'),
                 h('div', { class: 'map-beat-list' }, ...c.beats.map((b, i) => {
                   const label = b.kind === 'puzzle' ? b.puzzle.title : b.kind === 'name' ? `Named: ${b.entry.term}` : b.kind === 'explain' ? 'Explain it' : b.kind === 'build' ? `Build: ${b.build.fn}()`
-                    : b.kind === 'card' ? b.card.title : b.kind === 'sayit' ? 'Say it' : b.kind === 'doubt' ? `Doubt: ${b.doubt.claim}` : b.kind === 'review' ? b.review.title : b.kind === 'law' ? 'Engrave the Law' : b.kind === 'compare' ? 'Compare with Ilse’s page'
+                    : b.kind === 'card' ? b.card.title : b.kind === 'sayit' ? 'Say it' : b.kind === 'doubt' ? `Doubt: ${b.doubt.claim}` : b.kind === 'review' ? b.review.title : b.kind === 'broadcast' ? 'The Broadcast' : b.kind === 'law' ? 'Engrave the Law' : b.kind === 'compare' ? 'Compare with Ilse’s page'
                     : b.kind === 'procedure' ? `Procedure: ${b.procedure.title}` : b.kind === 'scene' ? 'Scene' : 'Cinematic';
                   const bb = h('button', { class: `map-beat ${cs.done.includes(b.id) ? 'done' : ''}`, type: 'button', html: `<span class="bk">${b.kind}</span> ${inline(label)}${b.kind === 'puzzle' && cs.stars[b.puzzle.id] ? ` <span class="c-yellow">${'★'.repeat(cs.stars[b.puzzle.id])}</span>` : ''}` });
                   bb.addEventListener('click', () => { picked = { ch: c, beat: i }; sfx.click(); close(); });
@@ -248,6 +252,7 @@ export class App implements Game {
         button('Codex', () => { close(); void this.codexScreen(); }),
         button('Settings', () => { close(); void this.settingsScreen(); }),
         button('Title screen', () => { action = 'title'; close(); }, { cls: 'ghost' })),
+      h('p', { class: 'c-muted keys-help' }, 'Keys: Enter continue · H hint · R reset · F fire · C codex · L who runs what · Esc menu'),
     ]);
     const a = action as string;
     if (a === 'map') await this.chapterSelect();

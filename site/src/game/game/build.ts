@@ -218,7 +218,7 @@ function writeEditor(initial: string, lang: 'python' | 'js', onRun: () => void) 
       ta.selectionStart = ta.selectionEnd = st + indent.length;
       sync();
     } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); onRun(); }
-    e.stopPropagation();
+    if (e.key !== 'Escape') e.stopPropagation(); // Esc still opens the menu
   });
   sync();
   return {
@@ -249,7 +249,7 @@ function fillEditor(template: string, lang: 'python' | 'js', saved: string[] | u
       inp.addEventListener('input', fit);
       inp.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); const next = inputs[i + 1]; if (next && !(e.ctrlKey || e.metaKey)) next.focus(); else onRun(); }
-        e.stopPropagation();
+        if (e.key !== 'Escape') e.stopPropagation();
       });
       fit();
       inputs.push(inp);
@@ -377,7 +377,7 @@ export async function runBuild(g: Game, def: BuildDef, hud: Hud): Promise<void> 
     const ta = h('textarea', { class: 'own-words', rows: 4, placeholder: 'Your docstring, in your own words. Saved with your code and exported in lantern.py.' }) as HTMLTextAreaElement;
     ta.value = docs()[def.fn] ?? '';
     ta.addEventListener('input', () => { docs()[def.fn] = ta.value; save(); });
-    ta.addEventListener('keydown', (e) => e.stopPropagation());
+    ta.addEventListener('keydown', (e) => { if (e.key !== 'Escape') e.stopPropagation(); });
     const note = def.ilseNote ? h('details', { class: 'ilse-note' }, h('summary', null, 'Ilse’s original note'), h('div', { html: md(def.ilseNote) })) : null;
     docBox.replaceChildren(
       h('div', { class: 'kicker' }, 'In your own words'),

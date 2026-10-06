@@ -53,6 +53,16 @@ for (const i of beats) {
       await frames(4);
     }
     console.log(`beat ${i} review: ${res.join(', ')}`);
+  } else if (kind === 'broadcast') {
+    const res = [];
+    for (let k = 0; k < 3; k++) {
+      await p.waitForFunction(() => !!window.__game.briefing(), null, { timeout: 30000 }).catch(() => {});
+      const r = await p.evaluate(() => window.__game.solveBriefing());
+      res.push(r ? r.ok : 'none');
+      await frames(6);
+      await p.screenshot({ path: `${out}/${tag}-step${k + 1}.png` });
+    }
+    console.log(`beat ${i} broadcast: ${res.join(', ')}`);
   } else if (['doubt', 'law', 'procedure'].includes(kind)) {
     // the speaker may voice a line first (doubts); give the step time to open
     await p.waitForFunction(() => !!window.__game.briefing(), null, { timeout: 30000 }).catch(() => {});

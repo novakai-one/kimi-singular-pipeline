@@ -84,3 +84,13 @@ export function openPanel(ui: UI, title: string, body: string, o: { kicker?: str
   ui.panel.appendChild(p);
   return close;
 }
+
+/** Save text as a file (the browser's download). */
+export function download(name: string, text: string, type = 'text/plain'): void {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type }));
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  window.setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}

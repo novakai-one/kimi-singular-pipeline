@@ -16,6 +16,7 @@ import { celebrate } from '../gfx/fx';
 import { runBuild } from './build';
 import { clearCine } from '../kit/cine';
 import { shipExterior } from '../content/common/shots';
+import { runBroadcast } from './broadcast';
 import { runCard, runSayIt, runDoubt, runReview, runLaw, runCompare, runProcedure, type BriefingHost } from './briefing';
 import { Grid2D, type GridOpts } from '../gfx/grid';
 
@@ -169,6 +170,7 @@ export class Runner {
         return;
       }
       case 'review': return runReview(this.host(ch), beat.review);
+      case 'broadcast': this.g.stage.clearWorld(); await this.backdrop(); return runBroadcast(this.host(ch), beat.broadcast);
       case 'law': return runLaw(this.host(ch), beat.law);
       case 'compare': this.g.stage.clearWorld(); await this.backdrop(); return runCompare(this.host(ch), beat.compare);
       case 'procedure': return runProcedure(this.host(ch), beat.procedure);
