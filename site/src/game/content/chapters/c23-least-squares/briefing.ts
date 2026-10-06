@@ -12,7 +12,7 @@ import { gsPlaneHolds } from '../c22-gram-schmidt/logic';
 import { twiceScene } from '../c21-projection/briefing';
 import { twiceHolds } from '../c21-projection/logic';
 import {
-  curveFits, curveHolds, exactHolds, fitLine, fmtN, fmtV, lawCore, perpHolds, perpLine, randPts, residualHolds, residualPerp, throughCount,
+  curveFits, curveHolds, exactHolds, fitLine, fmtN, fmtV, lawCore, lineTex, perpHolds, perpLine, randPts, residualHolds, residualPerp, throughCount,
   throughHolds, type FitCase,
 } from './logic';
 
@@ -61,7 +61,7 @@ export function readingsScene(p: PuzzleCtx, o: {
     up.object.visible = u.length > 0; down.object.visible = dn.length > 0;
     if (u.length) up.setSegments(u); if (dn.length) down.setSegments(dn);
     if (o.perp) { const pl = perpLine(pts); perpL.object.visible = !!pl; if (pl) perpL.setPoints([[-3, pl[0] - 3 * pl[1], 0.01], [n + 2, pl[0] + (n + 2) * pl[1], 0.01]]); }
-    r.row('l', 'best line', `$y = ${fmtN(f[0])} ${f[1] < 0 ? '-' : '+'} ${fmtN(Math.abs(f[1]))}t$`, C.result);
+    r.row('l', 'best line', lineTex(f[0], f[1]), C.result);
     o.extra?.({ pts, r });
   };
   const setPts = (q: number[][]) => { pts = q.map((x) => x.slice()); knobs.forEach((k, i) => k.at([pts[i][0], pts[i][1], 0.02])); sync(); };
@@ -102,14 +102,14 @@ export const doubtThrough: DoubtDef = {
 export const doubtPerp: DoubtDef = {
   id: 'c23-d-perp', who: 'bram', isTrue: false,
   claim: 'Least squares makes the perpendicular distances from the readings to the line as small as it can.',
-  reason: 'It makes the **vertical** leftovers small: each reading’s miss in $y$. The line that makes perpendicular distances smallest (dashed) is a different line whenever the readings do not lie on one line. The right angle in least squares is in data space, between the leftover arrow and the columns of $A$.',
+  reason: 'It makes the **vertical** leftovers small: each reading’s miss in $y$. The line that makes perpendicular distances smallest (dashed) is usually a different line: the two agree only when the readings lie on one line, or when the best line is level and the readings spread wider across than up and down. The right angle in least squares is in data space, between the leftover arrow and the columns of $A$.',
   goal: 'Drag the readings. Yellow: the least-squares line. Dashed: the line with the smallest perpendicular distances. **Challenge it** (they differ) or **Back it**.',
   view: '2d',
   setup(p) {
     return readingsScene(p, {
       start: [[0, 1], [1, 2], [2, 3], [3, 4]], perp: true, title: 'Two lines',
       holds: perpHolds,
-      describe: (pts) => { const a = fitLine(pts), b = perpLine(pts); return `readings ${ptsText(pts)}: least squares $y = ${fmtN(a[0])} + ${fmtN(a[1])}t$, smallest perpendicular distances ${b ? `$y = ${fmtN(b[0])} + ${fmtN(b[1])}t$` : 'a vertical line'}`; },
+      describe: (pts) => { const a = fitLine(pts), b = perpLine(pts); return `readings ${ptsText(pts)}: least squares ${lineTex(a[0], a[1])}, smallest perpendicular distances ${b ? lineTex(b[0], b[1]) : 'a vertical line'}`; },
       cases: (r) => randPts(r, 4, 2),
       edges: [[[0, 1], [1, 2], [2, 2], [3, 4]], [[0, 0], [1, 3], [2, 1], [3, 4]]],
       showMe: [[0, 1], [1, 2], [2, 2], [3, 4]],
@@ -141,8 +141,8 @@ export const doubtExact: DoubtDef = {
       const f = fitLine(pts);
       truth.setPoints([[-3, c0 - 3 * c1, 0.005], [6, c0 + 6 * c1, 0.005]]);
       yl.setPoints([[-3, f[0] - 3 * f[1], 0.01], [6, f[0] + 6 * f[1], 0.01]]);
-      r.row('t', 'line of the readings', `$y = ${fmtN(c0)} ${c1 < 0 ? '-' : '+'} ${fmtN(Math.abs(c1))}t$`);
-      r.row('f', 'least squares gives', `$y = ${fmtN(f[0])} ${f[1] < 0 ? '-' : '+'} ${fmtN(Math.abs(f[1]))}t$`, C.result);
+      r.row('t', 'line of the readings', lineTex(c0, c1));
+      r.row('f', 'least squares gives', lineTex(f[0], f[1]), C.result);
     };
     const kA = new Knob(p, [0, c0, 0.02], { color: C.white, countMoves: false, constrain: (q) => { c0 = Math.round(q.y * 4) / 4; return new Vector3(0, c0, 0.02); }, onMove: () => { c1 = (kB.pos[1] - c0) / 3; sync(); } });
     const kB = new Knob(p, [3, c0 + 3 * c1, 0.02], { color: C.white, countMoves: false, constrain: (q) => new Vector3(3, Math.round(q.y * 4) / 4, 0.02), onMove: (pos) => { c1 = (pos[1] - c0) / 3; sync(); } });
@@ -150,7 +150,7 @@ export const doubtExact: DoubtDef = {
     const set = (a: number, b: number) => { c0 = a; c1 = b; kA.at([0, c0, 0.02]); kB.at([3, c0 + 3 * c1, 0.02]); sync(); };
     return {
       holds: () => exactHolds(c0, c1, ts),
-      describe: () => { const f = fitLine(ts.map((t) => [t, c0 + c1 * t])); return `readings on $y = ${fmtN(c0)} + ${fmtN(c1)}t$: least squares gives $y = ${fmtN(f[0])} + ${fmtN(f[1])}t$, leftover 0`; },
+      describe: () => { const f = fitLine(ts.map((t) => [t, c0 + c1 * t])); return `readings on ${lineTex(c0, c1)}: least squares gives ${lineTex(f[0], f[1])}, leftover 0`; },
       randomize(rr, edge) { const cases: [number, number][] = [[2, 0], [4, -1.5], [-1, 1.5]]; if (edge !== undefined) set(...cases[edge]); else set(rint(rr, 0, 5) / 2, rint(rr, -1, 2) / 2); },
       edgeCases: 3,
       async showMe() { set(1, 0.5); },

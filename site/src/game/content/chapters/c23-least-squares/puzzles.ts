@@ -16,7 +16,8 @@ import { DropPlane } from '../c21-projection/drop';
 import { MiniBoard } from './board';
 import {
   P1_BEST, P1_FIT, P1_PTS, P2_ATA, P2_ATB, P2_B, P2_ONES, P2_R, P2_T, P2_TS, P2_X, P3_ATA, P3_ATB, P3_AREA, P3_FIT, P3_PTS,
-  P4_CURVE10, P4_FIT, P4_HOUR, P4_PTS, P4_TARGET, area, curve5, fmtN, p1Won, p2Won, p4Won, throughCount,
+  P4_BEST, P4_CURVE10, P4_FIT, P4_HANDLE_T, P4_HOUR, P4_PTS, P4_TARGET, area, curve5, fmtN, hourAt, lineTex, p1Won, p2Won, p4Near, p4Won,
+  throughCount,
 } from './logic';
 import { S } from './script';
 import '../c21-projection/c21.css';
@@ -27,7 +28,7 @@ export const tag = (p: PuzzleCtx, text: string, at: V3, cls = '', offset: [numbe
   p.add(l);
   return l;
 };
-const lineText = (c0: number, c1: number) => `$y = ${fmtN(c0)} ${c1 < 0 ? '-' : '+'} ${fmtN(Math.abs(c1))}t$`;
+const lineText = (c0: number, c1: number) => lineTex(c0, c1);
 
 // ------------------------------------------------------------------ p1 Drag the line
 
@@ -43,7 +44,7 @@ export const p1: PuzzleDef = {
   },
   hints: [
     'A line through two readings leaves big squares at the others. Spread the misses out.',
-    'Tilt the line so the squares above it balance the squares below it.',
+    'At the best line, the leftovers above it and below it add to the same total length (not the same area). That is true for every line through the average reading $(1.5, 2.25)$. Keep the line through that point and tilt it until the total area stops shrinking.',
     'The best line is $y = 0.9 + 0.9t$: through $(0, 0.9)$ and $(3, 3.6)$.',
   ],
   par: 4,
@@ -128,27 +129,45 @@ export const p2: PuzzleDef = {
       r.note('The best line is the nearest point of the plane. Its leftover is perpendicular to both columns: $A^{\\mathsf T}(\\mathbf b - A\\hat{\\mathbf x}) = \\mathbf 0$.');
       p.win();
     };
+    // Navigator and Commander win in the worksheet: reaching the foot points there instead of going quiet
+    let pointed = false;
     const dp = new DropPlane(p, {
       a: [1, 1, 1], b: [0, 1, 2], target: v3(P2_B), w0: [2, 0], step: d === 'commander' ? null : 1 / 6, magnet: d === 'cadet' ? 0.25 : 0, range: 3, size: 6, center: [0.6, 1.5, 2.4],
       labels: ['$(1, 1, 1)$', '$(0, 1, 2)$'],
       onMove: (w, q) => show(w, q),
-      onEnd: (w) => { if (d === 'cadet' && p2Won(w, tol)) finish(); },
+      onEnd: (w) => {
+        if (!p2Won(w, tol)) return;
+        if (d === 'cadet') { finish(); return; }
+        if (done || pointed) return;
+        pointed = true;
+        p.bark('lantern', d === 'navigator'
+          ? 'There is the right angle: the leftover reads 0 against both columns. Write those two zeros out in the worksheet.'
+          : 'There is the right angle. Now put the steps from it to the formula in order.');
+      },
     });
     p.dock().append(board.el);
     show(dp.w, dp.p);
     let ws: StepWorksheet | null = null;
     let tiles: TileOrder | null = null;
+    // Navigator: the player builds the normal equations from the right angle, one column at a time
     const STEPS = [
-      { prompt: '$A^{\\mathsf T}A$', answer: P2_ATA },
-      { prompt: '$A^{\\mathsf T}\\mathbf b$', answer: [P2_ATB] },
-      { prompt: '$\\hat{\\mathbf x}$ from $A^{\\mathsf T}A\\hat{\\mathbf x} = A^{\\mathsf T}\\mathbf b$', answer: [P2_X] },
+      { prompt: 'The leftover $\\mathbf b - A\\mathbf x$, with $\\mathbf x = (c_0, c_1)$, reads 0 against $(1, 1, 1)$: $\\_\\,c_0 + \\_\\,c_1 = \\_$', answer: [[...P2_ATA[0], P2_ATB[0]]],
+        mistakes: [[[[3, 3, 0]], 'The 0 is the whole leftover read against $(1, 1, 1)$. Move the $\\mathbf b$ part to the right: $1 + 2 + 4$.'], [[[-3, -3, -7]], 'Right equation, times $-1$. Write it with positive numbers.']] },
+      { prompt: 'It reads 0 against $(0, 1, 2)$: $\\_\\,c_0 + \\_\\,c_1 = \\_$', answer: [[...P2_ATA[1], P2_ATB[1]]],
+        mistakes: [[[[3, 5, 0]], 'Move the $\\mathbf b$ part to the right: $0 \\cdot 1 + 1 \\cdot 2 + 2 \\cdot 4$.'], [[[-3, -5, -10]], 'Right equation, times $-1$. Write it with positive numbers.']] },
+      { prompt: 'Those two rows are $A^{\\mathsf T}A\\hat{\\mathbf x} = A^{\\mathsf T}\\mathbf b$. Solve: $\\hat{\\mathbf x}$', answer: [P2_X] },
       { prompt: 'leftover $\\mathbf b - A\\hat{\\mathbf x}$', answer: [P2_R] },
     ];
+    // Commander: the tiles derive the formula; the last line solves it
+    const LAST = { prompt: '$\\hat{\\mathbf x}$ from $A^{\\mathsf T}A\\hat{\\mathbf x} = A^{\\mathsf T}\\mathbf b$', answer: [P2_X] };
+    const last = () => { tiles?.el.remove(); tiles = null; ws = new StepWorksheet(p, { title: 'The last line', steps: [LAST], onDone: finish }); };
     if (d === 'cadet') {
       p.setGoal('Drag the yellow point across the blue plane until the dashed leftover to $\\mathbf b$ is as short as it goes. The board shows the line that point stands for.');
     } else if (d === 'navigator') {
-      ws = new StepWorksheet(p, { steps: STEPS, onDone: finish });
+      p.setGoal('Drag the yellow point across the blue plane to see the right angle, then type where the formula comes from in the worksheet. The board shows the line that point stands for.');
+      ws = new StepWorksheet(p, { title: 'Where the formula comes from · each step is checked', steps: STEPS, onDone: finish });
     } else {
+      p.setGoal('Drag the yellow point across the blue plane to see the right angle. Then order the steps from that right angle to the formula, and solve its last line.');
       const TILES = [
         { id: 'point', text: 'Every line makes a point $A\\mathbf x$ of the column space.' },
         { id: 'perp', text: 'The best one is nearest $\\mathbf b$: its leftover $\\mathbf b - A\\hat{\\mathbf x}$ is perpendicular to every column.' },
@@ -156,21 +175,20 @@ export const p2: PuzzleDef = {
         { id: 'rearrange', text: 'Rearrange: $A^{\\mathsf T}A\\hat{\\mathbf x} = A^{\\mathsf T}\\mathbf b$.' },
       ];
       const REF = TILES.map((t) => t.id);
-      const last = () => { ws = new StepWorksheet(p, { title: 'The last line', steps: [STEPS[2]], onDone: finish }); };
       tiles = new TileOrder(p, {
         title: 'Where the formula comes from: order the steps', tiles: TILES, submitLabel: 'Check order',
-        onSubmit: (o) => { p.move(); if (o.join() === REF.join()) { tiles!.el.remove(); last(); } else { sfx.miss(); p.bark('lantern', 'That order does not reach the formula. Start from what a line makes in data space.'); } },
+        onSubmit: (o) => { p.move(); if (o.join() === REF.join()) last(); else { sfx.miss(); p.bark('lantern', 'That order does not reach the formula. Start from what a line makes in data space.'); } },
       });
     }
     return {
       async showMe() {
         if (d === 'cadet') { await dp.moveTo([P2_X[0], P2_X[1]], 1000); finish(); return; }
-        if (tiles) { tiles.el.remove(); ws = new StepWorksheet(p, { title: 'The last line', steps: [STEPS[2]], onDone: finish }); }
+        if (!ws) last();
         await ws!.showMe(300); finish();
       },
       solve() {
         if (d === 'cadet') { dp.set([P2_X[0], P2_X[1]]); finish(); return; }
-        if (tiles) { tiles.el.remove(); ws = new StepWorksheet(p, { title: 'The last line', steps: [STEPS[2]], onDone: finish }); }
+        if (!ws) last();
         ws!.solve(); finish();
       },
       wrong() { if (d === 'cadet') dp.set([1, 1]); else ws?.wrong(); },
@@ -251,22 +269,32 @@ export const p4: PuzzleDef = {
     // the 380 m level and the axes' numbers
     const level = new FatLine(p.g.stage, [W(-3, P4_TARGET), W(40, P4_TARGET)], { color: C.orange, width: 1.6, opacity: 0.8, dashed: true, dashSize: 0.16, gapSize: 0.1 });
     p.add(level);
-    tag(p, '380 m: the rig stops reaching', W(6, P4_TARGET), 'o', [0, -16]);
+    tag(p, '380 m: inside the rig’s reach', W(6, P4_TARGET), 'o', [0, -16]);
     for (const hr of [0, 10, 20, 30]) tag(p, `hour ${hr}`, W(hr, 380), 'dim', [0, 28]);
     for (const m of [390, 400, 410]) tag(p, `${m} m`, W(-1.6, m), 'dim', [0, 0]);
     const r = p.readout('Forecast');
     let ghost: FatLine | null = null;
-    let fitted = false, hour = 6, done = false;
+    let fitted = false, hour = 6, done = false, toldFit = false;
+    // Within about 4 px (0.2 m) of the best line at both handles, the line snaps onto it: the 1% window is two
+    // pixels wide and the 2D view has no zoom. Cadet snaps from twice as far, onto the dashed ghost.
+    const snapM = (d === 'cadet' ? 0.1 : 0.05) / SY;
+    const showLine = () => {
+      const f = fromWorld(fl.m, fl.c), a = area(P4_PTS, f.c0, f.c1);
+      r.row('line', 'line', lineTex(f.c0, f.c1, 3), C.result);
+      r.row('area', 'total square area', fmtN(a, 3), a <= P4_BEST * 1.01 ? C.good : C.white);
+      if (d !== 'commander') { const over = (a / P4_BEST - 1) * 100; r.row('gap', 'above the smallest by', `${over < 0.05 ? '0' : over.toFixed(over < 10 ? 1 : 0)}%`, over <= 1 ? C.good : C.orange); }
+    };
     const fl: FitLine = new FitLine(p, {
-      points: pts, m: (SY * -0.5) / SX, c: SY * (409 - Y0), squares: false, handleX: [0, 7.2],
-      onChange: (m, c) => { const f = fromWorld(m, c); r.row('line', 'line', `$y = ${fmtN(f.c0)} ${f.c1 < 0 ? '-' : '+'} ${fmtN(Math.abs(f.c1), 3)}t$`, C.result); placeMarker(); },
+      points: pts, m: (SY * -0.5) / SX, c: SY * (409 - Y0), squares: false, handleX: [P4_HANDLE_T[0] * SX, P4_HANDLE_T[1] * SX],
+      onChange: () => { showLine(); placeMarker(); },
       onCommit: (m, c) => {
         const f = fromWorld(m, c);
-        const ok = area(P4_PTS, f.c0, f.c1) <= area(P4_PTS, P4_FIT[0], P4_FIT[1]) * 1.01;
+        const ok = p4Near(f.c0, f.c1, snapM) || area(P4_PTS, f.c0, f.c1) <= P4_BEST * 1.01;
         if (d === 'cadet' && !ghost) {
           ghost = new FatLine(p.g.stage, [[-2, best.c - 2 * best.m, 0.005], [14, best.c + 14 * best.m, 0.005]], { color: C.result, width: 1.3, opacity: 0.35, dashed: true, dashSize: 0.12, gapSize: 0.1 });
           p.add(ghost);
         }
+        if (ok) fl.set(best.m, best.c);
         if (ok && !fitted) { fitted = true; p.subgoal(0); sfx.success(); }
         if (!ok && fitted) { fitted = false; p.subgoal(0, false); }
         check();
@@ -277,7 +305,7 @@ export const p4: PuzzleDef = {
       color: C.orange,
       constrain: (q) => { hour = Math.max(0, Math.min(40, Math.round((q.x / SX) * 10) / 10)); return new Vector3(...markerPos()); },
       onMove: () => showHour(),
-      onEnd: () => check(),
+      onEnd: () => check(true),
     });
     const markerPos = (): V3 => [hour * SX, fl.m * hour * SX + fl.c, 0.03];
     const placeMarker = () => { marker.at(markerPos()); showHour(); };
@@ -297,21 +325,26 @@ export const p4: PuzzleDef = {
       tag(p, `curve through all six: ${fmtN(P4_CURVE10, 0)} m at hour 10`, [at[0], at[1], 0], 'o', [150, 0]);
       p.bark('lantern', `The curve through every reading forecasts ${fmtN(P4_CURVE10, 0)} metres at hour ten.`);
     };
-    const check = () => {
+    const check = (fromMarker = false) => {
       if (done) return;
-      if (!fitted) return;
-      const f = fromWorld(fl.m, fl.c);
-      if (p4Won(f.c0, f.c1, hour, tol)) {
-        done = true;
-        p.subgoal(1);
-        fl.setDraggable(false); marker.setEnabled(false);
-        r.note(`Best line: the drift reaches 380 m at hour ${fmtN(P4_HOUR, 1)}.`);
-        showCurve();
-        p.win();
+      const f = fromWorld(fl.m, fl.c), own = hourAt(f.c0, f.c1);
+      if (!fitted) {
+        if (fromMarker && !toldFit && (Math.abs(hour - own) <= 1 || Math.abs(hour - P4_HOUR) <= 1)) { toldFit = true; p.bark('lantern', 'That is where this line reaches 380 m. Fit the best line first: the forecast rides on it.'); }
+        return;
       }
+      if (!p4Won(f.c0, f.c1, hour, tol)) {
+        if (fromMarker && Math.abs(hour - own) <= 1) p.bark('lantern', `Close. The line reaches 380 m a little ${hour < own ? 'later' : 'earlier'}.`);
+        return;
+      }
+      done = true;
+      p.subgoal(1);
+      fl.setDraggable(false); marker.setEnabled(false);
+      r.note(`Best line: the drift reaches 380 m at hour ${fmtN(P4_HOUR, 1)}.`);
+      showCurve();
+      p.win();
     };
     p.dock().append(h('div', { class: 'a8-btns' }, button('Try the curve through every reading', () => { p.move(); showCurve(); }, { cls: 'small ghost' })));
-    { const f = fromWorld(fl.m, fl.c); r.row('line', 'line', `$y = ${fmtN(f.c0)} ${f.c1 < 0 ? '-' : '+'} ${fmtN(Math.abs(f.c1), 3)}t$`, C.result); }
+    showLine();
     placeMarker();
     return {
       async showMe() { await fl.showBest(1000); fitted = true; p.subgoal(0); hour = Math.round(P4_HOUR * 10) / 10; await marker.moveTo(markerPos(), 900); showHour(); check(); },

@@ -13,6 +13,8 @@ export const fmtV = (v: readonly number[], d = 2): string => `(${v.map((x) => { 
 export const fmtN = (x: number, d = 2): string => { const y = Math.round(x * 10 ** d) / 10 ** d; return Math.abs(y) < 10 ** -d / 2 ? '0' : y.toFixed(d).replace('-', '−'); };
 export const texM = (M: Mat, d?: number): string => `\\begin{bmatrix} ${M.map((r) => r.map((x) => (d === undefined ? niceTex(x) : fmtN(x, d).replace('−', '-'))).join(' & ')).join(' \\\\ ')} \\end{bmatrix}`;
 export const near = (a: readonly number[], b: readonly number[], tol: number): boolean => a.length === b.length && norm(vsub([...a], [...b])) <= tol;
+/** The line y = c0 + c1 t as TeX. The sign comes from the rounded slope, so −1e-17 prints "+ 0t", never "- 0t". */
+export const lineTex = (c0: number, c1: number, d1 = 2): string => { const s = fmtN(c1, d1); return `$y = ${fmtN(c0)} ${s.startsWith('−') ? '-' : '+'} ${s.replace('−', '')}t$`; };
 
 /** A line y = c0 + c1 t through points (t, y): its columns are 1 and t. */
 export const lineA = (ts: readonly number[]): Mat => ts.map((t) => [1, t]);
@@ -66,9 +68,20 @@ export const P4_HOUR = (P4_FIT[0] - P4_TARGET) / -P4_FIT[1];    // 31.8
 /** The degree-5 curve through all six readings (Lagrange form). */
 export const curve5 = (t: number): number => P4_TS.reduce((s, ti, i) => s + P4_YS[i] * P4_TS.reduce((p, tj, j) => (j === i ? p : (p * (t - tj)) / (ti - tj)), 1), 0);
 export const P4_CURVE10 = curve5(10);                           // −315.7
-export const p4Won = (c0: number, c1: number, hour: number, tol: number) => area(P4_PTS, c0, c1) <= area(P4_PTS, P4_FIT[0], P4_FIT[1]) * 1.01 && Math.abs(hour - P4_HOUR) <= tol;
+export const P4_BEST = area(P4_PTS, P4_FIT[0], P4_FIT[1]);     // 0.0728
 /** Where the line y = c0 + c1 t reaches the target. */
 export const hourAt = (c0: number, c1: number, y = P4_TARGET) => (Math.abs(c1) < 1e-12 ? Infinity : (y - c0) / c1);
+/** p4's two line handles sit at hours 0 and 24. */
+export const P4_HANDLE_T: [number, number] = [0, 24];
+/** p4: both handles within tolM metres of the best line's. The puzzle then snaps the line onto the best line. */
+export const p4Near = (c0: number, c1: number, tolM: number) => P4_HANDLE_T.every((t) => Math.abs(c0 + c1 * t - (P4_FIT[0] + P4_FIT[1] * t)) <= tolM);
+/** How far the forecast of the line y = c0 + c1 t may sit from the best line's and still count as that line's. */
+export const P4_HOUR_SLACK = 0.3;
+/**
+ * p4's forecast: the marker sits where the player's own line reaches 380 m (within tol hours), and that line
+ * forecasts what the best line does (within P4_HOUR_SLACK). Fitting the line is subgoal 0, checked apart.
+ */
+export const p4Won = (c0: number, c1: number, hour: number, tol: number) => { const h = hourAt(c0, c1); return Math.abs(hour - h) <= tol && Math.abs(h - P4_HOUR) <= P4_HOUR_SLACK; };
 
 // ------------------------------------------------------------------ p5 [SP] The Collapse fit (TT17)
 
@@ -219,7 +232,7 @@ export const lawCore: LawCore<FitCase> & { answer: Record<string, string> } = {
     { pts: [[0, 0], [1, 5]] },                                                  // two readings: always exact
   ],
   holds: lawHolds,
-  describe: (c) => { const { f, r } = resid(c.pts); return `readings ${c.pts.map((q) => fmtV(q)).join(', ')}: best line $y = ${fmtN(f[0])} ${f[1] < 0 ? '-' : '+'} ${fmtN(Math.abs(f[1]))}t$, leftover ${fmtV(r)}`; },
+  describe: (c) => { const { f, r } = resid(c.pts); return `readings ${c.pts.map((q) => fmtV(q)).join(', ')}: best line ${lineTex(f[0], f[1])}, leftover ${fmtV(r)}`; },
 };
 
 // ------------------------------------------------------------------ crew
