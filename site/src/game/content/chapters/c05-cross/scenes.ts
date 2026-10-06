@@ -29,11 +29,12 @@ export const ARK_OPTS: ArkOpts = {
 
 // ------------------------------------------------------------------ the hull's normals
 
-interface HullMesh { geo: BufferGeometry; normals: Float32Array; pos: Float32Array; colors: Float32Array; toWorld: Matrix3; order: number[]; x: Float32Array; done: number; faceN: Float32Array | null }
+interface HullMesh { geo: BufferGeometry; normals: Float32Array; pos: Float32Array; colors: Float32Array; toWorld: Matrix3; order: number[]; x: Float32Array; done: number; out: number; faceN: Float32Array | null }
 
 /**
  * Prepare every mesh of the ark for the hull-lighting bake. The corrupted record: in half of the
- * panels (runs of 40 triangles) every vertex normal points into the hull, so those panels render dark.
+ * panels (runs of 40 triangles) every vertex normal points into the hull, so those panels render dark
+ * (their baked light term starts low). `out` counts the faces whose normals already face out.
  */
 export function corruptHull(model: Object3D, ark: Group): { meshes: HullMesh[]; total: number } {
   const meshes: HullMesh[] = [];
@@ -70,11 +71,29 @@ export function corruptHull(model: Object3D, ark: Group): { meshes: HullMesh[]; 
     const flip = Array.from({ length: panels }, () => r() < 0.5);
     for (let f = 0; f < faces; f++) if (flip[Math.floor(f / 40)]) for (let k = 0; k < 9; k++) normals[f * 9 + k] *= -1;
     nAttr.needsUpdate = true;
+    // which faces already face out: every vertex normal agrees with the corner-order normal
+    let out = 0;
+    for (let f = 0; f < faces; f++) {
+      const nf = windingNormal(pos, f * 9);
+      let ok = true;
+      for (let k = 0; k < 3; k++) {
+        const q = f * 9 + k * 3;
+        if (normals[q] * nf[0] + normals[q + 1] * nf[1] + normals[q + 2] * nf[2] < 0) { ok = false; colors[q] = 0.16; colors[q + 1] = 0.17; colors[q + 2] = 0.2; }
+      }
+      if (ok) out++;
+    }
     const order = Array.from({ length: faces }, (_, f) => f).sort((a, b) => x[b] - x[a]);
     const toWorld = new Matrix3().getNormalMatrix(m.matrixWorld);
-    meshes.push({ geo, normals, pos, colors, toWorld, order, x, done: 0, faceN: null });
+    meshes.push({ geo, normals, pos, colors, toWorld, order, x, done: 0, out, faceN: null });
   });
   return { meshes, total };
+}
+
+/** (B − A) × (C − A) for the face whose corners start at `o` (LANTERN's own check, before any bake). */
+function windingNormal(p: Float32Array, o: number): number[] {
+  const ux = p[o + 3] - p[o], uy = p[o + 4] - p[o + 1], uz = p[o + 5] - p[o + 2];
+  const vx = p[o + 6] - p[o], vy = p[o + 7] - p[o + 1], vz = p[o + 8] - p[o + 2];
+  return [uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx];
 }
 
 const LIGHT = new Vector3(...STAR_DIR).normalize();
@@ -88,25 +107,28 @@ function fixFace(hm: HullMesh, f: number): void {
   const p = hm.pos, n = hm.normals, o = f * 9;
   const nf = hm.faceN ? [hm.faceN[f * 3], hm.faceN[f * 3 + 1], hm.faceN[f * 3 + 2]]
     : crew.normal([p[o], p[o + 1], p[o + 2]], [p[o + 3], p[o + 4], p[o + 5]], [p[o + 6], p[o + 7], p[o + 8]]);
+  let turned = false;
   for (let k = 0; k < 3; k++) {
     const q = o + k * 3;
-    if (n[q] * nf[0] + n[q + 1] * nf[1] + n[q + 2] * nf[2] < 0) { n[q] = -n[q]; n[q + 1] = -n[q + 1]; n[q + 2] = -n[q + 2]; }
+    if (n[q] * nf[0] + n[q + 1] * nf[1] + n[q + 2] * nf[2] < 0) { n[q] = -n[q]; n[q + 1] = -n[q + 1]; n[q + 2] = -n[q + 2]; turned = true; }
     tmp.set(n[q], n[q + 1], n[q + 2]).applyMatrix3(hm.toWorld).normalize();
     const lit = 0.78 + 0.42 * Math.max(0, tmp.dot(LIGHT));
     hm.colors[q] = lit * 1.02; hm.colors[q + 1] = lit; hm.colors[q + 2] = lit * 0.96;
   }
+  if (turned) hm.out++;
 }
 
 /** Bake every face whose spine coordinate is past `cut` (the sweep runs from bow, +x, to stern). */
-function bakeTo(hull: { meshes: HullMesh[] }, cut: number): number {
-  let baked = 0;
+function bakeTo(hull: { meshes: HullMesh[] }, cut: number): { baked: number; out: number } {
+  let baked = 0, out = 0;
   for (const hm of hull.meshes) {
     let moved = false;
     while (hm.done < hm.order.length && hm.x[hm.order[hm.done]] >= cut) { fixFace(hm, hm.order[hm.done]); hm.done++; moved = true; }
     if (moved) { (hm.geo.getAttribute('normal') as BufferAttribute).needsUpdate = true; (hm.geo.getAttribute('color') as BufferAttribute).needsUpdate = true; }
     baked += hm.done;
+    out += hm.out;
   }
-  return baked;
+  return { baked, out };
 }
 
 const round = (x: number) => Math.round(x * 1e5) / 1e5;
@@ -207,6 +229,8 @@ export async function install(g: Game): Promise<void> {
     panel.append(h('div', { class: 'kicker' }, 'Hull lighting'), runOn, h('div', { style: 'height:8px;border-radius:4px;background:rgba(232,241,255,0.08)' }, bar), count);
     g.ui.scene.appendChild(panel);
     runOn.textContent = `Computing ${hull.total.toLocaleString('en')} normals…`;
+    const facing = (n: number) => { count.textContent = `${n.toLocaleString('en')} of ${hull.total.toLocaleString('en')} triangles facing out`; };
+    facing(bakeTo(hull, Infinity).out);
     const job = faceNormals(hull);
     await g.say(S.install);
     check(set);
@@ -223,13 +247,12 @@ export async function install(g: Game): Promise<void> {
     await animate(5200, (k) => {
       const cut = x0 + (x1 - x0) * k;
       ring.at(cut);
-      const n = bakeTo(hull, cut);
-      bar.style.width = `${(100 * n) / Math.max(1, hull.total)}%`;
-      count.textContent = `${n.toLocaleString('en')} of ${hull.total.toLocaleString('en')} triangles facing out`;
+      const b = bakeTo(hull, cut);
+      bar.style.width = `${(100 * b.baked) / Math.max(1, hull.total)}%`;
+      facing(b.out);
     }, ease.inOut);
     check(set);
-    bakeTo(hull, -1e9);
-    count.textContent = `${hull.total.toLocaleString('en')} of ${hull.total.toLocaleString('en')} triangles facing out`;
+    facing(bakeTo(hull, -Infinity).out);
     await animate(500, (k) => { (ring.mesh.material as MeshBasicMaterial).opacity = 0.32 * (1 - k); }, ease.out);
     sfx.success();
     g.stage.flash(0.1, 400);
