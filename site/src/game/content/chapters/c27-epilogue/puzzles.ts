@@ -43,9 +43,9 @@ export const p1: PuzzleDef = {
     const mv = new MatrixView3(p, {
       M: R, draggable: true, input: true, snap: p.snap() ?? 0.5,
       onChange: (M) => {
-        r.row('m', 'setting (rows)', show3(M));
+        for (let j = 0; j < 3; j++) r.row(`s${j}`, `spire ${j + 1}`, `(${[0, 1, 2].map((i) => nice(+M[i][j].toFixed(3))).join(', ')})`, [C.v, C.w, C.u][j]);
         const g = matMul(matMul(inverse(P)!, M), P);
-        r.row('g', 'in the Anchor’s grid', show3(g), L.isIdentity(M, 1e-6) ? C.result : undefined);
+        r.row('g', 'in the Anchor’s grid', L.isIdentity(g, 1e-6) ? 'the same: nothing moves' : show3(g), L.isIdentity(M, 1e-6) ? C.result : undefined);
       },
       onCommit: (M) => {
         p.move();
@@ -61,7 +61,6 @@ export const p1: PuzzleDef = {
         }
       },
     });
-    r.row('m', 'setting (rows)', show3(mv.get()));
     return {
       async showMe() { await mv.showMe(identity(3), 1400); },
       async wrong() { await mv.showMe([[1, 0, 0], [0, 1, 0], [0, 0, 0]], 800); },
