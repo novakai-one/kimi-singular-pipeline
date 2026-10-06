@@ -466,7 +466,7 @@ export class DialRig {
     const tip = this.o.dims === 2 ? this.tip.slice(0, 2) : this.tip;
     r.row('t', this.previewOn ? 'tip lands at' : 'last landing', this.previewOn ? fmtV(tip) : this.landed ? fmtV(this.o.dims === 2 ? this.landed.slice(0, 2) : this.landed) : '?', C.result);
     const terms = this.arrows.map((a, i) => (this.bolted[i] ? `${nice(this.dials[i])}\\,${MACRO[i]}{${texV(this.o.dims === 2 ? a.slice(0, 2) : a)}}` : null)).filter(Boolean);
-    const size = terms.length >= 3 && this.o.dims === 3 ? '\\footnotesize ' : '';
+    const size = terms.length >= 3 ? '\\footnotesize ' : '';
     r.eq(`${size}${terms.join(' + ').replace(/\+ -/g, '- ')} = \\cy{${this.previewOn ? texV(tip) : '?'}}`);
   }
 

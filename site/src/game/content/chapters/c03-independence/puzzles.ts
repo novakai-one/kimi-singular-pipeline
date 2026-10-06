@@ -4,7 +4,7 @@ import type { PuzzleCtx, PuzzleDef, V3 } from '../../../game/types';
 import { VectorHandle } from '../../../kit/handle';
 import { StepWorksheet, TileOrder } from '../../../kit/steps';
 import { Arrow } from '../../../gfx/arrow';
-import { Beacon } from '../../../gfx/markers';
+import { Beacon, Dot } from '../../../gfx/markers';
 import { FatLine } from '../../../gfx/lines';
 import { PlanePatch } from '../../../gfx/shapes';
 import { burst } from '../../../gfx/fx';
@@ -310,7 +310,7 @@ export const p5: PuzzleDef = {
     void p.g.stage.view3D({ target: mid, distance: 13, azimuth: -55, elevation: 24, ms: 0 });
     const loop = [...four.dials, -1];
     const a4 = new Arrow(ORIGIN, A[3], { color: '#e8f1ff', label: '$\\mathbf a_4$' });
-    const ring = new Beacon(p.g.stage, A[3], { color: '#e8f1ff', beam: false });
+    const ring = new Dot(A[3], { color: '#e8f1ff', size: 0.1, glow: 1.6 });
     p.add(a4, ring);
     const flags = [false, false];
     let closed = false;

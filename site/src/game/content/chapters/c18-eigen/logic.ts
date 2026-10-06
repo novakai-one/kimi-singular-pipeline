@@ -222,7 +222,12 @@ export const LAW_CORE: LawCore<EigCase> & { answer: Record<string, string> } = {
       : c.A.some((r, i) => Math.abs(r[i] - c.l) < 1e-9);   // 'diag': λ is on A's diagonal
     return isEig === cond;
   },
-  describe: (c) => `A = ${texSmallPlain(c.A)}, λ = ${fmtN(c.l)}: ${isRealEigenvalue(c.A, c.l, 1e-7) ? 'λ is a stretch of A' : 'λ is not a stretch of A'}; A − λI ${Math.abs(det(shift(c.A, c.l))) < 1e-7 ? 'flattens space' : 'does not flatten space'}`,
+  describe: (c) => {
+    const S = shift(c.A, c.l);
+    const flat = Math.abs(det(S)) < 1e-7, zero = S.every((r) => r.every((x) => Math.abs(x) < 1e-9));
+    const what = zero ? 'is the zero matrix' : flat ? 'flattens space but is not the zero matrix' : 'does not flatten space';
+    return `A = ${texSmallPlain(c.A)}, λ = ${fmtN(c.l)}: ${isRealEigenvalue(c.A, c.l, 1e-7) ? 'some arrow only stretches by λ' : 'no arrow only stretches by λ'}, and A − λI = ${texSmallPlain(S)} ${what}`;
+  },
 };
 const texSmallPlain = (M: Mat) => `(${M.map((r) => r.map(fmtN).join(', ')).join('; ')})`;
 export const LAW_NEAR_MISSES: Record<string, string>[] = [{ cond: 'zero' }, { cond: 'invertible' }, { cond: 'diag' }];
@@ -244,6 +249,8 @@ export interface ProcRun { ok: boolean; message: string; values: number[] | null
 const rowReduce2 = (A: Mat): Mat => (Math.abs(A[0][0]) < 1e-12 ? A : [A[0].slice(), [0, A[1][1] - (A[1][0] / A[0][0]) * A[0][1]]]);
 const realRoots = (A: Mat): number[] => { const e = eig2(A); return e.kind === 'real' ? (Math.abs(e.values[0] - e.values[1]) < 1e-12 ? [e.values[0]] : e.values) : []; };
 const unitLine = (v: Vec): Vec => { const u = normalize(v); return u[0] < -1e-9 || (Math.abs(u[0]) < 1e-9 && u[1] < 0) ? u.map((x) => -x) : u; };
+
+const DIRECT_MSG = 'LANTERN solved $(A - \\lambda I)\\mathbf v = \\mathbf 0$ without choosing $\\lambda$. For almost every $\\lambda$ the only answer is the zero arrow, so that is all it found. Find the $\\lambda$ that flatten first: $\\det(A - \\lambda I) = 0$.';
 
 /** Run the tiles literally on PROC_A. A missing or misplaced key step is replaced by its misconception. */
 export function runProc(ids: readonly string[], A0: Mat = PROC_A): ProcRun {
@@ -270,7 +277,7 @@ export function runProc(ids: readonly string[], A0: Mat = PROC_A): ProcRun {
       steps.push({ tile: id, label: `Roots: $\\lambda = ${values.map(fmtN).join('$ and $\\lambda = ')}$` });
     } else if (id === 'foreach') { loop = true; steps.push({ tile: id, label: 'For each $\\lambda$:' }); }
     else if (id === 'null') {
-      if (!values || !values.length) return fail('novalues', 'LANTERN reached “find the null space” with no $\\lambda$ to use.');
+      if (!values || !values.length) return direct ? fail('direct', DIRECT_MSG) : fail('novalues', 'LANTERN reached “find the null space” with no $\\lambda$ to use.');
       const use = loop ? values : values.slice(0, 1);
       for (const l of use) {
         const line = nullLine(A, l);
@@ -283,7 +290,7 @@ export function runProc(ids: readonly string[], A0: Mat = PROC_A): ProcRun {
       steps.push({ tile: id, label: vectors.length ? 'Leave out the zero arrow' : 'Leave out the zero arrow (nothing listed yet)' });
     }
   }
-  if (direct && (!values || !values.length)) return fail('direct', 'LANTERN solved $(A - \\lambda I)\\mathbf v = \\mathbf 0$ without choosing $\\lambda$. For almost every $\\lambda$ the only answer is the zero arrow, so that is all it found. Find the $\\lambda$ that flatten first: $\\det(A - \\lambda I) = 0$.');
+  if (direct && (!values || !values.length)) return fail('direct', DIRECT_MSG);
   if (!values) return fail('novalues', 'LANTERN never found a value of $\\lambda$. Form $A - \\lambda I$, set its determinant to 0 and solve.');
   const rightValues = values.length === PROC_VALUES.length && PROC_VALUES.every((v) => values!.some((x) => Math.abs(x - v) < 1e-9));
   if (!rightValues) {
