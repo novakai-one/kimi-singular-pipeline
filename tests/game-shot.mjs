@@ -1,6 +1,6 @@
 // Screenshot any game page through the Vite dev server: node tests/game-shot.mjs <url-path> <out.png> [waitMs]
 import { chromium } from 'playwright';
-const [, , path = '/game/sandbox.html', out = 'shot.png', waitMs = '2500', w = '1440', h = '900'] = process.argv;
+const [, , path = '/game/_sandbox.html', out = 'shot.png', waitMs = '2500', w = '1440', h = '900'] = process.argv;
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const p = await b.newPage({ viewport: { width: +w, height: +h } });
 const errors = [];

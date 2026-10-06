@@ -78,6 +78,14 @@ Rules:
 | `kit/rowops.ts` `RowOpsBoard`, `SystemView` | augmented matrix with row operations; the lines/planes picture kept in sync |
 | `kit/geom.ts` | `RightAngle`, `AngleArc`, `Shadow` (projection), `Sweep` (eigen hunt), `UnitCircleImage` (SVD) |
 | `kit/data.ts` | `PointCloud`, `FitLine` (least squares), `Projector3D`, `PCAView` |
+| `kit/flight.ts` `BurnChain` | burns drawn tip to tail from the ship; **Fire** flies the ship; fixed (already fired) burns; per-burn constraints; `onArrive` returns `'win' / 'ok' / 'miss'` |
+| `kit/cine.ts` | `letterbox`, `fadeBlack`, `titleCard`, `NumberBoard`, `stamp`, `clearCine` for cinematic beats |
+| `gfx/buoys.ts` `BuoyField` | the lattice of light buoys: a matrix moves every point at once (`set`, `to`), `highlight`, `pick` |
+| `gfx/models.ts` | `loadModel(name)`, `Ship` (model + engine exhaust, `flyTo`, `face`, `setThrust`); models in `public/game/models/` (`lantern`, `meridian`, `anchor`, `buoy`, `debris_0..5`, `bridge`) |
+| `content/common/set.ts` | `makeAnchor`, `makeLantern`, `SPIRES` (story set pieces with fallbacks) |
+| `game/caseboard.ts` | `pin(id, question, chapter)` raises a story question; `answer(id, text, chapter)` resolves it |
+| `game/build.ts` `pylib` | `await pylib.call('add', v, w)` runs the player's Python function (or the reference) — use for payoffs |
+| `g.stage.shockwave(at, ms, amp)` | a screen-space shockwave ring (the pulse) · `g.stage.flash()`, `g.stage.nudge()` |
 | `gfx/arrow.ts` `Arrow` | a non-draggable arrow (`moveTo`, `grow`, `pulse`) |
 | `gfx/grid.ts` `Grid2D` | via `p.grid()`; `grid.to(M)` animates the moved grid |
 | `gfx/shapes.ts` | `Parallelogram`, `Parallelepiped`, `PlanePatch`, `InfLine`, `Outline2D`, `Lattice3D` |

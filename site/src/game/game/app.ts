@@ -17,6 +17,7 @@ import { CHAPTERS, ACTS, act, chapter as findChapter, nextChapter } from './regi
 import type { ChapterDef, CodexEntry, Game } from './types';
 import { TitleScene } from './title';
 import { installDebug } from './debug';
+import { caseBoardScreen } from './caseboard';
 
 export class App implements Game {
   readonly stage: Stage;
@@ -48,6 +49,7 @@ export class App implements Game {
       onCodex: () => void this.codexScreen(),
       onSettings: () => void this.settingsScreen(),
       onLog: () => void this.logScreen(),
+      onCase: () => void caseBoardScreen(this.ui),
     });
     this.hud.setVisible(false);
     this.runner = new Runner(this, this.hud);

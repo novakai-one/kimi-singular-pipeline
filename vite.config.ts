@@ -13,7 +13,7 @@ function findPages(dir: string, out: Record<string, string> = {}): Record<string
     const full = join(dir, name);
     if (name === 'node_modules' || name === 'public' || name === 'src') continue;
     if (statSync(full).isDirectory()) findPages(full, out);
-    else if (name.endsWith('.html')) out[relative(root, full).replace(/\.html$/, '')] = full;
+    else if (name.endsWith('.html') && !name.startsWith('_')) out[relative(root, full).replace(/\.html$/, '')] = full; // _name.html = dev only
   }
   return out;
 }

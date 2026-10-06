@@ -16,6 +16,7 @@ import { makeAnchor, makeLantern } from '../../common/set';
 import { near } from '../../../kit/handle';
 import { S, PULSE0 } from './script';
 import type { Ship } from '../../../gfx/models';
+import { pin } from '../../../game/caseboard';
 
 const CYAN = '#59e1ff';
 const ORANGE = C.orange;
@@ -302,7 +303,7 @@ async function closing(g: Game): Promise<void> {
   s.buoys.set(PULSE0);
   await g.say(S.close.slice(0, 4));
   sfx.discover();
-  g.toast('Why did everything move except the point under the Anchor?', 'Case board');
+  if (pin('linear', 'Why did everything move except the point under the Anchor? Why did straight lines stay straight?', 'c00')) g.toast('Why did everything move except the point under the Anchor?', 'Case board');
   await g.say(S.close.slice(4));
 }
 

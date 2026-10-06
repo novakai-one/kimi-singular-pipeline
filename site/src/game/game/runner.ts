@@ -14,6 +14,7 @@ import { setAnimSpeed, animSpeed, wait } from '../core/tween';
 import { celebrate } from '../gfx/fx';
 import { runBuild } from './build';
 import { clearCine } from '../kit/cine';
+import { shipExterior } from '../content/common/shots';
 import { Grid2D, type GridOpts } from '../gfx/grid';
 
 export interface PuzzleState {
@@ -47,6 +48,13 @@ export class Runner {
     this.g.ui.panel.replaceChildren();
     this.g.ui.clearScene();
     this.hud.clearControls();
+  }
+
+  /** If nothing is on stage (e.g. right after a puzzle), show the ship drifting in space. */
+  private async backdrop(): Promise<void> {
+    if (this.g.stage.world.children.length) return;
+    if (this.g.headless) return;
+    await shipExterior(this.g);
   }
 
   /** A promise that rejects when abort() is called. */
@@ -93,6 +101,7 @@ export class Runner {
         if (beat.view === '2d') await this.g.stage.view2D({ height: 10, ms: 900 });
         if (beat.view === '3d') await this.g.stage.view3D({ ms: 1200 });
         if (beat.setup) await this.guard(Promise.resolve(beat.setup(this.g)));
+        else await this.backdrop();
         await this.guard(this.g.say(beat.lines, { onLine: beat.onLine }));
         return;
       }
@@ -107,6 +116,7 @@ export class Runner {
       case 'explain': return this.runExplain(beat.explain);
       case 'build': {
         this.hud.hideObjective();
+        await this.backdrop();
         await this.guard(runBuild(this.g, beat.build as BuildDef, this.hud));
         return;
       }
@@ -128,6 +138,9 @@ export class Runner {
 
   private async mountPuzzle(def: PuzzleDef, onWin: () => void): Promise<PuzzleState> {
     this.teardownPuzzle();
+    // every puzzle starts from an empty world (scenes may have left a set or a shot behind)
+    this.g.stage.clearWorld();
+    this.g.ui.clearScene();
     clearCine();
     if ((def.view ?? '2d') === '2d') await this.g.stage.view2D({ height: 10, ms: 700 });
     else await this.g.stage.view3D({ ms: 900 });
@@ -302,6 +315,7 @@ export class Runner {
 
   async runName(e: CodexEntry): Promise<void> {
     this.hud.hideObjective();
+    if (!e.visual) await this.backdrop();
     const firstTime = !S().codex[e.id];
     S().codex[e.id] = { ...(S().codex[e.id] ?? {}), at: Date.now() };
     save();

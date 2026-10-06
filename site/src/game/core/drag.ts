@@ -29,6 +29,9 @@ export class DragManager {
   private grabOffset = new Vector3();
   /** True while anything is being dragged (other systems can ignore clicks). */
   dragging = false;
+  /** The handle last grabbed: arrow keys nudge it. */
+  private last: (DragOpts & DragHandle) | null = null;
+  private nudgeTimer = 0;
 
   constructor(private readonly stage: Stage) {
     const el = stage.renderer.domElement;
@@ -36,6 +39,30 @@ export class DragManager {
     window.addEventListener('pointermove', (e) => this.move(e));
     window.addEventListener('pointerup', () => this.up());
     window.addEventListener('pointercancel', () => this.up());
+    window.addEventListener('keydown', (e) => this.key(e));
+  }
+
+  /** Arrow keys move the last grabbed handle one snap step (Shift: five steps; PageUp/Down: height in 3-D). */
+  private key(e: KeyboardEvent): void {
+    const item = this.last;
+    if (!item || !this.items.has(item) || !item.enabled || this.active) return;
+    const t = e.target as HTMLElement | null;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'BUTTON' || t.isContentEditable)) return;
+    const dirs: Record<string, [number, number, number]> = {
+      ArrowLeft: [-1, 0, 0], ArrowRight: [1, 0, 0], ArrowUp: [0, 1, 0], ArrowDown: [0, -1, 0], PageUp: [0, 0, 1], PageDown: [0, 0, -1],
+    };
+    const d = dirs[e.key];
+    if (!d) return;
+    if (d[2] && this.stage.mode === '2d') return;
+    e.preventDefault();
+    const step = (item.snap?.() ?? 0.1) * (e.shiftKey ? 5 : 1);
+    let p = item.getPos().add(new Vector3(d[0] * step, d[1] * step, d[2] * step));
+    const s = item.snap?.();
+    if (s) p.set(Math.round(p.x / s) * s, Math.round(p.y / s) * s, Math.round(p.z / s) * s);
+    if (item.constrain) p = item.constrain(p);
+    item.onMove(p);
+    window.clearTimeout(this.nudgeTimer);
+    this.nudgeTimer = window.setTimeout(() => { if (this.items.has(item)) item.onEnd?.(); }, 650);
   }
 
   add(o: DragOpts): DragHandle {
@@ -44,10 +71,11 @@ export class DragManager {
       remove: () => { this.items.delete(item); if (this.active === item) this.up(); },
     });
     this.items.add(item);
+    if (!this.last) this.last = item;
     return item;
   }
 
-  clear(): void { this.items.clear(); this.active = null; this.dragging = false; }
+  clear(): void { this.items.clear(); this.active = null; this.last = null; this.dragging = false; }
 
   private hit(e: PointerEvent): (DragOpts & DragHandle) | null {
     const list = [...this.items].filter((i) => i.enabled && i.target.visible !== false);
@@ -63,6 +91,7 @@ export class DragManager {
     e.preventDefault();
     e.stopPropagation();
     this.active = item;
+    this.last = item;
     this.dragging = true;
     this.vertical = e.shiftKey && this.stage.mode === '3d' && !item.planar;
     const p = item.getPos();

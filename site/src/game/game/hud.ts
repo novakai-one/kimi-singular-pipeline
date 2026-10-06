@@ -19,13 +19,14 @@ export class Hud {
   private starsEl: HTMLElement | null = null;
   private hintBtn: HTMLButtonElement | null = null;
 
-  constructor(private readonly ui: UI, menu: { onMenu: () => void; onCodex: () => void; onSettings: () => void; onLog: () => void }) {
+  constructor(private readonly ui: UI, menu: { onMenu: () => void; onCodex: () => void; onSettings: () => void; onLog: () => void; onCase: () => void }) {
     this.chapterEl = h('div', { class: 'hud-chapter' });
     this.objEl = h('div', { class: 'objective glass' });
     this.objEl.hidden = true;
     this.tl = h('div', { class: 'hud-tl' }, this.chapterEl, this.objEl);
     this.tr = h('div', { class: 'hud-tr' },
       button('Log', menu.onLog, { cls: 'ghost small', title: 'Dialogue log' }),
+      button('Case board', menu.onCase, { cls: 'ghost small', title: 'Open questions' }),
       button('Codex', menu.onCodex, { cls: 'ghost small', title: 'Codex (C)' }),
       button('⚙', menu.onSettings, { cls: 'ghost small icon', title: 'Settings' }),
       button('☰', menu.onMenu, { cls: 'ghost small icon', title: 'Menu (Esc)' }));

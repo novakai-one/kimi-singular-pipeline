@@ -75,6 +75,37 @@ The repository is private. The first time you open a notebook, Colab asks to con
 
 ---
 
+---
+
+## SINGULAR: the linear algebra game
+
+A voiced story game that teaches university linear algebra, from vectors to the singular value decomposition.
+You move space with your own hands, find out *why* each idea works, explain it back, and write the Python behind it.
+
+**Play:** `npm install`, then `npm run dev` and open http://localhost:5173/game/ (or **Linear algebra → SINGULAR** in the site menu).
+
+| Where | What |
+|---|---|
+| `game-design/` | the design: `GDD.md`, `curriculum.md` (28 concept nodes), `AUTHORING.md` (how to write a chapter), the three original pitches |
+| `site/game/index.html` | the game page |
+| `site/src/game/` | the game: `core/` (stage, tweens, drag, save), `gfx/` (grid shader, arrows, buoys, shapes, models), `kit/` (puzzle components), `ui/`, `audio/` (music, effects, voice), `game/` (runner, builder, Python runner), `math/` (exact linear algebra), `content/` (chapters, cast, script) |
+| `site/public/game/` | voice banks (`voice/`), Blender models (`models/`); Pyodide is copied in by `npm run gen` |
+| `tools/game/` | `voices.py` + `pack_voices.py` (Kokoro voice acting), `blender/*.py` (procedural 3-D models) |
+
+**Checks**
+
+```bash
+node --experimental-strip-types --test tests/unit/game-*.test.ts   # maths library and puzzle numbers
+node tests/game-solve-all.mjs            # every puzzle, every difficulty, solved headlessly (dev server running)
+node tests/game-flow.mjs c01 shots/c01   # screenshots of every beat of a chapter
+node tests/game-wording.mjs              # house wording rules + "no term before it is named"
+```
+
+**Regenerate the voices** (Kokoro TTS, CPU): `node tests/game-lines.mjs lines.json`, then
+`python tools/game/voices.py lines.json --model <kokoro dir>` and `python tools/game/pack_voices.py lines.json`.
+
+---
+
 ## Repo layout
 
 ```
