@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import { readdirSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -18,7 +18,24 @@ function findPages(dir: string, out: Record<string, string> = {}): Record<string
   return out;
 }
 
+// With hot reload off, a newly added chapter file must still reach the chapter registry's glob.
+function chapterWatch(): Plugin {
+  return {
+    name: 'chapter-watch',
+    configureServer(server) {
+      const reg = resolve(root, 'src/game/game/registry.ts');
+      const bust = (f: string) => {
+        if (!f.includes('/content/chapters/')) return;
+        server.moduleGraph.getModulesByFile(reg)?.forEach((m) => server.moduleGraph.invalidateModule(m));
+      };
+      server.watcher.on('add', bust);
+      server.watcher.on('unlink', bust);
+    },
+  };
+}
+
 export default defineConfig({
+  plugins: [chapterWatch()],
   root,
   base: './', // relative URLs: works on GitHub Pages under any sub-path
   build: {
@@ -27,5 +44,6 @@ export default defineConfig({
     rollupOptions: { input: findPages(root) },
     chunkSizeWarningLimit: 1200,
   },
-  server: { port: 5173 },
+  // No hot reload: several tools edit files while browser tests run; a reload would break them.
+  server: { port: 5173, hmr: false },
 });

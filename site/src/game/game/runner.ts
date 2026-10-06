@@ -13,6 +13,7 @@ import { music } from '../audio/music';
 import { setAnimSpeed, animSpeed, wait } from '../core/tween';
 import { celebrate } from '../gfx/fx';
 import { runBuild } from './build';
+import { clearCine } from '../kit/cine';
 import { Grid2D, type GridOpts } from '../gfx/grid';
 
 export interface PuzzleState {
@@ -38,6 +39,7 @@ export class Runner {
   /** Stop whatever is running (used when jumping to another chapter or the title). */
   abort(): void {
     this.aborted = true;
+    clearCine();
     for (const f of [...this.abortFns]) f();
     this.abortFns.clear();
     this.g.dialogue.abort();
@@ -126,6 +128,7 @@ export class Runner {
 
   private async mountPuzzle(def: PuzzleDef, onWin: () => void): Promise<PuzzleState> {
     this.teardownPuzzle();
+    clearCine();
     if ((def.view ?? '2d') === '2d') await this.g.stage.view2D({ height: 10, ms: 700 });
     else await this.g.stage.view3D({ ms: 900 });
     const ctx = new PuzzleCtxImpl(this.g, this.hud, onWin);
@@ -156,6 +159,9 @@ export class Runner {
     if (def.predict) {
       predictBox = this.predictionCard(def, (id) => { prediction = id; });
       this.g.ui.scene.appendChild(predictBox);
+      // once the player starts playing, an unanswered prediction gets out of the way
+      const box = predictBox;
+      (state.ctx as PuzzleCtxImpl).onFirstMove = () => { if (prediction === null) box.hidden = true; };
     }
 
     const hintBox = h('div', { class: 'hint-box glass' });
@@ -409,7 +415,11 @@ class PuzzleCtxImpl implements PuzzleCtx {
     this.onWin();
   }
 
-  move(n = 1): void { this.moveCount += n; }
+  onFirstMove: (() => void) | null = null;
+  move(n = 1): void {
+    if (this.moveCount === 0 && this.onFirstMove) { this.onFirstMove(); this.onFirstMove = null; }
+    this.moveCount += n;
+  }
   moves(): number { return this.moveCount; }
   subgoal(i: number, done = true): void { this.hud.subgoal(i, done); if (done) sfx.success(); }
   setGoal(m: string): void { this.hud.setGoal(m); }

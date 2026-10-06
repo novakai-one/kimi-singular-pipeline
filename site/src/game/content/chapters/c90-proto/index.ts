@@ -35,7 +35,7 @@ const reach: PuzzleDef = {
 };
 
 const ch: ChapterDef = {
-  id: 'c00', act: 1, num: 0, title: 'Prototype', subtitle: 'Engine test', nodes: ['N01'], dev: true,
+  id: 'c90', act: 99, num: 90, title: 'Prototype', subtitle: 'Engine test', nodes: ['N01'], dev: true,
   beats: [
     { kind: 'scene', id: 's1', lines: [['you', 'This is a test of the comm channel. The words should fade in.'], ['narrator', 'A narration line, in italics, centred.']] },
     { kind: 'puzzle', id: 'p1', puzzle: reach },

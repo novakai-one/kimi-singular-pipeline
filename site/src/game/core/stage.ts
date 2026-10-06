@@ -342,7 +342,10 @@ export function clearGroup(g: Object3D): void {
 }
 
 export function disposeDeep(o: Object3D): void {
+  const owners: (() => void)[] = [];
   o.traverse((n) => {
+    const d = (n.userData as { dispose?: () => void }).dispose;
+    if (typeof d === 'function') owners.push(d);
     const m = n as Mesh;
     if (m.geometry) m.geometry.dispose();
     const mat = m.material as Material | Material[] | undefined;
@@ -350,4 +353,6 @@ export function disposeDeep(o: Object3D): void {
     else if (mat) mat.dispose();
   });
   (o as Object3D & { dispose?: () => void }).dispose?.();
+  // objects that own per-frame callbacks (ships, pads, beacons) clean themselves up
+  for (const f of owners) { try { f(); } catch { /* already disposed */ } }
 }

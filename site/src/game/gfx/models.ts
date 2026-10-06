@@ -55,6 +55,7 @@ export class Exhaust {
       new MeshBasicMaterial({ color: new Color(color).multiplyScalar(2.2), transparent: true, opacity: 0.55, blending: AdditiveBlending, depthWrite: false }));
     this.glow = glowSprite(color, s * 6, 0.9);
     this.group.add(this.cone, this.glow);
+    this.group.userData.dispose = () => this.dispose();
     this.off = stage.tick((_dt, t) => {
       const f = 0.85 + 0.15 * Math.sin(t * 43) * Math.sin(t * 17.3);
       this.cone.scale.set(1, Math.max(0.01, this.power * f), 1);
@@ -78,6 +79,7 @@ export class Ship {
   readonly ready: Promise<void>;
 
   constructor(stage: Stage, o: { model?: string; scale?: number; engines?: V3[]; color?: string } = {}) {
+    this.group.userData.dispose = () => this.dispose();
     this.ready = (async () => {
       const m = o.model ? await loadModel(o.model) : null;
       const body = m ?? fallbackShip(o.color);

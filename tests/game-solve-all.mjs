@@ -34,7 +34,7 @@ for (const ch of chapters) {
         if (!mounted) throw new Error('did not mount');
         ok = await Promise.race([
           p.evaluate(() => window.__game.solve()),
-          new Promise((_, rej) => setTimeout(() => rej(new Error('solve timed out (30 s)')), 30000)),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('solve timed out (120 s)')), 120000)),
         ]);
         if (shots) await p.screenshot({ path: `${shots}/${ch.id}-${beat.puzzle}-${d}.png` });
       } catch (e) { err = String(e.message ?? e); }

@@ -53,6 +53,7 @@ export class Pad {
       this.label = new Label(o.label, [0, -r - 0.32, 0], { className: 'small' });
       this.group.add(this.label.object);
     }
+    this.group.userData.dispose = () => this.dispose();
     this.off = stage.tick((_dt, t) => {
       if (this.done) return;
       const k = 0.5 + 0.5 * Math.sin(t * 3.2);
@@ -148,6 +149,7 @@ export class Beacon {
       this.group.add(this.label.object);
     }
     this.at(pos);
+    this.group.userData.dispose = () => this.dispose();
     this.off = stage.tick((_dt, t) => { this.halo.material.opacity = 0.45 + 0.2 * Math.sin(t * 2.4); });
   }
   get object(): Group { return this.group; }

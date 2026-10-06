@@ -17,13 +17,16 @@
 .dock { position: absolute; left: 20px; bottom: 20px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; max-width: min(520px, calc(100vw - 40px)); }
 .hint-box { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); width: min(340px, 40vw); padding: 14px 16px; font-size: 15px; line-height: 1.5; color: var(--ink-2); animation: fade-in 0.3s; }
 .hint-box p { margin: 6px 0 0; }
-.predict-card { position: absolute; left: 50%; top: 18px; transform: translateX(-50%); width: min(640px, calc(100vw - 32px)); padding: 16px 18px; animation: fade-in 0.4s; }
+.predict-card { position: absolute; left: 456px; right: 456px; top: 18px; max-width: 640px; margin: 0 auto; padding: 16px 18px; animation: fade-in 0.4s; }
 .predict-q { font-size: 16px; line-height: 1.5; margin: 6px 0 10px; }
 .predict-q p { margin: 0; }
 .predict-chip { font-size: 14px; display: flex; gap: 10px; align-items: baseline; }
 .predict-chip p { margin: 0; display: inline; }
-.win-card { position: absolute; left: 50%; top: 18px; transform: translateX(-50%); width: min(620px, calc(100vw - 32px)); padding: 16px 20px; animation: win-in 0.6s cubic-bezier(.2,.8,.2,1); }
-@keyframes win-in { from { opacity: 0; transform: translate(-50%, -10px) scale(0.98); } to { opacity: 1; transform: translate(-50%, 0); } }
+.win-card { position: absolute; left: 456px; right: 456px; top: 18px; max-width: 640px; margin: 0 auto; padding: 16px 20px; animation: win-in 0.6s cubic-bezier(.2,.8,.2,1); }
+@keyframes win-in { from { opacity: 0; transform: translateY(-10px) scale(0.98); } to { opacity: 1; transform: none; } }
+@media (max-width: 1180px) {
+  .predict-card, .win-card { left: auto; right: 20px; width: min(420px, calc(100vw - 40px)); top: auto; bottom: 74px; margin: 0; }
+}
 .win-head { display: flex; justify-content: space-between; align-items: center; }
 .win-head .kicker { color: var(--good); font-size: 13px; }
 .win-head .stars { font-size: 22px; }
@@ -137,3 +140,24 @@
   .title-screen { padding: 0 20px; }
 }
 .build-stdout { margin: 0 16px 10px; padding: 8px 10px; max-height: 120px; overflow: auto; font: 12.5px/1.5 var(--mono); color: var(--ink-2); background: rgba(4, 8, 18, 0.7); border-radius: 8px; border: 1px solid var(--line); }
+
+/* ---------- cinematics ---------- */
+.cine { position: fixed; inset: 0; pointer-events: none; z-index: 9; }
+.cine-bars .bar { position: absolute; left: 0; right: 0; height: 11vh; background: #000; transition: transform var(--dur, 700ms) cubic-bezier(.6,0,.2,1); }
+.cine-bars .bar.top { top: 0; transform: translateY(-100%); }
+.cine-bars .bar.bottom { bottom: 0; transform: translateY(100%); }
+.cine-bars.on .bar { transform: none; }
+.cine-black { background: #000; opacity: 0; transition: opacity 900ms ease; }
+.cine-black.on { opacity: 1; }
+.cine-title { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; opacity: 0; transition: opacity 0.9s ease, letter-spacing 3s ease; letter-spacing: 0.02em; text-align: center; padding: 0 24px; }
+.cine-title.on { opacity: 1; letter-spacing: 0.06em; }
+.cine-title .kicker { font-size: 13px; letter-spacing: 0.3em; }
+.cine-title .t { font-family: var(--display); font-weight: 600; font-size: clamp(30px, 4.4vw, 60px); color: var(--ink); text-shadow: 0 0 40px rgba(89, 225, 255, 0.35); }
+.cine-title .s { font-size: 17px; color: var(--ink-2); letter-spacing: 0.04em; }
+.cine-numbers { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; opacity: 0; transition: opacity 0.8s; }
+.cine-numbers.on { opacity: 1; }
+.cine-numbers .grid { display: grid; gap: 10px 34px; padding: 18px 30px; border-left: 2px solid var(--ink-2); border-right: 2px solid var(--ink-2); border-radius: 6px; }
+.cine-numbers .n { font-family: var(--mono); font-size: clamp(28px, 3.6vw, 48px); color: rgba(232, 241, 255, 0.18); text-align: center; min-width: 2.4em; transition: color 0.4s, text-shadow 0.4s; }
+.cine-numbers .n.lit { color: var(--ink); text-shadow: 0 0 18px rgba(170, 184, 255, 0.6); }
+.cine-stamp { top: auto; bottom: auto; inset: auto; left: 28px; top: 13vh; font-family: var(--display); font-size: 12px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--ink-2); opacity: 0; transition: opacity 0.7s; }
+.cine-stamp.on { opacity: 1; }
