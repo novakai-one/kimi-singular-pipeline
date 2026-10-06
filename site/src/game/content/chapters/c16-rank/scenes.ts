@@ -10,7 +10,7 @@ import { h, inline } from '../../../ui/ui';
 import { glowSprite } from '../../../gfx/markers';
 import { isPlayerFn, pylib } from '../../../game/build';
 import { C2 } from '../../truth';
-import { Gone, actSet, camTo, fireScan, makeCutter, scanSet } from '../c15-nullspace/scenes';
+import { Gone, actSet, aimAt, camTo, fireScan, makeCutter, scanSet } from '../c15-nullspace/scenes';
 import { Counter } from './counter';
 import { crew } from './logic';
 import { S } from './script';
@@ -18,10 +18,9 @@ import { S } from './script';
 /** The cutter near the stern, its scan plane sweeping the sheet. */
 async function cutterSet(g: Game) {
   const set = await actSet(g, { ark: { at: [0, 0, 0] }, anchor: { at: [-150, 95, -18], scale: 7 }, lantern: { at: [-30, -40, 6], face: [0.3, 1, 0], scale: 1.5 } });
-  const cutter = makeCutter(1.5);
-  cutter.position.set(-44, -14, 14);
-  cutter.lookAt(new Vector3(-21, 0, 0));
-  cutter.rotateY(Math.PI / 2);
+  const cutter = makeCutter(1.1);
+  cutter.position.set(-62, -30, 16);
+  aimAt(cutter, [-21, 0, 0]);
   set.root.add(cutter);
   set.tick((_dt, t) => cutter.traverse((n) => { if (n.userData.blink) (n as Sprite).material.opacity = Math.sin(t * 5) > 0.6 ? 0.95 : 0.15; }));
   return { set, cutter };
@@ -63,7 +62,7 @@ export async function coldOpen(g: Game): Promise<void> {
 export async function cutterShot(g: Game): Promise<void> {
   const { set } = await cutterSet(g);
   let t = 0;
-  set.tick((dt) => { t += dt; const a = -2.4 + t * 0.018; g.stage.camera.position.set(-26 + 46 * Math.cos(a), 46 * Math.sin(a), 12 + Math.sin(t * 0.1)); g.stage.camera.up.set(0, 0, 1); g.stage.camera.lookAt(-28, -6, 4); });
+  set.tick((dt) => { t += dt; const a = -2.05 + t * 0.015; g.stage.camera.position.set(-30 + 82 * Math.cos(a), 82 * Math.sin(a), 18 + Math.sin(t * 0.1)); g.stage.camera.up.set(0, 0, 1); g.stage.camera.lookAt(-36, -12, 6); });
   g.stage.disposeControls();
   g.stage.mode = '3d';
 }

@@ -289,7 +289,7 @@ export const p4: PuzzleDef = {
     let M: Mat = identity(2);
     const x = new VectorHandle(p, { to: [2, 1, 0], color: C.v, label: '$\\mathbf x$', snap: 1, limit: 4, planar: true, onChange: () => upd() });
     const y = new VectorHandle(p, { to: [0, 2, 0], color: C.w, label: '$\\mathbf y$', snap: 1, limit: 4, planar: true, onChange: () => upd() });
-    const bx = new Arrow([0, 0, 0], [0, 0, 0], { color: C.v, opacity: 0.55, width: 0.035, label: '$B\\mathbf x$', labelAt: 'mid' });
+    const bx = new Arrow([0, 0, 0], [0, 0, 0], { color: C.v, opacity: 0.55, width: 0.035, label: '$B\\mathbf x$' });
     const my = new Arrow([0, 0, 0], [0, 0, 0], { color: C.w, opacity: 0.55, width: 0.035, label: '$M\\mathbf y$', labelAt: 'mid' });
     p.add(bx, my);
     const r = p.readout('Both sides');
@@ -519,7 +519,7 @@ export const p6: PuzzleDef = {
       tried.push(M);
       ringPts.set(identity(3)); blobPts.set(identity(3));
       outline.setOpacity(0);
-      await playMove(v, M, identity(2), fast ? 0 : 1300, [(W) => { ringPts.set(W); blobPts.set(W); }, ride([0, 0], (q) => centre.at([q[0], q[1] - 0.45, 0]))]);
+      await playMove(v, M, identity(2), fast ? 0 : 1300, [(W) => { ringPts.set(W); blobPts.set(W); }, ride([0, 0], (q) => centre.at([q[0] + 0.9, q[1] - 0.55, 0]))]);
       const img = RING.map((q) => v3(matVec(M, q)));
       outline.setPoints([...img, img[0]]);
       outline.setOpacity(0.7);

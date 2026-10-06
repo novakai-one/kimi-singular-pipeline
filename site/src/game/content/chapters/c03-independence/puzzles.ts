@@ -229,19 +229,19 @@ export const p4: PuzzleDef = {
   par: 1,
   onWin: S.p4Win,
   setup(p) {
-    void p.g.stage.view3D({ target: [0, 0, 0.4], distance: 14, azimuth: -50, elevation: 24, ms: 0 });
+    void p.g.stage.view3D({ target: [0.2, 0.2, 0.9], distance: 10, azimuth: -50, elevation: 24, ms: 0 });
     const bolted = [true, true, true, true];
     const arrows = PRUNE.map((v, i) => new Arrow(ORIGIN, to3(v), { color: PRUNE_COLORS[i], label: `$${fmtV(v).replace(/−/g, '-')}$` }));
     p.add(...arrows);
-    const glow = new ReachGlow(p.g.stage, { cell: 0.2, size: 0.55, gain: 0.32 });
+    const glow = new ReachGlow(p.g.stage, { cell: 0.2, size: 0.3, gain: 0.3 });
     p.add(glow);
-    const box: [number, number] = [-2.6, 2.6];
+    const box: [number, number] = [-2, 2];
     const r = p.readout('Thrusters on the rack');
     const paint = () => {
       glow.clear();
       const on = PRUNE.filter((_, i) => bolted[i]);
       const dim = spanDim(on);
-      if (dim === 3) { glow.setArrows([[1, 0, 0], [0, 1, 0], [0, 0, 1]]); glow.scatter(5200, [box, box, box], () => true, 1.4, 5); }
+      if (dim === 3) { glow.setArrows([[1, 0, 0], [0, 1, 0], [0, 0, 1]]); glow.scatter(2600, [box, box, box], () => true, 1.4, 5); }
       else { glow.setArrows([[1, 0, 0], [0, 1, 0], [0, 0, 1]]); glow.fill([box, box, [0, 0]], { step: [0.12, 0.12, 1], spread: 1.2 }); }
       PRUNE.forEach((v, i) => r.row(`a${i}`, fmtV(v), bolted[i] ? 'bolted' : 'unbolted', bolted[i] ? PRUNE_COLORS[i] : C.muted));
       r.row('s', 'the glow is', dim === 3 ? 'all of space' : 'the floor plane', C.result);

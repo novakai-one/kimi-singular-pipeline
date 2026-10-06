@@ -106,7 +106,7 @@ const ch: ChapterDef = {
   beats: [
     { kind: 'cinematic', id: 'open', run: coldOpen },
     { kind: 'card', id: 'inshort', card: { kind: 'inshort', title: 'Where can anything land, and what went to zero?', body: IN_SHORT } },
-    { kind: 'scene', id: 'p1-intro', lines: [...S.open, ...S.open, ...S.open], setup: sternShot },
+    { kind: 'scene', id: 'p1-intro', lines: S.p1Intro, setup: sternShot },
     { kind: 'puzzle', id: 'p1', puzzle: p1 },
     NAME_COL,
     { kind: 'scene', id: 'p2-intro', lines: S.p2Intro, setup: sternShot },

@@ -593,7 +593,7 @@ export const p7: PuzzleDef = {
   onWin: S.p7Win,
   setup(p) {
     // the box of U's columns: elimination leaves a staircase (A's own box is a needle 24 units tall)
-    void p.g.stage.view3D({ target: [2, 1, 1], distance: 10, azimuth: -52, elevation: 24, ms: 0 });
+    void p.g.stage.view3D({ target: [2.1, 1, 1], distance: 13, azimuth: -52, elevation: 24, ms: 0 });
     const box = new Parallelepiped(p.g.stage, col3(P7_U, 0), col3(P7_U, 1), col3(P7_U, 2), { color: C.result, opacity: 0.14 });
     const arrows = [C.v, C.w, C.u].map((c, j) => new Arrow([0, 0, 0], col3(P7_U, j), { color: c, width: 0.05 }));
     p.add(box, ...arrows);

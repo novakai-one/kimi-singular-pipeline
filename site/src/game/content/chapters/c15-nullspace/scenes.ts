@@ -41,6 +41,12 @@ function about(M: number[][], c: V3): Matrix4 {
   return new Matrix4().makeTranslation(c[0], c[1], c[2]).multiply(m).multiply(new Matrix4().makeTranslation(-c[0], -c[1], -c[2]));
 }
 
+/** Point an object's +x (its nose) from where it is toward a target. */
+export function aimAt(o: Object3D, target: V3): void {
+  const d = new Vector3(...target).sub(o.position).normalize();
+  o.quaternion.setFromUnitVectors(new Vector3(1, 0, 0), d);
+}
+
 /** Vell's cutter: a long dark wedge with white running lights (built here; no model yet). */
 export function makeCutter(scale = 1): Group {
   const g = new Group();
@@ -319,17 +325,17 @@ export async function close(g: Game): Promise<void> {
     g.stage.clearWorld();
     const set = await actSet(g, { ark: { at: [0, 0, 0] }, anchor: { at: [-150, 95, -18], scale: 7 }, lantern: { at: [-26, -34, 5], face: [0.2, 1, 0], scale: 1.5 } });
     set.check();
-    const cutter = makeCutter(1.4);
-    cutter.position.set(-170, -60, 24);
-    cutter.lookAt(new Vector3(-40, -40, 8));
-    cutter.rotateY(Math.PI / 2);
+    const cutter = makeCutter(1.1);
+    const from: V3 = [-215, 45, 32], to: V3 = [-112, 12, 14];
+    cutter.position.set(...from);
+    aimAt(cutter, [-20, 0, 0]);
     set.root.add(cutter);
     set.tick((_dt, t) => cutter.traverse((n) => { if (n.userData.blink) (n as Sprite).material.opacity = (Math.sin(t * 5) > 0.6 ? 0.95 : 0.15); }));
-    await camTo(g, set, [-60, -78, 14], [-40, -30, 4], 0);
+    await camTo(g, set, [-30, -104, 20], [-70, 0, 8], 0);
     await fadeBlack(g, false, 900);
     music.setIntensity(0.2);
-    const arrive = animate(9000, (k) => { cutter.position.set(-170 + 115 * k, -60 + 14 * k, 24 - 16 * k); }, ease.out);
-    void camTo(g, set, [-72, -70, 12], [-50, -42, 6], 9000);
+    const arrive = animate(9000, (k) => { cutter.position.set(from[0] + (to[0] - from[0]) * k, from[1] + (to[1] - from[1]) * k, from[2] + (to[2] - from[2]) * k); }, ease.out);
+    void camTo(g, set, [-40, -98, 17], [-74, 4, 9], 9000);
     await g.say(S.vell.slice(0, 2));
     set.check();
     await arrive;
