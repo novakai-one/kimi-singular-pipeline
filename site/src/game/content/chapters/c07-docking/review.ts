@@ -18,11 +18,11 @@ export const reviewDot: DoubtDef = {
   id: 'c07-r-dot', who: 'bram', isTrue: false,
   claim: 'If two arrows have dot product zero, one of them has a zero part.',
   reason: 'A dot product of zero means a right angle, not a missing part. $(2, 1)\\cdot(-1, 2) = -2 + 2 = 0$, and in 3-D $(1, 2, 2)\\cdot(2, 1, -2) = 2 + 2 - 4 = 0$: no part is zero in either pair.',
-  goal: 'Drag $\\cg{\\mathbf v}$ and $\\cr{\\mathbf w}$. **Challenge it** (a right angle with no zero part) or **Back it** (Bram will shake it).',
-  view: '2d',
-  setup(p) {
-    p.grid();
-    p.g.stage.view2D({ center: [0.3, 0.8], height: 9, ms: 0 });
+  goal: 'Drag $\\cg{\\mathbf v}$ and $\\cr{\\mathbf w}$ on the deck. **Challenge it** (a right angle with no zero part) or **Back it** (Bram will shake it).',
+  view: '3d',
+  async setup(p) {
+    await p.g.stage.view3D({ target: [0.3, 0.9, 0], distance: 12, azimuth: -90, elevation: 72, ms: 0 });
+    p.grid({ base: 0.1, main: 0.2, axis: 0.4 });
     let v: V3 = [1, 0, 0], w: V3 = [0, 2, 0];
     const mark = new RightAngle(p, [0, 0, 0], [1, 0, 0], [0, 1, 0], 0.3);
     const r = p.readout('Two arrows');
@@ -35,8 +35,8 @@ export const reviewDot: DoubtDef = {
       r.row('d', '$\\mathbf v\\cdot\\mathbf w$', num(d), Math.abs(d) < 1e-9 ? C.good : C.result);
       r.row('z', 'a zero part?', [...v.slice(0, 2), ...w.slice(0, 2)].some((x) => Math.abs(x) < 1e-9) ? 'yes' : 'no');
     };
-    const hv = new VectorHandle(p, { to: v, color: C.v, label: '$\\mathbf v$', snap: 1, limit: 4, countMoves: false, onChange: (t) => { v = t; show(); } });
-    const hw = new VectorHandle(p, { to: w, color: C.w, label: '$\\mathbf w$', snap: 1, limit: 4, countMoves: false, onChange: (t) => { w = t; show(); } });
+    const hv = new VectorHandle(p, { to: v, color: C.v, label: '$\\mathbf v$', planar: true, snap: 1, limit: 4, countMoves: false, onChange: (t) => { v = t; show(); } });
+    const hw = new VectorHandle(p, { to: w, color: C.w, label: '$\\mathbf w$', planar: true, snap: 1, limit: 4, countMoves: false, onChange: (t) => { w = t; show(); } });
     show();
     const set = (a: V3, b: V3) => { hv.set(a, [0, 0, 0]); hw.set(b, [0, 0, 0]); v = a; w = b; show(); };
     return {

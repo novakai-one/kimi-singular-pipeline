@@ -134,7 +134,7 @@ test('find_loop: the crew version passes every listed test and the swarm stays c
     if (got) assert.ok(L.isLoop(vs, got, 1e-9));
     else assert.equal(L.spanDim(vs), vs.length);
   }
-  assert.deepEqual(buildFindLoop.uses, ['lincomb']);
+  assert.deepEqual(buildFindLoop.uses, ['scale', 'add', 'lincomb']);
 });
 
 test('find_loop: the Python solution passes its tests and a 300-case swarm quickly (python3)', { skip: spawnSync('python3', ['--version']).status !== 0 }, () => {

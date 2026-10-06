@@ -15,7 +15,7 @@ export const buildFindLoop: BuildDef = {
     lines: FIND_LOOP.trimEnd().split('\n'),
     decoys: ['        if all(abs(x) < 1e-9 for x in lincomb(dials, vs)):'],
   },
-  uses: ['lincomb'],
+  uses: ['scale', 'add', 'lincomb'],
   tests: [
     { name: 'GDD p1: `find_loop([[1, 0, 2], [0, 1, 1], [2, 3, 7]])` finds `[-2, -3, 1]`', args: [[[1, 0, 2], [0, 1, 1], [2, 3, 7]]], expect: [-2, -3, 1] },
     { name: 'the spare `[1, 2, 3]` with thrusters two and three: `[-2, -4, 2]`', args: [[[1, 0, 1], [0, 1, 1], [1, 2, 3]]], expect: [-2, -4, 2] },
