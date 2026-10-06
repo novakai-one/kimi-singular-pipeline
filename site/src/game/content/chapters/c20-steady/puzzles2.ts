@@ -159,7 +159,7 @@ export const p7: PuzzleDef = {
   par: PR_STEPS,
   onWin: S.p7Win,
   setup(p) {
-    void p.g.stage.view2D({ center: [-0.1, 0], height: 6.4, ms: 0 });
+    void p.g.stage.view2D({ center: [-0.5, 0], height: 6.4, ms: 0 });
     // links: arrows from terminal to terminal, kept short of the nodes
     for (const [s, ts] of Object.entries(LINKS)) for (const t of ts) {
       const a = NODE_AT[s], b = NODE_AT[t];

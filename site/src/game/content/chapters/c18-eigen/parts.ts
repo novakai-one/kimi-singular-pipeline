@@ -245,7 +245,7 @@ export class PolyPlot {
     this.svg.append(this.roots);
     this.dot = el('circle', { r: 4.5, class: 'dot', cx: this.X(o.lo), cy: this.Y(o.fn(o.lo)) }) as SVGCircleElement;
     this.svg.append(this.dot);
-    if (o.label) { const lb = el('text', { x: 6, y: 13, class: 'lab' }); lb.textContent = o.label; this.svg.append(lb); }
+    if (o.label) { const lb = el('text', { x: this.W / 2, y: 13, class: 'lab', 'text-anchor': 'middle' }); lb.textContent = o.label; this.svg.append(lb); }
     this.el = h('div', { class: 'a7-plotwrap' }, this.svg);
   }
   private X(l: number): number { return ((l - this.o.lo) / (this.o.hi - this.o.lo)) * this.W; }

@@ -124,7 +124,7 @@ export const p5: PuzzleDef = {
   onWin: S.p5Win,
   setup(p) {
     const d = p.difficulty;
-    void p.g.stage.view2D({ center: [0.55, 0.42], height: 1.75, ms: 0 });
+    void p.g.stage.view2D({ center: [0.3, 0.55], height: 1.75, ms: 0 });
     const seg = new FatLine(p.g.stage, [[1, 0, 0], [0, 1, 0]], { color: C.white, width: 2, opacity: 0.55 });
     const l1 = new InfLine(p.g.stage, [0, 0, 0.001], [2, 1, 0], { color: C.violet, width: 1.8, opacity: 0.5, dashed: true, length: 4 });
     const l2 = new InfLine(p.g.stage, [P5_LONG[0], P5_LONG[1], 0.001], [1, -1, 0], { color: C.violet, width: 1.2, opacity: 0.25, dashed: true, length: 4 });

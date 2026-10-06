@@ -197,7 +197,7 @@ export const p3: PuzzleDef = {
   par: 4,
   onWin: S.p3Win,
   setup(p) {
-    void p.g.stage.view2D({ center: [0, 0.75], height: 7.2, ms: 0 });
+    void p.g.stage.view2D({ center: [0, 0.85], height: 9, ms: 0 });
     const sx = new Simplex(p, DRONES, STATIONS);
     const q = triPoint(DRONES_STEADY);
     const star = new Dot([q[0], q[1], 0.05], { color: C.result, size: 0.13 });

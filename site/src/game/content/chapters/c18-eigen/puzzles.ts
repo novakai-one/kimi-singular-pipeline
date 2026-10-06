@@ -325,6 +325,7 @@ export const p4: PuzzleDef = {
     // ---- stage A: the sweep finds nothing, the plot never touches zero
     const sw = new Sweep(p, { M: P4_T, radius: 1.1, start: rad(30), labels: { x: '$\\mathbf x$', mx: '$T\\mathbf x$' } });
     const plot = new PolyPlot({ lo: -3, hi: 3, ymin: -1, ymax: 10, fn: (x) => charAt(P4_T, x), label: 'det(T − λI) = λ² + 1', ticks: [-2, -1, 0, 1, 2] });
+    plot.at(0);
     const paintA = () => {
       r.row('m', '$T$', `$${texSmall(P4_T)}$`);
       r.row('cov', 'circle swept', `${Math.round(sw.coverage * 100)}%`, sw.coverage >= SWEEP_FULL ? C.good : C.white);
