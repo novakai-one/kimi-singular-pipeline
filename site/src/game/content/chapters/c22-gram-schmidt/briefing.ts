@@ -97,7 +97,7 @@ export const doubtPerp: DoubtDef = {
 
 /** Two arrows you can drag in 3-D, the plane they span, and what Gram–Schmidt makes of them. */
 export function gsPlaneScene(p: PuzzleCtx, o: { holds: (x1: Vec, x2: Vec) => boolean }): DoubtScene {
-  void p.g.stage.view3D({ target: [0.4, 0.4, 0.6], distance: 8, azimuth: -55, elevation: 24, ms: 0 });
+  void p.g.stage.view3D({ target: [0.3, 0.3, 0.4], distance: 11, azimuth: -55, elevation: 28, ms: 0 });
   p.grid({ base: 0.1, main: 0.2, axis: 0.45 });
   const patch = new PlanePatch(p.g.stage, [0, 0, 0], [0, 0, 1], { color: C.u, size: 5, opacity: 0.12 });
   p.add(patch);
@@ -227,7 +227,7 @@ export const procedure: ProcedureDef = {
     const res = runProcedure(ids);
     const msg = procMessage(ids);
     g.stage.clearWorld();
-    await g.stage.view3D({ target: [0.5, 0.5, 0.6], distance: 7.5, azimuth: -52, elevation: 22, ms: g.headless ? 0 : 500, orbit: false });
+    await g.stage.view3D({ target: [-1.1, -0.7, 0.6], distance: 8, azimuth: -52, elevation: 22, ms: g.headless ? 0 : 500, orbit: false });
     const W = g.stage.world;
     const cols = [C.v, C.w, C.u];
     const ghosts = PROC_X.map((x, i) => new Arrow([0, 0, 0], v3(x), { color: cols[i], opacity: 0.3, width: 0.03 }));
@@ -313,7 +313,7 @@ export const teo: TeoDef = {
     const res = runTeo(ids);
     const reply = teoReply(ids);
     g.stage.clearWorld();
-    await g.stage.view2D({ center: [1.6, 1.8], height: 7.2, ms: g.headless ? 0 : 500 });
+    await g.stage.view2D({ center: [-0.7, 1.9], height: 7.2, ms: g.headless ? 0 : 500 });
     const W = g.stage.world;
     const cols = [C.v, C.w, C.u];
     const teoDot = new Dot([0, 0, 0.05], { color: C.white, size: 0.12 });
@@ -323,15 +323,17 @@ export const teo: TeoDef = {
     const ll = new Label('Lantern', v3(target), { className: 'a8-pt c', offset: [0, -22] });
     W.add(teoDot.object, ship.object, lt.object, ll.object);
     const ms = g.headless ? 5 : 450;
-    const hs = TEO_HEADINGS.map((h0, i) => new Arrow([0, 0, 0.02], v3(h0, 0.02), { color: cols[i], label: `${fmtV(h0)}` }));
-    W.add(...hs.map((a) => a.object));
+    const hs = TEO_HEADINGS.map((h0, i) => new Arrow([0, 0, 0.02], v3(h0, 0.02), { color: cols[i], width: 0.04 }));
+    const hl = TEO_HEADINGS.map((h0, i) => new Label(fmtV(h0), v3(h0), { className: 'a8-pt', offset: [i === 0 ? 34 : -30, i === 0 ? 14 : -14] }));
+    W.add(...hs.map((a) => a.object), ...hl.map((l) => l.object));
     await wait(ms);
     // his headings as he left them (one unit long, if he was told to)
     await Promise.all(hs.map((a, i) => a.moveTo(v3(res.headings[i], 0.02), ms, [0, 0, 0.02])));
-    if (res.readings) res.readings.forEach((x, i) => hs[i].setLabel(`reads ${fmtN(x)}`));
+    hl.forEach((l, i) => l.at(v3(res.headings[i])));
+    if (res.readings) res.readings.forEach((x, i) => hl[i].set(`reads ${fmtN(x)}`));
     await wait(ms);
     if (res.aim) {
-      const aim = new Arrow([0, 0, 0.04], [0, 0, 0.04], { color: res.off <= 1 ? C.result : C.orange, label: 'antenna' });
+      const aim = new Arrow([0, 0, 0.04], [0, 0, 0.04], { color: res.off <= 1 ? C.result : C.orange, width: 0.045 });
       W.add(aim.object);
       await aim.moveTo(v3(vscale(normalize(res.aim), 4.6), 0.04), ms * 1.6, [0, 0, 0.04]);
       if (res.off > 1) {

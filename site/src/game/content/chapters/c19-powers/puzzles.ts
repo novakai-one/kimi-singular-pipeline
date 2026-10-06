@@ -291,11 +291,13 @@ export const p2: PuzzleDef = {
     const tick = (i: number) => { if (!done[i]) { done[i] = true; sg(p, i); } };
     let derived = d === 'cadet', cancelled = false, played = false, busy = false;
     const winCheck = () => { if (cancelled && derived && played && !p.won) { sfx.success(); msg('Fifty pulses, three moves. Every piece lands on the line $(1, 1)$.', 'good'); p.win(); } };
+    const cancelBtn = button('Cancel the middle pairs', () => void cancel(p.g.headless ? 1 : 520), { cls: 'primary small' });
     const cancel = async (ms: number) => {
       if (cancelled || busy) return;
       busy = true; p.move();
       await strip.cancel(ms);
       cancelled = true; busy = false; tick(0);
+      cancelBtn.disabled = true;
       msg('Each $P^{-1}P$ in the middle is $I$. What is left: $PD^{50}P^{-1}$.', 'good');
       if (derived) await play(p.g.headless ? 1 : 2600);
     };
@@ -334,7 +336,7 @@ export const p2: PuzzleDef = {
       submitTiles = submit;
       tiles = new TileOrder(p, { tiles: P2_TILES, decoys: P2_DECOYS, mount: box, title: 'Why A^k = P D^k P⁻¹: put the reason in order', submitLabel: 'Check the order', onSubmit: submit });
     }
-    r.el.append(h('div', { class: 'a7-kick' }, 'Fifty pulses on the rail'), strip.el, h('div', { class: 'a7-btns' }, button('Cancel the middle pairs', () => void cancel(p.g.headless ? 1 : 520), { cls: 'primary small' })));
+    r.el.append(h('div', { class: 'a7-kick' }, 'Fifty pulses on the rail'), strip.el, h('div', { class: 'a7-btns' }, cancelBtn));
     p.dock().append(box, msgEl);
     msg(d === 'cadet' ? 'Press **Cancel the middle pairs** and watch what is left.' : 'Cancel the middle, and show where the formula comes from.');
     const derive = async (fast: boolean) => {
@@ -404,30 +406,54 @@ export const p3: PuzzleDef = {
     };
     const done = [false, false, false];
     const tick = (i: number) => { if (!done[i]) { done[i] = true; sg(p, i); } };
-    const ws = new StepWorksheet(p, {
-      steps: [
-        { prompt: '$P$: lines that hold as columns (λ = 3 first; first entries 1)', answer: P3_P, mistakes: [[[[1, 0], [1, -1]], 'Columns, not rows: $(1, 0)$ is the first column.']] as [Mat, string][] },
-        { prompt: 'The diagonal of $D$, in the same order', answer: [P3_D[0][0], P3_D[1][1]], mistakes: [[[2, 3], 'Same order as the columns of $P$: 3 first.']] as [Vec, string][] },
-        { prompt: '$P^{-1}$', answer: P3_PINV, mistakes: [[[[1, 1], [0, 1]], 'Check: $P P^{-1}$ must be $I$. Here $P$ is its own inverse.']] as [Mat, string][] },
-        { prompt: '$(1, 1)$ in the grid of lines that hold: $P^{-1}(1, 1)$', answer: P3_C, mistakes: [[[1, 1], 'Those are its numbers in our grid. Multiply by $P^{-1}$.']] as [Vec, string][] },
-        { prompt: '$A^{10}(1, 1) = 2\\cdot 3^{10}\\,\\mathbf p_1 - 1\\cdot 2^{10}\\,\\mathbf p_2$', answer: P3_RESULT, mistakes: [[[59049, 1024], 'Two of $\\mathbf p_1$: $2 \\cdot 59049 - 1024$ across.']] as [Vec, string][] },
-        { prompt: 'Last chapter’s 3 × 3 has stretches 2, 5, −5. In its own grid, the diagonal of $A^4 = D^4$', answer: [P3_SUB_D4[0][0], P3_SUB_D4[1][1], P3_SUB_D4[2][2]], mistakes: [[[16, 625, -625], '$(-5)^4$: an even power of a negative number is positive.']] as [Vec, string][] },
-      ],
-      onDone: () => { tick(0); tick(1); tick(2); paint(5); void drawPath(); r.note('Ten repeats, two powers: $3^{10}$ along $(1, 0)$ and $2^{10}$ along $(1, -1)$.'); p.win(); },
-    });
+    const STEPS = [
+      { prompt: '$P$: lines that hold as columns (λ = 3 first; first entries 1)', answer: P3_P, mistakes: [[[[1, 0], [1, -1]], 'Columns, not rows: $(1, 0)$ is the first column.']] as [Mat, string][] },
+      { prompt: 'The diagonal of $D$, in the same order', answer: [P3_D[0][0], P3_D[1][1]], mistakes: [[[2, 3], 'Same order as the columns of $P$: 3 first.']] as [Vec, string][] },
+      { prompt: '$P^{-1}$', answer: P3_PINV, mistakes: [[[[1, 1], [0, 1]], 'Check: $P P^{-1}$ must be $I$. Here $P$ is its own inverse.']] as [Mat, string][] },
+      { prompt: '$(1, 1)$ in the grid of lines that hold: $P^{-1}(1, 1)$', answer: P3_C, mistakes: [[[1, 1], 'Those are its numbers in our grid. Multiply by $P^{-1}$.']] as [Vec, string][] },
+      { prompt: '$A^{10}(1, 1) = 2\\cdot 3^{10}\\,\\mathbf p_1 - 1\\cdot 2^{10}\\,\\mathbf p_2$', answer: P3_RESULT, mistakes: [[[59049, 1024], 'Two of $\\mathbf p_1$: $2 \\cdot 59049 - 1024$ across.']] as [Vec, string][] },
+      { prompt: 'Last chapter’s 3 × 3 has stretches 2, 5, −5. In its own grid, the diagonal of $A^4 = D^4$', answer: [P3_SUB_D4[0][0], P3_SUB_D4[1][1], P3_SUB_D4[2][2]], mistakes: [[[16, 625, -625], '$(-5)^4$: an even power of a negative number is positive.']] as [Vec, string][] },
+    ];
+    // three short sheets in turn (the dock stays short): P, D, P⁻¹ · the grid and the ten repeats · the 3 × 3
+    const STAGES: [number, number, string][] = [[0, 3, 'the move in its own grid'], [3, 5, 'one power per direction'], [5, 6, 'last chapter’s 3 × 3']];
+    const box = h('div', { class: 'a7-stage' });
+    p.dock().append(box);
+    let stage = 0;
+    let ws!: StepWorksheet;
+    const ok = () => STAGES[stage][0] + ws.el.querySelectorAll('.ws-row.ok').length;
     const watch = () => {
-      const n = ws.el.querySelectorAll('.ws-row.ok').length;
+      const n = Math.max(ok(), STAGES[stage][0]);
       paint(n);
       if (n >= 3) tick(0);
       if (n >= 4) void drawPath();
       if (n >= 5) tick(1);
     };
-    ws.el.addEventListener('change', watch);
-    ws.el.addEventListener('keyup', watch);
-    ws.el.addEventListener('click', () => window.setTimeout(watch, 30));
+    const open = (k: number) => {
+      stage = k;
+      box.replaceChildren();
+      const [a, b, title] = STAGES[k];
+      const mode = p.difficulty === 'cadet' ? 'LANTERN computes, you choose' : p.difficulty === 'navigator' ? 'each step is checked' : 'only the answer is checked';
+      ws = new StepWorksheet(p, {
+        mount: box,
+        title: `By hand ${k + 1}/3 · ${title} · ${mode}`,
+        steps: STEPS.slice(a, b),
+        onDone: () => {
+          paint(b);
+          if (b >= 3) tick(0);
+          if (b >= 4) void drawPath();
+          if (b >= 5) tick(1);
+          if (k < STAGES.length - 1) { sfx.snap(); open(k + 1); return; }
+          tick(2); r.note('Ten repeats, two powers: $3^{10}$ along $(1, 0)$ and $2^{10}$ along $(1, -1)$.'); p.win();
+        },
+      });
+      ws.el.addEventListener('change', watch);
+      ws.el.addEventListener('keyup', watch);
+      ws.el.addEventListener('click', () => window.setTimeout(watch, 30));
+    };
+    open(0);
     return {
-      async showMe() { await ws.showMe(420); watch(); },
-      solve() { ws.solve(); },
+      async showMe() { while (!p.won) { const k = stage; await ws.showMe(420); watch(); if (stage === k && !p.won) break; } },
+      solve() { for (let i = 0; i < STAGES.length && !p.won; i++) ws.solve(); },
       wrong() { ws.wrong(); },
     };
   },

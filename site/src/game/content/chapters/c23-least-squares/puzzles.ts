@@ -102,7 +102,7 @@ export const p2: PuzzleDef = {
   view: '3d',
   onWin: S.p2Win,
   async setup(p) {
-    await p.g.stage.view3D({ target: [0.6, 1.2, 1.8], distance: 9, azimuth: -42, elevation: 18, ms: 0 });
+    await p.g.stage.view3D({ target: [0.6, 1.2, 1.8], distance: 9, azimuth: -8, elevation: 20, ms: 0 });
     p.grid({ base: 0.1, main: 0.2, axis: 0.45 });
     const d = p.difficulty;
     const tol = d === 'commander' ? 0.01 : 0.05;

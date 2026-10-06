@@ -19,7 +19,7 @@ import { music } from '../../../audio/music';
 import { rng } from '../../../game/lawcheck';
 import { makeAnchor } from '../../common/set';
 import { C2 } from '../../truth';
-import { det, matVec, norm, normalize, type Mat, type Vec } from '../../../math/la';
+import { det, dot, matVec, norm, normalize, type Mat, type Vec } from '../../../math/la';
 import { arkSet, ptag, tag, unfoldPath, v3 } from '../c24-spectral/act9';
 import { checklist, msgLine } from '../c24-spectral/puzzles';
 import { symEig } from '../c24-spectral/logic';
@@ -58,17 +58,18 @@ export const sp1: PuzzleDef = {
   onWin: S.sp1Win,
   setup(p) {
     const d = p.difficulty;
-    void p.g.stage.view3D({ target: [2.2, 2.2, -1.6], distance: 19, azimuth: -28, elevation: 18, ms: 0 });
+    void p.g.stage.view3D({ target: [1.6, 1.6, -1.0], distance: 20, azimuth: -28, elevation: 18, ms: 0 });
     const c0: V3 = [0, 0, 0.6];
+    const right: V3 = [Math.sin((28 * Math.PI) / 180), Math.cos((28 * Math.PI) / 180), 0];   // screen right for this camera
     const line = new InfLine(p.g.stage, c0, v3(THIN_DIR), { color: C.white, width: 1.4, opacity: 0.4, dashed: true, length: 30 });
     p.add(line.object); p.onDispose(() => line.dispose());
-    ptag(p, 'the thin line, about (1, 1, −1)', [c0[0] - THIN_DIR[0] * 3, c0[1] - THIN_DIR[1] * 3, c0[2] - THIN_DIR[2] * 3 + 0.5], 'dim');
+    ptag(p, 'the thin line, about (1, 1, −1)', [0, 1, 2].map((i) => c0[i] + THIN_DIR[i] * 3.75 + right[i] * 1.3) as V3, 'dim');
     const r0 = rng(251);
     const ball: number[][] = [];
     while (ball.length < 70) { const q = [r0() * 2 - 1, r0() * 2 - 1, r0() * 2 - 1]; if (norm(q) <= 1) ball.push(q.map((x, i) => c0[i] + x * 0.45)); }
     const home = new PointCloud(p, { points: ball, color: C.white, size: 0.035, opacity: 0.35, glow: 0.2, core: 1 });
     const cluster = new PointCloud(p, { points: ball, color: C.accent, size: 0.05, glow: 0.4, core: 1.4 });
-    ptag(p, 'where the cluster should be', [c0[0] - 0.8, c0[1] - 1.1, c0[2] + 1], 'c');
+    ptag(p, 'where the cluster should be', [c0[0] + right[0] * 1.6, c0[1] + right[1] * 1.6, c0[2] + 0.7], 'c');
     void home;
     let fired = false, won = false;
     const r = p.readout('The raw undo');
@@ -233,7 +234,8 @@ export const sp3: PuzzleDef = {
     const band = new FatSegments(p.g.stage, [[[-TEAR * SC, -1.4, 0], [-TEAR * SC, 1.4, 0]], [[TEAR * SC, -1.4, 0], [TEAR * SC, 1.4, 0]]], { color: C.orange, width: 2, opacity: 0.8, dashed: true, dashSize: 0.1, gapSize: 0.07 });
     const axis = new FatLine(p.g.stage, [[-5, 0, 0], [5, 0, 0]], { color: C.white, width: 1.2, opacity: 0.4 });
     p.add(band.object, axis.object); p.onDispose(() => { band.dispose(); axis.dispose(); });
-    ptag(p, 'tear limit', [TEAR * SC, 1.65, 0], 'o'); ptag(p, 'tear limit', [-TEAR * SC, 1.65, 0], 'o');
+    // inside the two lines, clear of the objective card
+    ptag(p, 'tear limit', [TEAR * SC - 0.45, 1.65, 0], 'o'); ptag(p, 'tear limit', [-TEAR * SC + 0.45, 1.65, 0], 'o');
     ptag(p, 'error along the thin line (× 6)', [0, -1.75, 0], 'dim');
     const r0 = rng(625);
     const zs = Array.from({ length: 90 }, () => [gauss(r0), (r0() - 0.5) * 2.4]);
@@ -343,7 +345,7 @@ export const sp5: PuzzleDef = {
   view: '3d',
   onWin: S.sp5Win,
   async setup(p) {
-    void p.g.stage.view3D({ target: [0, 0, 1.2], distance: 12, azimuth: -55, elevation: 18, ms: 0 });
+    void p.g.stage.view3D({ target: [0.4, 0, 1.4], distance: 10, azimuth: -55, elevation: 18, ms: 0 });
     const anchor = await makeAnchor(p.g.stage, 0.32);
     p.add(anchor);
     const spires = [0, 1, 2].map((j) => { const a = new Arrow([0, 0, 0], [0, 0, 0.001], { color: [C.v, C.w, C.u][j], width: 0.06 }); p.add(a); a.object.visible = false; return a; });
@@ -356,15 +358,19 @@ export const sp5: PuzzleDef = {
     const msg = msgLine();
     let won = false;
     const showSpires = (M: Mat | null) => {
+      const cols = [0, 1, 2].map((j) => (M ? [M[0][j], M[1][j], M[2][j]] : [0, 0, 1]));
       spires.forEach((a, j) => {
         a.object.visible = !!M;
         if (!M) { lbl[j].show(false); return; }
-        const c = [M[0][j], M[1][j], M[2][j]], L = norm(c);
+        const c = cols[j], L = norm(c);
         const shown = L < 1e-9 ? 0.001 : 0.9 + 1.5 * Math.log10(1 + L);
         const u = L < 1e-9 ? [0, 0, 1] : normalize(c);
         a.setTo(v3(u.map((x) => x * shown)));
         lbl[j].at(v3(u.map((x) => x * (shown + 0.45))));
-        lbl[j].set(`spire ${j + 1} · ${fmtD(L, 1)}`);
+        // spires that point (almost) the same way share one label: the drawing cannot separate them
+        const twin = [0, 1, 2].find((k) => k !== j && norm(cols[k]) > 1e-9 && L > 1e-9 && Math.abs(dot(normalize(cols[k]), u)) > Math.cos((3 * Math.PI) / 180));
+        if (twin !== undefined && twin < j) { lbl[j].show(false); return; }
+        lbl[j].set(twin === undefined ? `spire ${j + 1} · ${fmtD(L, 1)}` : `spires ${j + 1} and ${twin + 1} · ${fmtD(L, 1)} and ${fmtD(norm(cols[twin]), 1)}`);
         lbl[j].show(true);
       });
     };
@@ -373,7 +379,7 @@ export const sp5: PuzzleDef = {
       pal.querySelectorAll('button').forEach((b) => b.classList.toggle('used', false));
       const M = cards.length ? railProduct(cards) : null;
       showSpires(M);
-      if (M) r.row('m', 'product', `$\\left[\\begin{smallmatrix}${M.map((row) => row.map((x) => fmtD(x, Math.abs(x) > 10 ? 0 : 2).replace('−', '-')).join(' & ')).join(' \\\\ ')}\\end{smallmatrix}\\right]$`);
+      if (M) r.row('m', 'product', `$\\begin{bmatrix}${M.map((row) => row.map((x) => fmtD(x, Math.abs(x) > 10 ? 0 : 1).replace('−', '-')).join(' & ')).join(' \\\\ ')}\\end{bmatrix}$`);
       else r.row('m', 'product', '—');
     };
     for (const c of CARDS) {
@@ -425,11 +431,17 @@ export const sp7: PuzzleDef = {
     // the stern's thickness through the two pulses (a strip, drawn to scale up to 1)
     const strip = new FatSegments(p.g.stage, [[[-3, 0, 0], [3, 0, 0]]], { color: C.accent, width: 3 });
     p.add(strip.object); p.onDispose(() => strip.dispose());
+    ptag(p, 'the stern whole · thickness 1', [0, 1.12, 0], 'dim');
+    ptag(p, `the stern today · 1/${Math.round(AMPLIFY)}`, [0, -1.15, 0], 'dim');
+    const midTag = ptag(p, '', [0, -0.6, 0], 'c');
     const r = p.readout('Two pulses');
     const msg = msgLine();
     let won = false;
     const paint = () => {
       const s1 = AMPLIFY ** t, s2 = AMPLIFY ** (1 - t);
+      midTag.set(`after the first pulse · ${fmtD(s1, 1)} times thicker`);
+      const yMid = -0.9 + Math.max(0.02, (s1 / AMPLIFY) * 1.8);
+      midTag.at([0, yMid + (yMid > 0.5 ? -0.25 : 0.25), 0]);
       b1.fill.style.width = `${(100 * Math.log(s1)) / Math.log(AMPLIFY)}%`; b1.val.textContent = `× ${fmtD(s1, 1)}`;
       b2.fill.style.width = `${(100 * Math.log(s2)) / Math.log(AMPLIFY)}%`; b2.val.textContent = `× ${fmtD(s2, 1)}`;
       r.row('t', '$t$', fmtD(t, 2), C.accent);
@@ -443,8 +455,8 @@ export const sp7: PuzzleDef = {
     paint();
     return {
       async showMe() { await animate(1000, (k) => { t = 0.2 + 0.3 * k; sl.set(Math.round(t * 20) / 20, false); paint(); }, ease.inOut); t = 0.5; sl.el.dispatchEvent(new Event('change')); },
-      solve() { t = 0.5; paint(); sl.el.dispatchEvent(new Event('change')); },
-      wrong() { t = 0.3; paint(); sl.el.dispatchEvent(new Event('change')); },
+      solve() { t = 0.5; sl.set(t, false); paint(); sl.el.dispatchEvent(new Event('change')); },
+      wrong() { t = 0.3; sl.set(t, false); paint(); sl.el.dispatchEvent(new Event('change')); },
     };
   },
 };

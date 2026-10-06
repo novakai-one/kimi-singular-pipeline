@@ -53,7 +53,7 @@ const NAME_DDS: Beat = {
   },
 };
 
-const WHY = 'Repeated squaring computes $A^{50}$ in 9 products instead of 49, and $A^{1000000}$ in about 40. That is how Fibonacci numbers are computed in $O(\\log n)$ steps.\n\nIn a graph’s link matrix, entry $(i, j)$ of $A^k$ counts the walks of length $k$ from $j$ to $i$. And whether a recurrent network’s signal grows or fades over many steps is decided by the powers of its eigenvalues: $|\\lambda|^k$.\n\nVell’s fifty-pulse forecast, next, runs on your `mat_pow`.';
+const WHY = 'Repeated squaring computes $A^{50}$ in fewer than ten products instead of 49, and $A^{1000000}$ in about 40. That is how Fibonacci numbers are computed in $O(\\log n)$ steps.\n\nIn a graph’s link matrix, entry $(i, j)$ of $A^k$ counts the walks of length $k$ from $j$ to $i$. And whether a recurrent network’s signal grows or fades over many steps is decided by the powers of its eigenvalues: $|\\lambda|^k$.\n\nVell’s fifty-pulse forecast, next, runs on your `mat_pow`.';
 
 const ch: ChapterDef = {
   id: 'c19',

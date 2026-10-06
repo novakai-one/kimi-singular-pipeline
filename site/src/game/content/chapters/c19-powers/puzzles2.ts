@@ -43,7 +43,7 @@ export const p4: PuzzleDef = {
     grid.set(P4_SHEAR);
     const axis = new InfLine(p.g.stage, [0, 0, 0.002], [1, 0, 0], { color: C.violet, width: 2.2, opacity: 0.7 });
     p.add(axis.object); p.onDispose(() => axis.dispose());
-    ptag(p, 'the one line the shear keeps', [2.6, 0, 0], 'vi', [0, 22]);
+    ptag(p, 'the one line the shear keeps', [-2.4, 0, 0], 'vi', [0, 22]);
     const box = new Parallelogram(p.g.stage, [1, 1, 0], [0, 1, 0], { color: C.result, opacity: 0.14 });
     p.add(box);
     const r = p.readout('Columns of P');
@@ -55,7 +55,7 @@ export const p4: PuzzleDef = {
       box.set(v3(a), v3(b));
       const d = a[0] * b[1] - a[1] * b[0];
       box.setColor(Math.abs(d) < 1e-9 ? C.orange : C.result);
-      for (const [k, v] of [['a', a], ['b', b]] as [string, Vec][]) r.row(k, k === 'a' ? '$\\mathbf p_1$ kept on its line?' : '$\\mathbf p_2$ kept on its line?', shearKeeps(v) ? `yes · ${fmtV(v)}` : `no · turned to ${fmtV(matVec(P4_SHEAR, v))}`, shearKeeps(v) ? C.violet : C.orange);
+      for (const [k, v] of [['a', a], ['b', b]] as [string, Vec][]) r.row(k, k === 'a' ? '$\\mathbf p_1$ kept?' : '$\\mathbf p_2$ kept?', shearKeeps(v) ? `yes: ${fmtV(v)}` : `no: sent to ${fmtV(matVec(P4_SHEAR, v))}`, shearKeeps(v) ? C.violet : C.orange);
       r.row('d', '$\\det P$', fmtN(d), Math.abs(d) < 1e-9 ? C.orange : C.white);
       sg(p, 0, shearKeeps(a) && shearKeeps(b));
     };
@@ -126,8 +126,8 @@ export const p5: PuzzleDef = {
     const d = p.difficulty;
     void p.g.stage.view2D({ center: [0.3, 0.55], height: 1.75, ms: 0 });
     const seg = new FatLine(p.g.stage, [[1, 0, 0], [0, 1, 0]], { color: C.white, width: 2, opacity: 0.55 });
-    const l1 = new InfLine(p.g.stage, [0, 0, 0.001], [2, 1, 0], { color: C.violet, width: 1.8, opacity: 0.5, dashed: true, length: 4 });
-    const l2 = new InfLine(p.g.stage, [P5_LONG[0], P5_LONG[1], 0.001], [1, -1, 0], { color: C.violet, width: 1.2, opacity: 0.25, dashed: true, length: 4 });
+    const l1 = new InfLine(p.g.stage, [0, 0, 0.001], [2, 1, 0], { color: C.violet, width: 1.6, opacity: 0.45, length: 4 });
+    const l2 = new InfLine(p.g.stage, [P5_LONG[0], P5_LONG[1], 0.001], [1, -1, 0], { color: C.violet, width: 1.2, opacity: 0.25, length: 4 });
     p.add(seg.object, l1.object, l2.object);
     p.onDispose(() => { seg.dispose(); l1.dispose(); l2.dispose(); });
     ptag(p, 'stretch 1 · (2, 1)', [0.92, 0.46, 0], 'vi', [0, -16]);
@@ -136,8 +136,8 @@ export const p5: PuzzleDef = {
     const ax = new FatLine(p.g.stage, [[0, 0, 0], [1.05, 0, 0]], { color: '#8fb8e8', width: 1.2, opacity: 0.5 });
     const ay = new FatLine(p.g.stage, [[0, 0, 0], [0, 1.05, 0]], { color: '#8fb8e8', width: 1.2, opacity: 0.5 });
     p.add(ax.object, ay.object); p.onDispose(() => { ax.dispose(); ay.dispose(); });
-    ptag(p, 'share at A', [1.04, -0.06, 0], 'dim');
-    ptag(p, 'share at B', [-0.08, 1.04, 0], 'dim');
+    ptag(p, 'share at A →', [0.5, 0, 0], 'dim', [0, 18]);
+    ptag(p, 'share at B ↑', [0, 0.5, 0], 'dim', [-52, 0]);
     let x: Vec = P5_START.slice();
     let k = 0;
     const dot = new Dot(v3(x, 0.01), { color: C.result, size: 0.022 });
@@ -182,16 +182,19 @@ export const p5: PuzzleDef = {
       paint(); check();
     };
     const controls = h('div', { class: 'a7-row' });
+    let showShare = (_v: number) => {};
     if (d === 'commander') {
       const inp = h('input', { class: 'cell a7-num', inputmode: 'decimal', 'aria-label': 'forecast share at site A', placeholder: '?' }) as HTMLInputElement;
       const go = () => { const v = parseNum(inp.value); if (v !== null) { p.move(); setShare(v); } };
       inp.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') go(); });
       inp.addEventListener('change', go);
       controls.append(h('span', { class: 'k' }, 'Forecast: share at A ='), inp);
+      showShare = (v) => { inp.value = fmtN(Math.round(v * 1000) / 1000); };
     } else {
       const sl = new Slider({ label: 'forecast: share at A', min: 0, max: 1, step: d === 'cadet' ? 1 / 6 : 1 / 12, value: 0.5, format: (v) => fmtN(Math.round(v * 12) / 12), onInput: (v) => setShare(v) });
       sl.el.addEventListener('change', () => p.move());
       controls.append(sl.el);
+      showShare = (v) => sl.set(v, false);
     }
     const stepRow = h('div', { class: 'a7-btns' }, button('Step', () => void stepOnce(p.g.headless ? 1 : 650), { cls: 'primary small' }));
     const ratioRow = h('div', { class: 'a7-row' });
@@ -213,12 +216,12 @@ export const p5: PuzzleDef = {
     paint();
     return {
       async showMe() {
-        setShare(P5_LONG[0]);
+        showShare(P5_LONG[0]); setShare(P5_LONG[0]);
         for (let i = 0; i < 3; i++) await stepOnce(p.g.headless ? 1 : 600);
         if (ratioIn) { ratioIn.value = String(P5_RATIO); ratioIn.dispatchEvent(new Event('change')); }
       },
       async solve() {
-        setShare(P5_LONG[0]);
+        showShare(P5_LONG[0]); setShare(P5_LONG[0]);
         for (let i = 0; i < 3; i++) await stepOnce(1);
         if (ratioIn) { ratioIn.value = String(P5_RATIO); ratioIn.dispatchEvent(new Event('change')); }
       },

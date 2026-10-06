@@ -44,7 +44,7 @@ export const p5: PuzzleDef = {
   view: '3d',
   onWin: S.p5Win,
   async setup(p) {
-    await p.g.stage.view3D({ target: [1.0, 0, 0.75], distance: 8.6, azimuth: -112, elevation: 16, ms: 0 });
+    await p.g.stage.view3D({ target: [1.0, 0, 0.75], distance: 8.6, azimuth: -90, elevation: 14, ms: 0 });
     const d = p.difficulty;
     const names = DRIFT_NAMES;
     const cols = [C.v, C.w, C.u];
@@ -166,14 +166,14 @@ export const p6: PuzzleDef = {
     const q2 = new Arrow([0, 0, 0], v3(P2_Q[1]), { color: C.result, width: 0.04, label: '$\\mathbf q_2$' });
     p.add(a1, a2, q1, q2);
     new RightAngle(p, [0, 0, 0], v3(P2_Q[0]), v3(P2_Q[1]), 0.14, { color: C.result });
-    const r = p.readout('$A = QR$');
-    r.eq('Q = \\begin{bmatrix} \\tfrac{1}{\\sqrt2} & \\tfrac{1}{\\sqrt6} \\\\ \\tfrac{1}{\\sqrt2} & -\\tfrac{1}{\\sqrt6} \\\\ 0 & \\tfrac{2}{\\sqrt6} \\end{bmatrix}');
+    const r = p.readout('Back to the skewed arrows');
+    r.eq('Q = \\begin{bmatrix} 1/\\sqrt2 & 1/\\sqrt6 \\\\ 1/\\sqrt2 & -1/\\sqrt6 \\\\ 0 & 2/\\sqrt6 \\end{bmatrix}');
     let done = false;
     const finish = () => {
       if (done) return;
       done = true;
       const QR = matMul(P6_QR.Q, P6_R);
-      r.eq('R = \\begin{bmatrix} \\sqrt2 & \\tfrac{1}{\\sqrt2} \\\\ 0 & \\tfrac{3}{\\sqrt6} \\end{bmatrix}');
+      r.eq('R = \\begin{bmatrix} \\sqrt2 & 1/\\sqrt2 \\\\ 0 & 3/\\sqrt6 \\end{bmatrix}');
       r.row('qr', '$QR$, column 1', fmtV(QR.map((row) => row[0])), C.v);
       r.row('qr2', '$QR$, column 2', fmtV(QR.map((row) => row[1])), C.w);
       r.note('$R$ is upper triangular: $\\mathbf a_1$ is built from $\\mathbf q_1$ alone, $\\mathbf a_2$ from $\\mathbf q_1$ and $\\mathbf q_2$.');
@@ -186,7 +186,7 @@ export const p6: PuzzleDef = {
         { prompt: '$\\mathbf q_1\\cdot\\mathbf a_2$', answer: 1 / R2, tol: T },
         { prompt: '$\\mathbf q_2\\cdot\\mathbf a_1$', answer: 0, tol: T },
         { prompt: '$\\mathbf q_2\\cdot\\mathbf a_2$', answer: 3 / Math.sqrt(6), tol: T, mistakes: [[3, 'Divide by $\\sqrt6$.']] },
-        { prompt: '$R = Q^{\\mathsf T}A$', answer: P6_R.map((row) => row.map((x) => Math.round(x * 1000) / 1000)), tol: T },
+        { prompt: '$R = Q^{\\mathsf T}A$', answer: P6_R, tol: T },
       ],
       onDone: finish,
     });
@@ -215,15 +215,15 @@ export const p7: PuzzleDef = {
   view: '3d',
   onWin: S.p7Win,
   async setup(p) {
-    await p.g.stage.view3D({ target: [0.2, 0, 0], distance: 5, azimuth: -20, elevation: 18, ms: 0 });
+    await p.g.stage.view3D({ target: [0.4, 0, 0.1], distance: 6.5, azimuth: -58, elevation: 24, ms: 0 });
     p.grid({ base: 0.1, main: 0.2, axis: 0.45 });
-    const ins = new Arrow([0, 0, 0], [1.6, 0, 0], { color: C.white, width: 0.06, label: 'three inputs, almost on top of each other' });
-    p.add(ins);
+    const ins = new Arrow([0, 0, 0], [1.6, 0, 0], { color: C.white, width: 0.045 });
+    p.add(ins, new Label('three inputs, almost on top of each other', [1.6, 0, 0], { className: 'a8-pt dim', offset: [0, 26] }));
     const q2 = new Arrow([0, 0, 0], [0, 0, 0], { color: C.result, label: '$\\mathbf q_2$' });
     const q3 = new Arrow([0, 0, 0], [0, 0, 0], { color: C.orange, label: '$\\mathbf q_3$' });
     q2.object.visible = q3.object.visible = false;
     p.add(q2, q3);
-    const r = p.readout('Angle between $\\mathbf q_2$ and $\\mathbf q_3$');
+    const r = p.readout('Angle between the last two arrows');
     const flags = [false, false, false];
     const tick = (i: number) => { if (!flags[i]) { flags[i] = true; p.subgoal(i); } if (flags.every(Boolean)) p.win(); };
     const run = async (which: 'c' | 'm') => {
