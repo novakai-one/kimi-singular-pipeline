@@ -35,8 +35,9 @@ export const sayit: SayItDef = {
 /** An editable system: a matrix of numbers in the dock, its planes in the world, where they meet. */
 function systemEditor(p: PuzzleCtx, start: Aug, o: { label?: string; size?: number } = {}) {
   let rows = start.map((r) => r.slice());
-  const planes = new PlaneSet(p, { n: 3, rows, size: o.size ?? 7, focus: [0, 0, 0] });
-  void planes.frame({ distance: 22, azimuth: -60, elevation: 22 });
+  const f0 = somePoint(rows) ?? [0, 0, 0];
+  const planes = new PlaneSet(p, { n: 3, rows, size: o.size ?? 7, focus: f0 });
+  void planes.frame({ distance: 22, azimuth: -60, elevation: 22, target: f0 });
   const r = p.readout('The planes');
   const paint = () => r.row('m', 'They share', meetWords(rows), C.result);
   const box = h('div');
@@ -57,6 +58,9 @@ function systemEditor(p: PuzzleCtx, start: Aug, o: { label?: string; size?: numb
       if (reshape) build(); else input.set(rows);
       await planes.setRows(rows, reshape ? 0 : ms);
       paint();
+      // a new case: aim at where its planes meet (no common point: keep the view)
+      const f = somePoint(rows);
+      if (f) await planes.refocus(f, ms);
     },
   };
 }

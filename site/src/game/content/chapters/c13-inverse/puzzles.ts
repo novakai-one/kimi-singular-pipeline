@@ -592,14 +592,15 @@ export const p7: PuzzleDef = {
   par: 5,
   onWin: S.p7Win,
   setup(p) {
-    void p.g.stage.view3D({ target: [1.6, 1.8, 2.4], distance: 17, azimuth: -48, elevation: 22, ms: 0 });
-    const box = new Parallelepiped(p.g.stage, col3(P7_A, 0), col3(P7_A, 1), col3(P7_A, 2), { color: C.result, opacity: 0.14 });
-    const arrows = [C.v, C.w, C.u].map((c, j) => new Arrow([0, 0, 0], col3(P7_A, j), { color: c, width: 0.05 }));
+    // the box of U's columns: elimination leaves a staircase (A's own box is a needle 24 units tall)
+    void p.g.stage.view3D({ target: [2, 1, 1], distance: 10, azimuth: -52, elevation: 24, ms: 0 });
+    const box = new Parallelepiped(p.g.stage, col3(P7_U, 0), col3(P7_U, 1), col3(P7_U, 2), { color: C.result, opacity: 0.14 });
+    const arrows = [C.v, C.w, C.u].map((c, j) => new Arrow([0, 0, 0], col3(P7_U, j), { color: c, width: 0.05 }));
     p.add(box, ...arrows);
     const r = p.readout('Elimination, multipliers kept');
     r.row('A', '$A$', `$${texM(P7_A)}$`);
     r.row('U', 'after elimination', `$U = ${texM(P7_U)}$`);
-    r.note('Each row operation subtracts a multiple of a pivot row. LANTERN keeps each multiple in $L$.');
+    r.note('Each row operation subtracts a multiple of a pivot row. LANTERN keeps each multiple in $L$. The box shows the columns of $U$.');
     const ws = new StepWorksheet(p, {
       steps: [
         { prompt: 'R2 − $\\ell_{21}$·R1 clears the 4: $\\ell_{21} =$', answer: P7_MULT.l21, mistakes: [[-2, 'The multiplier is what you subtract: 4 ÷ 2 = 2.']] },

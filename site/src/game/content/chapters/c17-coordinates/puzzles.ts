@@ -235,10 +235,9 @@ export const p3: PuzzleDef = {
     const { copper } = anchorBench(p, { center: [1.4, 0.6], height: 8.5, arms: false });
     const vg = vellGrid(p);
     const point = new Dot(v3(P3_SHIP, 0.05), { color: C.result, size: 0.12 });
-    const pt = tag(`Anchor ${fmtV(P3_ANCHOR)}`, v3(P3_SHIP), 'cu', [0, -26]);
+    const pt = tag(`Anchor ${fmtV(P3_ANCHOR)}`, v3(P3_SHIP), 'cu', [0, 30]);
     p.add(point, pt.object);
     p.onDispose(() => pt.dispose());
-    point.setOpacity(0); pt.show(false);
     const anc = new AnchorPath(p, P2, { showTag: false });
     const vel = new AnchorPath(p, PC, { showTag: false, names: ['\\mathbf c_1', '\\mathbf c_2'] });
     anc.show(false); vel.show(false);
@@ -264,7 +263,7 @@ export const p3: PuzzleDef = {
     const show = async (k: number) => {
       if (k <= shown) return;
       shown = k;
-      if (k >= 1) { tick(0); paint(1); point.setOpacity(1); pt.show(true); await anc.walk(P3_ANCHOR, ms()); pt.set(`Anchor ${fmtV(P3_ANCHOR)} · ours ${fmtV(P3_SHIP)}`); }
+      if (k >= 1) { tick(0); paint(1); await anc.walk(P3_ANCHOR, ms()); pt.set(`Anchor ${fmtV(P3_ANCHOR)} · ours ${fmtV(P3_SHIP)}`); }
       if (k >= 2) {
         anc.show(false);
         void copper.fade(0.25, ms());
@@ -280,7 +279,7 @@ export const p3: PuzzleDef = {
       steps,
       onDone: () => {
         tick(0); tick(1); tick(2); paint(2);
-        r.eq(`P_C^{-1}P_B = \\begin{bmatrix} \\tfrac12 & 1 \\\\ -\\tfrac12 & 0 \\end{bmatrix}, \\quad \\begin{bmatrix} \\tfrac12 & 1 \\\\ -\\tfrac12 & 0 \\end{bmatrix}\\begin{bmatrix} 2 \\\\ 1 \\end{bmatrix} = \\begin{bmatrix} 2 \\\\ -1 \\end{bmatrix}`);
+        r.eq('P_C^{-1}P_B\\begin{bmatrix} 2 \\\\ 1 \\end{bmatrix} = \\begin{bmatrix} 2 \\\\ -1 \\end{bmatrix}');
         r.note('One matrix, Anchor numbers in, Vell’s numbers out. No stop in our grid needed.');
         p.win();
         void show(2);

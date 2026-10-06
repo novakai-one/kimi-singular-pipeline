@@ -560,7 +560,7 @@ export const p5: PuzzleDef = {
 export const p7: PuzzleDef = {
   id: 'c14-p7',
   title: 'Can areas solve equations?',
-  goal: 'Solve $A\\mathbf x = \\mathbf b$ for $A = \\begin{bmatrix} 2 & 1 \\\\ 1 & 1 \\end{bmatrix}$, $\\mathbf b = (5, 3)$ with areas only. The tile with columns $\\mathbf x$ and $\\mathbf e_2$ has area $x_1$; $A$ sends it to the tile with columns $\\mathbf b$ and $\\mathbf a_2$.',
+  goal: 'Solve $A\\mathbf x = \\mathbf b$ for $A = \\begin{bmatrix} 2 & 1 \\\\ 1 & 1 \\end{bmatrix}$, $\\mathbf b = (5, 3)$ with areas only. The tile with columns $\\mathbf x$ and $\\mathbf e_2$ has area $x_1$; $A$ sends it to the tile with columns $\\mathbf b$ and $\\mathbf a_2$: the columns of $A_1(\\mathbf b)$, which is $A$ with column 1 replaced by $\\mathbf b$.',
   hints: [
     '$A$ multiplies every area by $\\det A$. So $\\det A \\cdot x_1$ is the area of the tile with columns $\\mathbf b$ and $\\mathbf a_2$.',
     '$\\det\\begin{bmatrix}5&1\\\\3&1\\end{bmatrix} = 2$ and $\\det A = 1$, so $x_1 = 2$.',
@@ -569,7 +569,7 @@ export const p7: PuzzleDef = {
   par: 5,
   onWin: S.p7Win,
   setup(p) {
-    p.g.stage.view2D({ center: [2.6, 1.8], height: 7.5, ms: 0 });
+    p.g.stage.view2D({ center: [2.4, 2.4], height: 10, ms: 0 });
     p.grid({ base: 0.42, main: 0.5, axis: 0.8 });
     const A1b = replaceCol(P7_A, 0, P7_B);
     const img = new Parallelogram(p.g.stage, col2(A1b, 0), col2(A1b, 1), { color: C.result, opacity: 0.2 });
@@ -588,12 +588,13 @@ export const p7: PuzzleDef = {
       steps: [
         { prompt: 'Area of the tile with columns $\\mathbf b$, $\\mathbf a_2$: $\\det\\begin{bmatrix}5&1\\\\3&1\\end{bmatrix}$', answer: det2(A1b) },
         { prompt: '$\\det A$', answer: det2(P7_A) },
-        { prompt: '$x_1 = 2 / 1$', answer: P7_X[0] },
+        { prompt: '$x_1 = \\det A_1(\\mathbf b) / \\det A$', answer: P7_X[0] },
         { prompt: '$x_2 = \\det\\begin{bmatrix}2&5\\\\1&3\\end{bmatrix} / \\det A$', answer: P7_X[1] },
       ],
       onDone: () => {
         xTile.setOpacity(0.18, 0.9);
-        r.eq('\\mathbf x = (2, 1): \\quad 2\\,(2, 1) + 1\\,(1, 1) = (5, 3)');
+        r.row('x', '$\\mathbf x$', '(2, 1)', C.good);
+        r.eq('2\\,(2, 1) + 1\\,(1, 1) = (5, 3)');
         void burst(p.g.stage, [P7_X[0], P7_X[1], 0.05], C.good, 40, 2);
         p.win();
       },
