@@ -1,6 +1,8 @@
 // The unit tile (GDD §3.5, Ch 14): a frosted white square that rides the grid. Its signed area shows on
 // it. It is one mesh moved by the matrix itself, front face white and back face amber, so a move that
-// turns the grid over shows the tile's back: no sign is painted on, the winding does it.
+// turns the grid over shows the tile's back: no sign is painted on, the winding does it. (three.js
+// re-flips the winding of any mesh whose world matrix has a negative determinant, so a mirror on the
+// floor would keep showing the front; set() undoes that so the screen winding decides the face.)
 import { BackSide, Color, FrontSide, BufferAttribute, BufferGeometry, Group, Mesh, MeshBasicMaterial } from 'three';
 import type { Stage } from '../../../core/stage';
 import type { V3 } from '../../../game/types';
@@ -24,6 +26,7 @@ export class UnitTile {
   readonly at: [number, number];
   private name: string;
   W: Mat = embed([[1, 0], [0, 1]]);
+  private mirrored = false;
 
   /** A unit square with its lower-left corner at `at` (grid units), riding whatever matrix it is given. */
   constructor(stage: Stage, o: { at?: [number, number]; color?: string; opacity?: number; name?: string; labelSize?: number } = {}) {
@@ -51,6 +54,16 @@ export class UnitTile {
   set(M: Mat): void {
     this.W = embed(M);
     setGroupMatrix(this.root, this.W);
+    const w = this.W;
+    const d3 = w[0][0] * (w[1][1] * w[2][2] - w[1][2] * w[2][1]) - w[0][1] * (w[1][0] * w[2][2] - w[1][2] * w[2][0]) + w[0][2] * (w[1][0] * w[2][1] - w[1][1] * w[2][0]);
+    const mirrored = d3 < 0;
+    if (mirrored !== this.mirrored) {
+      this.mirrored = mirrored;
+      this.front.material.side = mirrored ? BackSide : FrontSide;
+      this.back.material.side = mirrored ? FrontSide : BackSide;
+      this.front.material.needsUpdate = true;
+      this.back.material.needsUpdate = true;
+    }
     const c = matVec(this.W, [this.at[0] + 0.5, this.at[1] + 0.5, 0]);
     this.label.at([c[0], c[1], c[2] + 0.05]);
     const floor = M.length === 2 || (Math.abs(M[2][0]) + Math.abs(M[2][1]) + Math.abs(M[0][2]) + Math.abs(M[1][2]) < 1e-9 && Math.abs(M[2][2] - 1) < 1e-9);

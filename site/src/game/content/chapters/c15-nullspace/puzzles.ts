@@ -490,15 +490,15 @@ export const p4: PuzzleDef = {
     const tol = winTol(d(p));
     const left = new Room(p, { origin: [-3.9, 0, 0], scale: 0.7, extent: 3, title: 'starts' });
     const right = new Room(p, { origin: [3.9, 0, 0], scale: 0.7, extent: 3, title: 'landings' });
-    void twinView(p, { distance: 15.5 });
+    void twinView(p, { distance: 16.5, target: [0, 0, 1.5] });
     const sheet = new Sheet(right, [1, 1, -1], { color: C.result, size: 5, opacity: 0.1 });
     sheet.setOpacity(0.3);
     const flags = [false, false, false];
     const tick = (i: number) => { if (!flags[i]) { flags[i] = true; p.subgoal(i); } };
     const plateA = new Dot(left.w(P4_A), { color: C.white, size: 0.1 });
     const plateB = new Dot(left.w(P4_B), { color: C.white, size: 0.1 });
-    const tagA = ptTag('A (2, 0, 1)', left.w(P4_A), '', [-10, 22]);
-    const tagB = ptTag('B (3, 1, 0)', left.w(P4_B), '', [0, -22]);
+    const tagA = ptTag('A (2, 0, 1)', left.w(P4_A), '', [-58, -22]);
+    const tagB = ptTag('B (3, 1, 0)', left.w(P4_B), '', [52, 20]);
     p.add(plateA, plateB, tagA, tagB);
     const r = p.readout('Plates');
     r.row('a', 'A starts at', fmtV(P4_A));
@@ -509,7 +509,7 @@ export const p4: PuzzleDef = {
       const pts: V3[] = [];
       for (let i = 0; i <= 40; i++) {
         const t = i / 40;
-        pts.push([from[0] + (to[0] - from[0]) * t, from[1] + (to[1] - from[1]) * t, from[2] + (to[2] - from[2]) * t + Math.sin(Math.PI * t) * 2.2]);
+        pts.push([from[0] + (to[0] - from[0]) * t, from[1] + (to[1] - from[1]) * t, from[2] + (to[2] - from[2]) * t + Math.sin(Math.PI * t) * 1.1]);
       }
       const f = new FatLine(p.g.stage, pts, { color, width: 1.4, opacity: 0.5, dashed: true, dashSize: 0.18, gapSize: 0.12 });
       p.add(f);
@@ -569,7 +569,7 @@ export const p4: PuzzleDef = {
       // the same arrow from the origin lies on the violet line
       nul = new GlowLine(left, NULL_DIR);
       void nul.fadeIn(800);
-      const copy = left.arrow([1, 1, -1], { color: VIOLET, label: `$${tv('(1, 1, -1)')}$` });
+      const copy = left.arrow([1, 1, -1], { color: VIOLET, label: '$(1, 1, -1)$' });
       void copy.grow(700);
       const zero = new Dot(right.w([0, 0, 0]), { color: VIOLET, size: 0.08 });
       p.add(zero);
@@ -607,7 +607,7 @@ export const p4: PuzzleDef = {
       sfx.success();
       solLine = new GlowLine(left, NULL_DIR, { color: C.result, through: P4_PARTICULAR, opacity: 0.8, width: 2.2 });
       void solLine.fadeIn(800);
-      const tag = ptTag('every start on this line lands on (1, 2, 3)', left.w([1.6, 2.6, -0.6]), 'y');
+      const tag = ptTag('every start on this line lands on (1, 2, 3)', left.w([-0.6, 0.4, 1.6]), 'y', [0, -24]);
       p.add(tag);
       probes.forEach((q) => q.knob.setEnabled(false));
       p.win();
