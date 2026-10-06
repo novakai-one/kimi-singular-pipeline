@@ -13,18 +13,9 @@ import { sfx } from '../../../audio/sfx';
 import { rng } from '../../../game/lawcheck';
 import { matVec, type Mat, type Vec } from '../../../math/la';
 import { ptag } from '../c18-eigen/parts';
-import { fmtN } from './logic';
+import { TRI, apportion, fmtN, triPoint, triSplit } from './logic';
 
-/** Split integers by largest remainder so they add to `total`. */
-export function apportion(x: readonly number[], total: number): number[] {
-  const s = x.reduce((a, b) => a + b, 0) || 1;
-  const raw = x.map((t) => (t / s) * total);
-  const out = raw.map(Math.floor);
-  let left = total - out.reduce((a, b) => a + b, 0);
-  const order = raw.map((t, i) => [t - Math.floor(t), i]).sort((a, b) => b[0] - a[0]);
-  for (let k = 0; left > 0; k = (k + 1) % order.length, left--) out[order[k][1]]++;
-  return out;
-}
+export { TRI, apportion, triPoint, triSplit };
 
 const SECTION_COLORS = ['#9fd8ff', '#c9b49a', '#ffd166'];
 export const SECTIONS_AT: [number, number][] = [[-3.4, -1.2], [3.4, -1.2], [0, 2.3]];
@@ -150,21 +141,6 @@ export class FlowBoard {
 }
 
 // ------------------------------------------------------------------ the triangle of all splits
-
-export const TRI: [number, number][] = [[-2.8, -1.6], [2.8, -1.6], [0, 3.25]];
-/** A split (b, m, s) as a point in the triangle. */
-export const triPoint = (x: readonly number[]): V3 => { const s = x.reduce((a, b) => a + b, 0) || 1; return [TRI.reduce((t, v, i) => t + v[0] * (x[i] / s), 0), TRI.reduce((t, v, i) => t + v[1] * (x[i] / s), 0), 0]; };
-/** A point in the plane back to the nearest split (clamped into the triangle), scaled to `total`. */
-export function triSplit(q: readonly number[], total: number): Vec {
-  const [[x1, y1], [x2, y2], [x3, y3]] = TRI;
-  const d = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
-  let a = ((y2 - y3) * (q[0] - x3) + (x3 - x2) * (q[1] - y3)) / d;
-  let b = ((y3 - y1) * (q[0] - x3) + (x1 - x3) * (q[1] - y3)) / d;
-  let c = 1 - a - b;
-  a = Math.max(0, a); b = Math.max(0, b); c = Math.max(0, c);
-  const s = a + b + c;
-  return [a / s * total, b / s * total, c / s * total];
-}
 
 /** The triangle of splits, with the path of each start drawn hour by hour. */
 export class Simplex {

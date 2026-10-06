@@ -154,7 +154,8 @@ export const p6: PuzzleDef = {
 
 // ------------------------------------------------------------------ p7 Twice is once
 
-const BUOYS: number[][] = [[-2, 1], [1, 1], [2, -1], [3, 2], [-1, -2], [0, 2], [2, 3], [-3, 0]];
+const BUOYS: number[][] = [];
+for (let x = -2; x <= 2; x++) for (let y = -2; y <= 2; y++) if (x || y) BUOYS.push([x, y]);
 
 export const p7: PuzzleDef = {
   id: 'c21-p7',
@@ -175,12 +176,12 @@ export const p7: PuzzleDef = {
   par: 3,
   onWin: S.p7Win,
   setup(p) {
-    const grid = p.grid();
+    p.grid();
     void p.g.stage.view2D({ center: [0.2, 0.5], height: 9, ms: 0 });
     const tol = tolFor(p.difficulty);
     let M: Mat = identity(2);
     let applied = 0;
-    const dots = BUOYS.map((b) => new Dot(v3(b, 0.03), { color: C.accent, size: 0.08 }));
+    const dots = BUOYS.map((b) => new Dot(v3(b, 0.03), { color: C.accent, size: 0.07, glow: 1.1 }));
     p.add(...dots);
     const dirLine = new InfLine(p.g.stage, [0, 0, 0], v3(P7_DIR), { color: C.result, width: 1.4, opacity: 0.4, dashed: true });
     const nullLine = new InfLine(p.g.stage, [0, 0, 0], v3(P7_NULL), { color: C.violet, width: 3, opacity: 0 });
@@ -213,7 +214,7 @@ export const p7: PuzzleDef = {
       p.move();
       const from = M, to = matMul(P7, M);
       sfx.whoosh(0.8);
-      await animate(900, (k) => { const A = mlerp(from, to, k); grid.set(A); dots.forEach((d, i) => d.at(v3(matVec(A, BUOYS[i]), 0.03))); }, ease.inOut);
+      await animate(900, (k) => { const A = mlerp(from, to, k); dots.forEach((d, i) => d.at(v3(matVec(A, BUOYS[i]), 0.03))); }, ease.inOut);
       const moved = !meq(from, to, 1e-9);
       M = to;
       applied++;

@@ -397,6 +397,10 @@ export class PlaneSet {
     return this.v3(add(c, add(scale(u, a * this.half), scale(v, b * this.half))));
   }
 
+  private avoidPts: number[][] = [];
+  /** 2-D box mode: points whose tags the equation labels should stay clear of (used at the next placeLabels). */
+  setAvoid(pts: number[][]): void { this.avoidPts = pts.map((q) => q.slice()); }
+
   /** 2-D box mode: label spots for rows 0 … i, each the first candidate clear of the earlier ones. */
   private boxLabels(i: number): number[] | null {
     const box = this.o.box!;
@@ -408,7 +412,9 @@ export class PlaneSet {
       const nn = h.n[1] >= 0 ? h.n : scale(h.n, -1);
       const cands = [[0.78, 0.8, 0.5][j % 3], 0.22, 0.62, 0.38, 0.9, 0.1];
       const pos = (f: number) => add(add(seg[0], scale(sub(seg[1], seg[0]), f)), scale(nn, 0.42));
-      const clear = (w: number[]) => spots.every((q) => !q || Math.abs(q[0] - w[0]) > 1.7 || Math.abs(q[1] - w[1]) > 0.6);
+      const clear = (w: number[]) => spots.every((q) => !q || Math.abs(q[0] - w[0]) > 1.7 || Math.abs(q[1] - w[1]) > 0.6)
+        // and clear of a point's tag (drawn just above the point)
+        && this.avoidPts.every((q) => Math.abs(q[0] - w[0]) > 1.5 || Math.abs(q[1] + 0.4 - w[1]) > 0.55);
       spots.push(cands.map(pos).find(clear) ?? pos(cands[0]));
     }
     return spots[i] ?? null;

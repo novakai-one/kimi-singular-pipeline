@@ -129,6 +129,7 @@ export function drawTwin(host: Host, start: number[], cfg: TwinCfg = P1_TWIN): T
     },
     set(xy: number[]) {
       tw.xy = xy.slice();
+      planes.setAvoid([xy]);
       const [x] = xy;
       rowDot.at(RC(xy, 0.05));
       const m1 = scale(cols()[0], x), tip = tw.tip();

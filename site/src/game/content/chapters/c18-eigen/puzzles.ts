@@ -28,7 +28,7 @@ const hunt = (p: PuzzleCtx, M: Mat, o: { radius?: number; title?: string; onChan
 });
 
 /** The plain grid for the line hunts (the test arrow and its image do the talking). */
-const quietGrid = (p: PuzzleCtx) => p.grid({ main: 0.22, base: 0, axis: 0.45 });
+const quietGrid = (p: PuzzleCtx) => p.grid({ main: 0.32, base: 0, axis: 0.5 });
 
 /** Grid2D draws a violet line where a flattened grid lands; here violet means "sent to the origin", so hide it. */
 export function hideLandingLine(g: Grid2D): void {
@@ -71,7 +71,7 @@ export const p1: PuzzleDef = {
   par: 4,
   onWin: S.p1Win,
   setup(p) {
-    void p.g.stage.view2D({ center: [0.4, 0], height: 9.6, ms: 0 });
+    void p.g.stage.view2D({ center: [0.6, 1.2], height: 11, ms: 0 });
     quietGrid(p);
     let won = false;
     const check = () => {
@@ -81,7 +81,7 @@ export const p1: PuzzleDef = {
       p.subgoal(1, n >= 2);
       if (h1.done && !won) { won = true; sfx.success(); h1.say('Both lines locked. Every other arrow turns.', 'good'); p.win(); }
     };
-    const h1: LineHunt = hunt(p, P1_A, { title: 'Lines that hold', onChange: () => check() });
+    const h1: LineHunt = hunt(p, P1_A, { radius: 1.05, title: 'Lines that hold', onChange: () => check() });
     const { paint } = huntReadout(p, () => h1, 'The test arrow');
     paint();
     if (p.difficulty === 'commander') h1.say('Type an arrow and test it. The circle shows where it goes.');
@@ -114,7 +114,7 @@ export const p2: PuzzleDef = {
   par: 3,
   onWin: S.p2Win,
   setup(p) {
-    void p.g.stage.view2D({ center: [0.4, 0], height: 8.4, ms: 0 });
+    void p.g.stage.view2D({ center: [0.5, 0.9], height: 8.8, ms: 0 });
     quietGrid(p);
     let won = false;
     const check = () => {

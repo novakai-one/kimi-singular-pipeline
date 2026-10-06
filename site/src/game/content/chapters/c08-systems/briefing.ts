@@ -63,7 +63,7 @@ export const doubtColumns: DoubtDef = {
   goal: 'Set the weights so the yellow tip reaches the ring. Watch the point on the left. **Back it** (Bram will shake it) or **Challenge it** with a case where the tip reaches the ring but the lines miss.',
   view: '2d',
   setup(p) {
-    p.g.stage.view2D({ center: [0.2, 1.2], height: 14.5, ms: 0 });
+    p.g.stage.view2D({ center: [0.2, 1.9], height: 14.5, ms: 0 }); // panel captions below the settled doubt card
     const cfg = { rows: D2_START.rows, rowO: [-6.4, 0], rowBox: [-3, -3, 3, 3] as [number, number, number, number], colO: [3.6, 0], colBox: [-7, -7, 7, 7] as [number, number, number, number], colK: 3 / 7 };
     const tw = drawTwin(p, D2_START.w.slice(), cfg);
     const sx = new Slider({ label: 'weight $x$', min: -3, max: 3, step: 0.5, value: 0, onInput: (v) => { tw.set([v, tw.xy[1]]); p.move(); } });
@@ -73,7 +73,7 @@ export const doubtColumns: DoubtDef = {
     const glow = new FatLine(p.g.stage, [[0, 0, 0], [0, 0, 0]], { color: C.result, width: 2, opacity: 0 });
     p.add(glow.object);
     p.onDispose(() => glow.dispose());
-    const setCase = (rows: Aug, w: number[]) => { tw.setRows(rows); tw.set(w); sx.set(w[0], false); sy.set(w[1], false); };
+    const setCase = (rows: Aug, w: number[]) => { tw.setRows(rows); tw.set(w); tw.planes.placeLabels(); sx.set(w[0], false); sy.set(w[1], false); };
     return {
       holds: () => d2Holds(tw.rows, tw.xy),
       describe: () => `rows $${rowTex(tw.rows[0], ['x', 'y'])}$ and $${rowTex(tw.rows[1], ['x', 'y'])}$, weights ${pt(tw.xy)}: ${reaches() ? `the tip reaches ${pt([tw.rows[0][2], tw.rows[1][2]])} and the point ${pt(tw.xy)} is ${onAll(tw.rows, tw.xy, 1e-6) ? 'on both lines' : 'off a line'}` : 'the tip misses the ring'}`,

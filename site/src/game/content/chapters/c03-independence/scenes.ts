@@ -127,14 +127,18 @@ export async function reveal(g: Game): Promise<void> {
     g.stage.world.add(ark.root);
   }
   let shipZ = 0;
-  const stop = cam(g, (t) => {
-    const k = ease.inOut(Math.min(1, t / 9));
-    const look = new Vector3(0.5, 0.4, shipZ + 0.6).lerp(new Vector3(40, 70, 46), k);
-    const pos = new Vector3(-5.5, -7.5, shipZ + 1.2).lerp(new Vector3(-12, -14, shipZ + 6), k);
+  let k = 0; // 0: behind the climbing ship; 1: looking past it at the ark
+  const ARK = new Vector3(40, 70, 46);
+  const shipPos = () => new Vector3(shipZ * 0.35, shipZ * 0.15, shipZ);
+  const stop = cam(g, () => {
+    const sp = shipPos();
+    const look = sp.clone().add(new Vector3(0.5, 0.4, 0.6)).lerp(ARK, ease.inOut(k));
+    const pos = sp.clone().add(new Vector3(-5.5, -7.5, 1.2).lerp(new Vector3(-7, -10, 2.4), ease.inOut(k)));
     return { pos: [pos.x, pos.y, pos.z], look: [look.x, look.y, look.z] };
   });
   tie(glow.mesh, stop);
-  const climb = g.stage.tick((dt) => { shipZ += dt * 1.6; ship.object.position.set(shipZ * 0.35, shipZ * 0.15, shipZ); glow.setGain(Math.max(0, 0.17 - shipZ * 0.01)); });
+  glow.setGain(0.2);
+  const climb = g.stage.tick((dt) => { shipZ += dt * 1.6; ship.object.position.copy(shipPos()); glow.setGain(Math.max(0, 0.2 - shipZ * 0.02)); });
   tie(ship.object, climb);
   await fadeBlack(g, false, 1400);
   await letterbox(g, true, 600);
@@ -142,7 +146,8 @@ export async function reveal(g: Game): Promise<void> {
   await wait(2600);
   g.mood('void');
   void stamp(g, 'Off the plane · approach to the colony ark *Meridian*', 4200);
-  await wait(2200);
+  // swing the view past the ship to the ark (awaited, so the lines start on the ark)
+  await animate(5500, (x) => { k = x; }, ease.linear);
   sfx.discover();
   await g.say(S.reveal, {
     onLine: (_l, i) => {
