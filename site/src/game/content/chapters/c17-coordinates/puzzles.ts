@@ -179,7 +179,7 @@ export const p2: PuzzleDef = {
     const check = async (fast = false) => {
       p.move();
       bench.dim(true);
-      await path.walk(P2_ANCHOR, fast || p.g.headless ? 10 : 520);
+      if (fast) { path.show(true); path.set(P2_ANCHOR); } else await path.walk(P2_ANCHOR, p.g.headless ? 10 : 520);
       if (p2Won(at, tol(p))) { if (!won) { won = true; gap.hide(); sfx.success(); msg.className = 'c17-msg good'; msg.textContent = `The Anchor’s path ends on your marker: ${fmtV(P2_SHIP)}.`; p.win(); } return; }
       sfx.miss();
       gap.show(at, P2_SHIP);

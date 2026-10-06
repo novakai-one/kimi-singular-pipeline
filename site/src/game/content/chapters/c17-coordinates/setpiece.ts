@@ -188,7 +188,8 @@ export const sp: PuzzleDef = {
       const M = shipMove(S0);
       cube.group.visible = true; ct.show(true);
       cube.set([1, 0, 0], [0, 1, 0], [0, 0, 1]);
-      await cube.morph(v3(col(M, 0)), v3(col(M, 1)), v3(col(M, 2)), fast || p.g.headless ? 10 : 900);
+      if (fast) cube.set(v3(col(M, 0)), v3(col(M, 1)), v3(col(M, 2)));
+      else await cube.morph(v3(col(M, 0)), v3(col(M, 1)), v3(col(M, 2)), p.g.headless ? 10 : 900);
       ct.set(`volume × ${fmtN(det(M))}`);
       if (spVolumeOk(S0)) { tick(1); sfx.success(); paint(); say('The unit cube keeps its volume: × 1.', 'good'); return; }
       paint(); sfx.miss(); say(`This setting scales volume by ${fmtN(det(M))}. The ark would come out ${det(M) < 1 ? 'crushed' : 'stretched'}.`, 'bad');
@@ -239,12 +240,13 @@ export const sp: PuzzleDef = {
       root.add(holder);
       holder.add(ark);
       holder.matrixAutoUpdate = false;
-      await animate(fast || p.g.headless ? 20 : 2400, (k) => {
+      const place = (k: number) => {
         const M = turn3(k);
         holder.matrix.set(M[0][0], M[0][1], M[0][2], 0, M[1][0], M[1][1], M[1][2], 0, M[2][0], M[2][1], M[2][2], 0, 0, 0, 0, 1);
         holder.matrixWorldNeedsUpdate = true;
         const q = matVec(M, ARK); at.at(v3(q));
-      }, ease.inOut);
+      };
+      if (fast) place(1); else await animate(p.g.headless ? 20 : 2400, place, ease.inOut);
       at.set(`ark ${fmtV(ARK_AFTER)}`);
       won = true; tick(3); sfx.success();
       say(`The ark is at ${fmtV(ARK_AFTER)}, clear of the stream.`, 'good');

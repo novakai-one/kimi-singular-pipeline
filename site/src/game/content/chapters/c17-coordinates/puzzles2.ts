@@ -136,7 +136,8 @@ export const p4: PuzzleDef = {
       busy = true;
       p.move();
       measured.show(false);
-      await playCards(rail.cards as Card[], [bench.rider], { ms: fast || p.g.headless ? 20 : 1500, rail, onStage: (i) => bench.say(i), pause: fast ? 0 : 250 });
+      if (fast) bench.rider(M);
+      else await playCards(rail.cards as Card[], [bench.rider], { ms: p.g.headless ? 20 : 1500, rail, onStage: (i) => bench.say(i), pause: 250 });
       bench.say(-1);
       measured.show(true);
       replayed = true; paint();
@@ -230,7 +231,8 @@ export const p5: PuzzleDef = {
       busy = true;
       p.move();
       handles.forEach((x) => { x.object.visible = false; });
-      await playCards(rail.cards as Card[], [bench.rider], { ms: fast || p.g.headless ? 20 : 1300, rail, onStage: (i) => bench.say(i), pause: fast ? 0 : 200 });
+      if (fast) bench.rider(shipMove(Sm));
+      else await playCards(rail.cards as Card[], [bench.rider], { ms: p.g.headless ? 20 : 1300, rail, onStage: (i) => bench.say(i), pause: 200 });
       bench.say(-1);
       replayed = true; paint();
       busy = false;
@@ -314,6 +316,17 @@ async function playMeasure(id: Measure['id'], rooms: Room[], fast: boolean): Pro
     await wait(fast ? 10 : 250);
   }
 }
+/** The same measurement's end state, at once (Show me and tests do not wait for frames). */
+function snapMeasure(id: Measure['id'], rooms: Room[]): void {
+  for (const rm of rooms) {
+    if (id === 'det') rm.tile.set(v3(col(rm.M, 0)), v3(col(rm.M, 1)), at(rm, [0, 0], 0.01));
+    if (id === 'land') rm.land.set(at(rm, [0, 0]), at(rm, matVec(rm.M, [1, 0])));
+    if (id === 'four') {
+      rm.rider.setOpacity(1); rm.rider.at(at(rm, [1, 0], 0.05));
+      rm.trail.setSegments([0, 1, 2, 3].map((k) => [at(rm, matVec(mpow2(rm.M, k), [1, 0]), 0.03), at(rm, matVec(mpow2(rm.M, k + 1), [1, 0]), 0.03)] as [V3, V3]));
+    }
+  }
+}
 const mpow2 = (M: Mat, k: number): Mat => { let out = identity(2); for (let i = 0; i < k; i++) out = matMul(M, out); return out; };
 /** The honest in-between of one pulse: R turns; T = P R P⁻¹ turns in the Anchor's grid. */
 const partial = (M: Mat, t: number): Mat => {
@@ -352,11 +365,11 @@ export const p6: PuzzleDef = {
       h('span', { class: 'h' }, 'measurement'), h('span', { class: 'h c17-cu' }, 'Anchor’s'), h('span', { class: 'h' }, 'ours'), h('span', { class: 'h' }, 'mark'));
     const rowEls = new Map<string, { lbl: HTMLElement; a: HTMLElement; b: HTMLElement; same: HTMLButtonElement; diff: HTMLButtonElement }>();
     let busy = false;
-    const measure = async (m: Measure, fast = false) => {
+    const measure = async (m: Measure, instant = false) => {
       if (busy || measured.has(m.id)) return;
       busy = true;
       p.move();
-      await playMeasure(m.id, rooms, fast || p.g.headless);
+      if (instant) snapMeasure(m.id, rooms); else await playMeasure(m.id, rooms, p.g.headless);
       measured.add(m.id);
       const e = rowEls.get(m.id)!;
       e.a.innerHTML = inline(m.a); e.b.innerHTML = inline(m.b);
@@ -504,9 +517,12 @@ export const p7: PuzzleDef = {
       fc.at(f as V3); fc.setOpacity(1); ft.at(f as V3); ft.show(true); ft.set(`forecast ${fmtV(f)}`);
       sfx.snap();
       bow.at(BOW3 as V3); bt.at(BOW3 as V3); gap.object.visible = false;
-      await wait(fast || p.g.headless ? 10 : 500);
-      // the recorded pulse, played honestly: P · (turn, heights × 0.8) · P⁻¹
-      await animate(fast || p.g.headless ? 20 : 2000, (t) => { const q = matVec(T3partial(t), BOW3); bow.at(q as V3); bt.at(q as V3); }, ease.inOut);
+      if (fast) { bow.at(BOW3_REAL as V3); bt.at(BOW3_REAL as V3); }
+      else {
+        await wait(p.g.headless ? 10 : 500);
+        // the recorded pulse, played honestly: P · (turn, heights × 0.8) · P⁻¹
+        await animate(p.g.headless ? 20 : 2000, (t) => { const q = matVec(T3partial(t), BOW3); bow.at(q as V3); bt.at(q as V3); }, ease.inOut);
+      }
       busy = false;
       if (p7Won(rail.cards.map((c) => c!.M))) {
         won = true; sfx.success();

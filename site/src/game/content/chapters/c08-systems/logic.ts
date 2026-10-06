@@ -84,19 +84,21 @@ export function d2Holds(rows: Aug, w: number[], tol = 1e-6): boolean {
 }
 /** A 2-D case with weights that reach b (random), or (edge 0) two parallel columns with b on their line. */
 export function d2Random(rng: () => number, edge = -1): { rows: Aug; w: number[] } {
-  if (edge === 0) {
-    const a = [randNZ(rng, 3), randNZ(rng, 3)], k = randNZ(rng, 2);
-    const w = [randInt(rng, -3, 3), randInt(rng, -3, 3)];
-    // columns (a₁, a₂) and k(a₁, a₂): rows [a₁, k a₁ | …], [a₂, k a₂ | …]
-    const rows: Aug = [[a[0], k * a[0], 0], [a[1], k * a[1], 0]];
+  // small numbers, so the point stays inside the row panel and the ring inside the column panel
+  const fits = (rows: Aug, w: number[]) => rows.every((r) => Math.abs(r[2]) <= 6) && w.every((x) => Math.abs(x) <= 2);
+  for (;;) {
+    let rows: Aug;
+    if (edge === 0) {
+      const a = [randNZ(rng, 2), randNZ(rng, 2)], k = randNZ(rng, 2);
+      // columns (a₁, a₂) and k(a₁, a₂): rows [a₁, k a₁ | …], [a₂, k a₂ | …]
+      rows = [[a[0], k * a[0], 0], [a[1], k * a[1], 0]];
+    } else {
+      do { rows = [[randInt(rng, -2, 2), randInt(rng, -2, 2), 0], [randInt(rng, -2, 2), randInt(rng, -2, 2), 0]]; } while (Math.abs(rows[0][0] * rows[1][1] - rows[0][1] * rows[1][0]) < 1);
+    }
+    const w = [randInt(rng, -2, 2), randInt(rng, -2, 2)];
     rows.forEach((r) => { r[2] = r[0] * w[0] + r[1] * w[1]; });
-    return { rows, w };
+    if (fits(rows, w)) return { rows, w };
   }
-  let rows: Aug;
-  do { rows = [[randInt(rng, -3, 3), randInt(rng, -3, 3), 0], [randInt(rng, -3, 3), randInt(rng, -3, 3), 0]]; } while (Math.abs(rows[0][0] * rows[1][1] - rows[0][1] * rows[1][0]) < 1);
-  const w = [randInt(rng, -3, 3), randInt(rng, -3, 3)];
-  rows.forEach((r) => { r[2] = r[0] * w[0] + r[1] * w[1]; });
-  return { rows, w };
 }
 export const D2_START = { rows: [[2, 1, 4], [1, -1, -1]] as Aug, w: [0, 0] };
 export const D2_SHOW = { rows: [[2, 1, 4], [1, -1, -1]] as Aug, w: [1, 2] };

@@ -262,8 +262,8 @@ export const p4: PuzzleDef = {
   view: '3d',
   onWin: S.p4Win,
   setup(p) {
-    const planes = new PlaneSet(p, { n: 3, rows: [P4.row], showSolution: false, size: 11, focus: [3, 0.5, 0] });
-    void planes.frame({ distance: 22, azimuth: -70, elevation: 26 });
+    const planes = new PlaneSet(p, { n: 3, rows: [P4.row], showSolution: false, size: 8.5, focus: [3, 0.5, 0] });
+    void planes.frame({ distance: 27, azimuth: -70, elevation: 26 });
     const targets = P4.targets.map((q, i) => new Dot(q as V3, { color: '#e8f1ff', size: 0.14, glow: 1.6, label: 'ABC'[i] }));
     p.add(...targets);
     const visited = [false, false, false];

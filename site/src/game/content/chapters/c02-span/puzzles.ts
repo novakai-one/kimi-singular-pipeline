@@ -229,7 +229,7 @@ export const p4: PuzzleDef = {
   onWin: S.p4Win,
   setup(p) {
     p.grid();
-    p.g.stage.view2D({ center: [3.2, 3.2], height: 11, ms: 0 });
+    p.g.stage.view2D({ center: [1.4, 3.3], height: 12, ms: 0 });
     const target = to3(P4_TARGET);
     const pad = new Pad(p.g.stage, target, { label: 'beacon' });
     p.add(pad);
