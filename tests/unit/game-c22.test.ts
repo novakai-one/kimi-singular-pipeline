@@ -9,7 +9,7 @@ import { execFileSync } from 'node:child_process';
 import * as L from '../../site/src/game/content/chapters/c22-gram-schmidt/logic.ts';
 import { GRAM_SCHMIDT, GS_TESTS, QR, QR_TESTS, buildGramSchmidt, buildQr } from '../../site/src/game/content/chapters/c22-gram-schmidt/build.ts';
 import { checkLaw, rng, rint } from '../../site/src/game/game/lawcheck.ts';
-import { det, dot, fromCols, identity, matMul, meq, norm, transpose, veq, type Mat } from '../../site/src/game/math/la.ts';
+import { det, dot, identity, matMul, meq, norm, transpose, veq, type Mat } from '../../site/src/game/math/la.ts';
 
 const close = (a: number, b: number, tol = 1e-9) => assert.ok(Math.abs(a - b) <= tol, `${a} ≉ ${b}`);
 
@@ -72,7 +72,6 @@ test('p5: the Drift frame (1.03, 0.98, 1.01; up and forward 88.6° apart) square
   assert.ok(!L.driftFixed(L.DRIFT));
   // squaring forward first keeps the lean: square and unit, but not level
   const fwdFirst = [L.DRIFT[1], L.DRIFT[0], L.DRIFT[2]];
-  const q = (globalThis as unknown as { x?: never }).x ?? null; void q;
   const qs = L.modifiedGS(fwdFirst);
   const frame = [qs[1], qs[0], qs[2]];
   assert.ok(Math.abs(L.horizonLean(frame[1]) - 1.4) < 1e-9 && !L.driftFixed(frame));
@@ -154,7 +153,7 @@ test('Teach Teo T4: the reference aims at the Lantern; missing K1, K2 or K3 (or 
   const ok = L.runTeo(L.TEO_REF);
   assert.equal(ok.fault, 'ok');
   assert.ok(ok.off < 1e-6);
-  assert.deepEqual(ok.readings, [3, 4.949747468305833, 4].map((x, i) => (i === 1 ? ok.readings![1] : x)));
+  close(ok.readings![0], 3); close(ok.readings![1], 7 / Math.SQRT2); close(ok.readings![2], 4);
   assert.deepEqual(ok.pair, [0, 2]);
   // K3 missing: the readings come out scaled (6 instead of 3)
   const scaled = L.runTeo(['check', 'read', 'aim']);
@@ -245,5 +244,4 @@ test('build: qr passes its tests and a swarm (positive diagonal, so one right an
   assert.ok(runPy('qr', QR, cases, lib).every(Boolean), 'swarm');
   for (const t of QR_TESTS) { const [Q, R] = buildQr.swarm!.crew(...t.args) as [Mat, Mat]; const [eQ, eR] = t.expect as [Mat, Mat]; assert.ok(meq(Q, eQ) && meq(R, eR), `crew agrees: ${t.name}`); }
   decoysFail(buildQr as typeof buildGramSchmidt, QR_TESTS, lib);
-  void fromCols;
 });
