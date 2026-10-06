@@ -231,7 +231,7 @@ export const procedure: ProcedureDef = {
   async run(g, ids) {
     const res = runProc(ids);
     g.stage.clearWorld();
-    await g.stage.view2D({ center: [0, -1.45], height: 7.5, ms: 300 });
+    await g.stage.view2D({ center: [-2.35, -1.45], height: 7.5, ms: 300 });
     const W = g.stage.world;
     const step = new Label('LANTERN runs your steps', [0, 1.75, 0], { className: 'a7-board step' });
     W.add(step.object);

@@ -109,7 +109,7 @@ export const p6: PuzzleDef = {
     const rec = record();
     const cloud = new PointCloud(p, { points: rec.X.map(() => [0, 0, 0]), color: C.accent, size: 0.02, glow: 0.25, core: 1.2, opacity: 0.8 });
     const path = new PointCloud(p, { points: rec.path.map(() => [0, 0, 0]), color: C.result, size: 0.05, glow: 0.5, core: 1.6 });
-    const pathLine = new FatSegments(p.g.stage, [[[0, 0, 0], [0, 0, 0]]], { color: C.result, width: 2, opacity: 0.85 });
+    const pathLine = new FatSegments(p.g.stage, [[[0, 0, 0], [0, 0, 0]]], { color: C.result, width: 3, opacity: 0.9 });
     pathLine.object.traverse((o) => { o.renderOrder = 6; o.frustumCulled = false; });   // over the dense arms
     p.add(pathLine.object); p.onDispose(() => pathLine.dispose());
     const ax = [tag('', [3.75, -0.35, 0], 'dim'), tag('', [0, 3.4, 0], 'dim')];
@@ -131,7 +131,7 @@ export const p6: PuzzleDef = {
         const pp = rec.path.map((i) => pts[i]);
         path.set(pp); path.group.visible = true;
         const segs: [V3, V3][] = [];
-        for (let i = 1; i < pp.length; i++) segs.push([pp[i - 1] as V3, pp[i] as V3]);
+        for (let i = 1; i < pp.length; i++) segs.push([[pp[i - 1][0], pp[i - 1][1], 0.03], [pp[i][0], pp[i][1], 0.03]]);
         pathLine.setSegments(segs); pathLine.object.visible = true;
       }
       ax[0].set(chosen[0] !== undefined ? `component ${chosen[0] + 1} →` : '');

@@ -35,7 +35,7 @@ export const S: Record<string, Line[]> = {
     { who: 'lantern', text: `Ten repeats send (1, 1) to ${fmtV(P3_RESULT)}. One power of three, one power of two.`, say: 'Ten repeats send one, one, to one hundred and seventeen thousand and seventy-four, one thousand and twenty-four. One power of three, one power of two.' },
   ],
   p4Intro: [
-    { who: 'wren', text: 'Does every pulse get a grid like that?' },
+    { who: 'wren', text: 'Does every pulse have a grid of its own lines?' },
     { who: 'lantern', text: 'Testing the shear from the line hunt. It keeps one line.' },
   ],
   p4Win: [

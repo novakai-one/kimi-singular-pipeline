@@ -145,8 +145,8 @@ export async function send(g: Game): Promise<void> {
     const pp = rec.path.map((i) => pts[i] as V3);
     worldCloud(g, { points: pp, color: C.result, size: 0.05, glow: 0.5, core: 1.6 });
     const segs: [V3, V3][] = [];
-    for (let i = 1; i < pp.length; i++) segs.push([pp[i - 1], pp[i]]);
-    const pathLine = inWorld(g, new FatSegments(g.stage, [[[0, 0, 0], [0, 0, 0]]], { color: C.result, width: 2, opacity: 0.85 }));
+    for (let i = 1; i < pp.length; i++) segs.push([[pp[i - 1][0], pp[i - 1][1], 0.03], [pp[i][0], pp[i][1], 0.03]]);
+    const pathLine = inWorld(g, new FatSegments(g.stage, [[[0, 0, 0], [0, 0, 0]]], { color: C.result, width: 3, opacity: 0.9 }));
     pathLine.setSegments(segs);
     pathLine.object.traverse((o) => { o.renderOrder = 6; o.frustumCulled = false; });   // over the dense arms
     inWorld(g, tag(`Received · ${REC_N.toLocaleString('en-GB')} entries, two numbers each`, [0, 3.6, 0], 'c'));

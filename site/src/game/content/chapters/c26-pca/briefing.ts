@@ -371,7 +371,7 @@ const reviewCond: DoubtDef = {
         if (edge !== undefined) { const [M, b, e] = edges[edge]; A = M; db = e; bH.set(v3(b)); paint(); return; }
         do { A = [[half(rr, -2, 2), half(rr, -2, 2)], [half(rr, -2, 2), half(rr, -2, 2)]]; } while (Math.abs(det(A)) < 0.25);
         db = [rr() * 0.6 - 0.3, rr() * 0.6 - 0.3];
-        bH.set([rint(rr, -3, 3) || 1, rint(rr, -3, 3), 0]);
+        bH.set([rint(rr, -3, 3) || 1, rint(rr, -1, 3), 0]);   // keep b on screen
         paint();
       },
       edgeCases: edges.length,
