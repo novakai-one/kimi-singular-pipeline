@@ -19,6 +19,7 @@ import type { ChapterDef, CodexEntry, DoubtDef, Game } from './types';
 import { TitleScene } from './title';
 import { installDebug } from './debug';
 import { caseBoardScreen } from './caseboard';
+import { SANDBOX } from '../content/sandbox';
 import { manualView, libraryView, honestyPanel } from './manual';
 
 export { download };
@@ -139,6 +140,7 @@ export class App implements Game {
     else if (choice === 'codex') { await this.codexScreen(); await this.titleScreen(); }
     else if (choice === 'settings') { await this.settingsScreen(); await this.titleScreen(); }
     else if (choice === 'viva') await this.viva();
+    else if (choice === 'sandbox') await this.play(SANDBOX, 0);
   }
 
   /** Doubt and Review claims from every chapter the player has opened (no term before it is earned). */
@@ -195,6 +197,7 @@ export class App implements Game {
   }
 
   private async chapterEnd(ch: ChapterDef): Promise<void> {
+    if (ch.id === SANDBOX.id) { await this.titleScreen(); return; }
     const next = nextChapter(ch.id);
     const cs = chapterSave(ch.id);
     const puzzles = ch.beats.filter((b) => b.kind === 'puzzle').length;

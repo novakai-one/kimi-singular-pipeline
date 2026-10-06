@@ -2,6 +2,7 @@
 import type { ActDef, ChapterDef } from './types';
 import { registerBuild } from './build';
 import { ACTS } from '../content/acts';
+import { SANDBOX } from '../content/sandbox';
 
 const mods = import.meta.glob<{ default: ChapterDef }>('../content/chapters/*/index.ts', { eager: true });
 
@@ -13,11 +14,11 @@ const ALL: ChapterDef[] = Object.values(mods)
 /** Story chapters in order. */
 export const CHAPTERS: ChapterDef[] = ALL.filter((c) => !c.dev);
 /** Developer test chapters (kit showcases). */
-export const DEV_CHAPTERS: ChapterDef[] = ALL.filter((c) => c.dev);
+export const DEV_CHAPTERS: ChapterDef[] = [...ALL.filter((c) => c.dev), SANDBOX];
 
 for (const ch of [...CHAPTERS, ...DEV_CHAPTERS]) for (const b of ch.beats) if (b.kind === 'build') registerBuild(b.build);
 
-export function chapter(id: string): ChapterDef | undefined { return ALL.find((c) => c.id === id); }
+export function chapter(id: string): ChapterDef | undefined { return ALL.find((c) => c.id === id) ?? (id === SANDBOX.id ? SANDBOX : undefined); }
 export function act(n: number): ActDef | undefined { return ACTS.find((a) => a.num === n); }
 export function nextChapter(id: string): ChapterDef | undefined {
   const i = CHAPTERS.findIndex((c) => c.id === id);
@@ -28,7 +29,7 @@ const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
 export function actLabel(n: number): string { return ROMAN[n] ? `Act ${ROMAN[n]}` : ''; }
 /** "Prologue", "Epilogue" or "Chapter 7". */
 export function chapterName(ch: ChapterDef): string {
-  return ch.num === 0 && ch.act === 0 ? 'Prologue' : ch.act === 10 ? 'Epilogue' : ch.dev ? `Test ${ch.num}` : `Chapter ${ch.num}`;
+  return ch.id === SANDBOX.id ? 'Free play' : ch.num === 0 && ch.act === 0 ? 'Prologue' : ch.act === 10 ? 'Epilogue' : ch.dev ? `Test ${ch.num}` : `Chapter ${ch.num}`;
 }
 /** HUD kicker: "Act II · Chapter 5", or "Prologue". */
 export function chapterKicker(ch: ChapterDef): string {

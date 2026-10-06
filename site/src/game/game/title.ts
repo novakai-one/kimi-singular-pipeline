@@ -12,7 +12,7 @@ import { Vector3, type Object3D } from 'three';
 import { makeAnchor } from '../content/common/set';
 import { loadModel } from '../gfx/models';
 
-export type TitleChoice = 'new' | 'continue' | 'chapters' | 'codex' | 'settings' | 'viva';
+export type TitleChoice = 'new' | 'continue' | 'chapters' | 'codex' | 'settings' | 'viva' | 'sandbox';
 
 // Each pose is a real 3x3 move of the whole lattice. One of them flattens space onto a plane
 // (its third row is zero): the title's quiet promise, paid off in Chapter 13.
@@ -101,6 +101,7 @@ export class TitleScene {
             button('Chapter map', () => pick('chapters')),
             button('Codex', () => pick('codex'), { cls: 'ghost' }),
             o.canViva ? button('Viva: revise every claim', () => pick('viva'), { cls: 'ghost' }) : null,
+            button('Holotable: free play', () => pick('sandbox'), { cls: 'ghost' }),
             button('Settings', () => pick('settings'), { cls: 'ghost' }))),
         h('div', { class: 'title-foot c-muted' }, 'Headphones recommended · Mouse and keyboard'));
       this.el.style.pointerEvents = 'auto';
