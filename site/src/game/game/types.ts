@@ -182,6 +182,8 @@ export interface CardDef {
   body: string;
   /** For 'why': "When you see ___, think ___." */
   cue?: string;
+  /** For 'numpy': a short Python snippet shown as code. */
+  code?: string;
   /** Optional little visual behind the card. */
   visual?: (g: Game) => Promise<void> | void;
 }

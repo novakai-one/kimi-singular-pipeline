@@ -2,6 +2,7 @@
 // solve the current puzzle, read state). Also handy in the browser console.
 import type { App } from './app';
 import { buildTest, pylib } from './build';
+import { NUMPY_CARDS } from '../content/numpy';
 import { CHAPTERS, DEV_CHAPTERS, chapter } from './registry';
 import { S } from '../core/save';
 import { normLine, spoken, voiceId, type Line } from '../content/lines';
@@ -101,6 +102,10 @@ export function installDebug(app: App): void {
           if (b.kind === 'procedure') { add(`${w} title`, b.procedure.title); add(`${w} brief`, b.procedure.brief); b.procedure.tiles.forEach((t) => add(`${w} tile`, t.text)); }
         }
         for (const [k, ls] of Object.entries(c.script ?? {})) ls.map(normLine).forEach((l, i) => add(`${c.id} script.${k} ${i}`, l.text));
+        // the act's NumPy card follows its last chapter
+        const next = CHAPTERS[CHAPTERS.indexOf(c) + 1];
+        const np = !next || next.act !== c.act ? NUMPY_CARDS[c.act] : undefined;
+        if (np) { order++; add(`numpy act ${c.act} title`, np.title); add(`numpy act ${c.act} body`, np.body); }
       }
       return out;
     },

@@ -17,6 +17,7 @@ import { runBuild } from './build';
 import { clearCine } from '../kit/cine';
 import { shipExterior } from '../content/common/shots';
 import { runBroadcast } from './broadcast';
+import { NUMPY_CARDS } from '../content/numpy';
 import { runCard, runSayIt, runDoubt, runReview, runLaw, runCompare, runProcedure, type BriefingHost } from './briefing';
 import { Grid2D, type GridOpts } from '../gfx/grid';
 
@@ -124,6 +125,11 @@ export class Runner {
         save();
         this.onBeat?.(ch, i);
       }
+      // the act's NumPy card after its last chapter (GDD §5.7)
+      const story = CHAPTERS.filter((c) => !c.dev);
+      const next = story[story.findIndex((c) => c.id === ch.id) + 1];
+      const card = !ch.dev && (!next || next.act !== ch.act) ? NUMPY_CARDS[ch.act] : undefined;
+      if (card) await runCard(this.host(ch), card);
     } catch (e) {
       if (e instanceof Aborted) return 'aborted';
       throw e;

@@ -46,6 +46,7 @@ export async function runCard(host: BriefingHost, c: CardDef): Promise<void> {
     h('div', { class: 'kicker' }, kicker),
     h('h2', { html: inline(c.title) }),
     h('div', { class: 'card-body', html: md(c.body) }),
+    ...(c.code ? [h('pre', { class: 'card-code' }, c.code)] : []),
     ...(c.cue ? [h('div', { class: 'name-cue', html: md(c.cue) })] : []));
   g.ui.scene.appendChild(el);
   if (c.kind === 'inshort') sfx.open();
