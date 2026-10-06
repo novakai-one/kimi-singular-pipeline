@@ -82,3 +82,9 @@
 
 /* Teo's note in the empty pod (end of Act III) */
 .g-label.c10-note { font-family: Georgia, 'Times New Roman', serif; font-size: 17px; color: #f3ead8; padding: 8px 14px; border-radius: 4px; background: rgba(40, 34, 24, 0.82); border: 1px solid rgba(243, 234, 216, 0.25); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5); max-width: 360px; white-space: normal; text-align: center; transform: rotate(-1.5deg); }
+/* Ch 8 p5: a compact worksheet (three rows and four columns) */
+.worksheet.c08-tanks .ws-steps { gap: 4px; }
+.worksheet.c08-tanks .ws-row { padding: 3px 8px; }
+.worksheet.c08-tanks .ws-grid { gap: 2px; }
+.worksheet.c08-tanks .ws-cell { width: 50px; height: 26px; font-size: 14px; }
+.worksheet.c08-tanks .ws-bracket { padding: 2px 8px; }

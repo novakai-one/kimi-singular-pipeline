@@ -35,7 +35,7 @@ export const doubtLean: DoubtDef = {
   goal: 'The upright box holds **24**. Drag the **blue** strut (**Shift**-drag for height). Then **Challenge it** (a leaned strut that keeps its volume) or **Back it** (Bram will shake it).',
   view: '3d',
   async setup(p) {
-    await p.g.stage.view3D({ target: [1, 1.3, 2.4], distance: 21, azimuth: -60, elevation: 21, ms: 0 });
+    await p.g.stage.view3D({ target: [1, 1.3, 3.0], distance: 21, azimuth: -60, elevation: 21, ms: 0 });
     p.grid({ base: 0.08, main: 0.14, axis: 0.3 });
     const v = v3(P1_V), w = v3(P1_W0);
     let u: V3 = v3(P1_U0);
@@ -79,7 +79,7 @@ export function swapDoubt(id: string, claim: string): DoubtDef {
     goal: 'Drag the struts. Compare $\\cg{\\mathbf a}\\cdot(\\cr{\\mathbf b}\\times\\cb{\\mathbf c})$ with the swapped order $\\cr{\\mathbf b}\\cdot(\\cg{\\mathbf a}\\times\\cb{\\mathbf c})$. **Back it** (Bram will shake it) or **Challenge it**.',
     view: '3d',
     async setup(p) {
-      await p.g.stage.view3D({ target: [0.9, 1, 2.0], distance: 20, azimuth: -58, elevation: 22, ms: 0 });
+      await p.g.stage.view3D({ target: [0.9, 1, 2.6], distance: 20, azimuth: -58, elevation: 22, ms: 0 });
       p.grid({ base: 0.08, main: 0.14, axis: 0.3 });
       let a: V3 = [2, 0, 0], b: V3 = [1, 3, 0], c: V3 = [1, 1, 4];
       const box = new StrutBox(p, b, c, a);

@@ -525,7 +525,7 @@ export const p5: PuzzleDef = {
     P5.rows.forEach((_, i) => planes.setRowVisible(i, false));
     void planes.frame({ distance: 26 });
     const r = p.readout('The logbook rules');
-    r.note('1. Together the tanks hold **13** tonnes.\n\n2. Tank B holds **1** tonne more than tank A.\n\n3. Tank C holds **2** tonnes more than tank B.');
+    r.note('**Rule 1** · Together the tanks hold **13** tonnes.\n\n**Rule 2** · Tank B holds **1** tonne more than tank A.\n\n**Rule 3** · Tank C holds **2** tonnes more than tank B.');
     const steps = [
       { prompt: 'Rule 1: $\\_x + \\_y + \\_z = 13$', answer: [[1, 1, 1]] },
       { prompt: 'Rule 2: $\\_x + \\_y + \\_z = 1$', answer: [[-1, 1, 0]], mistakes: [[[[1, -1, 0]], 'That says A holds 1 more than B. Here B holds more: $y - x = 1$.']] as [number[][], string][] },
@@ -537,6 +537,7 @@ export const p5: PuzzleDef = {
     ];
     let shown = 0;
     const ws = new StepWorksheet(p, { steps, onDone: () => { reveal(3); sfx.success(); p.win(); } });
+    ws.el.classList.add('c08-tanks'); // seven steps, four of them columns: keep it short enough to clear the goal card
     const reveal = (n: number) => {
       for (let i = shown; i < Math.min(3, n); i++) { planes.setRowVisible(i, true); sfx.snap(); }
       if (n >= 3 && shown < 3) {

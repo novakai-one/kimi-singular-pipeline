@@ -590,12 +590,12 @@ export const p6: PuzzleDef = {
       r.row('box', 'the box', num(P6.box));
       box.show(false); housing.setFill(0); housing.setEdge(0); hl.show(false);
       const six = sixTets(a, b, c).map((t) => t.map(v3));
-      pieces = six.map((t, i) => new Tetra(p, t, { color: tints[i], fill: 0.05, edge: 0.75 }));
+      pieces = six.map((t, i) => new Tetra(p, t, { color: tints[i], fill: i === 0 ? 0.1 : 0.04, edge: i === 0 ? 0.95 : 0.45 }));
       sfx.whoosh(1);
       const go = (k: number) => {
         pieces.forEach((pc, i) => {
           const cc = pc.centre;
-          const dir = new Vector3(cc[0] - centre[0], cc[1] - centre[1], cc[2] - centre[2]).normalize().multiplyScalar(0.45 * k);
+          const dir = new Vector3(cc[0] - centre[0], cc[1] - centre[1], cc[2] - centre[2]).normalize().multiplyScalar(1.05 * k);
           pc.group.position.copy(dir);
           void i;
         });
