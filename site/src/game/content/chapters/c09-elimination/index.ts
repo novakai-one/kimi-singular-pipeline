@@ -22,7 +22,7 @@ const ch: ChapterDef = {
   music: 'explore',
   inShort: IN_SHORT,
   prereqs: ['c08'],
-  catchup: 'Each equation in three unknowns is a plane, and a solution is a point on every plane. Three planes can meet at one point, along a line, or nowhere.\n\nStory so far: Teo\'s pod is in bay three, deck five, and the bay has no power. The power board is on deck seven.',
+  catchup: 'Each equation in three unknowns is a plane, and a solution is a point on every plane. Three planes can meet at one point, along a line, in a whole plane (when all three are the same plane), or nowhere.\n\nStory so far: Teo\'s pod is in bay three, deck five, and the bay has no power. The power board is on deck seven.',
   script: S,
   beats: [
     { kind: 'cinematic', id: 'cold', run: coldOpen },

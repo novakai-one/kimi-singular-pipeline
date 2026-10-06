@@ -779,7 +779,7 @@ Visual: inside the dark ark, shown as LANTERN's scan hologram: planes of light i
 
 #### Ch 8 · "Where do the three planes meet?" — N09
 
-**In short.** Where do several flat conditions all hold at once? Where their planes meet: at one point, along a line, or nowhere. Never at exactly two points.
+**In short.** Where do several flat conditions all hold at once? Where their planes meet: at one point, along a line, in a whole plane (when they are all the same plane), or nowhere. Never at exactly two points.
 
 **Plot beat.** Teo's sleeper pod sends a weak ping. Three fan-beam sensors each sweep a flat beam and record the plane the beam was on when the ping arrived. The pod lies on all three planes. (Planes, not range spheres.)
 
