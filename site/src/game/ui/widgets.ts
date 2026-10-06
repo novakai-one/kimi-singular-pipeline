@@ -169,11 +169,14 @@ export class Readout {
   private readonly rows = new Map<string, { k: HTMLElement; v: HTMLElement; row: HTMLElement }>();
   private readonly eqEl: HTMLElement;
   private readonly noteEl: HTMLElement;
+  private readonly titleEl: HTMLElement;
   constructor(title?: string) {
     this.rowsEl = h('div', { class: 'rows', style: 'display:flex;flex-direction:column;gap:6px' });
     this.eqEl = h('div', { class: 'eq' });
     this.noteEl = h('div', { class: 'note' });
-    this.el = h('div', { class: 'readout glass' }, title ? h('div', { class: 'kicker', html: inline(title) }) : null, this.rowsEl, this.eqEl, this.noteEl);
+    this.titleEl = h('div', { class: 'kicker', html: inline(title ?? '') });
+    this.titleEl.hidden = !title;
+    this.el = h('div', { class: 'readout glass' }, this.titleEl, this.rowsEl, this.eqEl, this.noteEl);
     this.eqEl.hidden = true;
     this.noteEl.hidden = true;
   }
@@ -191,6 +194,8 @@ export class Readout {
     r.v.innerHTML = inline(value);
     r.v.style.color = color ?? '';
   }
+  /** Change the title (may contain $tex$); empty hides it. */
+  setTitle(title: string): void { this.titleEl.hidden = !title; this.titleEl.innerHTML = inline(title); }
   hideRow(key: string, hidden = true): void { const r = this.rows.get(key); if (r) r.row.hidden = hidden; }
   eq(texSrc: string | null): void { this.eqEl.hidden = !texSrc; if (texSrc) this.eqEl.innerHTML = tex(texSrc, true); }
   note(mdSrc: string | null): void { this.noteEl.hidden = !mdSrc; if (mdSrc) this.noteEl.innerHTML = md(mdSrc); }

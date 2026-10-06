@@ -304,16 +304,32 @@ export async function runLaw<C>(host: BriefingHost, L: LawDef<C>): Promise<void>
   const saved = S().laws[L.id];
   if (saved) Object.assign(filled, saved.filled);
   const sentence = h('div', { class: 'law-sentence' });
+  // each open slot is a button; choosing opens a row of its options (with their maths) under the sentence
+  const picker = h('div', { class: 'law-picker', role: 'group' });
+  picker.hidden = true;
+  let open: string | null = null;
+  const pick = (key: string | null) => {
+    open = key;
+    picker.hidden = !key;
+    if (!key) { picker.replaceChildren(); return; }
+    const slot = L.slots[key];
+    picker.setAttribute('aria-label', `Choices for ${key}`);
+    picker.replaceChildren(...slot.options.map((o) => {
+      const b = h('button', { class: `btn small ghost law-choice ${filled[key] === o.id ? 'on' : ''}`, type: 'button', html: inline(o.text) }) as HTMLButtonElement;
+      b.addEventListener('click', (e) => { e.stopPropagation(); filled[key] = o.id; status.innerHTML = ''; sfx.click(); pick(null); render(); (sentence.querySelector(`[data-slot="${key}"]`) as HTMLElement | null)?.focus(); });
+      return b;
+    }));
+    (picker.querySelector('.law-choice.on, .law-choice') as HTMLElement | null)?.focus();
+  };
   const render = () => {
     sentence.replaceChildren(...L.frame.map((piece) => {
       if (typeof piece === 'string') return h('span', { html: inline(piece) });
       const slot = L.slots[piece.slot];
-      if (!editable(piece.slot)) return h('span', { class: 'law-fixed', html: inline(slot.options.find((o) => o.id === filled[piece.slot])?.text ?? '') });
-      const sel = h('select', { class: 'law-slot', 'aria-label': piece.slot }) as HTMLSelectElement;
-      sel.append(h('option', { value: '' }, '…'), ...slot.options.map((o) => h('option', { value: o.id }, o.text.replace(/\$/g, ''))));
-      sel.value = filled[piece.slot] ?? '';
-      sel.addEventListener('change', () => { filled[piece.slot] = sel.value; status.innerHTML = ''; sfx.click(); });
-      return sel;
+      const text = slot.options.find((o) => o.id === filled[piece.slot])?.text;
+      if (!editable(piece.slot)) return h('span', { class: 'law-fixed', html: inline(text ?? '') });
+      const b = h('button', { class: `law-slot ${open === piece.slot ? 'open' : ''} ${text ? '' : 'empty'}`, type: 'button', 'data-slot': piece.slot, 'aria-expanded': String(open === piece.slot), 'aria-label': `${piece.slot}: ${text ? text.replace(/\$/g, '') : 'not chosen'}`, html: text ? inline(text) : '…' }) as HTMLButtonElement;
+      b.addEventListener('click', (e) => { e.stopPropagation(); sfx.click(); pick(open === piece.slot ? null : piece.slot); render(); });
+      return b;
     }));
   };
   render();
@@ -364,16 +380,16 @@ export async function runLaw<C>(host: BriefingHost, L: LawDef<C>): Promise<void>
   };
 
   const card = panel('law');
-  card.append(h('div', { class: 'kicker' }, 'Engrave the Law'), sentence,
+  card.append(h('div', { class: 'kicker' }, 'Engrave the Law'), sentence, picker,
     h('div', { class: 'doubt-actions' },
       button('Test it', () => void prove(), { cls: 'primary small' }),
-      button('Show me', async () => { Object.assign(filled, L.answer); render(); if (await prove()) { const right = L.reason.options.find((o) => o.right)!; (reasonBox.querySelector(`.choice-card:nth-child(${L.reason.options.indexOf(right) + 1})`) as HTMLElement | null)?.click(); } }, { cls: 'ghost small' }),
+      button('Show me', async () => { Object.assign(filled, L.answer); pick(null); render(); if (await prove()) { const right = L.reason.options.find((o) => o.right)!; (reasonBox.querySelector(`.choice-card:nth-child(${L.reason.options.indexOf(right) + 1})`) as HTMLElement | null)?.click(); } }, { cls: 'ghost small' }),
       button('Skip', () => resolveDone(), { cls: 'ghost small' })),
     status, reasonBox);
   g.ui.scene.appendChild(card);
   const gen = claimSolve('law');
   briefingTest.solve = async () => {
-    Object.assign(filled, L.answer); render();
+    Object.assign(filled, L.answer); pick(null); render();
     const ok = await prove();
     if (ok) { const right = L.reason.options.find((o) => o.right)!; (reasonBox.querySelectorAll('.choice-card')[L.reason.options.indexOf(right)] as HTMLElement | undefined)?.click(); }
     return ok && proven;

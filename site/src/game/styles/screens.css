@@ -301,6 +301,13 @@
 .doubt-verdict p { margin: 6px 0; }
 .law-sentence { font-size: 19px; line-height: 2.1; }
 .law-slot { font: inherit; font-size: 16px; color: var(--accent); background: rgba(89, 225, 255, 0.08); border: 1px solid rgba(89, 225, 255, 0.4); border-radius: 8px; padding: 2px 8px; margin: 0 4px; }
+button.law-slot { cursor: pointer; line-height: 1.5; min-width: 2.4em; vertical-align: baseline; }
+button.law-slot.empty { color: var(--muted); border-style: dashed; }
+button.law-slot.open, button.law-slot:focus-visible { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(89, 225, 255, 0.25); outline: none; }
+.law-picker { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border-radius: 10px; background: rgba(89, 225, 255, 0.05); border: 1px solid var(--line); }
+.law-picker[hidden] { display: none; }
+.law-choice { font-size: 15px; }
+.law-choice.on { border-color: var(--accent); color: var(--accent); }
 .law-fixed { color: var(--accent); }
 .law-status { font-size: 15px; line-height: 1.5; color: var(--ink-2); }
 .law-status p { margin: 4px 0; }
