@@ -1,5 +1,6 @@
 // Synthesised sound effects. Short, soft, musical (they sit in the same key as the score).
 import { audio, midiHz } from './audio';
+import { music } from './music';
 
 type Wave = OscillatorType;
 
@@ -68,53 +69,64 @@ function noise(o: { at?: number; dur?: number; vol?: number; from?: number; to?:
   src.stop(t + dur + 0.05);
 }
 
-// The score is in D (Dorian / minor). Effects use the same notes.
-const D = 62;
-const scale = [0, 2, 3, 5, 7, 9, 10, 12, 14, 15, 17, 19];
+// Effects use the score's notes. The score starts in D Dorian; each act moves its key centre and mode,
+// so D (the tonic near D4) and the two-octave scale are read from the music when an effect plays.
+let D = 62;
+let scale = [0, 2, 3, 5, 7, 9, 10, 12, 14, 15, 17, 19];
+function inKey(): void {
+  const k = music.tonality();
+  D = k.tonic;
+  scale = [...k.scale, ...k.scale.slice(0, 5).map((x) => x + 12)];
+}
 let lastTick = 0;
 
 export const sfx = {
-  hover(): void { tone(midiHz(D + 24 + 7), { vol: 0.03, d: 0.05, wave: 'sine' }); },
-  click(): void { tone(midiHz(D + 19), { vol: 0.08, d: 0.07, wave: 'triangle' }); tone(midiHz(D + 26), { vol: 0.04, d: 0.05, at: 0.02 }); },
-  back(): void { tone(midiHz(D + 14), { vol: 0.07, d: 0.08, wave: 'triangle' }); },
-  open(): void { [0, 4, 7].forEach((s, i) => tone(midiHz(D + 12 + scale[s]), { vol: 0.05, d: 0.25, at: i * 0.04, reverb: 0.4 })); },
+  hover(): void { inKey(); tone(midiHz(D + 24 + 7), { vol: 0.03, d: 0.05, wave: 'sine' }); },
+  click(): void { inKey(); tone(midiHz(D + 19), { vol: 0.08, d: 0.07, wave: 'triangle' }); tone(midiHz(D + 26), { vol: 0.04, d: 0.05, at: 0.02 }); },
+  back(): void { inKey(); tone(midiHz(D + 14), { vol: 0.07, d: 0.08, wave: 'triangle' }); },
+  open(): void { inKey(); [0, 4, 7].forEach((s, i) => tone(midiHz(D + 12 + scale[s]), { vol: 0.05, d: 0.25, at: i * 0.04, reverb: 0.4 })); },
   /** A soft tick as a dragged point crosses whole-number positions. Pitch follows height. */
   tick(level = 0): void {
     const ctx = audio.ctx;
     if (!ctx || ctx.currentTime - lastTick < 0.03) return;
+    inKey();
     lastTick = ctx.currentTime;
     const idx = Math.max(0, Math.min(scale.length - 1, 4 + Math.round(level)));
     tone(midiHz(D + 12 + scale[idx]), { vol: 0.05, d: 0.06, wave: 'triangle', filter: 3000 });
   },
-  snap(): void { tone(midiHz(D + 24), { vol: 0.07, d: 0.09, wave: 'sine' }); },
+  snap(): void { inKey(); tone(midiHz(D + 24), { vol: 0.07, d: 0.09, wave: 'sine' }); },
   /** Correct move / goal reached. */
   success(): void {
+    inKey();
     [0, 2, 4, 7].forEach((s, i) => tone(midiHz(D + 12 + scale[s]), { vol: 0.09, d: 0.9, at: i * 0.07, wave: 'triangle', reverb: 0.6, pan: (i - 1.5) * 0.3 }));
     tone(midiHz(D + 36), { vol: 0.03, d: 1.2, at: 0.28, reverb: 0.8 });
   },
   /** Big completion (puzzle solved). */
   solved(): void {
+    inKey();
     const chord = [0, 4, 7, 9, 11];
     chord.forEach((s, i) => tone(midiHz(D + scale[s % scale.length] + 12), { vol: 0.08, d: 1.8, at: i * 0.09, wave: 'triangle', reverb: 0.7, pan: (i - 2) * 0.25 }));
     tone(midiHz(D - 12), { vol: 0.14, d: 1.6, wave: 'sine', reverb: 0.3 });
     noise({ from: 6000, to: 12000, dur: 1.2, vol: 0.02, type: 'highpass', reverb: 0.6 });
   },
   /** Not right (gentle, never harsh). */
-  miss(): void { tone(midiHz(D - 5), { vol: 0.09, d: 0.22, wave: 'sine' }); tone(midiHz(D - 6), { vol: 0.06, d: 0.25, wave: 'triangle', at: 0.06, filter: 900 }); },
+  miss(): void { inKey(); tone(midiHz(D - 5), { vol: 0.09, d: 0.22, wave: 'sine' }); tone(midiHz(D - 6), { vol: 0.06, d: 0.25, wave: 'triangle', at: 0.06, filter: 900 }); },
   /** The grid moving under a matrix. */
-  whoosh(dur = 1.2): void { noise({ from: 220, to: 2600, dur, vol: 0.06, q: 0.8, reverb: 0.5 }); tone(midiHz(D - 12), { vol: 0.05, d: dur, glideTo: midiHz(D), wave: 'sine' }); },
+  whoosh(dur = 1.2): void { inKey(); noise({ from: 220, to: 2600, dur, vol: 0.06, q: 0.8, reverb: 0.5 }); tone(midiHz(D - 12), { vol: 0.05, d: dur, glideTo: midiHz(D), wave: 'sine' }); },
   /** Space squashed flat (det = 0). */
   collapse(): void {
+    inKey();
     tone(midiHz(D), { vol: 0.12, d: 1.4, glideTo: midiHz(D - 24), wave: 'sawtooth', filter: 900, reverb: 0.5 });
     noise({ from: 3000, to: 120, dur: 1.4, vol: 0.08, type: 'lowpass', q: 0.7, reverb: 0.5 });
   },
   /** A new idea named / codex entry. */
   discover(): void {
+    inKey();
     [7, 9, 11, 14].forEach((s, i) => tone(midiHz(D + 12 + (scale[s % scale.length] ?? 0) + (s >= 12 ? 12 : 0)), { vol: 0.05, d: 1.6, at: i * 0.12, wave: 'sine', reverb: 0.9 }));
   },
-  star(i = 0): void { tone(midiHz(D + 24 + scale[[0, 2, 4][i] ?? 4]), { vol: 0.08, d: 0.7, wave: 'triangle', reverb: 0.6 }); },
+  star(i = 0): void { inKey(); tone(midiHz(D + 24 + scale[[0, 2, 4][i] ?? 4]), { vol: 0.08, d: 0.7, wave: 'triangle', reverb: 0.6 }); },
   thrust(dur = 0.6): void { noise({ from: 180, to: 700, dur, vol: 0.07, q: 0.6, type: 'lowpass' }); },
-  warp(): void { tone(midiHz(D - 12), { vol: 0.1, d: 1.6, glideTo: midiHz(D + 24), wave: 'sawtooth', filter: 2400, reverb: 0.6 }); noise({ from: 200, to: 8000, dur: 1.6, vol: 0.05, reverb: 0.6 }); },
-  type(): void { tone(midiHz(D + 31), { vol: 0.012, d: 0.02, wave: 'square', filter: 2000 }); },
-  alarm(): void { [0, 0.5].forEach((at) => tone(midiHz(D + 7), { vol: 0.07, d: 0.3, at, wave: 'square', filter: 1400, glideTo: midiHz(D + 5) })); },
+  warp(): void { inKey(); tone(midiHz(D - 12), { vol: 0.1, d: 1.6, glideTo: midiHz(D + 24), wave: 'sawtooth', filter: 2400, reverb: 0.6 }); noise({ from: 200, to: 8000, dur: 1.6, vol: 0.05, reverb: 0.6 }); },
+  type(): void { inKey(); tone(midiHz(D + 31), { vol: 0.012, d: 0.02, wave: 'square', filter: 2000 }); },
+  alarm(): void { inKey(); [0, 0.5].forEach((at) => tone(midiHz(D + 7), { vol: 0.07, d: 0.3, at, wave: 'square', filter: 1400, glideTo: midiHz(D + 5) })); },
 };

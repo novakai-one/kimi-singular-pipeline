@@ -99,7 +99,7 @@ export const MOODS: Record<string, Mood> = {
   },
   // the dark middle of the story: open fifths, a tritone, air
   void: {
-    root: 45, scale: AEOLIAN, beatsPerChord: 8, bpm: 58, padCutoff: 600, padVol: 0.07, bassVol: 0.11, arpVol: 0.02, arpOct: 2, bellProb: 0.05, pulse: 0, wave: 'sawtooth', air: 0.011,
+    root: 45, scale: AEOLIAN, beatsPerChord: 8, bpm: 58, padCutoff: 600, padVol: 0.07, bassVol: 0.11, arpVol: 0.02, arpOct: 2, bellProb: 0.05, pulse: 0, wave: 'sawtooth', air: 0.055,
     chords: [[0, 4, 7], [5, 8, 12], [3, 7, 10], [6, 10, 13]],
     variants: [[[0, 4, 7], [3, 7, 10], [5, 9, 12], [4, 7, 11]], [[0, 4, 7], [6, 10, 13], [5, 9, 12], [0, 3, 7]]],
     arp: [0, -1, -1, -1, -1, -1, 4, -1, -1, -1, -1, -1, 2, -1, -1, -1],
@@ -219,10 +219,16 @@ const semis = (a: Arrangement, from: number, to: number) => noteOf(a, to) - note
 /** A chord written as stacked thirds from its first degree (root position, 7th or octave on top). */
 const stacked = (ch: number[]) => ch.length >= 3 && ch[1] === ch[0] + 2 && ch[2] === ch[0] + 4;
 
-/** Outside the mood's own mode a written chord can land on a diminished triad: use the 7th chord a third below. */
-function fixDim(ch: number[], a: Arrangement): number[] {
-  if (!stacked(ch) || semis(a, ch[0], ch[0] + 2) !== 3 || semis(a, ch[0], ch[0] + 4) !== 6) return ch;
-  const r = ch[0] - 2;
+/**
+ * Outside the mood's own mode a written chord can land on a diminished triad: use the 7th chord a third
+ * below (vii° → V7), or a third above if that would repeat the previous chord. An open fifth that has
+ * turned into a tritone becomes a fourth.
+ */
+function fixDim(ch: number[], a: Arrangement, prev: number[]): number[] {
+  const d = ch[0];
+  if (!stacked(ch)) return ch.map((x) => ((x - d) % 7 === 4 && semis(a, d, x) % 12 === 6 ? x - 1 : x));
+  if (semis(a, d, d + 2) !== 3 || semis(a, d, d + 4) !== 6) return ch;
+  const r = prev.length && (((prev[0] - (d - 2)) % 7) + 7) % 7 === 0 ? d + 2 : d - 2;
   return [r, r + 2, r + 4, r + 6];
 }
 
@@ -233,18 +239,22 @@ function colour(ch: number[], a: Arrangement): number[] {
   if (semis(a, d, d + 2) === 3 && semis(a, d, d + 4) === 6) return ch; // leave diminished colour alone
   const r = a.rng();
   if (a.c.quartal && r < 0.5 && semis(a, d, d + 3) === 5 && semis(a, d + 3, d + 6) === 5) return [d, d + 3, d + 6, d + 9];
-  if (r < 0.35 && semis(a, d, d + 1) === 2) return [d, d + 1, ...ch.slice(2)];                  // sus2
+  if (r < 0.35 && semis(a, d, d + 1) === 2 && !ch.includes(d + 8)) return [d, d + 1, ...ch.slice(2)]; // sus2
   if (r < 0.6 && semis(a, d, d + 3) === 5) return [d, d + 3, ...ch.slice(2)];                   // sus4
   if (semis(a, d, d + 1) === 2) return ch.length > 3 ? [d, d + 2, d + 4, d + 8] : [...ch, d + 8]; // add9
   return ch;
 }
 
-/** Re-voice a chord near the previous one (least total movement), inside a register window. */
+/**
+ * Re-voice a chord near the previous one (least total movement) inside a register window, pulled
+ * towards the window's centre and never with a second between the two lowest voices (mud).
+ */
 function leadVoices(prev: number[], notes: number[], lo: number, hi: number): number[] {
   const pcs = notes.map((n) => ((n % 12) + 12) % 12);
   const centre = (lo + hi) / 2;
-  const cost = (v: number[]) => v.reduce((s, x) => s + Math.min(...prev.map((p) => Math.abs(p - x))), 0)
-    + 0.15 * Math.abs(v.reduce((s, x) => s + x, 0) / v.length - centre);
+  const cost = (v: number[]) => (prev.length ? v.reduce((s, x) => s + Math.min(...prev.map((p) => Math.abs(p - x))), 0) : 0)
+    + 0.3 * Math.abs(v.reduce((s, x) => s + x, 0) / v.length - centre)
+    + (v[1] - v[0] < 3 ? 3 : 0);
   let best = notes, bestCost = notes[0] >= lo && notes[notes.length - 1] <= hi ? cost(notes) : Infinity;
   for (let inv = 0; inv < pcs.length; inv++) {
     const order = pcs.slice(inv).concat(pcs.slice(0, inv));
@@ -288,7 +298,7 @@ function waves(ctx: BaseAudioContext): Waves {
 }
 
 // Level trims that keep each voice's loudness where the old voices were (measured offline).
-const PAD_TRIM = 0.82;
+const PAD_TRIM = 0.57;
 const PLUCK_TRIM = 0.9;
 
 // ------------------------------------------------------------------ the scheduler
@@ -311,6 +321,7 @@ class Music {
   private nextTime = 0;
   private intensity = 0.3;
   private bus: GainNode | null = null;
+  private padBus: GainNode | null = null; // pads go through here so they can make room for the theme
   private live: Live[] = [];
   private sessionSeed = (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0;
   private streams = new Map<string, () => number>();
@@ -358,6 +369,7 @@ class Music {
     const bus = this.bus;
     window.setTimeout(() => { bus.disconnect(); }, fadeSec * 1000 + 200);
     this.bus = null;
+    this.padBus = null;
     if (this.timer !== null) window.clearInterval(this.timer);
     this.timer = null;
     this.playing = false;
@@ -373,6 +385,8 @@ class Music {
     this.bus.gain.value = 0;
     this.bus.gain.setTargetAtTime(1, ctx.currentTime, 1.2);
     this.bus.connect(audio.buses.music);
+    this.padBus = ctx.createGain();
+    this.padBus.connect(this.bus);
     this.playing = true;
     this.dirty = false;
     this.step = 0;
@@ -463,9 +477,13 @@ class Music {
     }
     const pulse = m.pulse + (this.intensity > 0.7 ? 0.025 : 0);
     if (pulse > 0 && s % 2 === 0) this.thump(noteOf(a, chord[0], -2), t, pulse);
-    // a heartbeat, lub-dub once a bar (Prologue void, the Pulse)
+    // a heartbeat, lub-dub every two beats (Prologue void, the Pulse)
     const beat = a.c.beat?.[a.name as MoodName] ?? 0;
-    if (beat > 0 && s % 16 < 2) this.thump(noteOf(a, chord[0], -2), t, s % 16 === 0 ? beat : beat * 0.6);
+    if (beat > 0 && s % 8 < 2) {
+      let hb = noteOf(a, chord[0], -1);
+      while (hb < 33) hb += 12;
+      this.thump(hb, t, s % 8 === 0 ? beat : beat * 0.6);
+    }
     const tick = (a.name === 'explore' || a.name === 'tension') ? a.c.tick ?? 0 : 0;
     if (tick > 0 && s % 4 === 0) this.tick(a, t, (s / 4) % 2 === 0, tick);
 
@@ -481,26 +499,28 @@ class Music {
     const letter = FORM[phrase % FORM.length];
     const prog = letter === 'B' ? a.progB : a.progA;
     let chord = prog[n % prog.length];
-    if (!a.native) chord = fixDim(chord, a);
+    if (!a.native) chord = fixDim(chord, a, this.chord);
     // phrase starts stay plain so the loop keeps its shape; elsewhere a chord may take a colour
     if (n % 4 !== 0 && r() < a.c.sus) chord = colour(chord, a);
     this.chord = chord;
 
     const dur = (60 / a.bpm) * m.beatsPerChord;
     const written = chord.map((d) => noteOf(a, d, 0));
-    const lo = Math.max(47, a.root - 1), hi = lo + 23;
-    const notes = m.voiceLead && this.voicing.length ? leadVoices(this.voicing, written, lo, hi) : written;
+    // one register for every key (about A♭3–D5), so brightness and level stay put as acts change key
+    const notes = m.voiceLead ? leadVoices(this.voicing, written, 51, 74) : written;
     this.voicing = notes;
     let body = noteOf(a, chord[0], 0);
     while (body > Math.min(...notes)) body -= 12;
     this.pad(notes, body, t, dur, a);
 
     let bassNote = noteOf(a, chord[0], -1);
-    while (bassNote < 33) bassNote += 12;
+    while (bassNote < 28) bassNote += 12;
+    if (m.voiceLead && bassNote > a.root - 5 && bassNote - 12 >= 31) bassNote -= 12;
     const fifth = chord.includes(chord[0] + 4) && semis(a, chord[0], chord[0] + 4) === 7;
     if (n > 0 && fifth && r() < (m.bassWalk ?? 0)) {
-      this.bass(bassNote, t, dur / 2, m.bassVol, 1.2, 0.5);
-      this.bass(bassNote + 7, t + dur / 2, dur / 2, m.bassVol * 0.85, 0.35, 1.2);
+      // a clean hand-off (short crossfade) so the two notes never stack
+      this.bass(bassNote, t, dur / 2, m.bassVol, 1.2, 0.15, 0.15);
+      this.bass(bassNote + (bassNote + 7 > a.root - 2 ? -5 : 7), t + dur / 2, dur / 2, m.bassVol * 0.85, 0.3, 1.2); // the fifth, below if above gets high
     } else this.bass(bassNote, t, dur, m.bassVol, 1.2, 1.2);
     if (m.air) this.air(t, dur, a);
 
@@ -511,18 +531,23 @@ class Music {
 
     // the theme
     if (this.theme === null) {
-      if (a.name === 'title' && n % 8 === 0) this.startTheme(THEME.open, 2, 1, 0.03);
-      else if (a.name === 'triumph' && n % 16 === 0) this.startTheme(THEME.closed, 0, 1, 0.032);
-      else if (a.name === 'void' && n % 8 === 4 && r() < 0.7) this.startTheme(THEME.fragment, 2, 1, 0.024);
-      else if (a.name === 'explore' && n % 16 === 8 && r() < (a.c.motif ?? 0)) this.startTheme(THEME.fragment, 2, 1, 0.02);
+      if (a.name === 'title' && n % 8 === 0) this.startTheme(THEME.open, 2, 1, 0.016, t);
+      else if (a.name === 'triumph' && n % 16 === 0) this.startTheme(THEME.closed, 0, 1, 0.017, t);
+      else if (a.name === 'void' && n % 8 === 4 && r() < 0.7) this.startTheme(THEME.fragment, 2, 1, 0.015, t);
+      else if (a.name === 'explore' && n % 16 === 8 && r() < (a.c.motif ?? 0)) this.startTheme(THEME.fragment, 2, 1, 0.012, t);
     }
     this.prune(t);
   }
 
-  private startTheme(p: Phrase, offsetBeats: number, oct: number, vol: number): void {
+  private startTheme(p: Phrase, offsetBeats: number, oct: number, vol: number, t: number): void {
     let at = offsetBeats * 4;
     const notes = p.map(([deg, beats]) => { const nt = { at, deg, len: beats * 4 }; at += beats * 4; return nt; });
     this.theme = { notes, i: 0, pos: 0, end: at, oct, vol };
+    // the pad leans back a little while the theme sings
+    const sixteenth = 60 / this.arr!.bpm / 4;
+    const g = this.padBus!.gain;
+    g.setTargetAtTime(0.8, t + Math.max(0, notes[0].at * sixteenth - 0.4), 0.4);
+    g.setTargetAtTime(1, t + at * sixteenth, 0.9);
   }
 
   private track(end: number, nodes: AudioScheduledSourceNode[]): void { this.live.push({ end, nodes }); }
@@ -551,7 +576,7 @@ class Music {
     const depth = ctx.createGain(); depth.gain.value = cut * 0.18;
     lfo.connect(depth).connect(f.frequency);
     f.connect(out);
-    out.connect(this.bus!);
+    out.connect(this.padBus!);
     const send = ctx.createGain(); send.gain.value = 0.55 + 0.25 * a.c.space;
     out.connect(send).connect(audio.reverbSend);
     const sides = [-0.35, 0.35].map((p) => {
@@ -581,14 +606,14 @@ class Music {
     this.track(end, oscs);
   }
 
-  private bass(n: number, t: number, dur: number, vol: number, attack: number, release: number): void {
+  private bass(n: number, t: number, dur: number, vol: number, attack: number, release: number, fadeLead = 0.2): void {
     const ctx = audio.ctx!;
     const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = midiHz(n);
     const o2 = ctx.createOscillator(); o2.type = 'triangle'; o2.frequency.value = midiHz(n);
     const g = ctx.createGain();
     g.gain.setValueAtTime(0, t);
     g.gain.linearRampToValueAtTime(vol, t + attack);
-    g.gain.setValueAtTime(vol, t + Math.max(attack, dur - 0.2));
+    g.gain.setValueAtTime(vol, t + Math.max(attack, dur - fadeLead));
     g.gain.linearRampToValueAtTime(0, t + dur + release);
     const g2 = ctx.createGain(); g2.gain.value = 0.25;
     o.connect(g); o2.connect(g2).connect(g);
@@ -610,12 +635,12 @@ class Music {
     const g = ctx.createGain();
     g.gain.setValueAtTime(0, t);
     g.gain.linearRampToValueAtTime(vol * PLUCK_TRIM, t + 0.005);
-    g.gain.exponentialRampToValueAtTime(1e-4, t + 1.1);
+    g.gain.exponentialRampToValueAtTime(1e-4, t + 1);
     const p = ctx.createStereoPanner(); p.pan.value = pan * 0.8;
     o.connect(f).connect(g).connect(p).connect(this.bus!);
     const ds = ctx.createGain(); ds.gain.value = delay; p.connect(ds).connect(audio.delaySend);
     const rs = ctx.createGain(); rs.gain.value = 0.35; p.connect(rs).connect(audio.reverbSend);
-    o.start(t); o.stop(t + 1.15);
+    o.start(t); o.stop(t + 1.05);
   }
 
   private bell(n: number, t: number): void {
