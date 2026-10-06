@@ -7,6 +7,7 @@ import { execFileSync } from 'node:child_process';
 import * as L from '../../site/src/game/content/chapters/c12-composition/logic.ts';
 import { MATMUL_TESTS, TRANSPOSE_TESTS, buildMatmul, buildTranspose, matmulCase, transposeCase } from '../../site/src/game/content/chapters/c12-composition/build.ts';
 import { buildMatvec } from '../../site/src/game/content/chapters/c11-transformations/build.ts';
+import { buildLincomb } from '../../site/src/game/content/chapters/c02-span/build.ts';
 import { checkLaw, rng } from '../../site/src/game/game/lawcheck.ts';
 import { det, identity, matMul, matVec, meq, transpose, veq } from '../../site/src/game/math/la.ts';
 
@@ -118,14 +119,22 @@ test('Doubts: shear/turn order and AB = 0 are false (the Shake breaks them); gro
   }
 });
 
-const LINCOMB = 'def lincomb(cs, vs):\n    out = [0] * len(vs[0])\n    for c, v in zip(cs, vs):\n        out = [o + c * x for o, x in zip(out, v)]\n    return out\n';
+// The game injects only the sources named in `uses` (game/build.ts runTests): Chapter 1's scale and add
+// (copied from c01-vectors/index.ts), Chapter 2's real lincomb, Chapter 11's matvec.
+const SOURCES: Record<string, string> = {
+  scale: 'def scale(c, v):\n    """Return the vector v stretched by the number c."""\n    return [c * x for x in v]\n',
+  add: 'def add(v, w):\n    """Return the vector for move v followed by move w."""\n    return [a + b for a, b in zip(v, w)]\n',
+  lincomb: buildLincomb.solution,
+  matvec: buildMatvec.solution,
+};
 function runPy(lib: string, code: string, fn: string, tests: { args: unknown[]; expect: unknown }[]): boolean[] {
   const prog = `import json, math\n${lib}\n${code}\ndef close(a, b):\n    if isinstance(a, list) and isinstance(b, list):\n        return len(a) == len(b) and all(close(x, y) for x, y in zip(a, b))\n    return isinstance(a, (int, float)) and isinstance(b, (int, float)) and abs(a - b) < 1e-6\nres = []\nfor a, e in json.loads(${JSON.stringify(JSON.stringify(tests.map((t) => [t.args, t.expect])))}):\n    try:\n        res.append(close(${fn}(*a), e))\n    except Exception:\n        res.append(False)\nprint(json.dumps(res))\n`;
   return JSON.parse(execFileSync('python3', ['-I', '-c', prog], { encoding: 'utf8' }));
 }
 
 test('builds: matmul (on matvec) and transpose pass their tests and a swarm; each decoy fails', () => {
-  const lib = `${LINCOMB}\n${buildMatvec.solution}`;
+  for (const u of buildMatmul.uses ?? []) assert.ok(SOURCES[u], `known library source ${u}`);
+  const lib = (buildMatmul.uses ?? []).map((u) => SOURCES[u]).join('\n');
   assert.ok(runPy(lib, buildMatmul.solution, 'matmul', MATMUL_TESTS).every(Boolean));
   assert.ok(runPy('', buildTranspose.solution, 'transpose', TRANSPOSE_TESTS).every(Boolean));
   const r = rng(13);

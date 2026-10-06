@@ -53,7 +53,7 @@ export const S: Record<string, Line[]> = {
     { who: 'vell', text: 'Noted. My people will use it.' },
   ],
   p4Intro: [
-    { who: 'bram', text: 'Here’s what has been eating at me since the spire bench. Ilse wrote a quarter turn. The pulse leans everything instead.' },
+    { who: 'bram', text: 'Here’s what has bothered me since the spire bench. Ilse wrote a quarter turn. The pulse leans everything instead.' },
     { who: 'bram', text: 'What if the Anchor reads her numbers in its own grid? Replay it, Nav. Into the Anchor’s grid, her numbers, back to ours.' },
   ],
   p4Win: [

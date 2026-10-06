@@ -7,6 +7,7 @@ import { execFileSync } from 'node:child_process';
 import * as L from '../../site/src/game/content/chapters/c11-transformations/logic.ts';
 import { plan2, framesOf, T3partial, T2partial, smoothAt, stageEnd } from '../../site/src/game/content/chapters/c11-transformations/honest.ts';
 import { TESTS, buildMatvec, swarmCase } from '../../site/src/game/content/chapters/c11-transformations/build.ts';
+import { buildLincomb } from '../../site/src/game/content/chapters/c02-span/build.ts';
 import { checkLaw, rng } from '../../site/src/game/game/lawcheck.ts';
 import { det, matMul, matVec, meq, mpow, identity, rank, veq, transpose } from '../../site/src/game/math/la.ts';
 import { T, T3, S_now } from '../../site/src/game/content/truth.ts';
@@ -156,13 +157,21 @@ test('Doubts: two buoys fix everything unless they are on one line; the origin n
   for (let i = 0; i < 100; i++) assert.ok(L.d2Holds({ A: [[r() * 8 - 4, r() * 8 - 4], [r() * 8 - 4, r() * 8 - 4]] }));
 });
 
-const LINCOMB = 'def lincomb(cs, vs):\n    out = [0] * len(vs[0])\n    for c, v in zip(cs, vs):\n        out = [o + c * x for o, x in zip(out, v)]\n    return out\n';
+// The game injects only the sources named in `uses` (game/build.ts runTests), so build the library the
+// same way: Chapter 1's scale and add (copied from c01-vectors/index.ts), Chapter 2's real lincomb.
+const SOURCES: Record<string, string> = {
+  scale: 'def scale(c, v):\n    """Return the vector v stretched by the number c."""\n    return [c * x for x in v]\n',
+  add: 'def add(v, w):\n    """Return the vector for move v followed by move w."""\n    return [a + b for a, b in zip(v, w)]\n',
+  lincomb: buildLincomb.solution,
+};
+const LINCOMB = (buildMatvec.uses ?? []).map((u) => SOURCES[u] ?? '').join('\n');
 function runPy(code: string, tests: { args: unknown[]; expect: unknown }[]): boolean[] {
   const prog = `import json, math\n${LINCOMB}\n${code}\nres = []\nfor a, e in json.loads(${JSON.stringify(JSON.stringify(tests.map((t) => [t.args, t.expect])))}):\n    try:\n        g = matvec(*a)\n        res.append(len(g) == len(e) and all(abs(x - y) < 1e-6 for x, y in zip(g, e)))\n    except Exception:\n        res.append(False)\nprint(json.dumps(res))\n`;
   return JSON.parse(execFileSync('python3', ['-I', '-c', prog], { encoding: 'utf8' }));
 }
 
 test('build: the matvec reference passes its tests and a swarm; each decoy fails at least one test', () => {
+  for (const u of buildMatvec.uses ?? []) assert.ok(SOURCES[u], `known library source ${u}`);
   assert.ok(runPy(buildMatvec.solution, TESTS).every(Boolean));
   const r = rng(3);
   const swarm = Array.from({ length: 60 }, (_, i) => { const [A, x] = swarmCase(r, ['cadet', 'navigator', 'commander'][i % 3]); return { args: [A, x], expect: matVec(A, x) }; });

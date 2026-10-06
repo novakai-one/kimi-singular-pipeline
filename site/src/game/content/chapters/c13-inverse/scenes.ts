@@ -59,7 +59,7 @@ export async function coldOpen(g: Game): Promise<void> {
     await fadeBlack(g, true, 10);
     g.stage.clearWorld();
     g.mood('explore');
-    const set = await meridianSet(g, { lantern: { at: [40, -16, 5], face: [-1, 0.35, -0.05], scale: 1.5 } });
+    const set = await meridianSet(g, { lantern: { at: [38, 12, 3], face: [-1, -0.25, 0.05], scale: 1.5 } });
     check(set);
     const cam = new CamRig(g, set, [62, -44, 20], [24, -2, 4]);
     cam.drift(0.4);
@@ -165,7 +165,7 @@ export async function install(g: Game): Promise<void> {
   try {
     g.stage.clearWorld();
     g.mood('explore');
-    const set: ArkSet = await meridianSet(g, { lantern: { at: [40, -16, 5], face: [-1, 0.35, -0.05], scale: 1.5 } });
+    const set: ArkSet = await meridianSet(g, { lantern: { at: [38, 12, 3], face: [-1, -0.25, 0.05], scale: 1.5 } });
     check(set);
     const cam = new CamRig(g, set, [50, -42, 18], [22, 0, 6]);
     cam.drift(0.35);
@@ -198,7 +198,7 @@ export async function install(g: Game): Promise<void> {
 /** The Meridian's bow with LANTERN's frame-plan hologram showing the move M, camera drifting. */
 export function bowShot(M: Mat) {
   return async (g: Game): Promise<void> => {
-    const set = await meridianSet(g, { lantern: { at: [40, -16, 5], face: [-1, 0.35, -0.05], scale: 1.5 } });
+    const set = await meridianSet(g, { lantern: { at: [38, 12, 3], face: [-1, -0.25, 0.05], scale: 1.5 } });
     const cam = new CamRig(g, set, [52, -42, 18], [22, 0, 6]);
     cam.drift(0.4);
     const holo = new PlanHologram(g, set.root, [22, 2, 12], 1.7, 1.15);

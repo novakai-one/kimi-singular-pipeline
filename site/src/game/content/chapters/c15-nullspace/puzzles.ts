@@ -24,12 +24,17 @@ import {
   ballStarts, countOnPlane, diffOnNull, fmtN, fmtV, land, len, p1Won, p2GapOk, p2Hit, p3Won, planeHeight, reachable,
   threeStartsOk, violetPreview, winTol, type Diff, type P3,
 } from './logic';
-import { GlowLine, Probe, Room, Sheet, VIOLET, buoyCloud, tv, twinView, violetGlow } from './space';
+import { GlowLine, LandCloud, Probe, Room, Sheet, VIOLET, tv, twinView, violetGlow } from './space';
 import { S } from './script';
 
 const d = (p: PuzzleCtx) => p.difficulty as Diff;
 const stepFor = (p: PuzzleCtx) => (p.difficulty === 'cadet' ? 1 : p.difficulty === 'navigator' ? 0.5 : 0.25);
-const planeTex = (n: readonly number[]) => {
+const gcd = (a: number, b: number): number => (b ? gcd(b, a % b) : a);
+const planeTex = (n0: readonly number[]) => {
+  // whole-number normals are shown in lowest terms: (0, 0, 2) reads z = 0
+  const whole = n0.every((x) => Math.abs(x - Math.round(x)) < 1e-9);
+  const g = whole ? n0.map((x) => Math.abs(Math.round(x))).reduce((a, b) => gcd(a, b), 0) : 1;
+  const n = g > 1 ? n0.map((x) => Math.round(x) / g) : n0;
   const terms: string[] = [];
   ['x', 'y', 'z'].forEach((v, i) => {
     const c = Math.round(n[i] * 100) / 100;
@@ -67,9 +72,9 @@ export const p1: PuzzleDef = {
     void p.g.stage.view3D({ target: [0, 0, 0.4], distance: 13.5, azimuth: -60, elevation: 20, ms: 0 });
     const starts = ballStarts(2000);
     const landed = starts.map(land);
-    const cloud = buoyCloud(p, room, starts as V3[], { size: 0.04 });
-    const sheet = new Sheet(room, [0, 0, 1], { color: C.white, size: 7, opacity: 0.1 });
-    sheet.setOpacity(0.55);
+    const cloud = new LandCloud(p, room, starts);
+    const sheet = new Sheet(room, [0, 0, 1], { color: '#9fd8ff', size: 7, opacity: 0.1 });
+    sheet.setOpacity(0.45);
     const r = p.readout('Your plane');
     let n: V3 = [0, 0, 2];
     let done = false;
@@ -85,10 +90,9 @@ export const p1: PuzzleDef = {
       if (!flattened) return;
       // light the buoys that lie on the plane
       const l = len(n);
-      const now: number[] = [], off: number[] = [];
-      landed.forEach((q, i) => { const on1 = l > 1e-9 && Math.abs(q[0] * n[0] + q[1] * n[1] + q[2] * n[2]) / l <= 0.06; if (on1 !== lit.has(i)) (on1 ? now : off).push(i); });
-      if (now.length) { cloud.highlight(now, C.result, 0.55); now.forEach((i) => lit.add(i)); }
-      if (off.length) { cloud.highlight(off, null); off.forEach((i) => lit.delete(i)); }
+      let changed = false;
+      landed.forEach((q, i) => { const on1 = l > 1e-9 && Math.abs(q[0] * n[0] + q[1] * n[1] + q[2] * n[2]) / l <= 0.06; if (on1 !== lit.has(i)) { changed = true; if (on1) lit.add(i); else lit.delete(i); } });
+      if (changed) cloud.paint((i) => (lit.has(i) ? C.result : '#9fd8ff'));
     };
     const set = (v: V3, fromInput = false) => {
       n = v.map((x) => Math.round(x * 1e6) / 1e6) as V3;
@@ -115,7 +119,7 @@ export const p1: PuzzleDef = {
       handle.setEnabled(false);
       sheet.setColor(C.result);
       sheet.setOpacity(1);
-      cloud.highlight([...landed.keys()], C.result, 0.55);
+      cloud.paint(() => C.result);
       sfx.success();
       p.subgoal(0);
       COLS.slice(0, 2).forEach((c, i) => {

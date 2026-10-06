@@ -303,7 +303,8 @@ test('builds: to_coords, from_coords, in_grid pass their tests and a swarm; each
     assert.ok(cases.some((c) => c.expect === null) || b.fn !== 'to_coords', 'the to_coords swarm includes flat grids');
     assert.ok(runPy(b.fn, src, cases).every(Boolean), `${b.fn} swarm`);
     // each crew version agrees with the fixed tests
-    for (const t of tests) { const got = b.swarm!.crew(...t.args); assert.ok(t.expect === null ? got === null : JSON.stringify((got as number[]).flat?.() ?? got) !== undefined, t.name); }
+    const same = (a: unknown, e: unknown): boolean => (a === null || e === null ? a === e : Array.isArray(a) ? Array.isArray(e) && a.length === e.length && a.every((x, i) => same(x, e[i])) : Math.abs((a as number) - (e as number)) < 1e-9);
+    for (const t of tests) assert.ok(same(b.swarm!.crew(...t.args), t.expect), `crew agrees: ${t.name}`);
     // each decoy (in place of the line it imitates) fails at least one test
     for (const decoy of b.assemble!.decoys ?? []) {
       const lines = b.assemble!.lines.slice();

@@ -11,6 +11,7 @@ import { PlanePatch } from '../../../gfx/shapes';
 import { BuoyField } from '../../../gfx/buoys';
 import { glowSprite } from '../../../gfx/markers';
 import { Knob } from '../../../kit/geom';
+import { PointCloud } from '../../../kit/data';
 import { C } from '../../../core/theme';
 import { animate, ease } from '../../../core/tween';
 import { cross, normalize } from '../../../math/la';
@@ -208,6 +209,31 @@ export function buoyCloud(host: Host, room: Room, starts: V3[], o: { color?: str
   b.object.scale.setScalar(room.s);
   addTo(host, b);
   return b;
+}
+
+/**
+ * The test buoys: small glowing points at given starts, drawn in a room. setMatrix / to send them through
+ * a matrix (honest: a straight line from where they are); paint colours each one.
+ */
+export class LandCloud {
+  readonly pc: PointCloud;
+  private M: number[][] = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+  private cols: string[];
+  constructor(host: Host, private readonly room: Room, readonly starts: readonly (readonly number[])[], o: { color?: string; size?: number; glow?: number; opacity?: number } = {}) {
+    const ctx = ('g' in host ? host : { add: (x: { object: Object3D }) => host.stage.world.add(x.object) }) as PuzzleCtx;
+    this.cols = starts.map(() => o.color ?? '#9fd8ff');
+    this.pc = new PointCloud(ctx, { points: this.points(this.M), colors: this.cols, size: o.size ?? 0.032, glow: o.glow ?? 0.22, opacity: o.opacity ?? 0.95, core: 1.35 });
+  }
+  get object(): Object3D { return this.pc.object; }
+  /** World positions after the matrix M. */
+  points(M: number[][]): V3[] {
+    return this.starts.map((s) => this.room.w([0, 1, 2].map((r) => M[r][0] * s[0] + M[r][1] * s[1] + M[r][2] * s[2])));
+  }
+  setMatrix(M: number[][]): void { this.M = M.map((r) => r.slice()); this.pc.set(this.points(this.M), this.cols); }
+  async to(M: number[][], ms = 1400): Promise<void> { await this.pc.to(this.points(M), ms); this.M = M.map((r) => r.slice()); }
+  /** Colour every point (one colour each). */
+  paint(color: (i: number) => string): void { this.cols = this.starts.map((_, i) => color(i)); this.pc.set(this.points(this.M), this.cols); }
+  dispose(): void { this.pc.dispose(); }
 }
 
 /** A soft violet glow at a room point (the pile at the origin). */

@@ -6,7 +6,7 @@ import { rint } from '../../../game/lawcheck.ts';
 
 const SOLUTION_LINES = [
   'def matvec(A, x):',
-  '    """Return A x: the mix of the columns of A, with the numbers in x as weights."""',
+  '    """Return A x: the columns of A mixed, with x as the weights."""',
   '    columns = [[row[j] for row in A] for j in range(len(x))]',
   '    return lincomb(x, columns)',
 ];
@@ -32,15 +32,15 @@ export const TESTS = [
 export const buildMatvec: BuildDef = {
   id: 'c11-matvec', fn: 'matvec', title: 'Where does one point land?',
   brief: 'Write `matvec(A, x)`. `A` is a list of rows, such as `[[1, -2], [1, -1]]`. `x` has one number per column of `A`.\n\nReturn $A\\mathbf x$: **the mix of the columns of `A`, with the numbers in `x` as the weights**. Your `lincomb(cs, vs)` from Chapter 2 does the mixing.\n\nThe columns are not stored as lists: column `j` is `[row[j] for row in A]`.',
-  starter: 'def matvec(A, x):\n    """Return A x: the mix of the columns of A, with the numbers in x as weights."""\n    columns = []\n    # column j of A is [row[j] for row in A]\n    return lincomb(x, columns)\n',
-  fill: 'def matvec(A, x):\n    """Return A x: the mix of the columns of A, with the numbers in x as weights."""\n    columns = [[row[___] for row in ___] for j in range(len(___))]\n    return lincomb(___, columns)\n',
-  signature: 'def matvec(A, x):\n    """Return A x: the mix of the columns of A, with the numbers in x as weights.\n\n    (On Write you may also use the row view: entry i is row i dotted with x.)"""\n',
+  starter: 'def matvec(A, x):\n    """Return A x: the columns of A mixed, with x as the weights."""\n    columns = []\n    # column j of A is [row[j] for row in A]\n    return lincomb(x, columns)\n',
+  fill: 'def matvec(A, x):\n    """Return A x: the columns of A mixed, with x as the weights."""\n    columns = [[row[___] for row in ___] for j in range(len(___))]\n    return lincomb(___, columns)\n',
+  signature: 'def matvec(A, x):\n    """Return A x: the columns of A mixed, with x as the weights.\n\n    (The row view works too: entry i is row i dotted with x.)"""\n',
   solution: `${SOLUTION_LINES.join('\n')}\n`,
   assemble: {
     lines: SOLUTION_LINES,
     decoys: ['    columns = A', '    return [A[i][i] * x[i] for i in range(len(x))]'],
   },
-  uses: ['lincomb'],
+  uses: ['lincomb', 'scale', 'add'],
   tests: TESTS,
   swarm: { gen: (r, level) => swarmCase(r, level), crew: (...a: unknown[]) => matVec(a[0] as Mat, a[1] as number[]) },
   docPrompt: 'What question does `matvec` answer, and why does the code work? Write it the way you would tell Bram.',

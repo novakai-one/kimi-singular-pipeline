@@ -57,7 +57,7 @@ export async function coldOpen(g: Game): Promise<void> {
           void g.stage.shockwave([0, 0, 0], 2200, 0.8);
           sfx.whoosh(2.4);
           void animate(g.headless ? 10 : 2600, (k) => whole.set(T3partial(k)), ease.inOut);
-          void stamp(g, `Hull volume × ${fmtN(det(T3))}`, 3600);
+          void stamp(g, `Hull volume × ${det(T3).toFixed(1)}`, 3600);
         }
         if (i === 2) sfx.alarm();
       },

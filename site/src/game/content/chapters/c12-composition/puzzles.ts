@@ -346,6 +346,9 @@ export const p4: PuzzleDef = {
     const enterTwice = () => {
       stage = 'twice';
       shakeBtn.hidden = true;
+      // back to the starting pair, and slide the holotable clear of the worksheet
+      x.set([2, 1, 0]); y.set([0, 2, 0]); upd();
+      void p.g.stage.view2D({ center: [-1.8, 1.5], height: 9, ms: 600 });
       input.el.style.opacity = '0.6';
       r.row('m', 'mover of $B$', `rows ${fmtV(P4_MOVER[0])}, ${fmtV(P4_MOVER[1])}`, C.result);
       if (d === 'commander') {

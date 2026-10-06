@@ -260,16 +260,20 @@ export const p5: PuzzleDef = {
 
 // ------------------------------------------------------------------ p6 [D] · what did not change
 
+/** Half the width of each room in the twin view (world units). */
+const ROOM_HALF = 1.75;
+
 interface Room { origin: V3; tile: Parallelogram; land: Arrow; rider: Dot; trail: FatSegments; M: Mat }
 
 function room(p: PuzzleCtx, origin: V3, M: Mat, o: { title: string; cls: string; copper: boolean }): Room {
-  const lines = new CopperGrid(p.g.stage, { M: o.copper ? identity(2) : identity(2), origin: [origin[0], origin[1]], half: 2.7, color: o.copper ? COPPER : SHIP_GRID.color, dashed: o.copper, opacity: o.copper ? 0.75 : 0.4, width: o.copper ? 1.5 : 1.1, n: 4 });
+  const H = ROOM_HALF;
+  const lines = new CopperGrid(p.g.stage, { M: identity(2), origin: [origin[0], origin[1]], half: H, color: o.copper ? COPPER : SHIP_GRID.color, dashed: o.copper, opacity: o.copper ? 0.75 : 0.4, width: o.copper ? 1.5 : 1.1, n: 4 });
   p.add(lines);
-  if (!o.copper) { const cu = new CopperGrid(p.g.stage, { M: P2, origin: [origin[0], origin[1]], half: 2.7, opacity: 0.35, width: 1.2, n: 8 }); p.add(cu); }
-  const axes = new FatSegments(p.g.stage, [[[origin[0] - 2.7, origin[1], 0.002], [origin[0] + 2.7, origin[1], 0.002]], [[origin[0], origin[1] - 2.7, 0.002], [origin[0], origin[1] + 2.7, 0.002]]], { color: o.copper ? COPPER : C.axis, width: 1.6, opacity: 0.55 });
+  if (!o.copper) { const cu = new CopperGrid(p.g.stage, { M: P2, origin: [origin[0], origin[1]], half: H, opacity: 0.35, width: 1.2, n: 8 }); p.add(cu); }
+  const axes = new FatSegments(p.g.stage, [[[origin[0] - H, origin[1], 0.002], [origin[0] + H, origin[1], 0.002]], [[origin[0], origin[1] - H, 0.002], [origin[0], origin[1] + H, 0.002]]], { color: o.copper ? COPPER : C.axis, width: 1.6, opacity: 0.55 });
   p.add(axes.object);
   p.onDispose(() => axes.dispose());
-  const cap = new Label(o.title, [origin[0], origin[1] + 3.15, 0], { className: o.cls });
+  const cap = new Label(o.title, [origin[0], origin[1] + H + 0.38, 0], { className: o.cls });
   p.add(cap.object);
   p.onDispose(() => cap.dispose());
   const tile = new Parallelogram(p.g.stage, [1, 0, 0], [0, 1, 0], { color: C.result, opacity: 0.16, origin: [origin[0], origin[1], 0.01] });
@@ -331,10 +335,10 @@ export const p6: PuzzleDef = {
   par: 12,
   onWin: S.p6Win,
   setup(p) {
-    void p.g.stage.view2D({ center: [0.4, 0.6], height: 9.4, ms: 0 });
+    void p.g.stage.view2D({ center: [0, 0], height: 11, ms: 0 });
     const rooms = [
-      room(p, [-3.2, 0, 0], R2, { title: 'In the Anchor’s grid · R', cls: 'c17-cap cu', copper: true }),
-      room(p, [3.6, 0, 0], T, { title: 'In our grid · T = P R P⁻¹', cls: 'c17-cap', copper: false }),
+      room(p, [-1.45, 1.75, 0], R2, { title: 'In the Anchor’s grid · R', cls: 'c17-cap cu', copper: true }),
+      room(p, [2.5, 1.75, 0], T, { title: 'In our grid · T = P R P⁻¹', cls: 'c17-cap', copper: false }),
     ];
     const list = measures();
     const marks: Partial<Record<Measure['id'], 'same' | 'diff'>> = {};
@@ -386,7 +390,7 @@ export const p6: PuzzleDef = {
     // the reason, by difficulty: watch + one drag / typed steps / tiles then the last line
     let ws: StepWorksheet | null = null;
     let slider: Slider | null = null;
-    const finish = () => { if (flags[1]) return; flags[1] = true; p.subgoal(1); r.note('**Similar** descriptions of one move share everything that does not depend on the grid: area scale, the sum down the diagonal, how many pulses bring it home.'); p.win(); };
+    const finish = () => { if (flags[1]) return; flags[1] = true; p.subgoal(1); r.note('Two descriptions of one move share everything that does not depend on the grid: area scale, the sum down the diagonal, how many pulses bring it home.'); p.win(); };
     const steps = [
       { prompt: 'Vell’s grid: $\\det P_C$', answer: P6.detPC },
       { prompt: '$\\det P_C^{-1} = 1/\\det P_C$', answer: P6.detPCinv, mistakes: [[P6.detPC, 'Undoing a doubling of area halves it.']] as [number, string][] },

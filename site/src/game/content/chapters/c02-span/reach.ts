@@ -93,7 +93,7 @@ export class ReachGlow {
     g.setAttribute('aCoef', this.coef);
     g.setAttribute('aBorn', this.born);
     g.instanceCount = 0;
-    this.baseGain = o.gain ?? 0.17;
+    this.baseGain = o.gain ?? 0.11;
     const mat = new ShaderMaterial({
       vertexShader: vert, fragmentShader: frag, transparent: true, depthWrite: false, blending: AdditiveBlending,
       uniforms: {
@@ -148,16 +148,16 @@ export class ReachGlow {
     return n > 1e-6 ? this.cellWorld / n : 1;
   }
 
-  /** Light the point at this dial setting. Returns true if it was new. */
-  deposit(c: number[], delay = 0): boolean {
+  /** Light the point at this dial setting. Returns true if it was new. (`force` skips the one-per-cell check.) */
+  deposit(c: number[], delay = 0, force = false): boolean {
     const c0 = c[0] ?? 0, c1 = c[1] ?? 0, c2 = c[2] ?? 0;
-    const key = `${Math.round(c0 / this.cellCoef(0))},${Math.round(c1 / this.cellCoef(1))},${Math.round(c2 / this.cellCoef(2))}`;
-    if (this.seen.has(key)) return false;
+    const key = force ? null : `${Math.round(c0 / this.cellCoef(0))},${Math.round(c1 / this.cellCoef(1))},${Math.round(c2 / this.cellCoef(2))}`;
+    if (key !== null && this.seen.has(key)) return false;
     const i = this.head;
     const old = this.keys[i];
-    if (old !== null) this.seen.delete(old);
+    if (old !== null && this.seen.get(old) === i) this.seen.delete(old);
     this.keys[i] = key;
-    this.seen.set(key, i);
+    if (key !== null) this.seen.set(key, i);
     this.coef.array[i * 3] = c0; this.coef.array[i * 3 + 1] = c1; this.coef.array[i * 3 + 2] = c2;
     this.born.array[i] = this.now + delay;
     this.dirtyLo = Math.min(this.dirtyLo, i);
@@ -191,7 +191,7 @@ export class ReachGlow {
     const spread = o.spread ?? 1.4;
     let s = o.seed ?? 7;
     const rnd = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
-    const jit = o.jitter ?? 0.12;
+    const jit = o.jitter ?? 1;
     const counts = ranges.map(([lo, hi], i) => Math.max(1, Math.floor((hi - lo) / steps[i]) + 1));
     const total = counts.reduce((p, x) => p * x, 1);
     let maxR = 1e-6;
@@ -200,7 +200,7 @@ export class ReachGlow {
       let rem = idx;
       const c = ranges.map(([lo], i) => { const k = rem % counts[i]; rem = Math.floor(rem / counts[i]); return lo + (k + (rnd() - 0.5) * jit) * steps[i]; });
       const r = Math.sqrt(c.reduce((p, x) => p + x * x, 0)) / maxR;
-      this.deposit(c, spread * r * (0.85 + 0.3 * rnd()));
+      this.deposit(c, spread * r * (0.85 + 0.3 * rnd()), true);
     }
   }
 
@@ -212,7 +212,7 @@ export class ReachGlow {
     for (let k = 0; k < n && tries < n * 20; tries++) {
       const c = ranges.map(([lo, hi]) => lo + (hi - lo) * rnd());
       if (!keep(this.worldOf(c))) continue;
-      this.deposit(c, spread * rnd());
+      this.deposit(c, spread * rnd(), true);
       k++;
     }
   }

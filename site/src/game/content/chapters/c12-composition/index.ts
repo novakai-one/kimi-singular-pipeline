@@ -63,7 +63,7 @@ const ch: ChapterDef = {
         saw: 'Take $B$ with columns (1, 0) and (2, 1). The matrix that kept $(B\\mathbf x)\\cdot\\mathbf y = \\mathbf x\\cdot(M\\mathbf y)$ for 200 pairs had **the rows of $B$ as its columns**. For two moves in a row, the crossed-over matrices came in the other order.',
         means: 'A matrix can cross to the other arrow of a dot product if its rows are written as columns.',
         name: 'The **transpose** $A^T$ is $A$ with its rows written as columns. It is the matrix that moves to the other side of a dot product. A **symmetric matrix** equals its own transpose.',
-        formula: '(A\\mathbf x)\\cdot\\mathbf y = \\mathbf x\\cdot(A^T\\mathbf y) \\qquad (AB)^T = B^TA^T \\qquad \\begin{bmatrix}1&2\\\\0&1\\end{bmatrix}^T = \\begin{bmatrix}1&0\\\\2&1\\end{bmatrix}',
+        formula: '\\begin{gathered}(A\\mathbf x)\\cdot\\mathbf y = \\mathbf x\\cdot(A^T\\mathbf y) \\qquad (AB)^T = B^TA^T \\\\[6pt] \\begin{bmatrix}1&2\\\\0&1\\end{bmatrix}^T = \\begin{bmatrix}1&0\\\\2&1\\end{bmatrix}\\end{gathered}',
         why: 'A dot product is a row times a column: $\\mathbf u\\cdot\\mathbf v = \\mathbf u^T\\mathbf v$. Moving $A$ across, then $B$, gives $(AB\\mathbf x)\\cdot\\mathbf y = \\mathbf x\\cdot(B^TA^T\\mathbf y)$.',
         cue: 'When you see a matrix inside a dot product, think **move it across as its transpose**.',
         use: 'Training a neural network sends each error backwards through a layer with $W^T$.',

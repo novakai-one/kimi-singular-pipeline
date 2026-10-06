@@ -370,17 +370,17 @@ export const p4: PuzzleDef = {
     p.grid({ base: 0.1, main: 0.16, axis: 0.35 });
     const H = v3(P4_HEADING), Sp = v3(P4_SPINE);
     const axis = unit(cross(P4_HEADING, P4_SPINE));
-    // the ark far off, its spine along s
-    const ark = await loadModel('meridian');
-    if (ark) {
+    // the ark far off, loaded in the background (the puzzle does not wait for it)
+    const g0 = new Group();
+    g0.quaternion.copy(alongX(Sp));
+    g0.position.set(-5, 46, 1);
+    p.add(g0);
+    void loadModel('meridian').then((ark) => {
+      if (!ark || !g0.parent) return;
       ark.rotation.x = Math.PI / 2;
       ark.scale.setScalar(0.2);
-      const g0 = new Group();
       g0.add(ark);
-      g0.quaternion.copy(alongX(Sp));
-      g0.position.set(-5, 46, 1);
-      p.add(g0);
-    }
+    });
     const ship = makeLantern(p.g.stage, 0.13);
     p.add(ship);
     ship.setThrust(0.15);
@@ -685,7 +685,7 @@ export const p7: PuzzleDef = {
     const caseB = new Arrow([0, 0, 0], [0, 1, 0], { color: C.w, opacity: 0 });
     caseA.setOpacity(0); caseB.setOpacity(0);
     p.add(caseA, caseB);
-    const commit = async () => {
+    const commit = async (fast = false) => {
       if (phase !== 'place' || !p7Won(tip)) return;
       phase = 'shake';
       dh.setEnabled(false);
@@ -699,12 +699,12 @@ export const p7: PuzzleDef = {
       for (let i = 0; i < 6; i++) {
         const a: V3 = [rnd() * 6 - 3, rnd() * 6 - 3, rnd() * 4], b: V3 = [rnd() * 6 - 3, rnd() * 6 - 3, rnd() * 4];
         caseA.setOpacity(0.9); caseB.setOpacity(0.9);
-        await Promise.all([caseA.moveTo(a, 300), caseB.moveTo(b, 300)]);
+        if (fast) { caseA.set([0, 0, 0], a); caseB.set([0, 0, 0], b); } else await Promise.all([caseA.moveTo(a, 300), caseB.moveTo(b, 300)]);
         const ratio = Math.abs(dot(a, b)) / (norm(a) * norm(b));
         csG.set(ratio, `${ratio.toFixed(2)} ≤ 1`);
         if (!cauchySchwarz(a, b)) break;
         sfx.tick(i);
-        await wait(260);
+        if (!fast) await wait(260);
       }
       phase = 'done';
       p.win();
@@ -712,8 +712,8 @@ export const p7: PuzzleDef = {
     p.dock().append(h('div', { style: 'display:flex;gap:10px;align-items:center;font-size:14px' }, h('span', { html: inline('$\\mathbf x =$') }), vin.el), h('div', { class: 'c-muted', style: 'font-size:12.5px' }, 'Press Enter in a box to place it.'));
     return {
       async showMe() { await dh.moveTo(v3(P7_READINGS), 1200); },
-      async solve() { dh.set(v3(P7_READINGS)); await commit(); },
-      async wrong() { dh.set([2, -1, 3]); await commit(); },
+      async solve() { dh.set(v3(P7_READINGS)); await commit(true); },
+      async wrong() { dh.set([2, -1, 3]); await commit(true); },
     };
   },
 };

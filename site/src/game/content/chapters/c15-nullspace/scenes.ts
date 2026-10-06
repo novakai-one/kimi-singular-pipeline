@@ -7,7 +7,6 @@ import {
 import type { Game, V3 } from '../../../game/types';
 import { loadModel, type Ship } from '../../../gfx/models';
 import { glowSprite } from '../../../gfx/markers';
-import { BuoyField } from '../../../gfx/buoys';
 import { animate, ease, wait } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
 import { music } from '../../../audio/music';
@@ -18,7 +17,7 @@ import { rng } from '../../../game/lawcheck';
 import { makeAnchor, makeLantern } from '../../common/set';
 import { C as COLLAPSE, C2 } from '../../truth';
 import { ballStarts, crew, parallel, NULL_DIR } from './logic';
-import { Room, VIOLET } from './space';
+import { LandCloud, Room, VIOLET } from './space';
 import { S } from './script';
 
 /** Thrown when the player leaves a cinematic part-way: stop quietly. */
@@ -138,7 +137,7 @@ export async function camTo(g: Game, set: ActSet, pos: V3, look: V3, ms: number)
 }
 
 /** LANTERN's scan room: the lattice of test buoys and the debris line around the origin. */
-export interface ScanSet { set: ActSet; room: Room; buoys: BuoyField; debris: Object3D[]; pile: Sprite; starts: V3[] }
+export interface ScanSet { set: ActSet; room: Room; buoys: LandCloud; debris: Object3D[]; pile: Sprite; starts: V3[] }
 
 export const DEBRIS_TS: number[] = Array.from({ length: 41 }, (_, i) => -2.4 + (4.8 * i) / 40);
 
@@ -146,9 +145,9 @@ export async function scanSet(g: Game, o: { buoys?: number; flat?: boolean } = {
   const set = await actSet(g, { ark: null, anchor: null });
   const room = new Room(g, { extent: 3, floor: true });
   const starts = ballStarts(o.buoys ?? 1400);
-  const buoys = new BuoyField(g.stage, { points: starts, dims: 3, color: '#9fd8ff', size: 0.045 });
+  const buoys = new LandCloud(g, room, starts, { size: 0.03 });
   set.root.add(buoys.object);
-  if (o.flat) buoys.set(C2);
+  if (o.flat) buoys.setMatrix(C2);
   // the debris: pieces spread along the line through (1, 1, −1)
   const debris: Object3D[] = [];
   const R = rng(1541);

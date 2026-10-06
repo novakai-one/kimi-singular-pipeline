@@ -216,7 +216,7 @@ export const sp: PuzzleDef = {
       if (!spFootOk([STREAM_X, footY, 0], f, d === 'commander' ? 0.01 : 0.05)) return;
       placeFoot(streamFoot(f)[1]);
       mark ??= new RightAngle(p, [STREAM_X, footY, 0.05], [0, -1, 0], [f[0] - STREAM_X, 0, 0], 0.3);
-      mark.set([STREAM_X, footY, 0.05], [0, f[1] > -10 ? -1 : 1, 0], [f[0] - STREAM_X, 0, 0]); mark.show(true);
+      mark.set([STREAM_X, footY, 0.05], [0, -1, 0], [f[0] - STREAM_X, 0, 0]); mark.show(true);
       const dd = distToStream(f);
       if (spClear(S0)) { tick(2); sfx.success(); paint(); say(`The closest point of the stream is ${fmtV(streamFoot(f))}: the ark would be ${fmtN(dd)} steps clear.`, 'good'); }
       else { sfx.miss(); paint(); say(`Only ${fmtN(dd)} from the stream. Clearance needed: ${CLEARANCE}.`, 'bad'); }

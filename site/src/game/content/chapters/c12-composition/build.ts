@@ -53,7 +53,7 @@ export const buildMatmul: BuildDef = {
   signature: 'def matmul(A, B):\n    """Return A B: column j is A times column j of B (B acts first)."""\n',
   solution: `${MATMUL_LINES.join('\n')}\n`,
   assemble: { lines: MATMUL_LINES, decoys: ['    columns = [matvec(B, [row[j] for row in A]) for j in range(len(A[0]))]', '    return [[A[i][j] * B[i][j] for j in range(len(B[0]))] for i in range(len(A))]'] },
-  uses: ['matvec', 'lincomb'],
+  uses: ['matvec', 'lincomb', 'scale', 'add'],
   tests: MATMUL_TESTS,
   swarm: { gen: (r, level) => matmulCase(r, level), crew: (...a: unknown[]) => matMul(a[0] as Mat, a[1] as Mat) },
   docPrompt: 'What question does `matmul` answer, and why is column j of the answer A times column j of B? Write it the way you would tell Bram.',

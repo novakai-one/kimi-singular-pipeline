@@ -73,7 +73,7 @@ const ch: ChapterDef = {
   act: 6,
   num: 17,
   title: 'Same point, different grid: what are its numbers now?',
-  subtitle: 'Coordinates and change of basis',
+  subtitle: 'Naming points in another grid',
   nodes: ['N19'],
   palette: 'copper',
   music: 'explore',
