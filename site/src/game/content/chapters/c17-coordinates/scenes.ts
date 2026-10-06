@@ -97,7 +97,7 @@ export async function coldOpen(g: Game): Promise<void> {
     const a1 = new Arrow([0, 0, 0.03], [0, 0, 0.03], { color: C.v, width: 0.055, label: '$\\mathbf b_1$' });
     const a2 = new Arrow([0, 0, 0.03], [0, 0, 0.03], { color: C.w, width: 0.055, label: '$\\mathbf b_2$' });
     set.root.add(a1.object, a2.object);
-    for (const a of [a1, a2]) a.object.userData.dispose = () => a.dispose();
+    for (const a of [a1, a2]) { a.object.userData.dispose = () => a.dispose(); a.setOpacity(0); }
     const len = new Label('', [0, 0, 0], { className: 'c17-pt r', offset: [26, -10] });
     const ang = new Label('', [0, 0, 0], { className: 'c17-pt', offset: [0, 0] });
     len.show(false); ang.show(false);
@@ -109,8 +109,9 @@ export async function coldOpen(g: Game): Promise<void> {
       onLine: async (_l, i) => {
         set.check();
         if (i === 1) { await copper.fade(0.8, 900); }                       // LANTERN's square drawing
-        if (i === 2) { await a1.moveTo([B1[0], B1[1], 0.03], 900); sfx.snap(); }
+        if (i === 2) { a1.setOpacity(1); await a1.moveTo([B1[0], B1[1], 0.03], 900); sfx.snap(); }
         if (i === 3) {
+          a2.setOpacity(1);
           await a2.moveTo([0, 1, 0.03], 700);
           await wait(250);
           // the measured second arm: the copper grid slides from square to the Anchor's (a shear, never flat)

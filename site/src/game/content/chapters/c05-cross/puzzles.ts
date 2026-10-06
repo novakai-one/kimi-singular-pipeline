@@ -545,14 +545,14 @@ export const p6: PuzzleDef = {
   view: '3d',
   onWin: S.p6Win,
   async setup(p) {
-    await p.g.stage.view3D({ target: [1.2, 1.6, 2.6], distance: 19, azimuth: -28, elevation: 18, ms: 0 });
+    await p.g.stage.view3D({ target: [1.0, 1.8, 3.4], distance: 24, azimuth: -28, elevation: 14, ms: 0 });
     p.grid({ base: 0.1, main: 0.16, axis: 0.4 });
     const v = v3(P6_V);
     let th = 50;
     const par = panel(p, v, v3(p6W(th)), 0.22);
     const vA = new Arrow([0, 0, 0], v, { color: C.v, label: '$\\mathbf v$' });
     const wA = new Arrow([0, 0, 0], v3(p6W(th)), { color: C.w, label: '$\\mathbf w$' });
-    const nA = new Arrow([0, 0, 0], [0, 0, 1], { color: C.result, label: '$\\mathbf v\\times\\mathbf w$' });
+    const nA = new Arrow([0, 0, 0], [0, 0, 1], { color: C.result, label: '$\\mathbf v\\times\\mathbf w$, drawn ¼ size' });
     p.add(vA, wA, nA);
     const arc = new AngleArc(p, [0, 0, 0], v, v3(p6W(th)), { radius: 1.6, label: '$\\theta$' });
     const r = p.readout('Raised arrow');
@@ -563,7 +563,7 @@ export const p6: PuzzleDef = {
       const n = v3(cross(P6_V, w));
       par.set(v, w);
       wA.set([0, 0, 0], w);
-      nA.set([0, 0, 0], n);
+      nA.set([0, 0, 0], [n[0] / 4, n[1] / 4, n[2] / 4]);
       nA.object.visible = norm(n) > 0.02;
       arc.set(v, w);
       gArea.set(norm(n));
@@ -620,7 +620,7 @@ export const p7: PuzzleDef = {
       const t = turns(D);
       [B, Cc, D].forEach((q, i) => {
         const left = t[i] > 1e-9;
-        tags[i].at([q[0] + 0.45, q[1] + 0.35, 0]);
+        tags[i].at([q[0] + 0.55, q[1] - 0.5, 0]);
         tags[i].set(t[i] === 0 ? 'straight' : left ? `left · ${nice(Math.round(t[i] * 100) / 100)}` : `right · ${nice(Math.round(t[i] * 100) / 100)}`);
         tags[i].el.style.color = left ? '#59e1ff' : C.orange;
         r.row(`t${i}`, `at ${['B', 'C', 'D'][i]}`, `${nice(Math.round(t[i] * 100) / 100)} · ${left ? 'left' : t[i] === 0 ? 'straight' : 'right'}`, left ? '#59e1ff' : C.orange);

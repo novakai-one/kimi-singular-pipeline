@@ -151,6 +151,7 @@ export class PlaneSet {
       for (const c of changes) c.g.hyper = c.tw ? c.tw.at(1) : c.to;
       if (JSON.stringify(this.solutionKey()) !== solBefore) this.rebuildSolution();
       this.drawAll();
+      this.placeLabels(); // the planes moved: find label spots clear of each other again
     };
     if (ms <= 0) { end(); return Promise.resolve(); }
     this.pendingEnd = end;

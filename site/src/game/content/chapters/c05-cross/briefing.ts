@@ -51,13 +51,13 @@ export const doubtSwap: DoubtDef = {
   async setup(p) {
     await p.g.stage.view3D({ target: [0.8, 0.8, 0.6], distance: 19, azimuth: -60, elevation: 22, ms: 0 });
     p.grid({ base: 0.1, main: 0.16, axis: 0.4 });
-    const vw = new Arrow([0, 0, 0], [0, 0, 1], { color: C.result, label: '$\\mathbf v\\times\\mathbf w$' });
-    const wv = new Arrow([0, 0, 0], [0, 0, -1], { color: C.result, opacity: 0.55, width: 0.04, label: '$\\mathbf w\\times\\mathbf v$' });
+    const vw = new Arrow([0, 0, 0], [0, 0, 1], { color: C.result, label: '$\\mathbf v\\times\\mathbf w$ (½ size)' });
+    const wv = new Arrow([0, 0, 0], [0, 0, -1], { color: C.result, opacity: 0.55, width: 0.04, label: '$\\mathbf w\\times\\mathbf v$ (½ size)' });
     p.add(vw, wv);
     const r = p.readout('Both orders');
     const upd = () => {
       const a = v3(cross(e.st.v, e.st.w)), b = v3(cross(e.st.w, e.st.v));
-      vw.set([0, 0, 0], a); wv.set([0, 0, 0], b);
+      vw.set([0, 0, 0], v3(a.map((x) => x / 2))); wv.set([0, 0, 0], v3(b.map((x) => x / 2)));
       vw.object.visible = norm(a) > 0.02; wv.object.visible = norm(b) > 0.02;
       r.row('a', '$\\mathbf v\\times\\mathbf w$', fmt(a), C.result);
       r.row('b', '$\\mathbf w\\times\\mathbf v$', fmt(b), C.result);
@@ -92,8 +92,8 @@ export const doubtDouble: DoubtDef = {
   async setup(p) {
     await p.g.stage.view3D({ target: [1.2, 1, 0.8], distance: 21, azimuth: -55, elevation: 24, ms: 0 });
     p.grid({ base: 0.1, main: 0.16, axis: 0.4 });
-    const n1 = new Arrow([0, 0, 0], [0, 0, 1], { color: C.result, label: '$\\mathbf v\\times\\mathbf w$' });
-    const n2 = new Arrow([0, 0, 0], [0, 0, 2], { color: C.result, opacity: 0, width: 0.04, label: '$(2\\mathbf v)\\times\\mathbf w$' });
+    const n1 = new Arrow([0, 0, 0], [0, 0, 1], { color: C.result, label: '$\\mathbf v\\times\\mathbf w$ (½ size)' });
+    const n2 = new Arrow([0, 0, 0], [0, 0, 2], { color: C.result, opacity: 0, width: 0.04, label: '$(2\\mathbf v)\\times\\mathbf w$ (½ size)' });
     const v2 = new Arrow([0, 0, 0], [1, 0, 0], { color: C.v, opacity: 0, width: 0.035, label: '$2\\mathbf v$' });
     n2.setOpacity(0); v2.setOpacity(0);
     const par2 = new Parallelogram(p.g.stage, [1, 0, 0], [0, 1, 0], { color: FROST, opacity: 0, edge: 1.1 });
@@ -105,7 +105,7 @@ export const doubtDouble: DoubtDef = {
     addGauges(r, g1, g2);
     const upd = () => {
       const a = v3(cross(e.st.v, e.st.w)), b = v3(cross(e.st.v.map((x) => 2 * x), e.st.w));
-      n1.set([0, 0, 0], a); n2.set([0, 0, 0], b);
+      n1.set([0, 0, 0], v3(a.map((x) => x / 2))); n2.set([0, 0, 0], v3(b.map((x) => x / 2)));
       v2.set([0, 0, 0], v3(e.st.v.map((x) => 2 * x)));
       par2.set(v3(e.st.v.map((x) => 2 * x)), e.st.w);
       g1.set(norm(a)); g2.set(norm(b));

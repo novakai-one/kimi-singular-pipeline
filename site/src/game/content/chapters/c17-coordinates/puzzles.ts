@@ -79,7 +79,7 @@ export const p1: PuzzleDef = {
   par: 2,
   onWin: S.p1Win,
   setup(p) {
-    const bench = anchorBench(p);
+    const bench = anchorBench(p, { center: [1.4, 1.6] });
     const buoy = new Dot(v3(P1_SHIP, 0.05), { color: C.result, size: 0.12 });
     const bt = tag(`ours ${fmtV(P1_SHIP)}`, v3(P1_SHIP), 'y', [0, -26]);
     p.add(buoy, bt.object);

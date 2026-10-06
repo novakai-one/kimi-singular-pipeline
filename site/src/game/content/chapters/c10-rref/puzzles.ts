@@ -342,7 +342,7 @@ export const p5: PuzzleDef = {
       const red = p5Reduced(k, m);
       r.row('row', 'last row', `[ 0  0  ${num(red[2])} | ${num(red[3])} ]`, C.u);
       const kind = kindOf(p5Rows(k, m));
-      r.row('kind', 'The planes meet', kind === 'one' ? `at one point ${pt(somePoint(p5Rows(k, m))!)}` : kind === 'many' ? 'along a whole line' : 'nowhere', C.result);
+      r.row('kind', 'The planes meet', kind === 'one' ? `at ${pt(somePoint(p5Rows(k, m))!)}` : kind === 'many' ? 'along a line' : 'nowhere', C.result);
       if (moved) tick(kind === 'one' ? 1 : kind === 'many' ? 2 : 3);
     };
     const upd = (moved: boolean) => { void planes.setRows(p5Rows(k, m), 300); paint(moved); };
