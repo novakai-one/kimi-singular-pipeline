@@ -352,3 +352,24 @@
 .fm-then .fm-slots { opacity: 0.75; margin-top: 8px; }
 .sandbox-toggles, .sandbox-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .sandbox-toggles .btn[aria-pressed="true"] { background: var(--accent); color: #031018; border-color: var(--accent); }
+/* ---------- the Broadcast (Epilogue) ---------- */
+.brief.broadcast { left: 50%; top: 84px; bottom: 96px; transform: translateX(-50%); width: min(1040px, calc(100vw - 32px)); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.bc-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+.bc-tray, .bc-chain { display: flex; flex-direction: column; gap: 6px; min-height: 60px; margin: 0; padding: 0; list-style: none; }
+.bc-chain { counter-reset: link; border-left: 1px solid var(--line); padding-left: 16px; }
+.bc-chain .tile { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.bc-chain .tile::before { counter-increment: link; content: counter(link); position: absolute; left: -30px; width: 20px; text-align: right; font: 12px var(--mono); color: var(--muted); }
+.bc-up { background: none; border: 0; color: var(--ink-2); cursor: pointer; font-size: 14px; padding: 0 6px; border-radius: 6px; }
+.bc-up:hover { background: rgba(255, 255, 255, 0.1); color: var(--ink); }
+.bc-msg { min-height: 22px; font-size: 14.5px; color: var(--ink-2); }
+.bc-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.bc-links { display: flex; flex-direction: column; gap: 12px; }
+.bc-link { display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; }
+.bc-link .btn { align-self: flex-start; }
+.bc-path { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.bc-down { padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; min-width: 260px; }
+.bc-down.yours { border-color: var(--accent); }
+.bc-down code { font-size: 14px; }
+.bc-doc { margin-top: 4px; font-size: 13.5px; color: var(--ink-2); white-space: pre-wrap; }
+.bc-arrow { color: var(--muted); padding-left: 16px; }
+@media (max-width: 760px) { .bc-cols { grid-template-columns: 1fr; } }

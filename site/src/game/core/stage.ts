@@ -264,9 +264,13 @@ export class Stage {
   }
 
   /** Tween the camera to a new position / look target / up vector. */
+  private camGen = 0;
   async moveCamera(pos: Vector3, target: Vector3, up: Vector3, ms: number): Promise<void> {
     const p0 = this.camera.position.clone(), t0 = this.lookTarget.clone(), u0 = this.camera.up.clone();
+    // a newer camera move wins: an older animation still running stops touching the camera
+    const gen = ++this.camGen;
     const apply = (k: number) => {
+      if (gen !== this.camGen) return;
       this.camera.position.lerpVectors(p0, pos, k);
       this.lookTarget.lerpVectors(t0, target, k);
       this.camera.up.lerpVectors(u0, up, k).normalize();
