@@ -99,6 +99,7 @@ export function installDebug(app: App): void {
             b.law.reason.options.forEach((o) => { add(`${w} reason option`, o.text); add(`${w} reason why`, o.why); });
           }
           if (b.kind === 'compare') { add(`${w} page`, b.compare.page); b.compare.keyIdeas.forEach((k) => add(`${w} key idea`, k)); }
+          if (b.kind === 'teo') { add(`${w} ask`, b.teo.ask); add(`${w} title`, b.teo.title); add(`${w} brief`, b.teo.brief); b.teo.tiles.forEach((t) => add(`${w} tile`, t.text)); }
           if (b.kind === 'procedure') { add(`${w} title`, b.procedure.title); add(`${w} brief`, b.procedure.brief); b.procedure.tiles.forEach((t) => add(`${w} tile`, t.text)); }
         }
         for (const [k, ls] of Object.entries(c.script ?? {})) ls.map(normLine).forEach((l, i) => add(`${c.id} script.${k} ${i}`, l.text));
@@ -119,6 +120,7 @@ export function installDebug(app: App): void {
           if (b.kind === 'explain') push([[b.explain.who, b.explain.intro]]);
           if (b.kind === 'sayit') push([[b.sayit.who, b.sayit.ask]]);
           if (b.kind === 'doubt') push([[b.doubt.who, b.doubt.claim]]);
+          if (b.kind === 'teo') push([['teo', b.teo.ask]]);
           if (b.kind === 'review') push(b.review.claims.map((d) => [b.review.who, d.claim]));
           if (b.kind === 'puzzle' && b.puzzle.onWin) push(b.puzzle.onWin);
         }

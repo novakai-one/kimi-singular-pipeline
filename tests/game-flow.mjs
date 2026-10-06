@@ -63,7 +63,7 @@ for (const i of beats) {
       await p.screenshot({ path: `${out}/${tag}-step${k + 1}.png` });
     }
     console.log(`beat ${i} broadcast: ${res.join(', ')}`);
-  } else if (['doubt', 'law', 'procedure'].includes(kind)) {
+  } else if (['doubt', 'law', 'procedure', 'teo'].includes(kind)) {
     // the speaker may voice a line first (doubts); give the step time to open
     await p.waitForFunction(() => !!window.__game.briefing(), null, { timeout: 30000 }).catch(() => {});
     const r = await p.evaluate(() => window.__game.solveBriefing());

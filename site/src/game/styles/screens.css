@@ -335,3 +335,7 @@
 .hon-row.backup strong { color: #9aa4bd; }
 .hon-row.engine strong { color: #c9b6ff; }
 .card-code { margin: 12px 0 0; padding: 12px 14px; font: 13px/1.6 var(--mono); color: #d7e3ff; background: rgba(4, 8, 18, 0.75); border: 1px solid var(--line); border-radius: 10px; white-space: pre; overflow-x: auto; }
+.teo-ask { font-size: 15px; color: var(--ink); margin-bottom: 6px; }
+.teo-ask strong { color: #9fefe6; }
+.teo-note { margin-top: 2px; }
+.teo-count { font-size: 12px; align-self: flex-end; }

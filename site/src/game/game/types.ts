@@ -322,6 +322,16 @@ export interface ProcedureDef {
   run(g: Game, tileIds: string[]): Promise<{ ok: boolean; message: string }>;
 }
 
+/**
+ * Teach Teo (GDD §4.4): a callback message to Teo in the stern. Step tiles plus up to 40 words of free text
+ * (never graded). Teo follows the tiles literally in `run`; the message is his reply (he braces the right strut,
+ * or the wrong one and asks a sharper question).
+ */
+export interface TeoDef extends ProcedureDef {
+  /** Teo's question, voiced first, e.g. "Are my struts still holding volume?" */
+  ask: string;
+}
+
 // ---------------------------------------------------------------- builder thread
 
 export interface BuildTest { name: string; args: unknown[]; expect: unknown; tol?: number }
@@ -374,6 +384,7 @@ export type Beat =
   | { kind: 'doubt'; id: string; doubt: DoubtDef }
   | { kind: 'review'; id: string; review: ReviewDef }
   | { kind: 'broadcast'; id: string; broadcast: BroadcastDef }
+  | { kind: 'teo'; id: string; teo: TeoDef }
   | { kind: 'law'; id: string; law: LawDef<any> }
   | { kind: 'compare'; id: string; compare: CompareDef }
   | { kind: 'procedure'; id: string; procedure: ProcedureDef };

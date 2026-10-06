@@ -411,9 +411,9 @@ export async function runCompare(host: BriefingHost, c: CompareDef): Promise<voi
 
 // ------------------------------------------------------------------ Procedures (LANTERN runs your steps)
 
-export async function runProcedure(host: BriefingHost, def: ProcedureDef): Promise<void> {
+export async function runProcedure(host: BriefingHost, def: ProcedureDef, teo?: { ask: string }): Promise<void> {
   const { g, hud } = host;
-  hud.setObjective('LANTERN runs exactly what you wrote', `**${def.title}**\n\n${def.brief}`);
+  hud.setObjective(teo ? 'A message to Teo' : 'LANTERN runs exactly what you wrote', `**${def.title}**\n\n${def.brief}`);
   let resolveDone!: () => void;
   const done = new Promise<void>((r) => { resolveDone = r; });
   let finished = false;
@@ -421,14 +421,31 @@ export async function runProcedure(host: BriefingHost, def: ProcedureDef): Promi
   const decoys = g.settings.difficulty === 'commander' ? def.decoys : undefined;
   const run = async (order: string[]) => {
     if (finished) return false;
-    status.innerHTML = md('LANTERN is running your steps…');
+    status.innerHTML = md(teo ? 'Teo is following your steps…' : 'LANTERN is running your steps…');
     const r = await def.run(g, order);
     status.innerHTML = md(r.ok ? `**It worked.** ${r.message}` : r.message);
     if (r.ok) { finished = true; sfx.solved(); void hud.primary('Continue').then(resolveDone); } else sfx.miss();
     return r.ok;
   };
   const el = panel('procedure');
-  const tiles = new TileOrder(null, { tiles: def.tiles, decoys, showPython: true, onSubmit: (o) => void run(o), mount: el, title: 'Steps for LANTERN' });
+  if (teo) {
+    // up to 40 words of the player's own, sent with the tiles; never graded (kept in the Field Manual)
+    const note = h('textarea', { class: 'own-words teo-note', rows: 2, placeholder: 'A few words of your own for Teo (optional, up to 40 words)' }) as HTMLTextAreaElement;
+    const count = h('span', { class: 'c-muted teo-count' }, '0 / 40 words');
+    const key = `teo:${def.id}`;
+    note.value = (S().flags[key] as string) ?? '';
+    const upd = () => {
+      const words = note.value.trim().split(/\s+/).filter(Boolean);
+      if (words.length > 40) note.value = words.slice(0, 40).join(' ');
+      count.textContent = `${Math.min(40, words.length)} / 40 words`;
+      S().flags[key] = note.value; save();
+    };
+    note.addEventListener('input', upd);
+    note.addEventListener('keydown', (e) => { if (e.key !== 'Escape') e.stopPropagation(); });
+    upd();
+    el.append(h('div', { class: 'teo-ask', html: inline(`**Teo:** “${teo.ask}”`) }), note, count);
+  }
+  const tiles = new TileOrder(null, { tiles: def.tiles, decoys, showPython: !teo, onSubmit: (o) => void run(o), mount: el, title: teo ? 'Steps for Teo' : 'Steps for LANTERN', submitLabel: teo ? 'Send to Teo' : undefined });
   el.append(status, h('div', { class: 'doubt-actions' },
     button('Show me', async () => { tiles.set(def.reference); await run(def.reference); }, { cls: 'ghost small' }),
     button('Skip', () => { finished = true; resolveDone(); }, { cls: 'ghost small' })));

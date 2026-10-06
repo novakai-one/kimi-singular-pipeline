@@ -201,6 +201,10 @@ export class Runner {
         return;
       }
       case 'review': return runReview(this.host(ch), beat.review);
+      case 'teo': {
+        await this.guard(this.g.say([['teo', beat.teo.ask]]));
+        return runProcedure(this.host(ch), beat.teo, { ask: beat.teo.ask });
+      }
       case 'broadcast': this.g.stage.clearWorld(); await this.backdrop(); return runBroadcast(this.host(ch), beat.broadcast);
       case 'law': return runLaw(this.host(ch), beat.law);
       case 'compare': this.g.stage.clearWorld(); await this.backdrop(); return runCompare(this.host(ch), beat.compare);
