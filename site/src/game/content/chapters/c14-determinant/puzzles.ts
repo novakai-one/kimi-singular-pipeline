@@ -502,7 +502,7 @@ export const p5: PuzzleDef = {
   par: 6,
   onWin: S.p5Win,
   setup(p) {
-    void p.g.stage.view3D({ target: [1.3, 1.2, 0.6], distance: 9, azimuth: -55, elevation: 24, ms: 0 });
+    void p.g.stage.view3D({ target: [1.5, 1.5, 1.4], distance: 14, azimuth: -55, elevation: 24, ms: 0 });
     const box = new Parallelepiped(p.g.stage, col3(P5_M, 0), col3(P5_M, 1), col3(P5_M, 2), { color: C.result, opacity: 0.16 });
     const arrows = [C.v, C.w, C.u].map((c, j) => new Arrow([0, 0, 0], col3(P5_M, j), { color: c, width: 0.045 }));
     p.add(box, ...arrows);

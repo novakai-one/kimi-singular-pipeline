@@ -29,13 +29,13 @@ const NAME_INVERSE: Beat = {
 const NAME_ELEMENTARY: Beat = {
   kind: 'name', id: 'name-elementary', entry: {
     id: 'elementary-matrix', term: 'elementary matrix', question: 'Why does row reducing [A | I] write down the inverse?', nodes: ['N15'],
-    saw: 'Each row operation on $[A \\mid I]$ moved the box: adding a multiple of one row to another sheared it, multiplying a row stretched it. After five operations the box was the unit cube, and the right half was the undo. The frame that was turned, then sheared, came back only when the shear came off first.',
-    means: 'A row operation is a move: multiplying on the left by the matrix you get when you do that operation to $I$. **If $E_1, \\dots, E_k$ turn $A$ into $I$, their product is $A^{-1}$, and doing them to $I$ writes it down.** To undo a chain, undo the last move first.',
+    saw: 'Each row operation on $[A \\mid I]$ moved the box: adding a multiple of a row sheared it, scaling a row stretched it. Five operations made it the unit cube, and the right half was the undo. The turned, then sheared frame came back only when the shear came off first.',
+    means: 'A row operation is a move: multiplying on the left by the matrix you get when you do that operation to $I$. **If $E_1, \\dots, E_k$ turn $A$ into $I$, their product is $A^{-1}$, and doing them to $I$ writes it down.**',
     name: 'An **elementary matrix** $E$ is the identity matrix with one row operation done to it. Doing that row operation to any matrix is multiplying it by $E$ on the left.',
     formula: '\\begin{gathered} E_k\\cdots E_2E_1A = I \\;\\Rightarrow\\; A^{-1} = E_k\\cdots E_2E_1 \\\\[6pt] [A \\mid I] \\to [I \\mid A^{-1}] \\qquad (AB)^{-1} = B^{-1}A^{-1} \\end{gathered}',
     why: 'Check the order: $(B^{-1}A^{-1})(AB) = B^{-1}(A^{-1}A)B = B^{-1}B = I$. The move done last, $A$, is undone first.',
     cue: 'When you see **[A | I]**, think **every row operation is a move, and the right half keeps the record**.',
-    use: 'Numerical libraries keep the record of elimination and reuse it for every new right-hand side, instead of starting again.',
+    use: 'Numerical libraries keep the record of elimination and reuse it for each new right-hand side.',
   },
 };
 

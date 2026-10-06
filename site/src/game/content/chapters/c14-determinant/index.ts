@@ -42,11 +42,11 @@ const NAME_ORIENT: Beat = {
 const NAME_COFACTOR: Beat = {
   kind: 'name', id: 'name-cofactor', entry: {
     id: 'cofactor-expansion', term: 'cofactor expansion', question: 'How do we compute a 3 × 3 or 4 × 4 determinant by hand?', nodes: ['N16'],
-    saw: 'Along every row of $\\begin{bmatrix}2&1&0\\\\1&3&1\\\\0&1&2\\end{bmatrix}$ the sum came to 8, the volume of the box its columns make. The $4 \\times 4$ took two single entries: $1 \\cdot 1 \\cdot (-1) = -1$.',
+    saw: 'Along every row of the $3 \\times 3$ the sum came to 8, the volume of the box its columns make. The $4 \\times 4$ took two single entries: $1 \\cdot 1 \\cdot (-1) = -1$.',
     means: 'Each entry times its cofactor, added along one row or column. Choose the row or column with the most zeros. For a **triangular** matrix the expansion leaves the product of the diagonal, which is why row reduction works: adding a multiple of a row changes nothing, a swap flips the sign.',
     name: 'The **minor** $M_{ij}$ is the determinant of what is left after deleting row $i$ and column $j$. The **cofactor** is $C_{ij} = (-1)^{i+j}M_{ij}$. **Cofactor expansion** along row $i$: $\\det A = \\sum_j a_{ij}C_{ij}$. A **triangular matrix** has only zeros below (or only zeros above) its diagonal; its determinant is the product of the diagonal.',
     formula: '\\begin{gathered} \\det A = a_{11}C_{11} + a_{12}C_{12} + a_{13}C_{13} \\qquad \\begin{bmatrix} + & - & + \\\\ - & + & - \\\\ + & - & + \\end{bmatrix} \\\\[6pt] 2 \\cdot 5 - 1 \\cdot 2 + 0 \\cdot 1 = 8 \\end{gathered}',
-    why: 'The $3 \\times 3$ determinant is the scalar triple product of the columns, $\\mathbf a_1 \\cdot (\\mathbf a_2 \\times \\mathbf a_3)$. Writing out the cross product gives the minors, and its middle component carries the minus sign: the $+\\,-\\,+$ pattern.',
+    why: 'The $3 \\times 3$ determinant is $\\mathbf a_1 \\cdot (\\mathbf a_2 \\times \\mathbf a_3)$, the scalar triple product of the columns. The cross product\'s components are the minors, the middle one with a minus sign: the $+\\,-\\,+$ pattern.',
     cue: 'When you see a **row or column full of zeros**, think **expand along it**.',
     use: 'For big matrices, libraries never expand cofactors (that takes $n!$ steps). They row reduce and multiply the pivots, in about $n^3$ steps.',
   },
