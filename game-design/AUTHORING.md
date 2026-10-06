@@ -164,6 +164,7 @@ const compare: CompareDef = { id: 'c04', page: 'Ilse's page (maths register, mar
 - One word per idea (Appendix C): "linear transformation", "null space" (never kernel), "column space", "augmented matrix", "pivot",
   "row echelon form", "reduced row echelon form", "span", "scalar triple product", "coplanar", "diagonalisation".
 - Colours: `\cg{}` green (first vector / column 1), `\cr{}` red (second / column 2), `\cb{}` blue (third / column 3), `\cy{}` yellow (result).
+  Inside `aligned` / `array` (where `\cr` is TeX's row break) write `\htmlClass{c-red}{…}` instead of `\cr{…}`. The macros also work in 3-D labels.
   Violet is reserved for the null space. Speaker colours never appear in the 3-D maths scene.
 - Voiced lines with maths get `say:` (how to read them aloud, no symbols). Lines are written for Kokoro's flat delivery: short, plain.
 

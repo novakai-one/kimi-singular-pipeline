@@ -33,7 +33,7 @@ export class Arrow {
   private readonly head: Mesh<ConeGeometry, MeshStandardMaterial>;
   private readonly hitbox: Mesh<SphereGeometry, MeshBasicMaterial>;
   private readonly ring: Mesh<RingGeometry, MeshBasicMaterial> | null = null;
-  readonly label: Label | null = null;
+  label: Label | null = null;
   private labelAt: 'tip' | 'mid';
   width: number;
   color: string;
@@ -106,7 +106,17 @@ export class Arrow {
 
   setTo(to: V3 | Vector3): void { this.set(this.from.clone(), to); }
 
-  setLabel(s: string): void { this.label?.set(s); }
+  /** Set (or first create) the label. */
+  setLabel(s: string): void {
+    if (!this.label) {
+      if (!s) return;
+      this.label = new Label(s, [0, 0, 0], { color: this.color, className: 'g-label-vec' });
+      this.group.add(this.label.object);
+      this.set(this.from.clone(), this.to.clone());
+      return;
+    }
+    this.label.set(s);
+  }
 
   setColor(c: string): void {
     this.color = c;

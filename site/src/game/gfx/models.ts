@@ -35,7 +35,14 @@ export async function loadModel(name: string): Promise<Object3D | null> {
     cache.set(name, p);
   }
   const m = await p;
-  return m ? m.clone(true) : null;
+  if (!m) return null;
+  // each copy gets its own materials (geometry stays shared), so tinting one ark never tints another
+  const c = m.clone(true);
+  c.traverse((o) => {
+    const mesh = o as Mesh;
+    if (mesh.isMesh) mesh.material = Array.isArray(mesh.material) ? mesh.material.map((x) => x.clone()) : (mesh.material as Material).clone();
+  });
+  return c;
 }
 
 export function preloadModels(names: string[]): void { names.forEach((n) => { void loadModel(n); }); }

@@ -57,7 +57,9 @@ export function installDebug(app: App): void {
       if (b.kind !== 'puzzle') throw new Error(`beat ${beat} of ${id} is ${b.kind}`);
       app.runner.abort();
       void app.play(ch, beat);
-      for (let i = 0; i < 400 && !(app.runner.puzzle && app.runner.puzzle.def.id === b.puzzle.id && app.runner.puzzle.runtime); i++) await new Promise((r) => setTimeout(r, 25));
+      // up to a minute: on a loaded software-rendered machine a puzzle can take a while to mount
+      const t0 = performance.now();
+      while (performance.now() - t0 < 60000 && !(app.runner.puzzle && app.runner.puzzle.def.id === b.puzzle.id && app.runner.puzzle.runtime)) await new Promise((r) => setTimeout(r, 25));
       return !!app.runner.puzzle?.runtime;
     },
     save: () => S(),

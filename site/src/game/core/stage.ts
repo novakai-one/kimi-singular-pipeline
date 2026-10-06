@@ -350,6 +350,9 @@ export function clearGroup(g: Object3D): void {
 export function disposeDeep(o: Object3D): void {
   const owners: (() => void)[] = [];
   o.traverse((n) => {
+    // CSS2D labels only remove their DOM element when they themselves are removed, not their parent
+    const el = (n as Object3D & { isCSS2DObject?: boolean; element?: HTMLElement }).element;
+    if ((n as { isCSS2DObject?: boolean }).isCSS2DObject && el) el.remove();
     const d = (n.userData as { dispose?: () => void }).dispose;
     if (typeof d === 'function') owners.push(d);
     const m = n as Mesh;
