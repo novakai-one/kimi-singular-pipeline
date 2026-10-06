@@ -17,23 +17,23 @@ from kit import M, Pal, Part, V  # noqa: E402
 
 def build():
     root = kit.empty('buoy', size=0.5)
-    shell = kit.mat('buoy_shell', (0.6, 0.6, 0.58), metal=0.2, rough=0.42)
-    band = kit.mat('buoy_band', (0.05, 0.055, 0.065), metal=0.6, rough=0.4)
+    shell = kit.mat('buoy_shell', (0.24, 0.245, 0.25), metal=0.3, rough=0.4)
+    band = kit.mat('buoy_band', (0.035, 0.038, 0.045), metal=0.6, rough=0.4)
     steel = Pal.steel()
     P = Part('body')
     ph = math.pi / 8
-    up = [(0.13, 0.3), (0.17, 0.42), (0.3, 0.42), (0.78, 0.12), (0.88, 0.05)]
-    lo = [(-0.13, 0.3), (-0.17, 0.42), (-0.3, 0.42), (-0.66, 0.15), (-0.74, 0.08)]
+    up = [(0.09, 0.3), (0.14, 0.42), (0.3, 0.42), (0.78, 0.12), (0.88, 0.05)]
+    lo = [(-0.09, 0.3), (-0.14, 0.42), (-0.3, 0.42), (-0.66, 0.15), (-0.74, 0.08)]
     P.lathe(up, M((0, 0, 0)), shell, segs=8, close0=True, close1=True, phase=ph)
     P.lathe(list(reversed(lo)), M((0, 0, 0)), shell, segs=8, close0=True, close1=True, phase=ph)
     # dark accent bands at the shell rims
-    P.lathe([(0.17, 0.425), (0.24, 0.425)], M((0, 0, 0)), band, segs=8, phase=ph)
-    P.lathe([(-0.24, 0.425), (-0.17, 0.425)], M((0, 0, 0)), band, segs=8, phase=ph)
+    P.lathe([(0.14, 0.425), (0.21, 0.425)], M((0, 0, 0)), band, segs=8, phase=ph)
+    P.lathe([(-0.21, 0.425), (-0.14, 0.425)], M((0, 0, 0)), band, segs=8, phase=ph)
     # struts across the glowing gap
     for k in range(4):
         a = math.pi / 4 + k * math.pi / 2
         u = V((math.cos(a), math.sin(a), 0))
-        P.box((0.07, 0.05, 0.36), M(u * 0.37, z=(0, 0, 1), up=u), band)
+        P.box((0.07, 0.05, 0.3), M(u * 0.37, z=(0, 0, 1), up=u), band)
     # antenna + bottom thruster
     P.cyl(0.018, 0.5, M((0, 0, 1.1)), steel, segs=6)
     P.cyl(0.07, 0.06, M((0, 0, -0.77)), band, segs=8)
@@ -45,10 +45,10 @@ def build():
         P.box((0.02, 0.16, 0.26), M(u * 0.3 + V((0, 0, 0.5)), rot=(0, 0, a + math.pi / 2)), band)
     P.finish(parent=root, sharp=30, weighted=False)
     C = Part('core')
-    C.cyl(0.29, 0.28, M((0, 0, 0)), Pal.e_cyan(4.5), segs=8)
+    C.cyl(0.27, 0.2, M((0, 0, 0)), kit.emis('buoy_core', kit.PALE_CYAN, 0.9), segs=8)
     C.finish(parent=root, sharp=30, weighted=False)
     T = Part('light_tip')
-    T.sphere(0.04, M((0, 0, 1.37)), Pal.e_white(8), ico=1)
+    T.sphere(0.04, M((0, 0, 1.37)), Pal.e_white(2.0), ico=1)
     T.finish(parent=root, sharp=30, weighted=False)
     return root
 

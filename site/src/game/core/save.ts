@@ -1,5 +1,6 @@
 // Saved state (localStorage, every access in try/catch; the game works without it).
 export type Difficulty = 'cadet' | 'navigator' | 'commander';
+export type CodeHelp = 'off' | 'assemble' | 'fill' | 'write';
 
 export interface Settings {
   difficulty: Difficulty;
@@ -9,7 +10,14 @@ export interface Settings {
   textSpeed: number;
   reduceMotion: boolean;
   quality: 'high' | 'low';
+  /** How much help the builder thread gives (independent of maths depth). */
+  codeHelp: CodeHelp;
+  /** Live result preview while dragging (null = follow difficulty). */
+  preview: boolean | null;
 }
+
+/** A Field Manual page: the player's own words, then the key ideas they ticked after comparing. */
+export interface ManualPage { see: string; means: string; called: string; cue: string; ticks: boolean[]; at: number; first?: Omit<ManualPage, 'first' | 'ticks'> }
 
 export interface ChapterSave {
   done: string[];                     // beat ids completed
@@ -26,17 +34,20 @@ export interface SaveData {
   explains: Record<string, { picked?: string[]; text?: string; at: number }>;
   code: Record<string, string>;       // builder thread: the player's own functions
   flags: Record<string, unknown>;
+  manual: Record<string, ManualPage>;
+  laws: Record<string, { filled: Record<string, string>; survived: boolean; proven: boolean; at: number }>;
+  doubts: Record<string, { stance: 'challenge' | 'back'; right: boolean; at: number }>;
 }
 
 const KEY = 'la-game-v1';
 
 export const DEFAULT_SETTINGS: Settings = {
   difficulty: 'navigator', master: 0.8, music: 0.5, sfx: 0.7, voice: 1, voiceOn: true,
-  autoAdvance: false, textSpeed: 1, reduceMotion: false, quality: 'high',
+  autoAdvance: false, textSpeed: 1, reduceMotion: false, quality: 'high', codeHelp: 'fill', preview: null,
 };
 
 function fresh(): SaveData {
-  return { v: 1, settings: { ...DEFAULT_SETTINGS }, last: null, chapters: {}, codex: {}, explains: {}, code: {}, flags: {} };
+  return { v: 1, settings: { ...DEFAULT_SETTINGS }, last: null, chapters: {}, codex: {}, explains: {}, code: {}, flags: {}, manual: {}, laws: {}, doubts: {} };
 }
 
 let data: SaveData = fresh();

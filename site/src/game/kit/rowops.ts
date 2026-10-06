@@ -613,12 +613,13 @@ export class RowOpsBoard {
     const applyBtn = h('button', { class: 'btn small primary', type: 'button' }, 'Apply', h('span', { class: 'kbd' }, 'Enter')) as HTMLButtonElement;
     const cancel = h('button', { class: 'btn small ghost', type: 'button' }, 'Cancel', h('span', { class: 'kbd' }, 'Esc')) as HTMLButtonElement;
     const btns = h('div', { class: 'rob-comp-btns' });
+    let alt: HTMLElement | null = null;
     if (fromDrag && kind === 'add' && this.allowed.has('swap')) {
-      const sw = h('button', { class: 'btn small ghost rob-swapi', type: 'button' }, `Swap R${source + 1} and R${target + 1} instead`) as HTMLButtonElement;
+      const sw = h('button', { class: 'rob-link', type: 'button' }, `swap R${source + 1} and R${target + 1}`) as HTMLButtonElement;
       sw.addEventListener('click', (e) => { e.stopPropagation(); void this.userApply({ kind: 'swap', i: Math.min(source, target), j: Math.max(source, target) }); });
-      btns.append(sw);
+      alt = h('span', { class: 'rob-alt' }, 'or ', sw);
     }
-    btns.append(h('span', { class: 'rob-flex' }), cancel, applyBtn);
+    btns.append(alt ?? h('span'), h('span', { class: 'rob-flex' }), cancel, applyBtn);
     const el = h('div', { class: `rob-comp rob-comp-${kind}`, role: 'dialog', 'aria-label': kind === 'add' ? 'Add a multiple of a row' : 'Multiply a row' },
       h('div', { class: 'rob-comp-title' }, kind === 'add' ? 'Add a multiple of one row to another' : 'Multiply a row by a number'),
       line, prev, msg, btns);

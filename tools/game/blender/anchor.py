@@ -25,10 +25,11 @@ SPIRE = (6.6, 6.6, 6.0)       # spire lengths beyond the core face
 
 
 def materials():
-    black = kit.mat('obsidian', (0.01, 0.01, 0.013), metal=0.0, rough=0.22, coat=1.0, spec=0.8)
-    black2 = kit.mat('obsidian_matte', (0.016, 0.016, 0.02), metal=0.3, rough=0.4, spec=0.5)
-    seam = kit.mat('seam_violet', kit.hexrgb('#b9a8ff'), emit=kit.hexrgb('#b9a8ff'), strength=3.0)
-    seam_dim = kit.mat('seam_violet_dim', (0.05, 0.04, 0.1), emit=tuple(c * 0.35 for c in kit.hexrgb('#b9a8ff')), strength=2.5)
+    black = kit.mat('obsidian', (0.005, 0.005, 0.007), metal=0.0, rough=0.18, coat=1.0, coat_rough=0.04)
+    black2 = kit.mat('obsidian_matte', (0.012, 0.012, 0.015), metal=0.3, rough=0.42)
+    violet = kit.hexrgb('#b9a8ff')
+    seam = kit.emis('seam_violet', violet, 1.5)
+    seam_dim = kit.emis('seam_violet_dim', violet, 0.45, base=(0.02, 0.016, 0.04))
     return black, black2, seam, seam_dim
 
 
@@ -130,7 +131,7 @@ def spire(root, i, mats):
             z = a + (b - a) * t
             bulge = 1.0 if s == 0 else 1.0 + (0.12 if 0.03 < t < 0.2 else 0.0) - 0.08 * t
             rad = radius(z) * bulge if not (tip and t == 1.0) else 0.004
-            g = min(0.016, rad * 0.08)
+            g = min(0.03, rad * 0.1)
             sec = notched(rad, rad * 0.72, g, twist=(z / total) * math.radians(50))
             rings.append([start + d * z + ex * x + ey * y for x, y in sec])
         faces, rv = P.loft(rings, black, cap0=True, cap1=not tip)

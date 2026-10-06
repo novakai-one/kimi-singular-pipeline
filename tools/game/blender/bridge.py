@@ -27,25 +27,25 @@ ARC_A = math.asin(W / ARC_R)
 
 class Mats:
     def __init__(self):
-        self.floor = kit.mat('br_floor', (0.045, 0.048, 0.054), metal=0.6, rough=0.45)
-        self.wall = kit.mat('br_wall', (0.06, 0.064, 0.072), metal=0.35, rough=0.55)
-        self.wall2 = kit.mat('br_wall_light', (0.13, 0.135, 0.145), metal=0.4, rough=0.5)
-        self.rib = kit.mat('br_rib', (0.12, 0.125, 0.135), metal=0.85, rough=0.32)
-        self.dark = kit.mat('br_dark', (0.02, 0.021, 0.024), metal=0.5, rough=0.5)
-        self.trim = kit.mat('br_trim', (0.32, 0.33, 0.35), metal=1.0, rough=0.28)
-        self.body = kit.mat('br_console', (0.08, 0.084, 0.09), metal=0.5, rough=0.4)
-        self.seat = kit.mat('br_seat', (0.05, 0.05, 0.055), metal=0.0, rough=0.7)
-        self.glass = kit.mat('br_table_glass', (0.01, 0.012, 0.016), metal=0.0, rough=0.05, spec=0.9,
-                             emit=(0.02, 0.06, 0.08), strength=2.5)
-        # emissives: soft cyan / cool white / warm white
-        self.screen = kit.mat('br_screen_base', (0.02, 0.05, 0.06), emit=(0.012, 0.034, 0.045), strength=2.5)
-        self.scr_mid = kit.mat('br_screen_mid', (0.06, 0.15, 0.19), emit=(0.045, 0.12, 0.16), strength=2.5)
-        self.scr_hi = kit.mat('br_screen_hi', (0.15, 0.38, 0.47), emit=(0.13, 0.33, 0.42), strength=2.5)
-        self.screen2 = kit.mat('br_screen_white', (0.22, 0.24, 0.27), emit=(0.15, 0.165, 0.19), strength=2.5)
-        self.keys = kit.mat('br_keys_warm', (0.5, 0.4, 0.3), emit=(0.4, 0.3, 0.2), strength=2.5)
-        self.strip = kit.mat('br_strip', (0.6, 0.65, 0.7), emit=(0.45, 0.5, 0.56), strength=2.5)
-        self.under = kit.mat('br_underglow', (0.04, 0.14, 0.18), emit=(0.025, 0.1, 0.13), strength=2.5)
-        self.rim = kit.mat('br_holo_rim', (0.4, 0.85, 1.0), emit=(0.42, 0.85, 1.0), strength=4.0)
+        self.floor = kit.mat('br_floor', (0.035, 0.037, 0.042), metal=0.6, rough=0.45)
+        self.wall = kit.mat('br_wall', (0.05, 0.053, 0.06), metal=0.3, rough=0.6)
+        self.wall2 = kit.mat('br_wall_light', (0.085, 0.09, 0.098), metal=0.35, rough=0.55)
+        self.rib = kit.mat('br_rib', (0.07, 0.073, 0.08), metal=0.85, rough=0.35)
+        self.dark = kit.mat('br_dark', (0.015, 0.016, 0.019), metal=0.5, rough=0.5)
+        self.trim = kit.mat('br_trim', (0.2, 0.205, 0.215), metal=1.0, rough=0.3)
+        self.body = kit.mat('br_console', (0.05, 0.053, 0.058), metal=0.5, rough=0.42)
+        self.seat = kit.mat('br_seat', (0.035, 0.035, 0.04), metal=0.0, rough=0.7)
+        self.glass = kit.mat('br_table_glass', (0.008, 0.01, 0.013), metal=0.0, rough=0.12,
+                             emit=(0.004, 0.012, 0.016), strength=1.0)
+        # emissives (in-game levels): soft cyan / cool white / warm white
+        self.screen = kit.emis('br_screen_base', (0.3, 0.75, 1.0), 0.05)
+        self.scr_mid = kit.emis('br_screen_mid', (0.3, 0.75, 1.0), 0.2)
+        self.scr_hi = kit.emis('br_screen_hi', (0.32, 0.78, 1.0), 0.6)
+        self.screen2 = kit.emis('br_screen_white', kit.COOL_WHITE, 0.45)
+        self.keys = kit.emis('br_keys_warm', kit.WARM_WHITE, 0.4)
+        self.strip = kit.emis('br_strip', kit.COOL_WHITE, 0.55)
+        self.under = kit.emis('br_underglow', (0.2, 0.75, 1.0), 0.12)
+        self.rim = kit.emis('br_holo_rim', kit.PALE_CYAN, 1.3)
         for mm in vars(self).values():
             mm.use_backface_culling = True     # single-sided: a camera outside a wall sees through it
 
@@ -132,7 +132,7 @@ def room(root, m):
         p0, p1 = V((0, side * W, 3.1)), V((0, side * (W - 0.9), H))
         nrm = V((0, -side * 1, -1)).normalized()
         mid = (p0 + p1) / 2 + nrm * 0.08
-        P.box((X1 - X0, (p1 - p0).length, 0.12), M(V(((X0 + X1) / 2, mid.y, mid.z)), z=nrm, up=(1, 0, 0)), m.wall2)
+        P.box(((p1 - p0).length, X1 - X0, 0.12), M(V(((X0 + X1) / 2, mid.y, mid.z)), z=nrm, up=(1, 0, 0)), m.wall2)
         P.box((X1 - X0 - 0.4, 0.05, 0.03), M(((X0 + X1) / 2, side * (W - 0.18), 3.02)), m.strip)
         # pipes along the lower walls
         for zz, r in ((0.22, 0.06), (0.36, 0.04)):
@@ -237,7 +237,7 @@ def console(root, name, loc, facing, m, wide=1.6, tall=False):
     if nrm.z < 0:
         nrm = -nrm
     screen(P, T, mid + nrm * 0.004 + slope * 0.03, nrm, slope, wide - 0.25, 0.42, m, seed=hash(name) % 1000)
-    P.box((0.06, wide - 0.3, 0.01), T @ M(b + slope * 0.045 + nrm * 0.006, z=nrm, up=slope), m.keys)
+    P.box((wide - 0.3, 0.06, 0.01), T @ M(b + slope * 0.045 + nrm * 0.006, z=nrm, up=slope), m.keys)
     # upright screen on a stalk
     P.box((0.06, 0.08, 0.5), T @ M((0.25, 0, 1.3)), m.rib)
     P.box((0.06, wide - 0.2, 0.62 if tall else 0.5), T @ M((0.22, 0, 1.65)), m.dark, bevel=0.015)

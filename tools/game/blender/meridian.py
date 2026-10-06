@@ -29,21 +29,20 @@ AX = (1, 0, 0)
 
 class Mats:
     def __init__(self):
-        self.hull = kit.mat('ark_hull', (0.5, 0.505, 0.51), metal=0.4, rough=0.4)
-        self.hull2 = kit.mat('ark_hull_dark', (0.3, 0.31, 0.32), metal=0.55, rough=0.45)
-        self.paint = kit.mat('ark_paint', (0.64, 0.64, 0.62), metal=0.05, rough=0.5)
-        self.accent = kit.mat('ark_accent', (0.07, 0.11, 0.17), metal=0.35, rough=0.42)
+        self.hull = kit.mat('ark_hull', (0.25, 0.255, 0.26), metal=0.35, rough=0.42)
+        self.hull2 = Pal.hull2()
+        self.paint = kit.mat('ark_paint', (0.3, 0.3, 0.295), metal=0.05, rough=0.5)
+        self.accent = Pal.accent()
         self.dark = Pal.dark()
         self.gun = Pal.gunmetal()
         self.steel = Pal.steel()
         self.rad = Pal.radiator()
-        self.glass = kit.mat('ark_glass', (0.01, 0.014, 0.02), metal=0.0, rough=0.06, spec=0.9,
-                             emit=(0.05, 0.08, 0.11), strength=1.0)
-        self.win_w = kit.mat('ark_window_warm', (1.0, 0.8, 0.6), emit=(1.0, 0.8, 0.56), strength=4.0)
-        self.win_c = kit.mat('ark_window_cool', (0.8, 0.9, 1.0), emit=(0.8, 0.9, 1.0), strength=4.0)
-        self.cyan = Pal.e_cyan(5)
-        self.white = Pal.e_white(8)
-        self.engine = Pal.e_engine(8)
+        self.glass = Pal.glass()
+        self.win_w = kit.emis('ark_window_warm', kit.WARM_WHITE, 1.25)
+        self.win_c = kit.emis('ark_window_cool', kit.COOL_WHITE, 1.15)
+        self.cyan = Pal.e_cyan(1.5)
+        self.white = Pal.e_white(2.2)
+        self.engine = Pal.e_engine(2.0)
 
 
 def ngon(n, ry, rz, chamfer=0.0, mids=False, phase=None):
@@ -78,7 +77,7 @@ def plate(P, m, faces, p_hatch=0.1, chamfer_len=None):
     inner = P.inset_panels(raised, 0.045, 0.02)
     for f in inner:
         r = random.random()
-        P._set([f], m.hull2 if r < 0.08 else m.hull if r < 0.3 else m.accent if r < 0.32 else m.paint)
+        P._set([f], m.hull2 if r < 0.05 else m.paint if r < 0.3 else m.accent if r < 0.32 else m.hull)
     P.inset_panels(hatch, 0.12, -0.06, m_panel=m.gun, m_groove=m.hull2)
 
 
@@ -99,21 +98,21 @@ def bow(root, m):
     bridge = [f for f in quads if 26.5 < f.calc_center_median().x < 27.6 and f.normal.z > 0.35]
     rest = [f for f in quads if f not in door_zone and f not in bridge]
     P.inset_panels(bridge, 0.07, -0.05, m_panel=m.glass, m_groove=m.dark)
-    plate(P, m, rest, chamfer_len=0.2)
+    plate(P, m, rest, p_hatch=0.035, chamfer_len=0.2)
     P._set(door_zone, m.hull2)
     # module rings (structural bands)
     for x in (16.25, 19.4, 22.55, 25.7):
         P.loft([section(x - 0.18, ngon(8, 3.0, 2.7, 0.18), 1.035), section(x + 0.18, ngon(8, 3.0, 2.7, 0.18), 1.035)], m.gun)
-    # dust shield at the nose: a shallow dome with radial ribs and a sensor spike
-    shield = [(28.7, 3.25), (29.05, 3.3), (29.35, 3.0), (29.7, 2.3), (29.95, 1.4), (30.1, 0.5), (30.14, 0.0)]
-    P.lathe([(x, r) for x, r in shield], M((0, 0, 0), z=AX), m.gun, segs=32, close0=True)
-    for k in range(8):
-        a = 2 * math.pi * k / 8 + math.pi / 8
-        c, s = math.cos(a), math.sin(a)
-        for (x0, r0), (x1, r1) in zip(shield[1:-2], shield[2:-1]):
-            P.beam(V((x0 + 0.03, r0 * c, r0 * s)), V((x1 + 0.03, r1 * c, r1 * s)), 0.2, m.hull2, h=0.07, up=V((0, c, s)))
-    P.cyl(0.18, 1.6, M((30.8, 0, 0), z=AX), m.steel, segs=12, r2=0.04)
-    P.sphere(0.12, M((31.6, 0, 0)), m.cyan, u=10, v=6)
+    # dust shield at the nose: a faceted octagonal dome of armour plates, a sensor mast at its cap
+    shield = [(28.75, 3.2), (29.05, 3.32), (29.45, 2.95), (29.8, 2.2), (30.02, 1.25), (30.1, 0.55)]
+    sf = P.lathe(shield, M((0, 0, 0), z=AX), m.hull2, segs=8, close1=True, phase=math.pi / 8)
+    bmesh.ops.recalc_face_normals(P.bm, faces=sf)
+    plates = P.inset_panels([f for f in sf if len(f.verts) == 4 and f.calc_area() > 0.3], 0.07, 0.04, m_groove=m.gun)
+    for f in plates:
+        P._set([f], m.hull if random.random() < 0.5 else m.hull2)
+    P.cyl(0.5, 0.25, M((30.2, 0, 0), z=AX), m.gun, segs=12)
+    P.cyl(0.14, 1.4, M((30.95, 0, 0), z=AX), m.steel, segs=10, r2=0.04)
+    P.sphere(0.11, M((31.65, 0, 0)), m.cyan, u=10, v=6)
     # window rows along both flanks (3 rows on the side faces and the upper/lower diagonals)
     random.seed(21)
     for side in (1, -1):
@@ -201,7 +200,7 @@ def truss_section(root, name, cx, m, src=None):
                     continue
                 a = math.pi / 4 + q * math.pi / 2
                 u = V((0, math.cos(a), math.sin(a)))
-                B.box((0.9, 0.7, 0.7), M(V((xm, 0, 0)) + u * 1.0, z=u, up=AX), random.choice([m.hull, m.accent]), bevel=0.05)
+                B.box((0.7, 0.9, 0.7), M(V((xm, 0, 0)) + u * 1.0, z=u, up=AX), random.choice([m.hull, m.accent]), bevel=0.05)
         # small pale cyan marker lights on the four corners of the end frames
         for x in (-L / 2, L / 2):
             for cy in (-1, 1):

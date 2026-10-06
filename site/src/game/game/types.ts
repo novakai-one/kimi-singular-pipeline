@@ -84,6 +84,8 @@ export interface PuzzleRuntime {
   showMe(): Promise<void>;
   /** Optional instant solve for tests; defaults to showMe() at high speed. */
   solve?(): void | Promise<void>;
+  /** Optional: perform a known-wrong attempt (a misconception). Tests assert it does NOT win. */
+  wrong?(): void | Promise<void>;
   /** Optional extra cleanup. */
   dispose?(): void;
 }
@@ -167,12 +169,145 @@ export interface ExplainDef {
   ownWords?: string;
 }
 
+
+// ---------------------------------------------------------------- the Briefing (GDD §4)
+// Order in a chapter: sayit → doubt × 2–3 (true and false mixed) → law → (procedure) → compare.
+// Nothing here is graded as free text; everything is checked by consequence.
+
+/** A chapter card: the chapter's In short box, a Why-it-matters card, or an act-end NumPy card. */
+export interface CardDef {
+  kind: 'inshort' | 'why' | 'numpy' | 'catchup';
+  title: string;
+  /** Markdown. For 'inshort': the question and a one-sentence literal answer, no unearned term. */
+  body: string;
+  /** For 'why': "When you see ___, think ___." */
+  cue?: string;
+  /** Optional little visual behind the card. */
+  visual?: (g: Game) => Promise<void> | void;
+}
+
+/** Say it: Bram asks the chapter's check question; the player writes their Field Manual page first. */
+export interface SayItDef {
+  id: string;                 // usually the chapter id
+  who: string;                // who asks (cast id), usually 'bram'
+  ask: string;                // the curriculum node's check question
+  /** "Help me start" sentence frames (blanks as ___); off by default, opened only on request. */
+  frames?: { see?: string; means?: string; called?: string; cue?: string };
+  /** Words for the Help-me-start word bank (objects from the player's own scene). */
+  wordBank?: string[];
+}
+
+/**
+ * Bram's Doubt: a claim the player answers by construction.
+ * Challenge it = build a counterexample (a case where the claim fails).
+ * Back it = build a demonstration; then the Shake randomises the scene's free quantities and re-checks.
+ */
+export interface DoubtDef {
+  id: string;
+  who: string;                // cast id making the claim
+  claim: string;              // the claim, in the speaker's words (earned terms only)
+  isTrue: boolean;
+  /** One literal line on why it holds (true) or what breaks it (false). Shown after the verdict. */
+  reason: string;
+  /** Goal text shown while building (markdown); defaults to a generic line. */
+  goal?: string;
+  view?: '2d' | '3d';
+  /** Build the holotable scene with the usual puzzle context. */
+  setup(p: PuzzleCtx): DoubtScene | Promise<DoubtScene>;
+}
+
+export interface DoubtScene {
+  /** Does the claim hold for the scene as it is now? */
+  holds(): boolean;
+  /** The current case in literal words, for messages: "v = (2, 1), w = (−4, −2)". */
+  describe(): string;
+  /** The Shake: set the free quantities to a random case (edge >= 0: the edge-th curated edge case). May animate. */
+  randomize(rng: () => number, edge?: number): void | Promise<void>;
+  /** How many curated edge cases randomize() knows (navigator uses 1, commander all). */
+  edgeCases?: number;
+  /** Show me: set up a construction for the given stance (the right stance for this claim). */
+  showMe(stance: 'challenge' | 'back'): Promise<void>;
+  dispose?(): void;
+}
+
+/** One slot of a Law frame. */
+export interface LawSlot { options: { id: string; text: string }[] }
+
+/**
+ * A Law: a templated statement the player fills from earned words; the Proving Ground then fires
+ * 500 cases at it. The first case that breaks it freezes on screen. A Law that survives becomes
+ * Proven only after the reason step.
+ */
+export interface LawDef<Case = unknown> {
+  id: string;
+  /** Text pieces and slots in order: ['$\\mathbf v \\cdot \\mathbf w$ is ', { slot: 'sign' }, ' exactly when ', { slot: 'angle' }]. */
+  frame: (string | { slot: string })[];
+  slots: Record<string, LawSlot>;
+  /** The intended filling (Show me). */
+  answer: Record<string, string>;
+  /** Slots shown on cadet (others are pre-filled with the answer). */
+  cadetSlots?: string[];
+  /** A random case. */
+  gen(rng: () => number): Case;
+  /** Curated edge cases (zero vector, parallel arrows, ...). */
+  edgeCases: Case[];
+  /** Does the statement, filled as given, hold for this case? */
+  holds(filled: Record<string, string>, c: Case): boolean;
+  /** The case in literal words: "w is the zero vector". */
+  describe(c: Case): string;
+  /** Draw a case on the holotable (used for the flicker and the counterexample freeze). */
+  draw?(g: Game, c: Case): void;
+  /** The reason step (cadet: pick the card; navigator/commander: the same cards, then the full line is shown). */
+  reason: { ask: string; options: { id: string; text: string; right: boolean; why: string }[] };
+}
+
+/** Compare: Ilse's model page appears beside the player's own page, with a key-idea checklist. */
+export interface CompareDef {
+  id: string;                 // matches the SayIt id
+  /** Ilse's notebook page (maths register, markdown). */
+  page: string;
+  formula?: string;           // TeX
+  keyIdeas: string[];         // 2–3 literal "Did you say …?" items
+}
+
+/** A step tile of a Procedure. */
+export interface Tile { id: string; text: string; py?: string }
+
+/**
+ * A Procedure: the player orders step tiles; LANTERN runs them literally on a new case. A missing
+ * or misplaced key step is replaced by its misconception, which fails visibly.
+ */
+export interface ProcedureDef {
+  id: string;
+  title: string;
+  brief: string;
+  tiles: Tile[];
+  decoys?: Tile[];            // misconception tiles (commander)
+  reference: string[];        // tile ids in a correct order
+  /** Run the tiles on the test case, animating in the world. Resolve with the outcome. */
+  run(g: Game, tileIds: string[]): Promise<{ ok: boolean; message: string }>;
+}
+
 // ---------------------------------------------------------------- builder thread
 
 export interface BuildTest { name: string; args: unknown[]; expect: unknown; tol?: number }
 
 export interface BuildDef {
   id: string;
+  /** Code help 'fill': the function with 2–5 blanks written as ___ (defaults to `starter`). */
+  fill?: string;
+  /** Code help 'write': the signature and docstring only (defaults to the first lines of `solution` up to the docstring). */
+  signature?: string;
+  /** Code help 'assemble' (Parsons): the solution's lines in order, plus up to two decoy lines (misconceptions). */
+  assemble?: { lines: string[]; decoys?: string[] };
+  /**
+   * The test swarm: random cases whose expected answer comes from the crew version (TypeScript).
+   * n by difficulty: 20 / 100 / 300.
+   */
+  swarm?: { gen: (rng: () => number, difficulty: Difficulty) => unknown[]; crew: (...args: unknown[]) => unknown; tol?: number };
+  /** After passing: the docstring prompt and Ilse's original note for the routine. */
+  docPrompt?: string;
+  ilseNote?: string;
   /** Language of starter/solution (default 'python': real Python 3 in the browser, lists not NumPy). */
   lang?: 'python' | 'js';
   /** Function name the player writes, e.g. "dot". Stored in the player's library. */
@@ -199,7 +334,13 @@ export type Beat =
   | { kind: 'puzzle'; id: string; puzzle: PuzzleDef }
   | { kind: 'name'; id: string; entry: CodexEntry }
   | { kind: 'explain'; id: string; explain: ExplainDef }
-  | { kind: 'build'; id: string; build: BuildDef };
+  | { kind: 'build'; id: string; build: BuildDef }
+  | { kind: 'card'; id: string; card: CardDef }
+  | { kind: 'sayit'; id: string; sayit: SayItDef }
+  | { kind: 'doubt'; id: string; doubt: DoubtDef }
+  | { kind: 'law'; id: string; law: LawDef<any> }
+  | { kind: 'compare'; id: string; compare: CompareDef }
+  | { kind: 'procedure'; id: string; procedure: ProcedureDef };
 
 export interface ChapterDef {
   id: string;            // "c01"
@@ -211,6 +352,12 @@ export interface ChapterDef {
   palette?: string;      // backdrop palette name (theme.ts)
   /** Developer test chapter: hidden from the map and the story order (open with ?chapter=<id>). */
   dev?: boolean;
+  /** The In short box (also shown by the opening `card` beat). */
+  inShort?: string;
+  /** Chapters whose ideas this one assumes (for the catch-up card on out-of-order play). */
+  prereqs?: string[];
+  /** One-picture re-teach shown when prerequisites are not done (literal words, never "recall that"). */
+  catchup?: string;
   music?: string;        // default mood
   beats: Beat[];
   /**

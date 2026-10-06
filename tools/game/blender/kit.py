@@ -45,9 +45,9 @@ def reset(seed=7):
 _mats = {}
 
 
-def mat(name, color, metal=0.0, rough=0.5, emit=None, strength=0.0, coat=0.0, spec=0.5):
-    """A Principled material. color/emit are linear RGB. Emission strength goes to
-    KHR_materials_emissive_strength in the glTF (the game raises it to at least 2.5)."""
+def mat(name, color, metal=0.0, rough=0.5, emit=None, strength=0.0, coat=0.0, coat_rough=0.05):
+    """A Principled material (linear RGB). Specular stays at the glTF default (no
+    KHR_materials_specular). For emissive parts use emis(), which knows the game's loader rule."""
     if name in _mats:
         return _mats[name]
     m = bpy.data.materials.new(name)
@@ -59,16 +59,34 @@ def mat(name, color, metal=0.0, rough=0.5, emit=None, strength=0.0, coat=0.0, sp
     b.inputs['Base Color'].default_value = (*color, 1)
     b.inputs['Metallic'].default_value = metal
     b.inputs['Roughness'].default_value = rough
-    if 'Specular IOR Level' in b.inputs:
-        b.inputs['Specular IOR Level'].default_value = spec
     if coat and 'Coat Weight' in b.inputs:
         b.inputs['Coat Weight'].default_value = coat
+        b.inputs['Coat Roughness'].default_value = coat_rough
     if emit:
         b.inputs['Emission Color'].default_value = (*emit, 1)
         b.inputs['Emission Strength'].default_value = strength
     m.diffuse_color = (*color, 1)
     _mats[name] = m
     return m
+
+
+GAME_EMISSIVE_MIN = 2.5   # models.ts: emissiveIntensity = max(exported strength, 2.5)
+
+
+def emis(name, rgb, level, base=None):
+    """Emissive material that shows as rgb * level in the game (rgb: max channel 1).
+    The loader multiplies the exported emissive factor by max(strength, 2.5), so levels up to 2.5
+    are baked into the factor (strength 1) and brighter ones use KHR_materials_emissive_strength."""
+    if name in _mats:
+        return _mats[name]
+    peak = max(rgb)
+    rgb = tuple(c / peak for c in rgb)
+    if level <= GAME_EMISSIVE_MIN:
+        col, strength = tuple(c * level / GAME_EMISSIVE_MIN for c in rgb), 1.0
+    else:
+        col, strength = rgb, level
+    return mat(name, base if base is not None else tuple(c * 0.2 for c in rgb), metal=0.0, rough=0.5,
+               emit=col, strength=strength)
 
 
 def hexrgb(h):
@@ -78,37 +96,44 @@ def hexrgb(h):
     return tuple(x / 12.92 if x <= 0.04045 else ((x + 0.055) / 1.055) ** 2.4 for x in c)
 
 
+COOL_WHITE = (0.82, 0.92, 1.0)
+PALE_CYAN = (0.45, 0.85, 1.0)
+WARM_WHITE = (1.0, 0.8, 0.56)
+
+
 class Pal:
-    """The shared hard-sci-fi palette (painted panels are dielectric, bare metal is metallic)."""
+    """Shared hard-sci-fi palette, tuned for the game's lighting (strong ambient + hemisphere fill,
+    key 2.2, ACES): light panels sit near 0.3 albedo, structure near 0.03-0.1."""
     @staticmethod
-    def hull():      return mat('hull_paint', (0.56, 0.57, 0.57), metal=0.15, rough=0.46)
+    def hull():      return mat('hull_metal', (0.3, 0.305, 0.31), metal=0.5, rough=0.38)
     @staticmethod
-    def hull2():     return mat('hull_paint_2', (0.42, 0.43, 0.44), metal=0.2, rough=0.5)
+    def hull2():     return mat('hull_metal_dark', (0.155, 0.16, 0.168), metal=0.55, rough=0.42)
     @staticmethod
-    def hull3():     return mat('hull_paint_3', (0.68, 0.68, 0.66), metal=0.1, rough=0.42)
+    def paint():     return mat('hull_paint', (0.36, 0.36, 0.35), metal=0.05, rough=0.5)
     @staticmethod
-    def accent():    return mat('accent_slate', (0.085, 0.12, 0.17), metal=0.3, rough=0.42)
+    def accent():    return mat('accent_slate', (0.05, 0.075, 0.11), metal=0.3, rough=0.42)
     @staticmethod
-    def dark():      return mat('structure_dark', (0.045, 0.048, 0.055), metal=0.55, rough=0.45)
+    def dark():      return mat('structure_dark', (0.03, 0.032, 0.036), metal=0.5, rough=0.45)
     @staticmethod
-    def gunmetal():  return mat('gunmetal', (0.15, 0.155, 0.165), metal=0.9, rough=0.34)
+    def gunmetal():  return mat('gunmetal', (0.09, 0.093, 0.1), metal=0.85, rough=0.35)
     @staticmethod
-    def steel():     return mat('steel_brushed', (0.5, 0.51, 0.53), metal=1.0, rough=0.27)
+    def steel():     return mat('steel_brushed', (0.3, 0.31, 0.325), metal=1.0, rough=0.34)
     @staticmethod
-    def radiator():  return mat('radiator', (0.075, 0.08, 0.09), metal=0.7, rough=0.3)
+    def radiator():  return mat('radiator', (0.04, 0.045, 0.05), metal=0.7, rough=0.28)
     @staticmethod
-    def nozzle():    return mat('nozzle_inner', (0.1, 0.085, 0.08), metal=1.0, rough=0.38)
+    def nozzle():    return mat('nozzle_inner', (0.07, 0.06, 0.055), metal=1.0, rough=0.4)
     @staticmethod
-    def glass():     return mat('glass_dark', (0.012, 0.016, 0.022), metal=0.0, rough=0.06, spec=0.8)
+    def glass():     return mat('glass_dark', (0.01, 0.012, 0.016), metal=0.0, rough=0.08,
+                                emit=(0.012, 0.02, 0.028), strength=1.0)
     # emissive accents: cool white, pale cyan, warm white (never the maths green/red/yellow)
     @staticmethod
-    def e_white(s=6.0):  return mat('emit_coolwhite', (0.8, 0.9, 1.0), emit=(0.82, 0.92, 1.0), strength=s)
+    def e_white(level=2.2):  return emis('emit_coolwhite', COOL_WHITE, level)
     @staticmethod
-    def e_cyan(s=5.0):   return mat('emit_cyan', (0.4, 0.8, 1.0), emit=(0.45, 0.85, 1.0), strength=s)
+    def e_cyan(level=1.4):   return emis('emit_cyan', PALE_CYAN, level)
     @staticmethod
-    def e_warm(s=3.0):   return mat('emit_warm', (1.0, 0.8, 0.6), emit=(1.0, 0.78, 0.52), strength=s)
+    def e_warm(level=1.1):   return emis('emit_warm', WARM_WHITE, level)
     @staticmethod
-    def e_engine(s=9.0): return mat('emit_engine', (0.6, 0.8, 1.0), emit=(0.55, 0.78, 1.0), strength=s)
+    def e_engine(level=2.0): return emis('emit_engine', (0.55, 0.78, 1.0), level)
 
 
 # ------------------------------------------------------------------ transforms
@@ -167,7 +192,8 @@ class Part:
 
     # -- primitives
     def box(self, size, mtx, m, bevel=0.0, seg=1):
-        """Axis box of `size` (x, y, z) centred on the origin of `mtx` (a Matrix or a location)."""
+        """Box of `size` (x, y, z) in the frame of `mtx` (a Matrix or a location). With
+        M(loc, z=n, up=u) the local axes are x = u x n, y = n x x (close to u), z = n."""
         mtx = mtx if isinstance(mtx, Matrix) else M(mtx)
         r = bmesh.ops.create_cube(self.bm, size=1.0, matrix=mtx @ Matrix.Diagonal((*size, 1)))
         verts = r['verts']
@@ -472,8 +498,12 @@ def export(path, root):
     meshes = [o for o in [root, *root.children_recursive] if o.type == 'MESH']
     tris = tri_count(meshes)
     unique = len({o.data.name for o in meshes})
+    bpy.context.view_layer.update()
+    pts = [o.matrix_world @ V(c) for o in meshes for c in o.bound_box]
+    lo = V((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts)))
+    hi = V((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
     print(f'[export] {os.path.relpath(path, ROOT)}  {tris} triangles  {len(meshes)} mesh nodes ({unique} unique meshes)'
-          f'  {size / 1024:.0f} KB')
+          f'  {size / 1024:.0f} KB  bounds x {lo.x:.2f}..{hi.x:.2f} y {lo.y:.2f}..{hi.y:.2f} z {lo.z:.2f}..{hi.z:.2f}')
     names = [o.name for o in root.children_recursive if not o.name.startswith('_')]
     print('[nodes]', ', '.join(sorted(names))[:2000])
     return tris, size
@@ -502,8 +532,8 @@ def _compositor_bloom(scn, threshold=1.0, strength=0.35, size=7):
 
 
 def render(path, az=-55, el=22, dist_scale=1.0, samples=48, res='960x540', target=None, lens=50,
-           env=0.35, key=2.6, rim=1.6, bloom=True, cam_loc=None, look=None, extra_lights=(), bg=(0.004, 0.006, 0.012),
-           clip_end=2000, softbox=1.2, bounces=6):
+           env=0.75, key=2.2, rim=1.2, bloom=True, cam_loc=None, look=None, extra_lights=(), bg=(0.004, 0.006, 0.012),
+           clip_end=2000, softbox=0.8, bounces=6, exposure=0.6):
     """Cycles preview: dark space background, soft studio reflections, key light and cyan rim
     (same directions as the game's lights), 3/4 view auto-framed on the scene's bounds."""
     scn = bpy.context.scene
@@ -526,6 +556,7 @@ def render(path, az=-55, el=22, dist_scale=1.0, samples=48, res='960x540', targe
         except Exception:
             continue
     scn.view_settings.look = 'None'
+    scn.view_settings.exposure = exposure
     # world: camera rays see near-black space, everything else sees a soft blue-grey studio gradient
     world = bpy.data.worlds.new('w')
     scn.world = world
@@ -539,10 +570,10 @@ def render(path, az=-55, el=22, dist_scale=1.0, samples=48, res='960x540', targe
     tc = nt.nodes.new('ShaderNodeTexCoord')
     sep = nt.nodes.new('ShaderNodeSeparateXYZ')
     ramp = nt.nodes.new('ShaderNodeValToRGB')
-    ramp.color_ramp.elements[0].position = 0.35
-    ramp.color_ramp.elements[0].color = (0.02, 0.022, 0.03, 1)
-    ramp.color_ramp.elements[1].position = 0.75
-    ramp.color_ramp.elements[1].color = (0.5, 0.56, 0.66, 1)
+    ramp.color_ramp.elements[0].position = 0.2
+    ramp.color_ramp.elements[0].color = (0.3, 0.33, 0.42, 1)
+    ramp.color_ramp.elements[1].position = 0.8
+    ramp.color_ramp.elements[1].color = (0.75, 0.82, 1.0, 1)
     mr = nt.nodes.new('ShaderNodeMapRange')
     mr.inputs['From Min'].default_value = -1
     mr.inputs['From Max'].default_value = 1
@@ -625,6 +656,10 @@ def render(path, az=-55, el=22, dist_scale=1.0, samples=48, res='960x540', targe
                 lo.visible_diffuse = False
             except Exception:
                 pass
+    for mm in bpy.data.materials:              # emulate models.ts: emissiveIntensity >= 2.5
+        b = mm.node_tree.nodes.get('Principled BSDF') if mm.node_tree else None
+        if b and b.inputs['Emission Strength'].default_value > 0 and max(b.inputs['Emission Color'].default_value[:3]) > 0:
+            b.inputs['Emission Strength'].default_value = max(b.inputs['Emission Strength'].default_value, GAME_EMISSIVE_MIN)
     if bloom:
         _compositor_bloom(scn)
     scn.render.filepath = path

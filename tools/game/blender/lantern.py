@@ -46,18 +46,18 @@ def ring(x, s=1.0, zo=0.0, w=HW, h=HH, c=CH, mids=True, top=1.0, sy=None):
 
 class Mats:
     def __init__(self):
-        self.hull = kit.mat('hull_metal', (0.5, 0.51, 0.52), metal=0.55, rough=0.36)
-        self.hull2 = kit.mat('hull_metal_dark', (0.3, 0.31, 0.32), metal=0.6, rough=0.42)
-        self.paint = kit.mat('hull_paint_white', (0.62, 0.62, 0.6), metal=0.05, rough=0.48)
+        self.hull = Pal.hull()
+        self.hull2 = Pal.hull2()
+        self.paint = Pal.paint()
         self.dark = Pal.dark()
         self.gun = Pal.gunmetal()
         self.steel = Pal.steel()
-        self.glass = kit.mat('cockpit_glass', (0.01, 0.014, 0.02), metal=0.0, rough=0.05, spec=0.9,
-                             emit=(0.04, 0.07, 0.1), strength=1.0)
+        self.glass = kit.mat('cockpit_glass', (0.01, 0.013, 0.018), metal=0.0, rough=0.06,
+                             emit=(0.014, 0.024, 0.034), strength=1.0)
         self.accent = Pal.accent()
 
 
-def plate_module(P, m, st, window=None, seed_bias=0.0):
+def plate_module(P, m, st, window=None, stripe=None, plain_from=None):
     """Loft a hex module through stations [(x, scale, zoff, top)], then plate it."""
     rings = [ring(x, s, zo, top=t) for x, s, zo, t in st]
     faces, rv = P.loft(rings, m.hull)
@@ -86,7 +86,13 @@ def plate_module(P, m, st, window=None, seed_bias=0.0):
     inner = P.inset_panels(raised, 0.013, 0.006)
     for f in inner:
         r = kit.random.random()
-        P._set([f], m.hull2 if r < 0.18 else m.paint if r < 0.36 else m.hull)
+        x = f.calc_center_median().x
+        if stripe and stripe[0] < x < stripe[1] and abs(f.normal.z) < 0.9:
+            P._set([f], m.accent)                      # the ship's slate-blue identity band
+        elif plain_from is not None and x > plain_from:
+            P._set([f], m.hull)
+        else:
+            P._set([f], m.hull2 if r < 0.07 else m.paint if r < 0.3 else m.hull)
     hin = P.inset_panels(hatch, 0.03, -0.012, m_panel=m.gun, m_groove=m.hull2)
     for f in hin:
         c = f.calc_center_median()
@@ -94,9 +100,9 @@ def plate_module(P, m, st, window=None, seed_bias=0.0):
         L = min(e.calc_length() for e in f.edges)
         if kit.random.random() < 0.6:   # vent slats
             for k in range(4):
-                P.box((0.016, L * 0.55, 0.01), M(c + V((1, 0, 0)) * (k - 1.5) * 0.04 + nrm * 0.003, z=nrm, up=(1, 0, 0)), m.dark)
+                P.box((L * 0.55, 0.016, 0.01), M(c + V((1, 0, 0)) * (k - 1.5) * 0.04 + nrm * 0.003, z=nrm, up=(1, 0, 0)), m.dark)
         else:                            # a small access hatch with a handle
-            P.box((0.08, L * 0.4, 0.012), M(c + nrm * 0.004, z=nrm, up=(1, 0, 0)), m.hull2, bevel=0.004)
+            P.box((L * 0.4, 0.08, 0.012), M(c + nrm * 0.004, z=nrm, up=(1, 0, 0)), m.hull2, bevel=0.004)
     return rv
 
 
@@ -113,14 +119,24 @@ def crew_module(P, m):
     st += [(0.68 + 0.27 * (i + 1), 1.0, 0, 1.0) for i in range(3)]          # .. 1.49
     st += [(1.72, 0.97, -0.005, 0.86), (1.95, 0.9, -0.02, 0.7), (2.14, 0.76, -0.04, 0.58),
            (2.26, 0.6, -0.05, 0.52), (2.32, 0.5, -0.05, 0.5)]
-    plate_module(P, m, st, window=(1.75, 1.94))
+    plate_module(P, m, st, window=(1.75, 1.94), stripe=(1.22, 1.49), plain_from=1.95)
     collar(P, m, 0.69, 0.06)
     collar(P, m, 1.52, 0.05, 1.03)
+    # port sensor blister and a starboard docking hatch with marker lights
+    nrm = V((0, HH, HW / 2)).normalized()
+    p = V((1.05, HW * 0.62, HH * 0.42))
+    P.cyl(0.11, 0.05, M(p + nrm * 0.02, z=nrm), m.gun, segs=16, bevel=0.01)
+    P.sphere(0.085, M(p + nrm * 0.05), m.glass, u=16, v=8)
+    hp = V((0.9, -HW - 0.005, -0.02))
+    P.cyl(0.17, 0.05, M(hp, z=(0, -1, 0)), m.gun, segs=20, bevel=0.012)
+    P.cyl(0.12, 0.03, M(hp + V((0, -0.035, 0)), z=(0, -1, 0)), m.hull2, segs=20)
+    for dz in (0.2, -0.2):
+        P.box((0.025, 0.02, 0.025), M(hp + V((0, -0.01, dz))), Pal.e_cyan())
     # window frame lip and a warm dashboard glow line just under the glass band
     # nose: lidar bar, chin sensor turret, docking lights
     P.box((0.05, 0.34, 0.05), M((2.335, 0, 0.1)), m.dark, bevel=0.01)
     for s in (1, -1):
-        P.box((0.02, 0.05, 0.022), M((2.36, s * 0.11, 0.1)), Pal.e_white(6))
+        P.box((0.02, 0.04, 0.018), M((2.36, s * 0.11, 0.1)), kit.emis('emit_dock', kit.COOL_WHITE, 1.2))
     P.cyl(0.1, 0.1, M((1.95, 0, -0.48), z=(0, 0, 1)), m.gun, segs=16, bevel=0.01)
     P.sphere(0.075, M((1.95, 0, -0.55)), m.glass, u=16, v=8)
     # crew window row (warm) along the upper side faces
@@ -131,8 +147,8 @@ def crew_module(P, m):
         for k in range(5):
             x = 0.86 + k * 0.15
             p = V((x, s * y, z))
-            P.box((0.08, 0.05, 0.012), M(p + nrm * 0.008, z=nrm, up=(1, 0, 0)), m.dark)
-            P.box((0.064, 0.032, 0.012), M(p + nrm * 0.012, z=nrm, up=(1, 0, 0)), Pal.e_warm(3.5))
+            P.box((0.05, 0.08, 0.012), M(p + nrm * 0.008, z=nrm, up=(1, 0, 0)), m.dark)
+            P.box((0.032, 0.064, 0.012), M(p + nrm * 0.012, z=nrm, up=(1, 0, 0)), Pal.e_warm())
     # dorsal hatch + handrails
     P.box((0.3, 0.3, 0.04), M((1.1, 0, HH + 0.02)), m.hull2, bevel=0.012)
     P.cyl(0.1, 0.03, M((1.1, 0, HH + 0.05)), m.gun, segs=16)
@@ -144,9 +160,21 @@ def engineering_module(P, m):
     st = [(-2.36, 0.84, 0, 1.0), (-2.3, 1.0, 0, 1.0)]
     st += [(-2.3 + 0.28 * (i + 1), 1.0, 0, 1.0) for i in range(4)]          # .. -1.18
     st += [(-1.04, 1.0, 0, 1.0), (-0.98, 0.86, 0, 1.0)]
-    plate_module(P, m, st)
+    plate_module(P, m, st, stripe=(-1.74, -1.46))
     collar(P, m, -2.24, 0.06)
     collar(P, m, -1.08, 0.06)
+    # service bays on the lower flanks (ribbed covers) and heat-exchanger fins
+    for s_ in (1, -1):
+        nrm = V((0, s_ * HH, -HW / 2)).normalized()
+        for x in (-1.95, -1.45):
+            c = V((x, s_ * HW * 0.76, -HH * 0.46)) + nrm * 0.035
+            P.box((0.24, 0.38, 0.07), M(c, z=nrm, up=(1, 0, 0)), m.hull2, bevel=0.012)
+            for k in range(5):
+                P.box((0.2, 0.025, 0.02), M(c + nrm * 0.045 + V((-0.14 + k * 0.07, 0, 0)), z=nrm, up=(1, 0, 0)), m.gun)
+        for k in range(10):
+            P.box((0.012, 0.09, 0.16), M((-2.15 + k * 0.05, s_ * (HW + 0.04), 0.12)), m.dark)
+        # whip antennas on the engineering module
+        P.cyl(0.006, 0.4, M((-2.05, s_ * 0.3, HH + 0.22)), m.steel, segs=5)
     # aft: docking collar / reactor access
     ax = (1, 0, 0)
     P.cyl(0.34, 0.14, M((-2.43, 0, 0), z=ax), m.gun, segs=24, bevel=0.012)
@@ -157,7 +185,7 @@ def engineering_module(P, m):
         u = V((0, math.cos(a), math.sin(a)))
         P.box((0.12, 0.045, 0.06), M(V((-2.45, 0, 0)) + u * 0.35, z=ax, up=u), m.steel, bevel=0.006)
     for s in (1, -1):
-        P.box((0.025, 0.05, 0.025), M((-2.37, s * 0.32, -0.3)), Pal.e_cyan(4))
+        P.box((0.025, 0.05, 0.025), M((-2.37, s * 0.32, -0.3)), Pal.e_cyan())
     # ventral tug clamp
     P.box((1.0, 0.32, 0.07), M((-1.7, 0, -HH - 0.03)), m.hull2, bevel=0.015)
     for s in (1, -1):
@@ -217,18 +245,18 @@ def radiators(P, m):
             return V(((x0 + x1) / 2 + u, root.y, root.z)) + out * (v + width / 2 + 0.05) + nrm * w
         for x in (x0 + 0.12, x1 - 0.12):
             P.beam((x, s * 0.1, HH + 0.04), V((x, 0, 0)) + V((0, root.y, root.z)) + out * 0.08, 0.05, m.gun, h=0.04)
-        P.box((L, width, 0.018), M(at(0, 0), z=nrm, up=(1, 0, 0)), rad)
+        P.box((width, L, 0.018), M(at(0, 0), z=nrm, up=(1, 0, 0)), rad)   # local x = across, y = along the ship
         for k in range(12):
             u = -L / 2 + 0.05 + k * (L - 0.1) / 11
             for w in (0.013, -0.013):
-                P.box((0.018, width * 0.95, 0.012), M(at(u, 0, w), z=nrm, up=(1, 0, 0)), m.gun)
+                P.box((width * 0.95, 0.018, 0.012), M(at(u, 0, w), z=nrm, up=(1, 0, 0)), m.gun)
         for v in (-width / 2, width / 2):
-            P.box((L + 0.03, 0.03, 0.036), M(at(0, v), z=nrm, up=(1, 0, 0)), m.hull2, bevel=0.005)
+            P.box((0.03, L + 0.03, 0.036), M(at(0, v), z=nrm, up=(1, 0, 0)), m.hull2, bevel=0.005)
         for u in (-L / 2, L / 2):
-            P.box((0.03, width, 0.036), M(at(u, 0), z=nrm, up=(1, 0, 0)), m.hull2, bevel=0.005)
+            P.box((width, 0.03, 0.036), M(at(u, 0), z=nrm, up=(1, 0, 0)), m.hull2, bevel=0.005)
         P.cyl(0.026, L, M(at(0, -width / 2 - 0.03), z=(1, 0, 0)), m.steel, segs=10)
         # pale cyan edge light at the radiator tip
-        P.box((0.04, 0.02, 0.02), M(at(L / 2 - 0.02, width / 2 + 0.02)), Pal.e_cyan(5))
+        P.box((0.04, 0.02, 0.02), M(at(L / 2 - 0.02, width / 2 + 0.02)), Pal.e_cyan())
 
 
 def antenna(P, m, root):
@@ -245,14 +273,14 @@ def antenna(P, m, root):
     P.cyl(0.028, 0.05, M(wb), m.gun, segs=10)
     P.cyl(0.007, 0.7, M(wb + V((0, 0, 0.37))), m.steel, segs=6)
     beacon = Part('light_beacon')
-    beacon.sphere(0.026, M(wb + V((0, 0, 0.74))), Pal.e_white(8), u=10, v=6)
+    beacon.sphere(0.026, M(wb + V((0, 0, 0.74))), Pal.e_white(), u=10, v=6)
     beacon.finish(parent=root)
 
 
 def projector(root, m):
     """Open lattice dish at the bow: rim ring, curved radial ribs, two hoops, a feed emitter."""
     P = Part('projector')
-    cyan = Pal.e_cyan(5)
+    cyan = kit.emis("emit_projector", kit.PALE_CYAN, 1.2)
     X0, R, D = 2.6, 0.9, 0.34
     xr = X0 + D
 
@@ -331,11 +359,11 @@ def pod(root, name, c, m, outward):
     P.lathe([(-NL, 0.24), (-NL, 0.225)], M(nb, z=ax), m.gun, segs=24)
     for z, rr in [(-0.11, 0.155), (-0.22, 0.186), (-0.31, 0.22)]:
         P.lathe([(z - 0.01, rr + 0.011), (z + 0.01, rr + 0.004)], M(nb, z=ax), m.gun, segs=24)
-    P.cyl(0.105, 0.01, M(nb - V((0.03, 0, 0)), z=ax), Pal.e_engine(7), segs=20)
+    P.cyl(0.105, 0.01, M(nb - V((0.03, 0, 0)), z=ax), Pal.e_engine(), segs=20)
     # outboard strake with nav light; dorsal RCS block
     o = V(outward)
-    P.box((0.55, 0.035, 0.08), M(c + o * 0.235 + V((0.08, 0, 0)), z=o, up=ax), m.dark, bevel=0.01)
-    P.sphere(0.026, M(c + o * 0.262 + V((0.36, 0, 0))), Pal.e_white(8), u=10, v=6)
+    P.box((0.08, 0.55, 0.035), M(c + o * 0.235 + V((0.08, 0, 0)), z=o, up=ax), m.dark, bevel=0.01)
+    P.sphere(0.026, M(c + o * 0.262 + V((0.36, 0, 0))), Pal.e_white(), u=10, v=6)
     P.box((0.12, 0.1, 0.08), M(c + V((0.12, 0, 0.23)), z=(0, 0, 1), up=ax), m.gun, bevel=0.01)
     for d in ((0, 1, 0), (0, -1, 0), (0, 0, 1)):
         P.cyl(0.013, 0.03, M(c + V((0.12, 0, 0.24)) + V(d) * 0.055, z=d), m.steel, segs=8, r2=0.02)

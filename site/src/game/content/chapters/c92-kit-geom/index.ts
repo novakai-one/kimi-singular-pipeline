@@ -13,7 +13,7 @@ import { sfx } from '../../../audio/sfx';
 import { animate, ease } from '../../../core/tween';
 import { VectorHandle } from '../../../kit/handle';
 import {
-  AngleArc, Knob, Shadow, Sweep, UnitCircleImage, add3, bestLine, blob2, deg, len3, lineAngleDist, noisyLine, rad,
+  AngleArc, Knob, Shadow, Sweep, UnitCircleImage, add3, bestLine, blob2, deg, len3, noisyLine, principal, rad,
   rayPlane, sub3, unit3,
 } from '../../../kit/geom';
 import { FitLine, PCAView, Projector3D } from '../../../kit/data';
@@ -232,7 +232,7 @@ const fit: PuzzleDef = {
       r.eq('\\sum_i \\big(y_i - (m x_i + c)\\big)^2');
     };
     fl = new FitLine(p, {
-      points: FIT_PTS, m: -0.25, c: 1.8,
+      points: FIT_PTS, m: 0, c: -1.2,
       onChange: upd,
       onCommit: () => { upd(); if (fl.ssr <= fl.bestSsr * 1.01) p.win(); },
     });
@@ -250,7 +250,7 @@ const fit: PuzzleDef = {
 
 // ------------------------------------------------------------------ 6. Closest point of a plane (3-D)
 
-const PA: V3 = [2, 0, 1], PB: V3 = [0, 2, 1], PV: V3 = [1.5, 0.5, 2.5];
+const PA: V3 = [2, 0, 1], PB: V3 = [-2, 0.5, -0.75], PV: V3 = [1.5, 0.5, 2.5];
 
 const plane: PuzzleDef = {
   id: 'kg-plane',
@@ -260,7 +260,7 @@ const plane: PuzzleDef = {
   hints: [
     'The dashed line runs from your point to the tip of $\\mathbf v$. Make it as short as you can.',
     'At the closest spot the dashed line stands straight up from the plane: it makes a right angle with every direction in the plane.',
-    'The closest spot is $\\mathbf a + \\tfrac12\\mathbf b = (2, 1, 1.5)$.',
+    'The closest spot is $(2, 1, 1.5)$, which is $3\\mathbf a + 2\\mathbf b$.',
   ],
   async setup(p) {
     await p.g.stage.view3D({ distance: 14, azimuth: -40, elevation: 20, target: [0.6, 0.6, 0.9], ms: 0 });
@@ -279,14 +279,17 @@ const plane: PuzzleDef = {
       r.row('q', 'your point', `(${q.map((x) => f2(x)).join(', ')})`, C.result);
       r.row('d', 'distance to the tip of $\\mathbf v$', f2(len3(sub3(PV, q))), C.orange);
     };
+    let done = false;
     const finish = async () => {
+      if (done) return;
+      done = true;
       knob.setEnabled(false);
+      p.win();
       await knob.moveTo(best, 250);
       link.setOpacity(0);
       await pr.reveal(1200);
       r.row('d', 'distance to the tip of $\\mathbf v$', f2(pr.distance), C.orange);
       r.note('The closest point is the projection $\\mathbf p$. The leftover $\\mathbf v - \\mathbf p$ is perpendicular to the plane.');
-      p.win();
     };
     const knob: Knob = new Knob(p, [-1.5, 1.5, 0], {
       color: C.result,
@@ -312,6 +315,7 @@ const plane: PuzzleDef = {
 // ------------------------------------------------------------------ 7. Principal directions
 
 const CLOUD = blob2(1200, { s1: 1.9, s2: 0.55, angle: rad(28), mean: [0.4, -0.3], seed: 5 });
+const blobFirst = () => principal(CLOUD).vectors[0];
 
 const pcaPuzzle: PuzzleDef = {
   id: 'kg-pca',
@@ -320,7 +324,7 @@ const pcaPuzzle: PuzzleDef = {
   hints: [
     'Each yellow dot on the line is the shadow of one point. The thick bar shows how far they spread.',
     'Line it up with the long direction of the cloud.',
-    'The best line points about 28° above the x-axis.',
+    `The best line points about ${Math.round(deg(Math.atan2(blobFirst()[1], blobFirst()[0])))}° above the x-axis.`,
   ],
   setup(p) {
     p.grid({ base: 0.2, main: 0.35 });
@@ -330,13 +334,17 @@ const pcaPuzzle: PuzzleDef = {
     const best = view.spread(view.first);
     const r = p.readout('Spread of the shadows');
     let dir: V3 = [Math.cos(rad(-50)), Math.sin(rad(-50)), 0];
+    // within about 2° of the first principal direction (the readout turns green at the same point)
+    const GOAL = 0.9985;
+    let ratio = 0;
     const upd = () => {
       const s = view.setProbe(dir);
+      ratio = s / best;
       r.row('a', 'line angle', `${Math.round(deg(Math.atan2(dir[1], dir[0])))}°`);
       r.row('s', 'spread (variance)', f2(s), C.result);
-      r.row('pc', 'of the largest possible', `${Math.round((s / best) * 100)}%`, s / best > 0.995 ? C.good : C.white);
+      r.row('pc', 'of the largest possible', `${(Math.floor(ratio * 1000) / 10).toFixed(1)}%`, ratio >= GOAL ? C.good : C.white);
     };
-    const onDir = () => lineAngleDist(Math.atan2(dir[1], dir[0]), Math.atan2(view.first[1], view.first[0])) <= rad(2);
+    const onDir = () => ratio >= GOAL;
     const finale = async () => {
       knob.setEnabled(false);
       view.setProbe(null);

@@ -236,7 +236,7 @@ export class FitLine extends Composite {
     const start = { m: o.m ?? 0, c: o.c ?? 0 };
     this.m = start.m; this.c = start.c;
     this.sqOn = !!o.squares;
-    this.sq = new Mesh(new BufferGeometry(), new MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.07, side: DoubleSide, depthWrite: false }));
+    this.sq = new Mesh(new BufferGeometry(), new MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.05, side: DoubleSide, depthWrite: false }));
     this.group.add(this.sq);
     this.parts.push({ dispose: () => { this.sq.geometry.dispose(); this.sq.material.dispose(); } });
     this.sqUp = this.own(new FatSegments(st, [[[0, 0, 0], [0, 0, 0]]], { color: C.v, width: 1, opacity: 0.4 }));
@@ -463,8 +463,8 @@ export class Projector3D extends Composite {
     this.mark.set(p, along, sub3(v, p));
     if (this.lr) {
       this.lr.show(kd >= 0.999 && rl > 0.8);
-      const side = unit3(sub3([0, 0, 0], along));
-      this.lr.at(add3(add3(p, sub3(v, p), 0.5), side, 0.45));
+      // beside the dashed line, on the side away from the origin (clear of a, b and v)
+      this.lr.at(add3(add3(p, sub3(v, p), 0.5), along, 0.5));
     }
   }
 

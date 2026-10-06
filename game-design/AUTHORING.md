@@ -1,121 +1,159 @@
 # Chapter authoring guide
 
-How to write a chapter of the game. Read this, `GDD.md`, and the chapter's rows in `curriculum.md` before writing anything.
-The reference chapter is `site/src/game/content/chapters/c01-*/index.ts`. Copy its structure.
+How to write a chapter of SINGULAR. **The GDD is the source of truth** (`game-design/GDD.md`); this file says how
+to express it in today's engine. Read first: GDD §0, §2 (story bible, **§2.7 truth table**), §3, §4, §7, your chapter
+in §6, Appendix C (term ledger), Appendix E; then this file; then `curriculum.md` for your nodes.
+
+The reference chapters are `content/chapters/c00-prologue/` and `c01-vectors/`. Copy their structure and polish.
 
 ---
 
-## 1. Where things go
+## 1. Files
 
 ```
 site/src/game/content/chapters/cNN-slug/
-  index.ts        default export: ChapterDef (beats in order)
-  script.ts       every voiced line of the chapter (plain data, no imports except types)
-  puzzles.ts      PuzzleDef objects (or one file per puzzle if long)
-  scenes.ts       cinematic / scene setup code (optional)
+  index.ts      default export: ChapterDef (beats in order)
+  script.ts     every voiced line of the chapter (plain data, no imports except types)
+  puzzles.ts    PuzzleDef objects + their pure win checks (exported functions of plain state)
+  briefing.ts   SayItDef, DoubtDefs, LawDef, CompareDef, (ProcedureDef)
+  build.ts      BuildDefs
 ```
+- The registry picks up `content/chapters/*/index.ts` automatically. Never edit shared files.
+- `id` is `cNN` (Prologue `c00`, Epilogue `c27`); `act` and `num` from GDD §6.1. Puzzle ids `cNN-pM` as in the GDD.
+- **Story numbers come from `content/truth.ts`** (TT1–TT22, computed and unit-tested). Never retype them.
 
-- The registry picks up `content/chapters/*/index.ts` automatically. Do not edit shared files.
-- `id` is `cNN` (e.g. `c07`). `act` and `num` come from the GDD chapter table.
-- Dev-only test chapters set `dev: true`.
+## 2. Beat order (GDD §3.2) → beat kinds
 
-## 2. The beats
-
-A chapter is a list of beats (`site/src/game/game/types.ts`):
-
-| kind | what the player sees | key fields |
+| GDD step | Beat kind | Notes |
 |---|---|---|
-| `scene` | voiced dialogue on the comm channel; optional `setup(g)` draws something first; `onLine(line, i)` runs before each line (camera moves, visuals) | `lines`, `setup`, `onLine`, `view` |
-| `cinematic` | a scripted visual sequence, HUD hidden | `run(g)` |
-| `puzzle` | a challenge: goal, win condition, hints, Show me, Skip, stars | `puzzle: PuzzleDef` |
-| `name` | the naming card: what you saw → what it means → its name → formula | `entry: CodexEntry` |
-| `explain` | explain-back: a chain of reasoning steps; wrong options carry the counter-argument | `explain: ExplainDef` |
-| `build` | the builder terminal: the player writes a **Python** function (real Python 3 in the browser, lists not NumPy), tests run, it joins their library (`basis.py`) | `build: BuildDef` |
+| Cold open (≤ 60 s) | `cinematic` or `scene` | the plot problem, shown, not explained |
+| Chapter card + In short | `card` (`kind: 'inshort'`) | question as title, one literal sentence, no unearned term; also set `ChapterDef.inShort` |
+| See it × 2–3, aha | `puzzle` | `predict` = the GDD's "Call it" (optional, never required) |
+| Name it | `name` (CodexEntry) | saw → means → name → formula → why → cue → use |
+| [D] where the formula comes from | `puzzle` | Cadet: watch + one drag. Navigator: typed steps (`StepWorksheet`). Commander: order the steps (`TileOrder`), then type the last line |
+| [H] by hand | `puzzle` | `StepWorksheet`: Cadet = LANTERN computes, Navigator = each step checked, Commander = final only |
+| Say it | `sayit` | Bram asks the node's check question; the player writes their Field Manual page first |
+| Doubts × 2–3 (true and false mixed) | `doubt` (DoubtDef) | Challenge = counterexample; Back = demonstration + the Shake (engine) |
+| Law | `law` (LawDef) | frame + slots; the Proving Ground fires 500 cases (engine); then the reason step |
+| Procedure (Ch 9, 13, 18, 20, 22, 26) | `procedure` | tiles + `run()` that animates LANTERN executing them literally |
+| Compare | `compare` | Ilse's model page + 2–3 "Did you say…?" key ideas |
+| Why it matters + cue | `card` (`kind: 'why'`) | the playable AI/CS use; "When you see ___, think ___." |
+| In code | `build` × 1–3 | Python on plain lists, `lantern.py` (GDD §5.5 lists the functions per chapter) |
+| Story out | `cinematic` / `scene` | open or close a Case Board question (`pin` / `answer`) |
 
-House order inside a chapter: **problem → see it (puzzles) → name it → formula → by hand → in code**.
-Never name a term before the beat that earns it (a `name` beat). Before that, describe what the player sees.
+Nothing is ever locked: the engine adds Show me and Skip to every puzzle, doubt, law, procedure and build.
 
 ## 3. Puzzles
 
 ```ts
-const p1: PuzzleDef = {
-  id: 'c03-reach',                       // unique across the game
-  title: 'Which points can two thrusters reach?',   // a plain question
-  goal: 'Fire the two thrusters so the ship stops on the beacon.',
-  subgoals: ['Reach the first beacon', 'Reach the second beacon'],
-  predict: { prompt, choices, answer, reveal },     // optional; never required
-  hints: ['…', '…', '… (the last hint all but gives it away)'],
-  par: 2,                                // moves for the second star (omit if moves do not matter)
-  view: '2d',                            // or '3d'
-  onWin: [['wren', 'Clean burn.']],      // optional short reaction
+export const p2: PuzzleDef = {
+  id: 'c03-p2', title: 'Which mount adds a new direction?',   // a plain question
+  goal: 'Bolt the third thruster where it reaches the signal. Fire all three.',
+  subgoals: ['…'],
+  predict: { prompt, choices, answer, reveal },               // the GDD's "Call it"; optional
+  hints: ['…', '…', 'the last hint all but gives it away'],
+  par: 2, view: '3d', onWin: S.p2Win,
   setup(p) {
-    const grid = p.grid();               // the standard grid
-    // build the scene with kit/ and gfx/ pieces, add them with p.add(...)
-    // call p.move() for each player action that counts; p.win() when the goal is met
+    // build the scene from the kit; p.add(...) everything; p.move() per counted action; p.win() when won
     return {
-      async showMe() { /* animate the real solution through the same controls, ending in p.win() */ },
+      async showMe() { /* drive the same controls to the reference answer, ending in p.win() */ },
+      solve() { /* optional: set the reference answer instantly and call p.win() */ },
+      wrong() { /* optional: a known-wrong attempt (a misconception); must NOT call p.win() */ },
     };
   },
 };
 ```
+- Keep each win test as a **pure exported function** of plain values in `puzzles.ts` (e.g. `export const p2Won = (mount: V3) => …`) and unit-test it (reference wins, the misconceptions do not).
+- Difficulty (`p.difficulty`) changes parameters only, never content (GDD §7.1): snap (`p.snap()` = 1 / 0.5 / null), tolerance (±0.05 / ±0.05 / ±0.01), live preview (cadet only, or after the first commit on navigator), typed steps, seeded number ranges.
+- Every miss teaches: leave the attempt where it landed and draw the gap; `sfx.miss()`; a literal LANTERN bark (`p.bark('lantern', …)`).
+- Every win has weight: motion, `sfx.success()`, a short crew reaction (`onWin`).
 
-Rules:
-- **Every puzzle has a win condition** checked from the game state, never from a button the player presses to claim success.
-- **Show me** must animate the actual solution with the same objects the player uses, then call `p.win()`.
-- The headless test calls `__game.solve()`, which runs `showMe()` at high speed and checks that `p.win()` fired. Every puzzle must pass.
-- Difficulty: read `p.difficulty` (`'cadet' | 'navigator' | 'commander'`). Cadet: whole numbers, extra guides drawn (e.g. components, the parallelogram). Navigator: halves and simple fractions. Commander: messier numbers, tighter par, no snapping, "compute it" variants (type the answer before you see it). `p.snap()` already returns 1 / 0.5 / null.
-- Tolerances: compare with `near(a, b, tol)` from `kit/handle.ts`. Use tol 0.05 when snapping, 0.08 on commander.
-- Keep the picture readable: one idea per puzzle, at most ~4 arrows on screen, labels never on top of each other.
-- Readouts (`p.readout(title)`) show live numbers next to the picture, colour-coded (green v, red w, yellow result).
+## 4. The Briefing contracts (`game/types.ts`)
 
-## 4. The kit (use these; do not re-implement)
+```ts
+const sayit: SayItDef = { id: 'c04', who: 'bram', ask: 'Why is v · w zero exactly when the arrows are at right angles?',
+  frames: { see: 'The ___ arrow's shadow on the ___ arrow …' }, wordBank: ['shadow', 'dish', 'right angle'] };
+
+const d1: DoubtDef = {
+  id: 'c04-d1', who: 'bram', isTrue: false,
+  claim: 'A bigger reading always means the arrows point closer together.',
+  reason: 'The reading also grows with length. Two long arrows far apart can read more than two short ones close together.',
+  view: '2d',
+  setup(p) {
+    // build a scene the player edits (handles, dials); return the scene interface:
+    return {
+      holds: () => /* does the claim hold for the scene as it is now? */,
+      describe: () => `v = (${…}), w = (${…})`,
+      randomize: (rng, edge) => { /* set free quantities to a random case, or the edge-th curated edge case */ },
+      edgeCases: 2,
+      async showMe(stance) { /* build the right construction for this claim */ },
+    };
+  },
+};
+
+const law: LawDef<{ v: number[]; w: number[] }> = {
+  id: 'c04-law',
+  frame: ['$\\cg{\\mathbf v} \\cdot \\cr{\\mathbf w}$ is ', { slot: 'sign' }, ' exactly when ', { slot: 'angle' }, { slot: 'extra' }],
+  slots: { sign: { options: [{ id: 'zero', text: 'zero' }, …] }, angle: { … }, extra: { … } },
+  answer: { sign: 'zero', angle: 'right', extra: 'or-zero' },
+  gen: (rng) => ({ v: …, w: … }), edgeCases: [{ v: [0, 0], w: [1, 2] }, …],
+  holds: (f, c) => …,                      // does the filled statement hold for case c?
+  describe: (c) => 'w is the zero vector',
+  draw: (g, c) => { … },                   // optional: draw the case on the holotable
+  reason: { ask: 'Why?', options: [{ id, text, right, why }, …] },
+};
+
+const compare: CompareDef = { id: 'c04', page: 'Ilse's page (maths register, markdown)', formula: '…', keyIdeas: ['Did you say …?', …] };
+```
+- Doubts: mix true and false claims (GDD §6 lists the T and F claims per chapter). The engine runs the Shake (2 / 5 / 10 random cases + curated edges by difficulty), freezes on a breaking case, shows `reason`, and charges a star for challenging a true claim.
+- Laws: `holds(filled, c)` must make the GDD's target statement survive every generated and edge case, and each listed near-miss filling must be broken by at least one case (unit-test this).
+- `ProcedureDef.run(g, tileIds)` executes the tiles literally on the test case and animates; a missing key step reproduces its misconception visibly.
+
+## 5. The kit (use these; do not re-implement)
 
 | Module | Use it for |
 |---|---|
-| `kit/handle.ts` `VectorHandle` | any vector the player drags (snapping, ticks, moves, constraints) · `near()` |
-| `kit/matrixview.ts` `MatrixView` | a 2×2 matrix: moved grid + column arrows (draggable) + typed input + unit-square area · `apply2()` |
-| `kit/matrixview3.ts` `MatrixView3` | a 3×3 matrix: moved lattice + 3 column arrows + 3×3 input + unit-cube volume · `apply3()` |
-| `kit/rowops.ts` `RowOpsBoard`, `SystemView` | augmented matrix with row operations; the lines/planes picture kept in sync |
+| `kit/handle.ts` `VectorHandle`, `near` | any vector the player drags (snapping, ticks, moves, constraints) |
+| `kit/flight.ts` `BurnChain` | burns tip to tail from the ship; **Fire** flies it; fixed burns; per-burn constraints; `onArrive` → `'win' / 'ok' / 'miss'` |
+| `kit/matrixview.ts` `MatrixView`, `apply2` | a 2×2 matrix: moved grid + draggable column arrows + typed input + unit-square area |
+| `kit/matrixview3.ts` `MatrixView3`, `apply3` | a 3×3 matrix: moved lattice + 3 column arrows + 3×3 input + unit-cube volume |
+| `kit/rowops.ts` `RowOpsBoard`; `kit/system.ts` `SystemView` | augmented matrix with row operations; the lines/planes picture kept in sync |
 | `kit/geom.ts` | `RightAngle`, `AngleArc`, `Shadow` (projection), `Sweep` (eigen hunt), `UnitCircleImage` (SVD) |
 | `kit/data.ts` | `PointCloud`, `FitLine` (least squares), `Projector3D`, `PCAView` |
-| `kit/flight.ts` `BurnChain` | burns drawn tip to tail from the ship; **Fire** flies the ship; fixed (already fired) burns; per-burn constraints; `onArrive` returns `'win' / 'ok' / 'miss'` |
-| `kit/cine.ts` | `letterbox`, `fadeBlack`, `titleCard`, `NumberBoard`, `stamp`, `clearCine` for cinematic beats |
-| `gfx/buoys.ts` `BuoyField` | the lattice of light buoys: a matrix moves every point at once (`set`, `to`), `highlight`, `pick` |
-| `gfx/models.ts` | `loadModel(name)`, `Ship` (model + engine exhaust, `flyTo`, `face`, `setThrust`); models in `public/game/models/` (`lantern`, `meridian`, `anchor`, `buoy`, `debris_0..5`, `bridge`) |
-| `content/common/set.ts` | `makeAnchor`, `makeLantern`, `SPIRES` (story set pieces with fallbacks) |
-| `game/caseboard.ts` | `pin(id, question, chapter)` raises a story question; `answer(id, text, chapter)` resolves it |
-| `game/build.ts` `pylib` | `await pylib.call('add', v, w)` runs the player's Python function (or the reference) — use for payoffs |
-| `g.stage.shockwave(at, ms, amp)` | a screen-space shockwave ring (the pulse) · `g.stage.flash()`, `g.stage.nudge()` |
-| `gfx/arrow.ts` `Arrow` | a non-draggable arrow (`moveTo`, `grow`, `pulse`) |
-| `gfx/grid.ts` `Grid2D` | via `p.grid()`; `grid.to(M)` animates the moved grid |
-| `gfx/shapes.ts` | `Parallelogram`, `Parallelepiped`, `PlanePatch`, `InfLine`, `Outline2D`, `Lattice3D` |
-| `gfx/markers.ts` | `Pad` (target ring), `Dot`, `Beacon` (3-D) |
-| `gfx/fx.ts` | `burst`, `shockwave`, `celebrate` |
-| `gfx/label.ts` `Label` | text/maths pinned to a 3-D point |
+| `kit/steps.ts` | `StepWorksheet` ([H] typed steps by difficulty), `TileOrder` ([D] commander, procedures) |
+| `kit/cine.ts` | `letterbox`, `fadeBlack`, `titleCard`, `NumberBoard`, `stamp`, `clearCine` |
+| `gfx/buoys.ts` `BuoyField` | the lattice of light buoys moved by a matrix (`set`, `to`, `highlight`, `pick`) |
+| `gfx/models.ts` | `loadModel(name)`, `Ship` (exhaust, `flyTo`, `face`); models: `lantern`, `meridian`, `anchor`, `buoy`, `debris_0..5`, `bridge` |
+| `content/common/set.ts`, `shots.ts` | `makeAnchor`, `makeLantern`, `SPIRES`; `shipExterior`, `bridgeShot` for scenes |
+| `content/truth.ts` | every story number (T, T3, C, C2, V, DRONES, HATCH, RECORD_SV, …) |
+| `game/caseboard.ts` | `pin(id, question, chapter)`, `answer(id, text, chapter)` |
+| `game/build.ts` `pylib` | `await pylib.call('matvec', A, x)`: the player's Python (or the reference) at story events |
+| `gfx/*` | `Arrow`, `Grid2D` (via `p.grid()`), `Parallelogram`, `Parallelepiped`, `PlanePatch`, `InfLine`, `Outline2D`, `Lattice3D`, `Pad`, `Dot`, `Beacon`, `Label`, `burst`/`celebrate` |
 | `ui/widgets.ts` | `MatrixInput`, `VectorInput`, `Slider`, `ChoiceCards`, `Readout`, `parseNum` |
-| `math/la.ts`, `math/rref.ts`, `math/frac.ts` | all numbers (exact fractions for row reduction) · `nice()` for display |
-| `audio/sfx.ts` `sfx` | `tick`, `snap`, `success`, `miss`, `whoosh`, `collapse`, `thrust`, `warp`, `alarm` |
-| `core/tween.ts` | `animate(ms, fn, ease)`, `wait(ms)`, `ease.*` |
+| `math/la.ts`, `math/rref.ts`, `math/frac.ts` | all numbers; `nice()` for display; exact fractions for row reduction |
+| `audio/sfx.ts` | `tick`, `snap`, `success`, `miss`, `whoosh`, `collapse`, `thrust`, `warp`, `alarm` |
+| `g.stage` | `view2D`, `view3D`, `shockwave(at, ms, amp)`, `flash`, `nudge` |
 
-Camera: `g.stage.view2D({ center, height, ms })` and `g.stage.view3D({ target, distance, azimuth, elevation, ms })`. 2-D puzzles default to a 10-unit-high view of the origin.
+## 6. Words (BUILD_BRIEF.md §2a and GDD §1.4 are the law)
 
-## 5. Words (BUILD_BRIEF.md §2a is the law)
-
-- Literal first: say what the arrows, points and grid do.
-- Short sentences (≤ 20 words). One idea per sentence. Bold one key idea per block.
-- No analogies. Banned: fruit, shopping, cooking, factories, machines that eat or spit, sports, personification of maths objects ("the matrix wants", "favourite direction").
+- Two registers (GDD §1.4): **story** (Wren, Bram, Teo, Vell, Ilse live) never explains maths and never uses a term
+  before its naming beat; **maths** (LANTERN, Ilse's logs, cards, goals, Laws, model pages) is literal first.
+- Literal: say what the arrows, points and grid do. Short sentences (≤ 20 words). One bold key idea per block.
+- No analogies. Banned: fruit, shopping, cooking, factories, machines that eat or spit, sports, personification of maths objects.
 - A matrix is never a machine. It moves points; it transforms the grid.
-- Never: simply, just, obviously, clearly, trivially, easy to see, recall that, note that, it turns out, as you know. No exclamation marks. No hype words.
-- One word per idea: "linear transformation" (not map/operator/function), "null space" (not kernel), "column space", "augmented matrix", "pivot", "row echelon form", "reduced row echelon form", "span", "scalar triple product", "coplanar", "diagonalisation" (British spelling).
-- Headings are plain questions: "What happens to the area?"
-- Characters may have feelings. Maths objects may not.
-- Maths in text: `$…$` (KaTeX). Colour macros: `\cg{v}` green, `\cr{w}` red, `\cy{…}` yellow.
-- Voiced lines: if a line contains maths, add `say:` with how it should be spoken (e.g. `say: 'v plus w'`).
+- Never: simply, just, obviously, clearly, trivially, easy to see, recall that, note that, it turns out, as you know. No exclamation marks.
+- One word per idea (Appendix C): "linear transformation", "null space" (never kernel), "column space", "augmented matrix", "pivot",
+  "row echelon form", "reduced row echelon form", "span", "scalar triple product", "coplanar", "diagonalisation".
+- Colours: `\cg{}` green (first vector / column 1), `\cr{}` red (second / column 2), `\cb{}` blue (third / column 3), `\cy{}` yellow (result).
+  Violet is reserved for the null space. Speaker colours never appear in the 3-D maths scene.
+- Voiced lines with maths get `say:` (how to read them aloud, no symbols). Lines are written for Kokoro's flat delivery: short, plain.
 
-## 6. Done means
+## 7. Done means
 
 1. `npx tsc --noEmit -p tsconfig.json` clean for your files.
-2. `node tests/game-flow.mjs cNN <dir>`: every puzzle `solve → true`, no console errors. Look at every screenshot.
-3. Every number on screen checked against `math/la.ts` (write a unit test in `tests/unit/` for any non-trivial puzzle maths).
-4. `npm run check:game-wording` (once it exists) reports nothing for your chapter.
-5. Every voiced line is in `script.ts` (scene lines, explain intros, onWin lines, and any `g.say` in code).
+2. `tests/unit/game-cNN.test.ts`: puzzle numbers, pure win checks (reference wins, misconceptions do not), Law frames
+   (target survives, near-misses break), doubt predicates (canonical construction right, the special case found).
+3. `node tests/game-solve-all.mjs cNN`: every puzzle passes at cadet, navigator and commander, no console errors.
+4. `node tests/game-flow.mjs cNN <dir>`: look at every screenshot; nothing cluttered, overlapping or off screen.
+5. `node tests/game-wording.mjs cNN` reports nothing.
+6. Every voiced line is in `script.ts` and reachable from `ChapterDef.script` or a beat.

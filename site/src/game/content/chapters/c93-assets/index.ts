@@ -62,7 +62,7 @@ async function lantern(g: Game): Promise<void> {
     root.add(ship.object);
     await ship.ready;
     ship.setThrust(0.6);
-    const stopOrbit = orbit(g, [0.2, 0, 0], 11, 22, -55, 9);
+    const stopOrbit = orbit(g, [0.2, 0, 0], 11, 22, -55, 16);
     const off = g.stage.tick(() => { ship.object.position.z = 0.06 * Math.sin(performance.now() / 1300); });
     return () => { stopOrbit(); off(); ship.dispose(); };
   });
@@ -73,7 +73,7 @@ async function meridian(g: Game): Promise<void> {
     const m = await model('meridian');
     if (m) root.add(m);
     const rings = ['ring_1', 'ring_2', 'ring_3'].map((n) => m?.getObjectByName(n)).filter(Boolean) as Object3D[];
-    const stopOrbit = orbit(g, [0, 0, 0], 105, 18, -40, 4);
+    const stopOrbit = orbit(g, [0, 0, 0], 105, 18, -40, 7);
     const off = g.stage.tick((dt) => { rings.forEach((r, i) => { r.rotation.x += dt * (0.12 + 0.02 * i); }); });
     return () => { stopOrbit(); off(); };
   });
@@ -92,7 +92,7 @@ async function anchor(g: Game): Promise<void> {
   await show(g, '**anchor** · monolith + spire_1..3', async (root) => {
     const m = await model('anchor');
     if (m) root.add(m);
-    const stopOrbit = orbit(g, [0.55, 0.55, 0.7], 8.5, 16, -62, 7);
+    const stopOrbit = orbit(g, [0.55, 0.55, 0.7], 8.5, 16, -62, 14);
     return () => { stopOrbit(); };
   });
 }

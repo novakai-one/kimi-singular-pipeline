@@ -94,6 +94,9 @@ def plate(P, mh, md, mg):
     P._set(rim, mg)
     bmesh.ops.recalc_face_normals(bm, faces=of + inf + rim)
     P.inset_panels([f for f in of if random.random() < 0.6], 0.025, 0.008)
+    for f in of:                       # scorched patches
+        if f.is_valid and random.random() < 0.12:
+            P._set([f], mg)
     # stringers on the inside
     for a in (-0.18, 0.12):
         p0 = V(((R - T) * math.cos(a) - R, (R - T) * math.sin(a), -H / 2 + 0.05))
@@ -167,6 +170,9 @@ def tank_shell(P, mh, md, mg):
     P._set(inf, md)
     P._set(rim, mg)
     bmesh.ops.recalc_face_normals(bm, faces=of + inf + rim)
+    for f in of:                       # scorched patches
+        if random.random() < 0.12:
+            P._set([f], mg)
     # ring frames inside, and a torn pipe stub
     for z in (-0.35, 0.35):
         P.sweep_ring(R - T - 0.04, [(-0.04, -0.03), (0.04, -0.03), (0.04, 0.03), (-0.04, 0.03)], M((0, 0, z)), mg,
@@ -176,9 +182,9 @@ def tank_shell(P, mh, md, mg):
 
 def build(i):
     root = kit.empty(f'debris_{i}', size=0.5)
-    rockm = kit.mat('rock', (0.075, 0.07, 0.066), metal=0.0, rough=0.88)
-    rock2 = kit.mat('rock_fresh', (0.12, 0.112, 0.105), metal=0.0, rough=0.8)
-    mh = kit.mat('hull_paint_burnt', (0.42, 0.42, 0.41), metal=0.25, rough=0.55)
+    rockm = kit.mat('rock', (0.06, 0.056, 0.052), metal=0.0, rough=0.88)
+    rock2 = kit.mat('rock_fresh', (0.078, 0.073, 0.068), metal=0.0, rough=0.82)
+    mh = kit.mat('hull_paint_burnt', (0.17, 0.17, 0.165), metal=0.3, rough=0.55)
     md, mg, ms = Pal.dark(), Pal.gunmetal(), Pal.steel()
     P = Part(f'chunk_{i}')
     if i == 0:
