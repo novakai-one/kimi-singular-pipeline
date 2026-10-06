@@ -88,6 +88,7 @@ export function installDebug(app: App): void {
           if (b.kind === 'card') { add(`${w} card title`, b.card.title); add(`${w} card body`, b.card.body); add(`${w} card cue`, b.card.cue); }
           if (b.kind === 'sayit') add(`${w} ask`, b.sayit.ask);
           if (b.kind === 'doubt') { add(`${w} claim`, b.doubt.claim); add(`${w} reason`, b.doubt.reason); add(`${w} goal`, b.doubt.goal); }
+          if (b.kind === 'review') for (const d of b.review.claims) { add(`${w} claim`, d.claim); add(`${w} reason`, d.reason); add(`${w} goal`, d.goal); }
           if (b.kind === 'law') {
             b.law.frame.forEach((x) => { if (typeof x === 'string') add(`${w} frame`, x); });
             Object.values(b.law.slots).forEach((sl) => sl.options.forEach((o) => add(`${w} slot`, o.text)));
@@ -111,6 +112,7 @@ export function installDebug(app: App): void {
           if (b.kind === 'explain') push([[b.explain.who, b.explain.intro]]);
           if (b.kind === 'sayit') push([[b.sayit.who, b.sayit.ask]]);
           if (b.kind === 'doubt') push([[b.doubt.who, b.doubt.claim]]);
+          if (b.kind === 'review') push(b.review.claims.map((d) => [b.review.who, d.claim]));
           if (b.kind === 'puzzle' && b.puzzle.onWin) push(b.puzzle.onWin);
         }
         for (const ls of Object.values(c.script ?? {})) push(ls);

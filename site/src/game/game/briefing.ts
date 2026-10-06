@@ -1,12 +1,12 @@
 // The Briefing engines (GDD §4): chapter cards, Say it, Bram's Doubts with the Shake, Laws with the
 // Proving Ground, Compare with the model page, and Procedures. Nothing is graded as free text;
 // everything is checked by consequence. Every step has Show me and Skip.
-import type { CardDef, CompareDef, DoubtDef, DoubtScene, Game, LawDef, ProcedureDef, PuzzleCtx, SayItDef } from './types';
+import type { CardDef, CompareDef, DoubtDef, DoubtScene, Game, LawDef, ProcedureDef, PuzzleCtx, ReviewDef, SayItDef } from './types';
 import type { Hud } from './hud';
 import { h, inline, md, button } from '../ui/ui';
 import { tex } from '../../lib/md';
 import { ChoiceCards } from '../ui/widgets';
-import { S, save, type ManualPage } from '../core/save';
+import { S, save, chapterSave, type ManualPage } from '../core/save';
 import { cast } from '../ui/dialogue';
 import { sfx } from '../audio/sfx';
 import { wait } from '../core/tween';
@@ -116,25 +116,28 @@ export async function runSayIt(host: BriefingHost, d: SayItDef): Promise<void> {
 
 const SHAKES = { cadet: 2, navigator: 5, commander: 10 } as const;
 
-export async function runDoubt(host: BriefingHost, d: DoubtDef): Promise<void> {
+export async function runDoubt(host: BriefingHost, d: DoubtDef, opts: { kicker?: string } = {}): Promise<{ stance: 'challenge' | 'back' | null; right: boolean; skipped: boolean }> {
   const { g, hud } = host;
   const m = await host.mount(d.view ?? '2d');
   const { p } = m;
   let scene: DoubtScene;
   try { scene = await d.setup(p); } catch (e) { m.done(); throw e; }
   const who = cast(d.who);
-  hud.setObjective(`${who.name}'s doubt`, `${d.goal ?? 'Decide: **Challenge it** (build a case where it fails) or **Back it** (build a case where it holds; then Bram shakes it).'}`);
+  const kicker = opts.kicker ?? `${who.name}'s doubt`;
+  hud.setObjective(kicker, `${d.goal ?? `Decide: **Challenge it** (build a case where it fails) or **Back it** (build a case where it holds; then ${who.name} shakes it).`}`);
   const card = panel('doubt');
   const verdict = h('div', { class: 'doubt-verdict' });
   let stance: 'challenge' | 'back' | null = null;
   let firstStance: 'challenge' | 'back' | null = null;
   let finished = false;
+  let outcome = { stance: null as 'challenge' | 'back' | null, right: false, skipped: true };
   let resolveDone!: () => void;
   const done = new Promise<void>((r) => { resolveDone = r; });
   const shaking = { on: false };
 
   const finish = (right: boolean, text: string) => {
     finished = true;
+    outcome = { stance: firstStance, right: right && firstStance === (d.isTrue ? 'back' : 'challenge'), skipped: false };
     if (firstStance) S().doubts[d.id] = { stance: firstStance, right, at: Date.now() };
     save();
     verdict.innerHTML = `<div class="kicker ${right ? 'c-green' : 'c-yellow'}">${right ? 'Settled' : 'Settled, with a lesson'}</div>${md(text)}`;
@@ -215,7 +218,7 @@ export async function runDoubt(host: BriefingHost, d: DoubtDef): Promise<void> {
 
   const actions = h('div', { class: 'doubt-actions' },
     button('Challenge it', () => void challenge(), { cls: 'small', title: 'Submit your case as a counterexample' }),
-    button('Back it', () => void back(), { cls: 'small primary', title: 'Submit your case as a demonstration, then Bram shakes it' }),
+    button('Back it', () => void back(), { cls: 'small primary', title: `Submit your case as a demonstration, then ${who.name} shakes it` }),
     giveUp,
     button('Show me', async () => {
       if (finished) return;
@@ -225,7 +228,7 @@ export async function runDoubt(host: BriefingHost, d: DoubtDef): Promise<void> {
       if (right === 'back') await back(); else await challenge();
     }, { cls: 'ghost small' }),
     button('Skip', () => { finished = true; resolveDone(); }, { cls: 'ghost small' }));
-  card.append(h('div', { class: 'kicker' }, `${who.name}'s doubt`), h('div', { class: 'doubt-claim', html: inline(`“${d.claim}”`) }), actions, verdict);
+  card.append(h('div', { class: 'kicker' }, kicker), h('div', { class: 'doubt-claim', html: inline(`“${d.claim}”`) }), actions, verdict);
   g.ui.scene.appendChild(card);
   briefingTest.kind = 'doubt';
   briefingTest.solve = async () => {
@@ -244,6 +247,39 @@ export async function runDoubt(host: BriefingHost, d: DoubtDef): Promise<void> {
     scene.dispose?.();
     m.done();
   }
+  return outcome;
+}
+
+// ------------------------------------------------------------------ The act Review (GDD §4.6)
+
+/**
+ * Four mixed claims by one speaker at the end of an act, each answered by construction (the Doubt
+ * mechanic). Objecting to a true claim (or backing a false one) costs a star.
+ */
+export async function runReview(host: BriefingHost, r: ReviewDef): Promise<void> {
+  const { g, hud } = host;
+  const who = cast(r.who);
+  let lost = 0;
+  for (let i = 0; i < r.claims.length; i++) {
+    const d = { ...r.claims[i], who: r.who };
+    await host.guard(g.say([[r.who, d.claim]]));
+    const res = await runDoubt(host, d, { kicker: `${r.title} · ${i + 1} of ${r.claims.length}` });
+    if (!res.skipped && !res.right) lost++;
+  }
+  const stars = Math.max(0, 3 - lost);
+  const cs = chapterSave(host.chapterId);
+  cs.stars[r.id] = Math.max(cs.stars[r.id] ?? 0, stars);
+  save();
+  const el = panel('card-why');
+  el.append(
+    h('div', { class: 'kicker' }, `${r.title} · settled`),
+    h('h2', null, `${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}`),
+    h('div', { class: 'card-body', html: md(lost
+      ? `${who.name}'s four claims are settled. ${lost === 1 ? 'One first call was' : `${lost} first calls were`} the wrong way round; each one's reason is in your Field Manual.`
+      : `${who.name}'s four claims are settled, every one by construction, and every first call right.`) }));
+  g.ui.scene.appendChild(el);
+  sfx.solved();
+  try { await host.guard(hud.primary('Continue')); } finally { el.remove(); }
 }
 
 // ------------------------------------------------------------------ Laws and the Proving Ground

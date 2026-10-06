@@ -202,6 +202,16 @@ export interface SayItDef {
  * Challenge it = build a counterexample (a case where the claim fails).
  * Back it = build a demonstration; then the Shake randomises the scene's free quantities and re-checks.
  */
+/** The act Review (GDD §4.6): four claims by one speaker, at least one true and one false, in mixed order. */
+export interface ReviewDef {
+  id: string;
+  /** Bram (Acts I–IV), Vell (V–VII), Ilse (VIII–IX). Overrides each claim's `who`. */
+  who: string;
+  /** e.g. "Act I Review". */
+  title: string;
+  claims: DoubtDef[];
+}
+
 export interface DoubtDef {
   id: string;
   who: string;                // cast id making the claim
@@ -340,6 +350,7 @@ export type Beat =
   | { kind: 'card'; id: string; card: CardDef }
   | { kind: 'sayit'; id: string; sayit: SayItDef }
   | { kind: 'doubt'; id: string; doubt: DoubtDef }
+  | { kind: 'review'; id: string; review: ReviewDef }
   | { kind: 'law'; id: string; law: LawDef<any> }
   | { kind: 'compare'; id: string; compare: CompareDef }
   | { kind: 'procedure'; id: string; procedure: ProcedureDef };

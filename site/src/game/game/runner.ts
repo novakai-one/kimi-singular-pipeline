@@ -16,7 +16,7 @@ import { celebrate } from '../gfx/fx';
 import { runBuild } from './build';
 import { clearCine } from '../kit/cine';
 import { shipExterior } from '../content/common/shots';
-import { runCard, runSayIt, runDoubt, runLaw, runCompare, runProcedure, type BriefingHost } from './briefing';
+import { runCard, runSayIt, runDoubt, runReview, runLaw, runCompare, runProcedure, type BriefingHost } from './briefing';
 import { Grid2D, type GridOpts } from '../gfx/grid';
 
 export interface PuzzleState {
@@ -165,8 +165,10 @@ export class Runner {
       case 'doubt': {
         // the speaker voices the claim, then the holotable opens
         await this.guard(this.g.say([[beat.doubt.who, beat.doubt.claim]]));
-        return runDoubt(this.host(ch), beat.doubt);
+        await runDoubt(this.host(ch), beat.doubt);
+        return;
       }
+      case 'review': return runReview(this.host(ch), beat.review);
       case 'law': return runLaw(this.host(ch), beat.law);
       case 'compare': this.g.stage.clearWorld(); await this.backdrop(); return runCompare(this.host(ch), beat.compare);
       case 'procedure': return runProcedure(this.host(ch), beat.procedure);

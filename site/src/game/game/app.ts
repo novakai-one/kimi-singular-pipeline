@@ -213,7 +213,7 @@ export class App implements Game {
               h('details', { class: 'map-beats' }, h('summary', null, 'Jump to a part'),
                 h('div', { class: 'map-beat-list' }, ...c.beats.map((b, i) => {
                   const label = b.kind === 'puzzle' ? b.puzzle.title : b.kind === 'name' ? `Named: ${b.entry.term}` : b.kind === 'explain' ? 'Explain it' : b.kind === 'build' ? `Build: ${b.build.fn}()`
-                    : b.kind === 'card' ? b.card.title : b.kind === 'sayit' ? 'Say it' : b.kind === 'doubt' ? `Doubt: ${b.doubt.claim}` : b.kind === 'law' ? 'Engrave the Law' : b.kind === 'compare' ? 'Compare with Ilse’s page'
+                    : b.kind === 'card' ? b.card.title : b.kind === 'sayit' ? 'Say it' : b.kind === 'doubt' ? `Doubt: ${b.doubt.claim}` : b.kind === 'review' ? b.review.title : b.kind === 'law' ? 'Engrave the Law' : b.kind === 'compare' ? 'Compare with Ilse’s page'
                     : b.kind === 'procedure' ? `Procedure: ${b.procedure.title}` : b.kind === 'scene' ? 'Scene' : 'Cinematic';
                   const bb = h('button', { class: `map-beat ${cs.done.includes(b.id) ? 'done' : ''}`, type: 'button', html: `<span class="bk">${b.kind}</span> ${inline(label)}${b.kind === 'puzzle' && cs.stars[b.puzzle.id] ? ` <span class="c-yellow">${'★'.repeat(cs.stars[b.puzzle.id])}</span>` : ''}` });
                   bb.addEventListener('click', () => { picked = { ch: c, beat: i }; sfx.click(); close(); });

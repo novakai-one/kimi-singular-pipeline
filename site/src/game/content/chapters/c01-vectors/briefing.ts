@@ -31,7 +31,7 @@ export const sayit: SayItDef = {
 export const doubtOrder: DoubtDef = {
   id: 'c01-d-order', who: 'bram', isTrue: false,
   claim: 'East then north lands somewhere different from north then east. Different route, different place.',
-  reason: 'Each direction adds on its own. Across, 4 + (−1) is the same as (−1) + 4; up works the same way. So both orders end at the same point, and the two routes trace two sides each of one parallelogram.',
+  reason: 'Each direction adds on its own. Across, $a_1 + b_1$ is the same number as $b_1 + a_1$; up works the same way. So both orders end at the same point, and the two routes trace two sides each of one parallelogram.',
   goal: 'Set any two burns. Then **Challenge it** (a case where both orders meet) or **Back it** (a case where they do not).',
   view: '2d',
   setup(p) {

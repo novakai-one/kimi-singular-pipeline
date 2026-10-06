@@ -4,7 +4,7 @@ Input:  lines.json from `node tests/game-lines.mjs` (each line has id and chapte
         voice-cache/<id>.mp3 (from voices.py).
 Output: site/public/game/voice/<bank>.mp3 and site/public/game/voice/manifest.json:
         { "banks": { "<bank>": { "<id>": [start_s, dur_s], ... } } }
-A line used by several chapters goes in the first chapter's bank.
+A line used by several chapters goes in the first chapter's bank. Banks of chapters not in lines.json are kept.
 Usage: python tools/game/pack_voices.py lines.json
 """
 import json, os, subprocess, sys, tempfile
@@ -34,7 +34,9 @@ def main():
         f = os.path.join(LINES, l['id'] + '.mp3')
         if not os.path.exists(f): continue
         banks.setdefault(l.get('chapter', 'misc'), []).append(l['id'])
-    manifest = {'banks': {}}
+    # banks not in this run are kept (pack one chapter without dropping the others)
+    mpath = os.path.join(VOICE, 'manifest.json')
+    manifest = json.load(open(mpath)) if os.path.exists(mpath) else {'banks': {}}
     for bank, ids in banks.items():
         parts, index, t = [], {}, 0.0
         for i in ids:

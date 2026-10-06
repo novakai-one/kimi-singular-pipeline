@@ -15,7 +15,7 @@ export const CHAPTERS: ChapterDef[] = ALL.filter((c) => !c.dev);
 /** Developer test chapters (kit showcases). */
 export const DEV_CHAPTERS: ChapterDef[] = ALL.filter((c) => c.dev);
 
-for (const ch of ALL) for (const b of ch.beats) if (b.kind === 'build') registerBuild(b.build);
+for (const ch of [...CHAPTERS, ...DEV_CHAPTERS]) for (const b of ch.beats) if (b.kind === 'build') registerBuild(b.build);
 
 export function chapter(id: string): ChapterDef | undefined { return ALL.find((c) => c.id === id); }
 export function act(n: number): ActDef | undefined { return ACTS.find((a) => a.num === n); }

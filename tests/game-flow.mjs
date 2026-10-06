@@ -7,6 +7,7 @@ const [, , chId = 'c00', out = 'shots/game', beatArg] = process.argv;
 mkdirSync(out, { recursive: true });
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+p.setDefaultTimeout(180000);
 await p.routeWebSocket(/.*/, () => {}); // no dev-server reloads mid-run
 const errors = [];
 p.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
@@ -39,6 +40,19 @@ for (const i of beats) {
     await frames(10);
     await p.screenshot({ path: `${out}/${tag}-solved.png` });
     console.log(`beat ${i} puzzle ${ch.beats[i].puzzle}: solve → ${ok}`);
+  } else if (kind === 'review') {
+    // four claims in a row: solve each as it opens, until the beat moves on
+    const res = [];
+    for (let k = 0; k < 6; k++) {
+      const open = await p.waitForFunction((bi) => window.__game.state().beat !== bi || !!window.__game.briefing(), i, { timeout: 60000 }).then(() => p.evaluate((bi) => window.__game.state().beat === bi && !!window.__game.briefing(), i)).catch(() => false);
+      if (!open) break;
+      const r = await p.evaluate(() => window.__game.solveBriefing());
+      res.push(r ? r.ok : 'none');
+      if (k === 0) { await frames(6); await p.screenshot({ path: `${out}/${tag}-claim1.png` }); }
+      await p.keyboard.press('Enter');
+      await frames(4);
+    }
+    console.log(`beat ${i} review: ${res.join(', ')}`);
   } else if (['doubt', 'law', 'procedure'].includes(kind)) {
     // the speaker may voice a line first (doubts); give the step time to open
     await p.waitForFunction(() => !!window.__game.briefing(), null, { timeout: 30000 }).catch(() => {});

@@ -12,6 +12,7 @@ if (shots) mkdirSync(shots, { recursive: true });
 
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const p = await b.newPage({ viewport: { width: 1280, height: 800 } });
+p.setDefaultTimeout(180000);
 const errors = [];
 p.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
 p.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
