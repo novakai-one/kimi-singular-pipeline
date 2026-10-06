@@ -133,16 +133,16 @@ export const doubtApart: DoubtDef = {
 
 export const law: LawDef<SetCase> = {
   ...lawCore,
-  frame: ['A set of arrows is ', { slot: 'kind' }, ' exactly when ', { slot: 'cond' }, '.'],
+  frame: ['A set of arrows is ', { slot: 'kind' }, ' exactly when ', { slot: 'cond' }, '. (Home is where the ship started.)'],
   slots: {
     kind: { options: [{ id: 'dep', text: 'linearly dependent' }, { id: 'indep', text: 'linearly independent' }] },
     cond: {
       options: [
-        { id: 'loop', text: 'some dials, not all zero, bring the ship back to the start' },
-        { id: 'onlyzero', text: 'only dials that are all zero bring the ship back to the start' },
+        { id: 'loop', text: 'some dials, not all zero, bring the ship home' },
+        { id: 'onlyzero', text: 'only all-zero dials bring the ship home' },
         { id: 'parallel', text: 'two of the arrows are parallel' },
-        { id: 'zero', text: 'one of the arrows is the zero vector' },
-        { id: 'many', text: 'there are more arrows than directions in the plane' },
+        { id: 'zero', text: 'one arrow is the zero vector' },
+        { id: 'many', text: 'there are more arrows than directions' },
       ],
     },
   },

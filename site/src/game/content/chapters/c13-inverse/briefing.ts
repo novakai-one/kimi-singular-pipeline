@@ -224,14 +224,15 @@ export const law: LawDef<InvCase> = {
     return `$A = ${texM(c.M)}$: ${lands ? 'two different points land on one spot, so it has no inverse' : 'no two points land together, and it has an inverse'}`;
   },
   draw(g: Game, c: InvCase) {
-    void g.stage.view2D({ center: [0, 0], height: 9, ms: 0 });
+    // the Law panel sits in the middle of the screen: draw the case to its right
+    void g.stage.view2D({ center: [-4.6, 0.4], height: 11, ms: 0 });
     const grid = new FlatGrid(g.stage, { extent: 6 });
     grid.set(c.M);
     grid.show(true);
     const plan = new FramePlan(g.stage, {}, 0.01);
     plan.set(c.M);
     const ghost = new FramePlan(g.stage, { color: '#8fa3c4', opacity: 0.5, fill: 0, dashed: true, width: 1.4 }, 0.004);
-    const lab = new Label(`$A = ${texM(c.M)}$`, [0, -3.6, 0], { color: C.white, size: 17 });
+    const lab = new Label(`$A = ${texM(c.M)}$`, [0, -3.4, 0], { color: C.white, size: 17 });
     g.stage.world.add(grid.object, plan.object, ghost.object, lab.object);
   },
   reason: {

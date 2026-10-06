@@ -190,7 +190,8 @@ export const law: LawDef<DetCase> = {
   draw(g: Game, c: DetCase) {
     const M = c.M;
     if (M.length === 2) {
-      void g.stage.view2D({ center: [0, 0], height: 9, ms: 0 });
+      // the Law panel sits in the middle of the screen: draw the case to its right
+      void g.stage.view2D({ center: [-4.2, 0.4], height: 9, ms: 0 });
       const grid = new FlatGrid(g.stage, { extent: 6 });
       grid.set(M);
       grid.show(true);
@@ -198,10 +199,10 @@ export const law: LawDef<DetCase> = {
       tile.set(M);
       g.stage.world.add(grid.object, tile.object);
     } else {
-      void g.stage.view3D({ target: [0, 0, 0.5], distance: 14, azimuth: -55, elevation: 24, ms: 0, orbit: false });
+      void g.stage.view3D({ target: [-4.1, -2.9, 0.5], distance: 14, azimuth: -55, elevation: 24, ms: 0, orbit: false }); // origin right of the panel
       g.stage.world.add(...[C.v, C.w, C.u].map((cl, j) => new Arrow([0, 0, 0], [M[0][j], M[1][j], M[2][j]], { color: cl, width: 0.05 }).object));
     }
-    g.stage.world.add(new Label(`det A = ${fmtN(det(M))}`, M.length === 2 ? [0, -3.8, 0] : [0, 0, -2.5], { color: C.white, size: 17 }).object);
+    g.stage.world.add(new Label(`det A = ${fmtN(det(M))}`, M.length === 2 ? [0, -2.8, 0] : [0, 0, -2.5], { color: C.white, size: 17 }).object);
   },
   reason: {
     ask: 'Your Law survived. **Why** is the determinant zero exactly when space is flattened?',

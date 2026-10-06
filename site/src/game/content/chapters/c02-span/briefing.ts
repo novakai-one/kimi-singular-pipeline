@@ -108,16 +108,16 @@ export const doubtFlip: DoubtDef = {
     let v = T0, w = T1;
     let flipped = false;
     const before = new ReachGlow(p.g.stage, { cell: 0.12 });
-    const after = new ReachGlow(p.g.stage, { cell: 0.12, color: '#59e1ff' });
+    const after = new ReachGlow(p.g.stage, { cell: 0.12, size: 0.22, gain: 0.55, color: '#59e1ff' });
     p.add(before, after);
     const av = new Arrow([0, 0, 0], v, { color: C.v, label: '$\\mathbf v$' });
     const aw = new Arrow([0, 0, 0], w, { color: C.w, label: '$\\mathbf w$' });
     p.add(av, aw);
     const R: [number, number] = [-2.5, 2.5];
     const paint = () => {
-      before.clear(); before.setArrows([v, w]); before.fill([R, R], { step: [0.1, 0.1], spread: 0.8 });
+      before.clear(); before.setArrows([v, w]); before.fill([R, R], { step: [0.15, 0.15], spread: 0.8 });
       after.clear();
-      if (flipped) { after.setArrows([v, neg(w)]); after.fill([R, R], { step: [0.14, 0.14], spread: 0.8, seed: 3 }); }
+      if (flipped) { after.setArrows([v, neg(w)]); after.fill([R, R], { step: [0.24, 0.24], spread: 0.8, seed: 3 }); }
     };
     const draw = () => {
       av.set([0, 0, 0], v);
@@ -164,12 +164,12 @@ export const law: LawDef<SpanCase> = {
     shape: { options: [{ id: 'plane', text: 'the whole plane' }, { id: 'line', text: 'a line' }, { id: 'point', text: 'a point' }] },
     cond: {
       options: [
-        { id: 'apart', text: 'v and w are not on one line through the origin' },
-        { id: 'oneline', text: 'v and w lie on one line through the origin' },
-        { id: 'onelineNZ', text: 'v and w lie on one line through the origin and are not both the zero vector' },
+        { id: 'apart', text: 'v and w are not on one line' },
+        { id: 'oneline', text: 'v and w lie on one line' },
+        { id: 'onelineNZ', text: 'v and w lie on one line, not both zero' },
         { id: 'differ', text: 'v and w are different arrows' },
-        { id: 'apartOrZero', text: 'v and w are not on one line, or one of them is the zero vector' },
-        { id: 'zero', text: 'v and w are both the zero vector' },
+        { id: 'apartOrZero', text: 'v and w are not on one line, or one is zero' },
+        { id: 'zero', text: 'v and w are both zero' },
       ],
     },
   },

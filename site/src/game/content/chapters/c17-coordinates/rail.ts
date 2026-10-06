@@ -47,19 +47,18 @@ export class Rail {
       el.addEventListener('click', () => { if (!used) this.put(c); });
       el.addEventListener('dragstart', (e) => (e as DragEvent).dataTransfer?.setData('text/plain', c.id));
     } else if (!fixed) {
-      el.addEventListener('click', () => { this.cards[i] = null; this.selected = i; sfx.back(); this.render(); this.o.onChange?.(this.cards.slice()); });
+      el.addEventListener('click', () => { this.cards[i] = null; this.selected = -1; sfx.back(); this.render(); this.o.onChange?.(this.cards.slice()); });
     }
     return el;
   }
 
   /** Put a card in the selected slot, or the first empty one in acting order. */
   put(c: Card): void {
-    let i = this.selected >= 0 && !this.o.slots[this.selected].fixed ? this.selected : this.cards.findIndex((x, k) => !x && !this.o.slots[k].fixed);
+    const i = this.selected >= 0 && !this.cards[this.selected] && !this.o.slots[this.selected].fixed ? this.selected : this.cards.findIndex((x, k) => !x && !this.o.slots[k].fixed);
     if (i < 0) { sfx.miss(); return; }
     if (this.cards.some((x) => x?.id === c.id)) { sfx.miss(); return; }
     this.cards[i] = c;
-    this.selected = this.cards.findIndex((x, k) => !x && !this.o.slots[k].fixed);
-    i = -1;
+    this.selected = -1;
     sfx.snap();
     this.render();
     this.o.onChange?.(this.cards.slice());

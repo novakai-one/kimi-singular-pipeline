@@ -65,7 +65,10 @@ export class Gap {
     const mid: V3 = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
     const d = [b[0] - a[0], b[1] - a[1]];
     const n = Math.hypot(d[0], d[1]) || 1;
-    this.label.at([mid[0] - (d[1] / n) * 0.38, mid[1] + (d[0] / n) * 0.38, mid[2] + 0.05]);
+    // put the label on the upper side of the dashed line (labels at the line's ends sit below it less often)
+    let nx = -d[1] / n, ny = d[0] / n;
+    if (ny < 0 || (ny === 0 && nx < 0)) { nx = -nx; ny = -ny; }
+    this.label.at([mid[0] + nx * 0.38, mid[1] + ny * 0.38, mid[2] + 0.05]);
     this.label.set(text);
     this.label.show(true);
   }

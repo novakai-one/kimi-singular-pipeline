@@ -111,8 +111,7 @@ export const p4: PuzzleDef = {
     const bench = replayBench(p, { center: [-0.4, 0.4], height: 8.6 });
     const measured = ghostOf(p, T, 'measured');
     const spire = ghostOf(p, R2, 'spire forecast', '#8a96ad');
-    void spire;
-    const rail = new Rail({ slots: SLOTS, palette: [CARD_P, CARD_PI, CARD_R], onChange: () => paint() });
+    const rail = new Rail({ slots: SLOTS, palette: [CARD_P, CARD_PI, CARD_R], onChange: () => { if (!busy && !won) { bench.rider(identity(2)); msg.className = 'c17-msg'; } paint(); } });
     const r = p.readout('The replay');
     const d = p.difficulty;
     let replayed = false;
@@ -135,11 +134,11 @@ export const p4: PuzzleDef = {
       if (typed && !meq(typed.get(), M, 1e-6)) { p.move(); sfx.miss(); msg.className = 'c17-msg bad'; msg.textContent = 'That is not the one matrix these three cards make. Multiply right to left.'; return; }
       busy = true;
       p.move();
-      measured.show(false);
+      measured.show(false); spire.show(false);
       if (fast) bench.rider(M);
       else await playCards(rail.cards as Card[], [bench.rider], { ms: p.g.headless ? 20 : 1500, rail, onStage: (i) => bench.say(i), pause: 250 });
       bench.say(-1);
-      measured.show(true);
+      measured.show(true); spire.show(true);
       replayed = true; paint();
       busy = false;
       if (p4Won(rail.cards.map((c) => c!.M))) {
@@ -154,7 +153,6 @@ export const p4: PuzzleDef = {
         ? `The bow lands at ${fmtV(land)}, not ${fmtV(BOW_REAL)}. The first card must turn our numbers into the Anchor’s: that is P⁻¹.`
         : `This rail sends the bow to ${fmtV(land)}. The measured pulse sent it to ${fmtV(BOW_REAL)}.`;
       p.bark('lantern', `Replay lands the bow at ${fmtV(land)}. Measured: ${fmtV(BOW_REAL)}.`);
-      window.setTimeout(() => { if (!won && !busy) bench.rider(identity(2)); }, p.g.headless ? 0 : 1600);
     };
     p.dock().append(rail.el, h('div', { class: 'c17-btns' }, ...(typed ? [typed.el] : []), button('Replay', () => void replay(), { cls: 'primary small' })), msg);
     const right = [CARD_PI, CARD_R, CARD_P];
@@ -196,7 +194,10 @@ export const p5: PuzzleDef = {
       r.row('m', 'the move in our grid, $PSP^{-1}$', show ? `$${texSmall(M)}$` : '?', C.white);
       r.row('b', 'bow lands at', show ? fmtV(matVec(M, BOW)) : '?', C.white);
     };
-    const input = new MatrixInput({ rows: 2, cols: 2, values: Sm, colourCols: true, label: 'S =', step: d === 'commander' ? 0.5 : 1, onChange: (m) => { Sm = m; rail.setCard(1, card()); syncHandles(); paint(); }, onSubmit: () => void replay() });
+    let shown = false;
+    /** After a missed replay, the picture stays until the setting changes. */
+    const back = () => { if (shown && !busy && !won) { shown = false; bench.rider(identity(2)); handles.forEach((x) => { x.object.visible = true; }); } };
+    const input = new MatrixInput({ rows: 2, cols: 2, values: Sm, colourCols: true, label: 'S =', step: d === 'commander' ? 0.5 : 1, onChange: (m) => { back(); Sm = m; rail.setCard(1, card()); syncHandles(); paint(); }, onSubmit: () => void replay() });
     input.el.classList.add('c17-in');
     // cadet: drag where each arm lands (in our grid); the setting reads their Anchor numbers
     const handles: Arrow[] = [];
@@ -214,6 +215,7 @@ export const p5: PuzzleDef = {
           target: hd.grab, getPos: () => hd.to.clone(), snap: () => null,
           constrain: (q) => { const c = anchorOf([q.x, q.y])!.map((x) => Math.max(-4, Math.min(4, Math.round(x)))); const t = matVec(P2, c); return new Vector3(t[0], t[1], 0.03); },
           onMove: (q) => {
+            back();
             hd.setTo([q.x, q.y, 0.03]);
             const L = handles.map((x) => [x.to.x, x.to.y]);
             Sm = settingFromLandings(L[0], L[1]).map((row) => row.map((x) => Math.round(x * 1e6) / 1e6));
@@ -231,9 +233,11 @@ export const p5: PuzzleDef = {
       busy = true;
       p.move();
       handles.forEach((x) => { x.object.visible = false; });
+      target.show(false);
       if (fast) bench.rider(shipMove(Sm));
       else await playCards(rail.cards as Card[], [bench.rider], { ms: p.g.headless ? 20 : 1300, rail, onStage: (i) => bench.say(i), pause: 200 });
       bench.say(-1);
+      target.show(true);
       replayed = true; paint();
       busy = false;
       if (p5Won(Sm)) {
@@ -248,7 +252,7 @@ export const p5: PuzzleDef = {
         ? 'That is Ilse’s original setting: read in the Anchor’s grid it leans our grid. The measured pulse again.'
         : `This setting moves our grid by ${fmtV(col(M, 0))}, ${fmtV(col(M, 1))}: the bow lands at ${fmtV(matVec(M, BOW))}. A clean turn sends it to ${fmtV(BOW_SPIRE)}.`;
       p.bark('lantern', `The bow lands at ${fmtV(matVec(M, BOW))}. A clean quarter turn sends it to ${fmtV(BOW_SPIRE)}.`);
-      window.setTimeout(() => { if (!won && !busy) { bench.rider(identity(2)); handles.forEach((x) => { x.object.visible = true; }); } }, p.g.headless ? 0 : 1600);
+      shown = true;
     };
     p.dock().append(rail.el, h('div', { class: 'c17-btns' }, input.el, button('Replay', () => void replay(), { cls: 'primary small' })), msg);
     paint();
