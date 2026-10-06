@@ -561,7 +561,7 @@ export const setPiece: PuzzleDef = {
       g.setAttribute('position', new BufferAttribute(new Float32Array([...dd.P, ...dd.Q, ...dd.R]), 3));
       doorFill = new Mesh(g, new MeshBasicMaterial({ color: new Color('#59e1ff'), transparent: true, opacity: 0.16, side: DoubleSide, depthWrite: false }));
       const glass = new PlanePatch(p.g.stage, dd.centre as V3, dd.n as V3, { color: '#7d8aa5', size: 6, opacity: 0.08 });
-      const centre = new Dot(dd.centre as V3, { color: '#e8f1ff', size: 0.08, label: 'door centre' });
+      const centre = new Dot(dd.centre as V3, { color: '#e8f1ff', size: 0.08, label: 'door centre', labelOffset: [-62, -16] });
       const lbl = new Label('pod-bay door: $6x + 3y + 2z = 6$', [1.4, 1.4, 2.4], { className: 'c08-pt off' });
       au = new Arrow([0, 0, 0], [0, 0, 0], { color: C.v, width: 0.04, label: '$a\\,\\mathbf u$' });
       aw = new Arrow([0, 0, 0], [0, 0, 0], { color: C.w, width: 0.04, label: '$b\\,\\mathbf w$' });

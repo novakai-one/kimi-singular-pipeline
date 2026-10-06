@@ -119,7 +119,7 @@ export const doubtArea: DoubtDef = {
   goal: 'Set a move $A$ and drag the grid arrows. The yellow tile is what $A$ does to a square of our grid; the copper tile, to a cell of the copper grid. **Back it** (Bram will shake it) or **Challenge it**.',
   view: '2d',
   setup(p) {
-    void p.g.stage.view2D({ center: [0.6, 0.6], height: 9, ms: 0 });
+    void p.g.stage.view2D({ center: [0.6, 1.2], height: 9, ms: 0 });
     let A: Mat = T.map((r) => r.slice());
     const ours = new Parallelogram(p.g.stage, [1, 0, 0], [0, 1, 0], { color: C.result, opacity: 0.16 });
     const cell = new Parallelogram(p.g.stage, [1, 0, 0], [0, 1, 0], { color: COPPER, opacity: 0.14 });
@@ -133,8 +133,10 @@ export const doubtArea: DoubtDef = {
       cell.group.visible = ok;
       if (ok) cell.set(v3(matVec(A, col(G, 0)), 0.012), v3(matVec(A, col(G, 1)), 0.012));
       const B = inGrid(A, G);
-      r.row('a', '$A$ in our grid', `$${texSmall(A)}$ · area × ${fmtN(det(A))}`, C.result);
-      r.row('b', '$P^{-1}AP$ in the copper grid', B ? `$${texSmall(B.map((x) => x.map((y) => Math.round(y * 1000) / 1000)))}$ · area × ${fmtN(det(B))}` : 'no grid: the arrows are on one line', COPPER);
+      r.row('a', '$A$, in our grid', `$${texSmall(A)}$`, C.result);
+      r.row('aa', 'its area scale', `× ${fmtN(det(A))}`, C.result);
+      r.row('b', '$P^{-1}AP$, in the copper grid', B ? `$${texSmall(B.map((x) => x.map((y) => Math.round(y * 1000) / 1000)))}$` : 'no grid', COPPER);
+      r.row('bb', 'its area scale', B ? `× ${fmtN(det(B))}` : '·', COPPER);
     };
     gh.onChange(() => draw());
     const mi = new MatrixInput({ rows: 2, cols: 2, values: A, label: 'A =', step: 1, onChange: (m) => { A = m; draw(); } });
@@ -239,7 +241,7 @@ export const law: LawDef<GridCase> = {
 
 export const compare: CompareDef = {
   id: 'c17',
-  page: '**Coordinates** are the weights on the grid arrows that reach a point. In the Anchor’s grid $\\mathcal B = \\{\\mathbf b_1, \\mathbf b_2\\}$ the buoy $(3, 2)$ has coordinates $(1, 2)$: $1\\mathbf b_1 + 2\\mathbf b_2 = (3, 2)$. The buoy never moved; only the arrows we counted in changed.\n\nThe matrix $P$ whose columns are $\\mathbf b_1, \\mathbf b_2$ turns those weights into standard numbers: $\\mathbf x = P[\\mathbf x]_\\mathcal B$. Its inverse goes the other way.\n\nA move $A$ written in $\\mathcal B$: translate in with $P$, move with $A$, translate back with $P^{-1}$. Read right to left, $[A]_\\mathcal B = P^{-1}AP$. The matrix $PAP^{-1}$ does the reverse: it takes a move written in $\\mathcal B$ and gives its standard matrix. That was my mistake. I wrote $R$ for our grid, and the Anchor played $PRP^{-1}$.\n\nTwo matrices related this way are **similar**: one move, two descriptions. They share everything that does not depend on the grid: area scale, the sum down the diagonal, how many repeats bring every point home.',
+  page: '**Coordinates** are the weights on the grid arrows that reach a point. In the Anchor’s basis $\\mathcal B = \\{\\mathbf b_1, \\mathbf b_2\\}$ the buoy $(3, 2)$ has coordinates $(1, 2)$: $1\\mathbf b_1 + 2\\mathbf b_2 = (3, 2)$. The buoy never moved.\n\nThe matrix $P$ with columns $\\mathbf b_1, \\mathbf b_2$ turns $\\mathcal B$-numbers into standard ones, $\\mathbf x = P[\\mathbf x]_\\mathcal B$. Its inverse goes the other way.\n\nTo write a move $A$ in $\\mathcal B$: turn $\\mathcal B$-numbers into standard ones ($P$), move ($A$), turn back ($P^{-1}$). Right to left, $[A]_\\mathcal B = P^{-1}AP$. $PAP^{-1}$ answers the reverse question: what a move written in $\\mathcal B$ does to standard numbers. I wrote $R$ for our grid; the Anchor read it in $\\mathcal B$ and played $PRP^{-1}$.\n\nMatrices related this way are **similar**: one move, two descriptions. They share what does not depend on the grid: area scale, the sum down the diagonal, how many repeats bring every point home.',
   formula: '[\\mathbf x]_\\mathcal B = P^{-1}\\mathbf x, \\qquad [A]_\\mathcal B = P^{-1}AP, \\qquad \\det(P^{-1}AP) = \\det A',
   keyIdeas: [
     'Did you say the point does not move, only its numbers?',
