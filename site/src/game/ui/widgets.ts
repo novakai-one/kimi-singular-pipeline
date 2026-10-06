@@ -173,7 +173,7 @@ export class Readout {
     this.rowsEl = h('div', { class: 'rows', style: 'display:flex;flex-direction:column;gap:6px' });
     this.eqEl = h('div', { class: 'eq' });
     this.noteEl = h('div', { class: 'note' });
-    this.el = h('div', { class: 'readout glass' }, title ? h('div', { class: 'kicker' }, title) : null, this.rowsEl, this.eqEl, this.noteEl);
+    this.el = h('div', { class: 'readout glass' }, title ? h('div', { class: 'kicker', html: inline(title) }) : null, this.rowsEl, this.eqEl, this.noteEl);
     this.eqEl.hidden = true;
     this.noteEl.hidden = true;
   }

@@ -42,7 +42,7 @@ export class Hud {
   setObjective(title: string, goal: string, subgoals: string[] = []): void {
     this.objEl.hidden = false;
     this.goalEl = h('div', { class: 'goal', html: md(goal) });
-    this.subs = subgoals.map((s) => h('div', { class: 'sub', html: inline(s) }));
+    this.subs = subgoals.map((s) => h('div', { class: 'sub' }, h('span', { html: inline(s) })));
     this.starsEl = h('span', { class: 'stars', 'aria-label': 'stars' });
     this.objEl.replaceChildren(
       h('div', { style: 'display:flex;justify-content:space-between;gap:10px;align-items:center' }, h('span', { class: 'kicker' }, title), this.starsEl),
