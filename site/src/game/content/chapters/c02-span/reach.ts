@@ -41,7 +41,7 @@ void main(){
   // a small bright core (the point the tip visited) inside a wide faint halo (the glow of the set)
   float core = exp(-r2 * 30.0);
   float halo = exp(-r2 * 3.2) * (1.0 - r2);
-  float a = (0.95 * core + 0.2 * halo) * vA * uGain;
+  float a = (core + 0.09 * halo) * vA * uGain;
   if (a < 0.003) discard;
   gl_FragColor = vec4(uColor, a);
 }`;
@@ -193,7 +193,7 @@ export class ReachGlow {
     const spread = o.spread ?? 1.4;
     let s = o.seed ?? 7;
     const rnd = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
-    const jit = o.jitter ?? 0.7;
+    const jit = o.jitter ?? 0.5;
     const counts = ranges.map(([lo, hi], i) => Math.max(1, Math.floor((hi - lo) / steps[i]) + 1));
     const total = counts.reduce((p, x) => p * x, 1);
     let maxR = 1e-6;
