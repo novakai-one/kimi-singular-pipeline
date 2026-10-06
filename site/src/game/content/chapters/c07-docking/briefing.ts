@@ -90,9 +90,10 @@ export const doubtNormal: DoubtDef = {
   goal: 'Set $a$, $b$, $c$ and $d$. The arrow $(a, b, c)$ stands on the plane beside two arrows that lie in it. **Back it** (Bram will shake it) or **Challenge it**.',
   view: '3d',
   async setup(p) {
-    await p.g.stage.view3D({ target: [0, 0, 1], distance: 16, azimuth: -55, elevation: 22, ms: 0 });
+    await p.g.stage.view3D({ target: [0.73, 0.37, 0.74], distance: 16, azimuth: -55, elevation: 22, ms: 0 });
     p.grid({ base: 0.06, main: 0.12, axis: 0.3 });
     let n: V3 = [6, 3, 2], k = 6;
+    let look: V3 = [0, 0, 0];
     const plane = new PlanePatch(p.g.stage, [0, 0, 0], [0, 0, 1], { color: '#8fd3ff', size: 6, opacity: 0.12 });
     p.add(plane);
     const na = new Arrow([0, 0, 0], [0, 0, 1], { color: '#fff1c2', width: 0.045, label: '$(a, b, c)$' });
@@ -107,6 +108,8 @@ export const doubtNormal: DoubtDef = {
     const show = () => {
       if (norm(n) < 1e-9) { r.row('eq', 'plane', 'none: (a, b, c) is zero'); return; }
       const x0 = footOnPlane([0, 0, 0], n, k) as V3;
+      // keep the plane in view: the camera follows the point of the plane nearest the origin
+      if (Math.hypot(x0[0] - look[0], x0[1] - look[1], x0[2] - look[2]) > 0.5) { look = x0; void p.g.stage.view3D({ target: [x0[0], x0[1], x0[2] + 0.5], distance: 16, azimuth: -55, elevation: 22, ms: 250 }); }
       const [a, b] = inPlaneDirs(n);
       plane.setSpan(x0, v3(a), v3(b));
       const u = vscale(n, 2 / norm(n));
