@@ -67,8 +67,11 @@ for (const i of beats) {
     console.log(`beat ${i} broadcast: ${res.join(', ')}`);
   } else if (['doubt', 'law', 'procedure', 'teo'].includes(kind)) {
     // the speaker may voice a line first (doubts); give the step time to open
-    await p.waitForFunction(() => !!window.__game.briefing(), null, { timeout: 90000 }).catch(() => {});
-    const r = await p.evaluate(() => window.__game.solveBriefing());
+    // wait for this beat's own step (a teo beat runs as a procedure), so a step still closing is not solved instead
+    const want = kind === 'teo' ? 'procedure' : kind;
+    await p.waitForFunction((w) => window.__game.briefing() === w, want, { timeout: 90000 }).catch(() => {});
+    let r = await p.evaluate(() => window.__game.solveBriefing());
+    if (!r) { await p.waitForTimeout(1500); r = await p.evaluate(() => window.__game.solveBriefing()); }
     await frames(10);
     await p.screenshot({ path: `${out}/${tag}-solved.png` });
     console.log(`beat ${i} ${kind}: solve → ${r ? r.ok : 'no briefing step found'}`);

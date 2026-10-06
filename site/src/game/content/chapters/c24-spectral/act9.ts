@@ -350,7 +350,7 @@ export async function arkSet(g: Game, o: ArkSetOpts = {}): Promise<ArkSet> {
   return {
     root, ark, model, anchor, lantern, alive,
     check: () => { if (!alive()) throw new Gone(); },
-    tick: (fn) => { offs.push(g.stage.tick(fn)); },
+    tick: (fn) => { if (alive()) offs.push(g.stage.tick(fn)); },
     setStern, braces,
   };
 }

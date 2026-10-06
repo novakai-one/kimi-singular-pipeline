@@ -115,7 +115,8 @@ export async function actSet(g: Game, o: ActSetOpts = {}): Promise<ActSet> {
   const set: ActSet = {
     root, ark: null, lantern: null, anchor: null, alive,
     check: () => { if (!alive()) throw new Gone(); },
-    tick: (fn) => { offs.push(g.stage.tick(fn)); },
+    // a set already cleared (the player moved on while a model loaded) takes no new per-frame work
+    tick: (fn) => { if (alive()) offs.push(g.stage.tick(fn)); },
   };
   const sd = new Vector3(...STAR).normalize();
   const star = new DirectionalLight('#ffd9b0', o.starLight ?? 2.4);

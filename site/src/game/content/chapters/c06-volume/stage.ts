@@ -44,8 +44,9 @@ export async function hullSet(g: Game, o: HullOpts = {}): Promise<HullSet> {
   g.stage.world.add(root);
   const offs: (() => void)[] = [];
   root.userData.dispose = () => { offs.splice(0).forEach((f) => f()); };
-  const tick = (fn: (dt: number, t: number) => void) => { offs.push(g.stage.tick(fn)); };
   const alive = () => !!root.parent;
+  // a set already cleared (the player moved on while a model loaded) takes no new per-frame work
+  const tick = (fn: (dt: number, t: number) => void) => { if (alive()) offs.push(g.stage.tick(fn)); };
 
   const sd = new Vector3(...STAR_DIR).normalize();
   const star = new DirectionalLight(STAR_COLOR, o.starLight ?? 2.4);

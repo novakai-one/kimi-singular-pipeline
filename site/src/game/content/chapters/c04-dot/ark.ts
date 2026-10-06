@@ -56,8 +56,9 @@ export async function arkSet(g: Game, o: ArkOpts = {}): Promise<ArkSet> {
   g.stage.world.add(root);
   const offs: (() => void)[] = [];
   root.userData.dispose = () => { offs.splice(0).forEach((f) => f()); };
-  const tick = (fn: (dt: number, t: number) => void) => { offs.push(g.stage.tick(fn)); };
   const alive = () => !!root.parent;
+  // a set already cleared (the player moved on while a model loaded) takes no new per-frame work
+  const tick = (fn: (dt: number, t: number) => void) => { if (alive()) offs.push(g.stage.tick(fn)); };
 
   // the low star: a warm key light and a glow far away in its direction
   const sd = new Vector3(...(o.starDir ?? STAR_DIR)).normalize();

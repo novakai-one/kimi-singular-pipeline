@@ -277,6 +277,7 @@
 .tile.used { opacity: 0.35; }
 .tile.in-plan { list-style: decimal; display: list-item; }
 .tile-py { font-size: 12px; color: var(--ink-2); background: none; padding: 0; }
+.tile.in-plan .tile-py { display: block; margin-top: 4px; } /* a numbered tile is a list item, not a flex column */
 
 /* ---------- the Briefing ---------- */
 .brief { position: absolute; padding: 20px 22px; animation: fade-in 0.4s; }

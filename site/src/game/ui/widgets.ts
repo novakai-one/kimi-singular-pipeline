@@ -122,17 +122,18 @@ export class Slider {
   readonly el: HTMLElement;
   private readonly input: HTMLInputElement;
   private readonly val: HTMLElement;
+  private readonly fmt: (v: number) => string;
   constructor(o: { label: string; min: number; max: number; step?: number; value?: number; onInput?: (v: number) => void; format?: (v: number) => string }) {
     this.input = h('input', { type: 'range', min: o.min, max: o.max, step: o.step ?? 0.01, value: o.value ?? o.min, 'aria-label': o.label }) as HTMLInputElement;
     this.val = h('span', { class: 'val' });
-    const fmt = o.format ?? ((v: number) => nice(v));
+    const fmt = this.fmt = o.format ?? ((v: number) => nice(v));
     const upd = () => { const v = parseFloat(this.input.value); this.val.textContent = fmt(v); o.onInput?.(v); };
     this.input.addEventListener('input', upd);
     this.el = h('label', { class: 'slider-row' }, h('span', { html: inline(o.label) }), this.input, this.val);
     this.val.textContent = fmt(o.value ?? o.min);
   }
   get(): number { return parseFloat(this.input.value); }
-  set(v: number, notify = true): void { this.input.value = String(v); if (notify) this.input.dispatchEvent(new Event('input')); else this.val.textContent = nice(v); }
+  set(v: number, notify = true): void { this.input.value = String(v); if (notify) this.input.dispatchEvent(new Event('input')); else this.val.textContent = this.fmt(v); }
 }
 
 export interface ChoiceOpt { id: string; text: string }

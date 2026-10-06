@@ -448,6 +448,7 @@ export async function runProcedure(host: BriefingHost, def: ProcedureDef, teo?: 
     status.innerHTML = md(teo ? 'Teo is following your steps…' : 'LANTERN is running your steps…');
     const r = await def.run(g, order);
     status.innerHTML = md(r.ok ? `**It worked.** ${r.message}` : r.message);
+    status.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     if (r.ok) { finished = true; sfx.solved(); void hud.primary('Continue').then(resolveDone); } else sfx.miss();
     return r.ok;
   };
