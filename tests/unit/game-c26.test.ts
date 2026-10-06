@@ -48,6 +48,16 @@ test('p2: about the origin the best direction points toward the mean; about the 
   assert.ok(L.p2Won([3.25, 2.15], 0.15) && !L.p2Won([0, 0], 0.15) && !L.p2Won([2.5, 2.2], 0.15));
 });
 
+test('p2 bark: “Closer” only when the pivot moved toward the mean; the turn is between lines, folded into [0°, 90°]', () => {
+  close(L.p2FromMean([0, 0]), Math.hypot(3.2, 2.2), 1e-12);   // 3.88
+  assert.ok(L.p2FromMean([-2, -2]) > L.p2FromMean([0, 0]), 'moving away from the mean is not closer');
+  assert.ok(L.p2FromMean([1, 1]) < L.p2FromMean([0, 0]));
+  close(L.p2Turn([0, 0]), 0, 1e-9);
+  // at (3.2, 0) the line goes from 33° to 99°: a turn of 66°, not the raw 114° between the two eigenvectors
+  assert.ok(Math.abs(L.p2Turn([3.2, 0]) - 66) < 1, `${L.p2Turn([3.2, 0])}`);
+  for (const c of [[3.2, 0], [-2, -2], [1, 1], [2, 1.5], [3, 3], [-1, 4]]) { const t = L.p2Turn(c); assert.ok(t >= 0 && t <= 90, `${c}: ${t}`); close(t, L.lineDeg(L.bestAbout(c), L.bestAbout([0, 0])), 1e-6); }
+});
+
 test('p3 [D]: C = [[4, 2], [2, 3]]: largest spread 5.56 of 7 (79%) along the top eigenvector; wᵀCw is the spread', () => {
   close(L.P3_EIG.values[0], (7 + Math.sqrt(17)) / 2, 1e-9);
   close(L.P3_SHARE, 0.7945, 1e-4);
@@ -58,6 +68,30 @@ test('p3 [D]: C = [[4, 2], [2, 3]]: largest spread 5.56 of 7 (79%) along the top
   assert.ok(said(S.p3Win).includes('5.56') && said(S.p3Win).includes('79%'));
 });
 
+test('p3 [D] at Navigator: the typed steps follow the derivation at w = (1, 0); two-decimal working passes each step', () => {
+  const [l1, l2] = L.P3_EIG.values, [q1, q2] = L.P3_EIG.vectors;
+  // (1) the quadratic form at w = (1, 0)
+  assert.equal(L.P3_W0_SPREAD, 4);
+  close(L.P3_W0_SPREAD, L.spreadOn(L.P3_CLOUD, [0, 0], L.P3_W0), 1e-9);
+  // (2) the eigenvalues, typed to two decimals
+  assert.ok(Math.abs(5.56 - l1) <= L.TOL2 && Math.abs(1.44 - l2) <= L.TOL2);
+  // (3) w in C's eigenvector grid: y² = (0.62, 0.38), adding to 1
+  close(L.P3_Y2[0] + L.P3_Y2[1], 1, 1e-12);
+  const r2 = (x: number) => Math.round(x * 100) / 100;
+  const qGrid = [q1, q2].map((q) => q.map(r2));   // the two-decimal grid printed in the prompt
+  assert.deepEqual(qGrid, [[0.79, 0.62], [0.62, -0.79]]);
+  const y2Worked = qGrid.map((q) => (q[0] * L.P3_W0[0] + q[1] * L.P3_W0[1]) ** 2);   // 0.6241, 0.3844
+  for (const typed of [y2Worked, y2Worked.map(r2)]) typed.forEach((y, i) => assert.ok(Math.abs(y - L.P3_Y2[i]) <= L.P3_Y2_TOL, `${y} vs ${L.P3_Y2[i]}`));
+  assert.ok(Math.abs(L.P3_Y2[1] - L.P3_Y2[0]) > L.P3_Y2_TOL, 'swapped y² values fail');
+  // (4) λ₁y₁² + λ₂y₂² is the same spread as step 1, also from two-decimal working
+  close(l1 * L.P3_Y2[0] + l2 * L.P3_Y2[1], L.P3_W0_SPREAD, 1e-9);
+  for (const y of [y2Worked, y2Worked.map(r2)]) assert.ok(Math.abs(5.56 * y[0] + 1.44 * y[1] - 4) <= L.P3_FORM_TOL, `${5.56 * y[0] + 1.44 * y[1]}`);
+  assert.ok(Math.abs(5.56 - 4) > L.P3_FORM_TOL && Math.abs(7 - 4) > L.P3_FORM_TOL);
+  // (5) with y₁² + y₂² = 1 the largest value is λ₁, at y = (1, 0): w = q₁
+  for (let t = 0; t <= 1; t += 0.05) assert.ok(l1 * t + l2 * (1 - t) <= l1 + 1e-12);
+  close(dot(q1, matVec(L.P3_C, q1)), l1, 1e-9);
+});
+
 test('p4 [H]: mean (4, 5); centred (2, 1), (−2, −1), (1, 2), (−1, −2); C = (1/3)[[10, 8], [8, 10]]; 6 and 2/3; (1, 1)/√2 keeps 90%; ±3/√2', () => {
   assert.ok(veq(L.P4_MEAN, [4, 5]));
   assert.ok(meq(L.P4_CENTRED, [[2, 1], [-2, -1], [1, 2], [-1, -2]]));
@@ -66,6 +100,12 @@ test('p4 [H]: mean (4, 5); centred (2, 1), (−2, −1), (1, 2), (−1, −2); C
   assert.ok(veq(L.P4_EIG.vectors[0], [R2, R2], 1e-12));
   close(L.P4_SHARE, 0.9, 1e-12);
   assert.ok(veq(L.P4_PROJ, [3 * R2, -3 * R2, 3 * R2, -3 * R2], 1e-12));
+  // two-decimal answers (3.33, 2.67; 0.67) pass the covariance and eigenvalue steps; the misconceptions do not
+  const r2 = (x: number) => Math.round(x * 100) / 100;
+  assert.ok(meq(L.P4_COV.map((r) => r.map(r2)), L.P4_COV, L.TOL2));
+  assert.ok(veq(L.P4_EIG.values.map(r2), L.P4_EIG.values, L.TOL2));
+  assert.ok(!meq([[2.5, 2], [2, 2.5]], L.P4_COV, L.TOL2) && !meq([[10, 8], [8, 10]], L.P4_COV, L.TOL2));
+  assert.ok(!veq([6, 0.6], L.P4_EIG.values, L.TOL2) && !veq([6, 0.7], L.P4_EIG.values, L.TOL2));
 });
 
 test('p5: the record’s twelve singular values (TT18); 2 components keep 96.35%, 1 keeps 60.0%; the third is above the tail', () => {

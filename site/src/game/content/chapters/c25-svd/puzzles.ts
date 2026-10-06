@@ -16,8 +16,9 @@ import { ptag, v3 } from '../c24-spectral/act9';
 import { checklist, msgLine } from '../c24-spectral/puzzles';
 import { deg, rad, texM } from '../c24-spectral/logic';
 import {
-  P1_A, P1_DET, P1_SIGMA, P2_ATA, P2_AV1, P2_AV2, P2_DECOYS, P2_EIG, P2_ORDER, P2_TILES, P3_T1, P3_T2, P4_A, P4_ATA, P4_EIG,
-  P4_SIGMA, P4_U, P4_V, fmtD, fmtN, outputsAngle, p1Won, p2Dot, p3Err, p3Won, threeMoves,
+  P1_A, P1_DET, P1_SIGMA, P2_AAT, P2_ATA, P2_ATAV1, P2_ATAV2, P2_DECOYS, P2_EIG, P2_ORDER, P2_ROWCOL, P2_TILES, P3_T1, P3_T2,
+  P4_A, P4_AAT_CORNER, P4_ATA, P4_EIG, P4_NO_CROSS, P4_SIGMA, P4_U, P4_V, fmtD, fmtN, outputsAngle, p1Won, p2Dot, p2OrderFault,
+  p3Err, p3Won, threeMoves,
 } from './logic';
 import { S } from './script';
 
@@ -178,9 +179,17 @@ export const p2: PuzzleDef = {
     const box = h('div', { class: 'a9-col' });
     let started = false, ws: StepWorksheet | null = null, tiles: TileOrder | null = null, last: StepWorksheet | null = null;
     const reasonDone = () => tick(1);
+    const TILE_MISS: Record<string, string> = {
+      decoy: '$A$ itself is not symmetric. It is $A^{\\mathsf T}A$ that is.',
+      missing: 'Use every true step.',
+      repeat: 'Use each step once.',
+      last: 'The right angle is the conclusion. It goes last.',
+      order: 'Write the dot product as $\\mathbf v_1^{\\mathsf T}A^{\\mathsf T}A\\,\\mathbf v_2$ first.',
+    };
     const submitTiles = (o: string[]) => {
       p.move();
-      if (o.join() !== P2_ORDER.join()) { sfx.miss(); msg.say('Not in that order. Start by writing the dot product of the images with $A^{\\mathsf T}A$ in the middle.', 'bad'); return; }
+      const fault = p2OrderFault(o);
+      if (fault) { sfx.miss(); msg.say(TILE_MISS[fault], 'bad'); return; }
       sfx.snap(); msg.say('Right. Now the last line.', 'good');
       if (!last) last = new StepWorksheet(p, { title: 'The last line · only the answer is checked', steps: [{ prompt: '$A(1, 1)\\cdot A(1, -1)$', answer: 0 }], mount: box, onDone: reasonDone });
     };
@@ -196,10 +205,16 @@ export const p2: PuzzleDef = {
         ws = new StepWorksheet(p, {
           title: 'Where the axes come from · each step is checked', mount: box, onDone: reasonDone,
           steps: [
-            { prompt: '$A^{\\mathsf T}A$', answer: P2_ATA, mistakes: [[[[25, 12], [12, 25]], 'Multiply $A^{\\mathsf T}$ by $A$, not $A$ by $A^{\\mathsf T}$.'], [[[9, 12], [12, 41]], 'That is $AA^{\\mathsf T}$. Columns of $A$ dotted with columns of $A$.']] },
+            { prompt: '$A^{\\mathsf T}A$', answer: P2_ATA, mistakes: [
+              [P2_ROWCOL, 'The diagonal is right, but the corners dot row 1 with row 2. Entries of $A^{\\mathsf T}A$ dot column $i$ with column $j$: $(3, 4)\\cdot(0, 5) = 20$.'],
+              [P2_AAT, 'That is $AA^{\\mathsf T}$: rows dotted with rows. $A^{\\mathsf T}A$ dots each column of $A$ with each column.'],
+            ] },
             { prompt: 'Its eigenvalues, larger first: the squares of the lengths', answer: P2_EIG },
-            { prompt: '$A(1, 1)$ and $A(1, -1)$', answer: [[P2_AV1[0], P2_AV2[0]], [P2_AV1[1], P2_AV2[1]]] },
-            { prompt: 'Their dot product', answer: 0 },
+            { prompt: '$A^{\\mathsf T}A\\,(1, 1)$ and $A^{\\mathsf T}A\\,(1, -1)$, one down each column: each is a multiple of its input', answer: [[P2_ATAV1[0], P2_ATAV2[0]], [P2_ATAV1[1], P2_ATAV2[1]]], mistakes: [
+              [[[P2_ATAV1[0], P2_ATAV1[1]], [P2_ATAV2[0], P2_ATAV2[1]]], 'Those are the two answers written across the rows. Write each one down its own column.'],
+            ] },
+            { prompt: 'Its eigenvectors are perpendicular: $(1, 1)^{\\mathsf T}A^{\\mathsf T}A\\,(1, -1) = 5\\,\\big((1, 1)\\cdot(1, -1)\\big) =$', answer: 0 },
+            { prompt: 'And $A(1, 1)\\cdot A(1, -1) = (1, 1)^{\\mathsf T}A^{\\mathsf T}A\\,(1, -1)$, the same number. Check it: $(3, 9)\\cdot(3, -1) =$', answer: 0 },
           ],
         });
       } else {
@@ -338,7 +353,10 @@ export const p4: PuzzleDef = {
     const ws = new StepWorksheet(p, {
       onDone: () => void finale(),
       steps: [
-        { prompt: '$A^{\\mathsf T}A$', answer: P4_ATA, mistakes: [[[[2, 1, 1], [1, 1, 0]], 'That would be 3 × 3: it is $AA^{\\mathsf T}$. $A^{\\mathsf T}A$ is 2 × 2.']] },
+        { prompt: '$A^{\\mathsf T}A$', answer: P4_ATA, mistakes: [
+          [P4_AAT_CORNER, 'That is the corner of $AA^{\\mathsf T}$: rows dotted with rows. $A^{\\mathsf T}A$ is 2 × 2: dot each column with each column.'],
+          [P4_NO_CROSS, 'You dropped the cross term: column 1 dotted with column 2 is $(1, 0, 1)\\cdot(1, 1, 0) = 1$.'],
+        ] },
         { prompt: 'Its eigenvalues, larger first', answer: P4_EIG },
         { prompt: 'The singular values $\\sigma_1, \\sigma_2$ (two decimals)', answer: P4_SIGMA, tol: 0.006, mistakes: [[[3, 1], 'Those are $\\sigma^2$. Take the square roots.']] },
         { prompt: '$V$: columns $\\mathbf v_1, \\mathbf v_2$, unit length, first entry positive (two decimals)', answer: [[P4_V[0][0], P4_V[1][0]], [P4_V[0][1], P4_V[1][1]]], tol: 0.006 },

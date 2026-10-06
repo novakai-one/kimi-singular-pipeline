@@ -58,6 +58,8 @@ export const sp1: PuzzleDef = {
   onWin: S.sp1Win,
   setup(p) {
     const d = p.difficulty;
+    // the set piece starts here: forget a previous run's choices (a skipped step uses the reference)
+    Object.assign(SP, { N: READINGS, braced: true, settings: true });
     void p.g.stage.view3D({ target: [1.6, 1.6, -1.0], distance: 20, azimuth: -28, elevation: 18, ms: 0 });
     const c0: V3 = [0, 0, 0.6];
     const right: V3 = [Math.sin((28 * Math.PI) / 180), Math.cos((28 * Math.PI) / 180), 0];   // screen right for this camera
@@ -293,7 +295,7 @@ export const sp4: PuzzleDef = {
   hints: [
     'The mixed stress is $\\mathbf q_1^{\\mathsf T}C\\,\\mathbf q_3$. It is zero only when both braces are eigenvectors of $C$.',
     'The first brace should end up close to $(1, 1, 2)$: about 35° from straight up.',
-    'Turn to 35.2°.',
+    'Turn to 35.2°, or the nearest the slider allows.',
   ],
   par: 2,
   view: '3d',
@@ -314,10 +316,11 @@ export const sp4: PuzzleDef = {
       set.braces(fr);
       const m = mixedStress(theta);
       r.row('t', 'braces turned by', `${fmtD(theta, d === 'commander' ? 1 : 1)}°`, C.accent);
-      r.row('m', 'mixed stress $\\mathbf q_1^{\\mathsf T}C\\,\\mathbf q_3$', fmtD(m, 3), Math.abs(m) < 0.01 ? C.good : C.orange);
+      // green exactly when the braces are inside the level's tolerance (the slider step cannot reach 0.000)
+      r.row('m', 'mixed stress $\\mathbf q_1^{\\mathsf T}C\\,\\mathbf q_3$', fmtD(m, 3), sp4Won(theta, tol) ? C.good : C.orange);
     };
     const sl = new Slider({ label: 'turn the braces', min: 0, max: 90, step, value: theta, format: (x) => `${fmtD(x, 1)}°`, onInput: (x) => { theta = x; paint(); } });
-    const check = () => { if (won) return; if (sp4Won(theta, tol)) { won = true; SP.braced = true; p.subgoal(0); msg.say('No mixed stress: each brace now only pushes or pulls.', 'good'); p.win(); } else msg.say(`Mixed stress ${fmtD(mixedStress(theta), 3)}. Keep turning.`); };
+    const check = () => { if (won) return; if (sp4Won(theta, tol)) { won = true; SP.braced = true; p.subgoal(0); msg.say(`Mixed stress ${fmtD(mixedStress(theta), 3)}: small enough that each brace only pushes or pulls.`, 'good'); p.win(); } else msg.say(`Mixed stress ${fmtD(mixedStress(theta), 3)}. Keep turning.`); };
     sl.el.addEventListener('change', () => { p.move(); check(); });
     p.dock().append(sl.el, msg.el);
     paint();

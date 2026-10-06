@@ -91,6 +91,9 @@ export const doubtCols: DoubtDef = {
 
 // ------------------------------------------------------------------ (F) "PCA fits data the way least squares does."
 
+/** A line's angle in degrees, folded into [0, 180): the readout and the verdict text use the same one. */
+const mod180 = (a: number) => ((a % 180) + 180) % 180;
+
 export const doubtLsq: DoubtDef = {
   id: 'c26-d-lsq', who: 'bram', isTrue: false,
   claim: 'The first principal component is the line of best fit from Chapter 23. Same line, new name.',
@@ -109,14 +112,14 @@ export const doubtLsq: DoubtDef = {
       pc.set(v3(m, 0.01), v3(e.vectors[0]));
       ls.set(v3(m, 0.012), [1, Cv[0][1] / Cv[0][0], 0]);
       const a1 = deg(Math.atan2(e.vectors[0][1], e.vectors[0][0])), a2 = deg(Math.atan(Cv[0][1] / Cv[0][0]));
-      r.row('p', 'first principal component at', `${fmtD(((a1 % 180) + 180) % 180, 1)}°`, C.result);
-      r.row('l', 'least-squares line at', `${fmtD(((a2 % 180) + 180) % 180, 1)}°`, C.orange);
+      r.row('p', 'first principal component at', `${fmtD(mod180(a1), 1)}°`, C.result);
+      r.row('l', 'least-squares line at', `${fmtD(mod180(a2), 1)}°`, C.orange);
     };
     const sc = shapedCloud(p, { angle: 0, s1: 2.5, onChange: paint });
     paint(sc.X);
     return {
       holds: () => lsqLikePcaHolds(sc.X),
-      describe: () => { const Cv = covariance(sc.X), e = symEig(Cv); return `the first principal component runs at ${fmtD(((deg(Math.atan2(e.vectors[0][1], e.vectors[0][0])) % 180) + 180) % 180, 1)}°, the least-squares line at ${fmtD(deg(Math.atan(Cv[0][1] / Cv[0][0])), 1)}°`; },
+      describe: () => { const Cv = covariance(sc.X), e = symEig(Cv); return `the first principal component runs at ${fmtD(mod180(deg(Math.atan2(e.vectors[0][1], e.vectors[0][0]))), 1)}°, the least-squares line at ${fmtD(mod180(deg(Math.atan(Cv[0][1] / Cv[0][0]))), 1)}°`; },
       randomize(rr, edge) { if (edge !== undefined) sc.set([40, 60][edge], [1, 0.6][edge]); else sc.set(rint(rr, 0, 179), 0.5 + rr() * 3); },
       edgeCases: 2,
       async showMe(stance) { sc.set(stance === 'challenge' ? 40 : 0, 1); },
@@ -129,7 +132,7 @@ export const doubtLsq: DoubtDef = {
 export const doubtSwing: DoubtDef = {
   id: 'c26-d-swing', who: 'bram', isTrue: true,
   claim: 'Skip the centring and the first direction swings toward the mean.',
-  reason: 'About the origin, the moments are $C + \\tfrac{n}{n - 1}\\mathbf m\\mathbf m^{\\mathsf T}$: the covariance plus a stretch along the mean $\\mathbf m$. Adding it pulls the top eigenvector toward the line of $\\mathbf m$, and never away. Far from the origin, it points almost straight at the cloud.',
+  reason: 'Without centring, the matrix is $X^{\\mathsf T}X/(n - 1) = C + \\tfrac{n}{n - 1}\\mathbf m\\mathbf m^{\\mathsf T}$: the covariance matrix plus a stretch along the mean $\\mathbf m$. Adding it pulls the top eigenvector toward the line of $\\mathbf m$, and never away. Far from the origin, it points almost straight at the cloud.',
   goal: 'Drag the cloud’s middle (white) and shape it (green handle). Orange: the first direction without centring, through the origin. Yellow: with centring. **Back it** (Bram will shake it) or **Challenge it**.',
   view: '2d',
   setup(p) {
@@ -234,7 +237,7 @@ export const procedure: ProcedureDef = {
       await cloudG.to(shown, fast ? 1 : 900);
     }
     if (res.dir) {
-      step.set(res.fault === 'centre' ? 'Eigenvectors of the moments about the origin' : res.fault === 'sort' ? 'Kept the first eigenvector found' : 'The first principal direction');
+      step.set(res.fault === 'centre' ? 'Eigenvectors of XᵀX/(n − 1), not centred' : res.fault === 'sort' ? 'Kept the first eigenvector found' : 'The first principal direction');
       inWorld(g, new InfLine(g.stage, [0, 0, 0.01], v3(res.dir), { color: res.ok ? C.result : C.orange, width: 1.4, opacity: 0.6, length: 22 }));
       await wait(fast ? 1 : 600);
       if (res.ok || res.fault === 'keep') {
@@ -338,7 +341,7 @@ const reviewCond: DoubtDef = {
   id: 'c26-r-cond', who: 'ilse', isTrue: true,
   claim: 'The condition number says how much a solver can multiply errors.',
   reason: 'Solving $A\\mathbf x = \\mathbf b$ divides by the singular values. A small error in $\\mathbf b$ grows by at most $1/\\sigma_{\\min}$, while $\\mathbf x$ shrinks from $\\mathbf b$ by at most $1/\\sigma_{\\max}$: relative errors grow by at most $\\sigma_{\\max}/\\sigma_{\\min}$. The worst case is $\\mathbf b$ along $\\mathbf u_1$ and the error along $\\mathbf u_n$.',
-  goal: 'Drag $\\mathbf b$ (green) and its error (red, from the tip of $\\mathbf b$). The readout compares how much the relative error grew with the condition number. **Back it** (Ilse will shake it) or **Challenge it**.',
+  goal: 'Drag $\\mathbf b$ (green). The red arrow from its tip is a fixed error; Ilse’s shake changes it. The readout compares how much the relative error grew with the condition number. **Back it** (Ilse will shake it) or **Challenge it**.',
   view: '2d',
   setup(p) {
     void p.g.stage.view2D({ center: [0.6, 1.6], height: 9, ms: 0 });   // b stays below the claim panel

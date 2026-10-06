@@ -62,7 +62,7 @@ export const S: Record<string, Line[]> = {
     { who: 'lantern', text: 'Optional. Two kinds of debris, side by side. The first component does not tell them apart.' },
   ],
   p7Win: [
-    { who: 'lantern', text: 'Along the second component the two kinds separate. The first component finds spread. It does not know which kind is which.' },
+    { who: 'lantern', text: 'Along the second component the two kinds separate. The first component is the direction of most spread. The labels of the two kinds play no part in it.' },
   ],
   briefing: [
     { who: 'bram', text: 'Holotable. Before that transmission goes out under my ship’s name, brief me.' },

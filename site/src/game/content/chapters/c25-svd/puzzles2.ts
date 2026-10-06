@@ -22,7 +22,7 @@ import { ptag, tag, v3 } from '../c24-spectral/act9';
 import { checklist, msgLine } from '../c24-spectral/puzzles';
 import { deg, rad } from '../c24-spectral/logic';
 import {
-  FITTED, K_OPTIONS, P5_E, P5_K, P7_A, P7_B, P7_XPLUS, SV2, SV_C2, TEO, TEO_COLS, TEO_ROWS, TEO_SV, THIN,
+  FITTED, K_OPTIONS, P5_E, P5_K, P7_A, P7_B, P7_START, P7_XPLUS, SV2, SV_C2, TEO, TEO_COLS, TEO_ROWS, TEO_SV, THIN,
   crewSvd, errStretch, fmtD, heard, isClear, layerError, p5Won, p5bWon, p6Won, p7Won, rebuild, storage, svdCanon, svdOk,
 } from './logic';
 import { SV_C } from '../../truth';
@@ -97,13 +97,15 @@ export const p5: PuzzleDef = {
       constrain: (q) => { let a = deg(Math.atan2(q.y, q.x)); if (d === 'cadet') a = Math.round(a / 5) * 5; theta = a; q.set(Math.cos(rad(a)), Math.sin(rad(a)), 0.03); return q; },
       onMove: () => paintA(),
     });
+    // part B opens once part A is locked: Show me and solve wait on this, not on the dock's style
+    let voiceP: Promise<void> | null = null;
     const lockA = () => {
       if (done[0]) return;
       p.move();
       if (p5bWon(theta, tol)) {
         tick(0); sfx.snap();
         msg.say(`Largest miss ${fmtD(errStretch(theta))} $= \\sigma_2 = \\sqrt5$, at $\\mathbf v_2$. Keeping one layer misses by at most the next singular value.`, 'good');
-        void toVoice();
+        voiceP = toVoice();
       } else { sfx.miss(); msg.say(`A miss of ${fmtD(errStretch(theta))} here. Somewhere it is larger.`, 'bad'); }
     };
     const btnA = button('Lock the largest miss', () => lockA(), { cls: 'primary small' });
@@ -192,12 +194,13 @@ export const p5: PuzzleDef = {
     };
     return {
       async showMe() {
-        await goTo(-45, 1300); lockA();
-        while (!partBEl.style.display || partBEl.style.display === 'none') await wait(20);
+        // part A may already be locked (Show me pressed during part B): then only part B is shown
+        if (!done[0]) { await goTo(-45, 1300); lockA(); }
+        await voiceP;
         for (const kk of [2, 4, 8]) { setK(kk); await wait(700); }
         send();
       },
-      async solve() { theta = -45; paintA(); lockA(); while (partBEl.style.display === 'none') await wait(5); setK(8); send(); },
+      async solve() { if (!done[0]) { theta = -45; paintA(); lockA(); } await voiceP; setK(8); send(); },
       async wrong() { theta = 45; paintA(); lockA(); },
     };
   },
@@ -262,7 +265,7 @@ export const p6: PuzzleDef = {
       rowFit.slice(1).forEach((el, i) => { el.textContent = fmtD(sv[i], 6); });
       labels.forEach((l, i) => l.set(`σ${i + 1} = ${fmtD(sv[i], 6)}${i === 2 ? ' · thin, not flat' : ''}`));
       sfx.discover();
-      msg.say(`${mine ? 'Computed with your `svd`.' : 'Computed with LANTERN’s backup routine; your `svd` runs here once you write it.'} The third stretch is not zero.`, 'good');
+      msg.say(`${mine ? 'Computed with your `svd`.' : 'Computed with LANTERN’s backup routine. Once you write your `svd`, it reruns these decimals.'} The third stretch is not zero.`, 'good');
       tick(0);
     };
     const check = () => {
@@ -325,7 +328,7 @@ export const p7: PuzzleDef = {
     p.add(ax);
     const step = d === 'cadet' ? 0.5 : d === 'navigator' ? 0.25 : 0.05;
     const tol = d === 'commander' ? 0.03 : 0.06;
-    let x: Vec = [1.5, -0.5];
+    let x: Vec = P7_START.slice();
     const r = p.readout('Input and output');
     const msg = msgLine();
     const done = [false, false];
@@ -358,7 +361,7 @@ export const p7: PuzzleDef = {
     paint();
     const go = async (to: Vec, ms: number) => { const a = x.slice(); await animate(ms, (k) => { x = [a[0] + (to[0] - a[0]) * k, a[1] + (to[1] - a[1]) * k]; xh.at([x[0], x[1], 0.03]); xArrow.setTo([x[0], x[1], 0.02]); paint(); }, ease.inOut); check(); };
     return {
-      async showMe() { await go([1.5, -0.5], 10); await go([1, 0], 900); await go([0.5, 0.5], 900); },
+      async showMe() { await go(P7_START, 10); await go([1, 0], 900); await go([0.5, 0.5], 900); },
       async solve() { await go([1, 0], 1); await go([0.5, 0.5], 1); },
       async wrong() { await go([1, 0], 1); },
     };

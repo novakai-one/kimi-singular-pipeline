@@ -27,9 +27,9 @@ const NAME_CENTRE: Beat = {
     means: 'Spread measured about a point far from the cloud is mostly the distance to the cloud. Take the mean reading away first, and what is left is the shape.',
     name: 'Taking the mean reading away from every reading is **mean-centring**. The centred readings $X_c$ have mean zero: the cloud sits around the origin.',
     formula: '\\bar{\\mathbf x} = \\tfrac1n\\left(\\mathbf x_1 + \\cdots + \\mathbf x_n\\right), \\qquad \\mathbf x_i \\;\\to\\; \\mathbf x_i - \\bar{\\mathbf x}',
-    why: 'About the origin, the spread matrix is $C + \\frac{n}{n-1}\\bar{\\mathbf x}\\bar{\\mathbf x}^{\\mathsf T}$: an extra layer along the mean, which swings the top direction toward the mean.',
+    why: 'About the origin, the spread along a unit arrow $\\mathbf u$ gains an extra $\\tfrac{n}{n-1}(\\bar{\\mathbf x}\\cdot\\mathbf u)^2$, the squared shadow of the mean. That extra is largest along the mean, so it swings the top direction toward the mean.',
     cue: 'When you see **data far from the origin**, think **centre it first**.',
-    use: 'Every data pipeline centres its columns before PCA; scikit-learn’s `PCA` does it for you.',
+    use: 'Every data pipeline centres its columns first; most libraries do it for you.',
   },
 };
 
@@ -38,7 +38,7 @@ const NAME_COV: Beat = {
     id: 'covariance-matrix', term: 'covariance matrix', question: 'Why is the direction of most spread an eigenvector?', nodes: ['N28'],
     saw: `Turning $\\mathbf w$ round the unit circle, the spread $\\mathbf w^{\\mathsf T}C\\,\\mathbf w$ peaked at ${fmtD(P3_EIG.values[0])} along ${v2(P3_EIG.vectors[0])}, ${pct(P3_SHARE, 0)} of the total 7: the top eigenvector of $C = \\left[\\begin{smallmatrix} 4 & 2 \\\\ 2 & 3 \\end{smallmatrix}\\right]$.`,
     means: 'One symmetric matrix holds the spread of the cloud in every direction at once. Its eigenvectors are the directions of most and least spread.',
-    name: 'For centred readings $X_c$ (one per row), $C = \\frac{1}{n-1}X_c^{\\mathsf T}X_c$ is the **covariance matrix**. Its diagonal holds each reading’s own spread; entry $(i, j)$ says how readings $i$ and $j$ move together. Its unit eigenvectors, largest eigenvalue first, are the **principal components**.',
+    name: 'For centred readings $X_c$ (one per row), $C = \\frac{1}{n-1}X_c^{\\mathsf T}X_c$ is the **covariance matrix**. Its diagonal holds the spread of each column (each number in a reading); entry $(i, j)$ says how the $i$-th and $j$-th numbers move together across the readings. Its unit eigenvectors, largest eigenvalue first, are the **principal components**.',
     formula: `C = \\tfrac{1}{n-1}X_c^{\\mathsf T}X_c, \\qquad \\max_{\\|\\mathbf w\\| = 1}\\mathbf w^{\\mathsf T}C\\,\\mathbf w = \\lambda_1 \\approx ${fmtD(P3_EIG.values[0])}`,
     why: 'The spread along $\\mathbf w$ is $\\frac{1}{n-1}\\|X_c\\mathbf w\\|^2 = \\mathbf w^{\\mathsf T}C\\,\\mathbf w$, a quadratic form, and $C$ is symmetric: on the unit circle it is largest at the top eigenvector (Chapter 24). These are the right singular vectors of $X_c$ (Chapter 25).',
     cue: 'When you see **“which way does the data vary most?”**, think **top eigenvector of the covariance matrix**.',

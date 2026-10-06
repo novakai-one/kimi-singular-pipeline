@@ -157,3 +157,62 @@ test('builds: svd and low_rank pass their tests and a swarm in CPython; each dec
   checkBuild(buildLowRank, `${ACT9_LIB}\n${SVD}`, 60);
   void LOW_RANK;
 });
+
+test('p2 [D] Navigator: AᵀA sends (1, 1) to 45 (1, 1) and (1, −1) to 5 (1, −1); the slips are AAᵀ and the row/column mix', () => {
+  assert.ok(veq(L.P2_ATAV1, [45, 45]) && veq(L.P2_ATAV2, [5, -5]));
+  close(dot([1, 1], L.P2_ATAV2), 0);
+  close(dot([1, 1], L.P2_ATAV2), 5 * dot([1, 1], [1, -1]));
+  close(dot(L.P2_AV1, L.P2_AV2), dot([1, 1], L.P2_ATAV2), 1e-12);
+  assert.ok(meq(L.P2_AAT, matMul(L.P1_A, transpose(L.P1_A))) && meq(L.P2_AAT, [[9, 12], [12, 41]]));
+  assert.ok(meq(L.P2_ROWCOL, [[25, 12], [12, 25]]));
+  for (const m of [L.P2_AAT, L.P2_ROWCOL]) assert.ok(!meq(m, L.P2_ATA), 'a slip is not the answer');
+});
+
+test('p2 [D] Commander: tile b may sit anywhere before d; a before c, d last, no decoy, each tile once', () => {
+  for (const o of [['a', 'b', 'c', 'd'], ['b', 'a', 'c', 'd'], ['a', 'c', 'b', 'd']]) assert.ok(L.p2OrderOk(o), o.join());
+  assert.equal(L.p2OrderFault(['a', 'x', 'c', 'd']), 'decoy');
+  assert.equal(L.p2OrderFault(['a', 'b', 'c', 'd', 'x']), 'decoy');
+  assert.equal(L.p2OrderFault(['a', 'c', 'd']), 'missing');
+  assert.equal(L.p2OrderFault(['a', 'b', 'b', 'c', 'd']), 'repeat');
+  assert.equal(L.p2OrderFault(['a', 'b', 'd', 'c']), 'last');
+  assert.equal(L.p2OrderFault(['d', 'a', 'b', 'c']), 'last');
+  assert.equal(L.p2OrderFault(['c', 'a', 'b', 'd']), 'order');
+  assert.equal(L.p2OrderFault(['b', 'c', 'a', 'd']), 'order');
+  assert.ok(L.p2OrderOk(L.P2_ORDER), 'the canonical order (Show me) passes');
+});
+
+test('p4 [H]: the AᵀA slips fit the 2 × 2 grid: the corner of AAᵀ, and the missing cross term', () => {
+  const aat = matMul(L.P4_A, transpose(L.P4_A));
+  assert.ok(meq(aat, [[2, 1, 1], [1, 1, 0], [1, 0, 1]]));
+  assert.ok(meq(L.P4_AAT_CORNER, [[2, 1], [1, 1]]) && meq(L.P4_NO_CROSS, [[2, 0], [0, 2]]));
+  for (const m of [L.P4_AAT_CORNER, L.P4_NO_CROSS]) { assert.equal(m.flat().length, L.P4_ATA.flat().length); assert.ok(!meq(m, L.P4_ATA)); }
+});
+
+test('p7 [S]: the input starts off the line of closest answers, so neither subgoal is met before a move', () => {
+  const y = matVec(L.P7_A, L.P7_START);
+  assert.ok(veq(y, [2, 2]));
+  close(norm([y[0] - L.P7_B[0], y[1] - L.P7_B[1]]), 2);
+  for (const tol of [0.03, 0.06]) { assert.ok(Math.abs(L.P7_START[0] + L.P7_START[1] - 1) > tol); assert.ok(!L.p7Won(L.P7_START, tol)); }
+});
+
+test('set piece lines: no reading count or error that the player’s own N can contradict; the split multiplies', () => {
+  // any N from 625 to 700 wins sp3, so the voiced lines name no N and no error
+  for (const N of [625, 650, 675, 700]) assert.ok(L.sp3Won(N));
+  for (const ls of [S.sp3Win, S.sp6Intro, S.sp6Win]) { const t = said(ls); assert.ok(!/625|0\.3\b|0\.28|0\.29/.test(t), t); }
+  // two pulses of √750 each, multiplied: not half of 750
+  const t7 = said(S.sp7Win);
+  assert.ok(t7.includes('27.4') && t7.includes('750') && !/half the stretch/i.test(t7));
+  close(L.splitStretch(0.5) ** 2, L.AMPLIFY, 1e-9); close(L.AMPLIFY, 750, 1e-6);
+  // the svd install line quotes the six decimals
+  assert.ok(L.SV6.every((x) => said(S.svdRerun).includes(x)));
+});
+
+test('sp4: the slider positions that win on each level leave a small non-zero mixed stress (the readout goes green on the win, not on 0)', () => {
+  for (const [step, tol] of [[1, 0.6], [0.5, 0.3], [0.1, 0.08]]) {
+    const at = Math.round(L.SP4_THETA / step) * step;
+    assert.ok(L.sp4Won(at, tol), `step ${step}`);
+    assert.ok(!L.sp4Won(at - step, tol) && !L.sp4Won(at + 2 * step, tol), `step ${step}: one position, not a range`);
+  }
+  assert.ok(Math.abs(L.mixedStress(35)) > 0.01 && Math.abs(L.mixedStress(35.5)) > 0.01);
+  close(L.mixedStress(0), Math.SQRT2, 1e-12);
+});

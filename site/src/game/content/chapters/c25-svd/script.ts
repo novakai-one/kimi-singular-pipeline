@@ -74,10 +74,14 @@ export const S: Record<string, Line[]> = {
   briefing: [
     { who: 'bram', text: 'Holotable. Every move keeps two arrows at right angles. Tell me why, before we bet the stern on it.' },
   ],
+  svdRerun: [
+    { who: 'lantern', text: `Show more decimals, rerun with your svd: ${SV6.join(', ')}. Still thin, not flat.`, say: 'Show more decimals, rerun with your S V D: three point zero zero two six seven, one point zero, and zero point zero zero one three three three. Still thin, not flat.' },
+  ],
   teoAsk: [
     { who: 'lantern', text: 'Teo’s channel, rebuilt from eight layers.' },
   ],
   teoMine: [{ who: 'lantern', text: 'Rebuilt with your low_rank.', say: 'Rebuilt with your low rank.' }],
+  teoMineBoth: [{ who: 'lantern', text: 'Rebuilt with your low_rank, running on your svd.', say: 'Rebuilt with your low rank, running on your S V D.' }],
   teoBackup: [{ who: 'lantern', text: 'Rebuilt with my backup routine.' }],
   teoAsk2: [
     { who: 'wren', text: 'He is asking you, Nav. Keep it short. He has to hold still for it.' },
@@ -106,14 +110,15 @@ export const S: Record<string, Line[]> = {
     { who: 'wren', text: 'And Teo has to hold still through every one of them.' },
   ],
   sp3Win: [
-    { who: 'lantern', text: `${READINGS} readings. The error falls to ${fmtD(TEAR, 1)}. The drones are counting.`, say: 'Six hundred and twenty-five readings. The error falls to zero point three. The drones are counting.' },
+    // no numbers here: any N from 625 to 700 wins, and the on-screen message gives the player's own error
+    { who: 'lantern', text: 'Enough readings. The error is inside the tear limit. The drones are counting.' },
     { who: 'wren', text: 'One knock. He is holding.' },
   ],
   sp4Intro: [
-    { who: 'bram', text: 'Braces. One sits on the hinge already. Turn the other two until nothing twists.' },
+    { who: 'bram', text: 'Two braces swung aside to let the drones in for the readings. The hinge one stayed put. Turn the other two back until nothing twists.' },
   ],
   sp4Win: [
-    { who: 'lantern', text: 'No mixed stress. The braces lie along the principal axes of the Collapse pulse.' },
+    { who: 'lantern', text: 'Mixed stress near zero. The braces lie along the principal axes of the Collapse pulse.' },
   ],
   sp5Intro: [
     { who: 'ilse', text: 'The stern was flattened before my quarter turn. Today the Collapse reads R C R⁻¹, and the spires read the Anchor’s grid.', say: 'The stern was flattened before my quarter turn. Today the Collapse reads R C R inverse, and the spires read the Anchor’s grid.' },
@@ -127,16 +132,16 @@ export const S: Record<string, Line[]> = {
     { who: 'lantern', text: 'Optional. The undo could fire as two gentler pulses instead of one.' },
   ],
   sp7Win: [
-    { who: 'lantern', text: 'Half the stretch each way: two pulses of at most 27.4. Together they make the undo.', say: 'Half the stretch each way: two pulses of at most twenty-seven point four. Together they make the undo.' },
+    { who: 'lantern', text: 'Each pulse takes the square root of the stretch: at most 27.4. Multiplied together they give 750, the full undo.', say: 'Each pulse takes the square root of the stretch: at most twenty-seven point four. Multiplied together they give seven hundred and fifty, the full undo.' },
     { who: 'bram', text: 'Good to know. The spires are already set.' },
   ],
   sp6Intro: [
-    { who: 'lantern', text: `Readings: ${READINGS}. Braces on the principal axes. Settings in the Anchor’s grid. Condition number ${Math.round(CONDITION)}, and the readings are clean enough for it.`, say: `Readings: six hundred and twenty-five. Braces on the principal axes. Settings in the Anchor’s grid. Condition number ${Math.round(CONDITION)}, and the readings are clean enough for it.` },
+    { who: 'lantern', text: `Readings averaged. Braces on the principal axes. Settings in the Anchor’s grid. Condition number ${Math.round(CONDITION)}, and the readings are clean enough for it.` },
     { who: 'wren', text: 'Teo. Hold on to something.' },
     { who: 'bram', text: 'Commit when you are ready, Nav.' },
   ],
   sp6Win: [
-    { who: 'lantern', text: `Hull error ${fmtD(TEAR, 2)}. Inside the tear limit.`, say: 'Hull error zero point three. Inside the tear limit.' },
+    { who: 'lantern', text: 'Hull error inside the tear limit.' },
   ],
   after: [
     { who: 'lantern', text: 'Stern volume restored. Pressure holding in every frame.' },

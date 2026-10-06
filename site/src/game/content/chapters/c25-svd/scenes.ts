@@ -1,7 +1,8 @@
 // Chapter 25 cinematics: the cold open (the braced stern; Teo's voice will not fit his channel), the act beat
-// after Show more decimals (thin, not gone: the case board's "Is the stern gone?" closes), Teo's channel rebuilt
-// from eight layers by the player's low_rank before T5, and the story out after the Unfold: Teo's voice comes
-// through clear, and the 750× pulse has cracked the Anchor.
+// after Show more decimals (thin, not gone: the case board's "Is the stern gone?" closes), right after the
+// builds Show more decimals rerun on the player's svd and Teo's channel rebuilt from eight layers by the
+// player's low_rank before T5, and the story out after the Unfold: Teo's voice comes through clear, and the
+// 750× pulse has cracked the Anchor.
 import { CanvasTexture, LinearFilter, Mesh, MeshBasicMaterial, PlaneGeometry, SRGBColorSpace, Vector3 } from 'three';
 import type { Game } from '../../../game/types';
 import { sfx } from '../../../audio/sfx';
@@ -15,7 +16,7 @@ import type { Mat } from '../../../math/la';
 import { arkSet, crackAnchor, drift, Gone, sternShot, tag } from '../c24-spectral/act9';
 import { BRACE_LINES } from '../c24-spectral/act9';
 import { P5_K, TEO, TEO_COLS, TEO_ROWS, THIN, fmtD, rebuild } from './logic';
-import { paintSpec } from './puzzles2';
+import { moreDecimals, paintSpec } from './puzzles2';
 import { S } from './script';
 
 export async function coldOpen(g: Game): Promise<void> {
@@ -72,8 +73,10 @@ export async function teoChannel(g: Game): Promise<void> {
     g.stage.clearWorld();
     await bridgeShot(g);
     await letterbox(g, true, 400);
+    // the svd install: p6 ran before the build, so Show more decimals reruns here on the player's svd
+    const svdJob = isPlayerFn('svd') ? moreDecimals() : null;
     const job = rebuildVoice();
-    // the spectrogram, floating over the holotable
+    // the spectrogram, floating over the holotable (hidden while the decimals are read)
     const canvas = document.createElement('canvas');
     canvas.width = TEO_COLS; canvas.height = TEO_ROWS;
     const tex = new CanvasTexture(canvas);
@@ -86,6 +89,13 @@ export async function teoChannel(g: Game): Promise<void> {
     const live = () => !!plane.parent;
     const turn = g.stage.tick((dt) => { plane.rotation.z += dt * 0.25; });
     plane.userData.dispose = ((d) => () => { turn(); d(); })(plane.userData.dispose as () => void);
+    if (svdJob) {
+      plane.visible = false;
+      const { mine: svdMine } = await svdJob;
+      if (!live()) return;
+      if (svdMine) { sfx.discover(); await g.say(S.svdRerun); if (!live()) return; }
+      plane.visible = true;
+    }
     await g.say(S.teoAsk);
     if (!live()) return;
     const { X, mine } = await job;
@@ -93,7 +103,7 @@ export async function teoChannel(g: Game): Promise<void> {
     paintSpec(canvas, X);
     tex.needsUpdate = true;
     sfx.discover();
-    await g.say(mine ? S.teoMine : S.teoBackup);
+    await g.say(mine ? (isPlayerFn('svd') ? S.teoMineBoth : S.teoMine) : S.teoBackup);
     if (!live()) return;
     await g.say(S.teoAsk2);
     await letterbox(g, false, 300);

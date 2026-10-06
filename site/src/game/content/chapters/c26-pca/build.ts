@@ -51,7 +51,7 @@ export const buildCovariance: BuildDef = {
   tests: COVARIANCE_TESTS,
   swarm: { gen: (r, d) => covCase(r, d), crew: (X) => crewCovariance(X as number[][]), tol: 1e-6 },
   docPrompt: 'What does entry (i, j) of the covariance matrix measure, and why take the mean away first? Write it the way you would tell Vell.',
-  ilseNote: 'covariance(X): centre first, or the biggest thing you measure is where the cloud sits. Then entry (i, j) is how readings i and j move together, averaged over n − 1. The diagonal holds each reading’s own spread; the matrix is symmetric, so Chapter 24 applies.',
+  ilseNote: 'covariance(X): centre first, or the biggest thing you measure is where the cloud sits. Then entry (i, j) is how the i-th and j-th numbers of a reading (columns i and j) move together across the readings, averaged over n − 1. The diagonal holds each column’s own spread; the matrix is symmetric, so Chapter 24 applies.',
   payoff: 'Your `pca` builds on it; the Anchor’s record goes out through both.',
 };
 

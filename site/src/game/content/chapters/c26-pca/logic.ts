@@ -91,6 +91,15 @@ export const P2_CLOUD = cloudWith(160, P2_MEAN, rotC(-38, 1.6, 0.12), 2603);
 /** The direction of most spread about the pivot c: the top eigenvector of the moments about c. */
 export const bestAbout = (c: readonly number[], X = P2_CLOUD): Vec => symEig(momentsAbout(X, c)).vectors[0];
 export const p2Won = (c: readonly number[], tol: number): boolean => norm(c.map((x, i) => x - P2_MEAN[i])) <= tol;
+/** The pivot's distance to the mean: a miss that brings it nearer is 'Closer', one that moves it away is not. */
+export const p2FromMean = (c: readonly number[]): number => norm(c.map((x, i) => x - P2_MEAN[i]));
+/** How far the line of most spread has turned from where it started (pivot at the origin), in degrees. Lines, not
+ *  arrows: eigenvectors carry an arbitrary sign, so the turn is folded into [0°, 90°]. */
+export function p2Turn(c: readonly number[]): number {
+  const at = (q: readonly number[]) => { const b = bestAbout(q); return (Math.atan2(b[1], b[0]) * 180) / Math.PI; };
+  const dd = Math.abs(at(c) - at([0, 0])) % 180;
+  return Math.min(dd, 180 - dd);
+}
 
 // ------------------------------------------------------------------ p3 [D] · why an eigenvector
 
@@ -107,6 +116,17 @@ export const P3_TILES = [
 ];
 export const P3_DECOYS = [{ id: 'x', text: 'The direction of most spread is the longest column of the data' }];
 export const P3_ORDER = ['a', 'b', 'c', 'd'];
+/** Two-decimal answers to values that do not terminate pass (|0.67 − 2/3| < 0.006), as on every such step. */
+export const TOL2 = 0.006;
+// p3 at Navigator: the derivation typed at w = (1, 0). Its spread wᵀCw is 4; in C's eigenvector grid it has
+// y² = (0.62, 0.38), and λ₁y₁² + λ₂y₂² gives the same 4; with y₁² + y₂² = 1 the largest is λ₁, at w = q₁.
+export const P3_W0: Vec = [1, 0];
+export const P3_W0_SPREAD = dot(P3_W0, matVec(P3_C, P3_W0));           // 4
+export const P3_Y2: Vec = P3_EIG.vectors.map((q) => dot(P3_W0, q) ** 2);   // 0.62, 0.38
+/** y² worked from the two-decimal grid (0.79² = 0.6241, 0.62² = 0.3844) still passes. */
+export const P3_Y2_TOL = 0.01;
+/** λ₁y₁² + λ₂y₂² worked from two-decimal λ and y² lands between 3.99 and 4.03. */
+export const P3_FORM_TOL = 0.05;
 
 // ------------------------------------------------------------------ p4 [H] · by hand
 

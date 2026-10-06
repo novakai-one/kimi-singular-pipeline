@@ -18,9 +18,9 @@ import { ptag, tag, v3 } from '../c24-spectral/act9';
 import { checklist, msgLine } from '../c24-spectral/puzzles';
 import { deg, rad, symEig, texM } from '../c24-spectral/logic';
 import {
-  P1_CLOUD, P1B_REF, P2_CLOUD, P2_MEAN, P3_C, P3_CLOUD, P3_DECOYS, P3_EIG, P3_ORDER, P3_SHARE, P3_TILES, P4_CENTRED, P4_COV,
-  P4_EIG, P4_MEAN, P4_PROJ, P4_SHARE, P4_X, PANCAKE, PANCAKE_BEST, bestAbout, covariance, fmtD, normalFrom, p1Won, p1bWon,
-  p2Won, p3Won, perpOn, planeKeeps, spreadOn, totalSpread,
+  P1_CLOUD, P1B_REF, P2_CLOUD, P2_MEAN, P3_C, P3_CLOUD, P3_DECOYS, P3_EIG, P3_FORM_TOL, P3_ORDER, P3_SHARE, P3_TILES, P3_W0,
+  P3_W0_SPREAD, P3_Y2, P3_Y2_TOL, P4_CENTRED, P4_COV, P4_EIG, P4_MEAN, P4_PROJ, P4_SHARE, P4_X, PANCAKE, PANCAKE_BEST, TOL2,
+  bestAbout, covariance, fmtD, normalFrom, p1Won, p1bWon, p2FromMean, p2Turn, p2Won, p3Won, perpOn, planeKeeps, spreadOn, totalSpread,
 } from './logic';
 import { S } from './script';
 
@@ -170,6 +170,7 @@ export const p2: PuzzleDef = {
     if (d === 'cadet') ptag(p, 'mean', [P2_MEAN[0] + 0.35, P2_MEAN[1] + 0.3, 0], 'dim');
     let c: Vec = [0, 0];
     const tol = d === 'cadet' ? 0.2 : d === 'navigator' ? 0.12 : 0.06;
+    let prevD = p2FromMean(c);   // 3.88 at the origin: each miss is judged against the one before
     const r = p.readout('About the pivot');
     const msg = msgLine();
     let won = false;
@@ -188,8 +189,12 @@ export const p2: PuzzleDef = {
     const check = () => {
       if (won) return;
       if (p2Won(c, tol)) { won = true; meanDot.object.visible = true; p.subgoal(0); msg.say('At the mean, the line runs along the cloud: **centre first**, then look for spread.', 'good'); p.win(); }
-      else if (norm(c) < 0.3) msg.say('About the origin, the line points at the cloud.');
-      else msg.say(`Closer. The line turned ${Math.round(Math.abs(deg(Math.atan2(bestAbout(c)[1], bestAbout(c)[0])) - deg(Math.atan2(bestAbout([0, 0])[1], bestAbout([0, 0])[0]))))}° from where it started.`);
+      else {
+        const dNow = p2FromMean(c);
+        if (norm(c) < 0.3) msg.say('About the origin, the line points at the cloud.');
+        else msg.say(`${dNow < prevD - 1e-6 ? 'Closer.' : 'Further from the middle of the cloud.'} The line turned ${Math.round(p2Turn(c))}° from where it started.`);
+        prevD = dNow;
+      }
     };
     p.dock().append(msg.el);
     paint();
@@ -271,13 +276,20 @@ export const p3: PuzzleDef = {
           reasonDone();
         })();
       } else if (d === 'navigator') {
+        // the derivation, typed at one direction w: its spread as a quadratic form, the same spread in C's
+        // eigenvector grid, and the largest value that form can take on the unit circle
+        const tile = (id: string) => P3_TILES.find((t) => t.id === id)?.text ?? '';
+        const w0 = `$\\mathbf w = (${P3_W0.join(', ')})$`;
+        const [q1, q2] = P3_EIG.vectors.map((q) => `(${q.map((x) => fmtD(x)).join(', ')})`);
         ws = new StepWorksheet(p, {
-          title: 'Where it comes from · each step is checked', mount: box, onDone: reasonDone,
+          title: 'Where it comes from · each step is checked', mount: box,
+          onDone: () => { msg.say(`Step 4 gave ${fmtD(P3_W0_SPREAD, 0)} again: in the eigenvector grid the spread is $\\lambda_1y_1^2 + \\lambda_2y_2^2$, and it is largest, $\\lambda_1$, at $\\mathbf w = \\mathbf q_1$: the first eigenvector.`, 'good'); reasonDone(); },
           steps: [
-            { prompt: 'The spread along $\\mathbf w = (1, 0)$: $\\mathbf w^{\\mathsf T}C\\,\\mathbf w$', answer: 4 },
-            { prompt: 'Along $\\mathbf w = (0, 1)$', answer: 3 },
-            { prompt: 'The eigenvalues of $C$, larger first (two decimals)', answer: [[P3_EIG.values[0], P3_EIG.values[1]]], tol: 0.006 },
-            { prompt: 'The share of the total along the best direction (percent)', answer: Math.round(100 * P3_SHARE), tol: 0.5 },
+            { prompt: `The spread along $\\mathbf w$ is the quadratic form $\\mathbf w^{\\mathsf T}C\\,\\mathbf w$. At ${w0}, it is`, answer: P3_W0_SPREAD },
+            { prompt: 'The eigenvalues of $C$, larger first (two decimals)', answer: [[P3_EIG.values[0], P3_EIG.values[1]]], tol: TOL2 },
+            { prompt: `${tile('b')}. Here $\\mathbf q_1 = ${q1}$, $\\mathbf q_2 = ${q2}$, and ${w0} has $y_1 = \\mathbf w\\cdot\\mathbf q_1$, $y_2 = \\mathbf w\\cdot\\mathbf q_2$. Its $y_1^2$ and $y_2^2$ (two decimals)`, answer: [P3_Y2.slice()], tol: P3_Y2_TOL },
+            { prompt: 'So for this $\\mathbf w$, $\\lambda_1y_1^2 + \\lambda_2y_2^2$ is (two decimals)', answer: P3_EIG.values[0] * P3_Y2[0] + P3_EIG.values[1] * P3_Y2[1], tol: P3_FORM_TOL },
+            { prompt: `${tile('c')}. With $y_1^2 + y_2^2 = 1$, the largest $\\lambda_1y_1^2 + \\lambda_2y_2^2$ can be (two decimals)`, answer: P3_EIG.values[0], tol: TOL2 },
           ],
         });
       } else {
@@ -342,8 +354,8 @@ export const p4: PuzzleDef = {
       steps: [
         { prompt: 'The mean reading', answer: [P4_MEAN] },
         { prompt: 'The centred readings, one per column', answer: [P4_CENTRED.map((r) => r[0]), P4_CENTRED.map((r) => r[1])] },
-        { prompt: 'The covariance matrix $\\frac{1}{n - 1}X_c^{\\mathsf T}X_c$ (fractions are fine)', answer: P4_COV, mistakes: [[[[2.5, 2], [2, 2.5]], 'Divide by $n - 1 = 3$, not by $n = 4$.'], [[[10, 8], [8, 10]], 'That is $X_c^{\\mathsf T}X_c$. Divide by $n - 1 = 3$.']] },
-        { prompt: 'Its eigenvalues, larger first', answer: [[P4_EIG.values[0], P4_EIG.values[1]]] },
+        { prompt: 'The covariance matrix $\\frac{1}{n - 1}X_c^{\\mathsf T}X_c$ (fractions or two decimals)', answer: P4_COV, tol: TOL2, mistakes: [[[[2.5, 2], [2, 2.5]], 'Divide by $n - 1 = 3$, not by $n = 4$.'], [[[10, 8], [8, 10]], 'That is $X_c^{\\mathsf T}X_c$. Divide by $n - 1 = 3$.']] },
+        { prompt: 'Its eigenvalues, larger first (fractions or two decimals)', answer: [[P4_EIG.values[0], P4_EIG.values[1]]], tol: TOL2 },
         { prompt: 'The first principal direction (first entry 1)', answer: [[1, 1]] },
         { prompt: 'The share it keeps (percent)', answer: Math.round(100 * P4_SHARE), tol: 0.5 },
         { prompt: 'Each reading’s coordinate along it (two decimals)', answer: [P4_PROJ], tol: 0.006 },

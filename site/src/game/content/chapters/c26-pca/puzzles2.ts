@@ -213,7 +213,7 @@ export const p7: PuzzleDef = {
       onMove: () => paint(),
       onEnd: () => check(),
     });
-    const check = () => { if (won) return; if (p7Won([Math.cos(rad(theta)), Math.sin(rad(theta))])) { won = true; p.subgoal(0); msg.say('Separated, along the second direction. The first direction has the most spread, and it does not care which kind is which.', 'good'); p.win(); } };
+    const check = () => { if (won) return; if (p7Won([Math.cos(rad(theta)), Math.sin(rad(theta))])) { won = true; p.subgoal(0); msg.say('Separated, along the second direction. The first direction has the most spread. The labels of the two kinds play no part in it.', 'good'); p.win(); } };
     p.dock().append(h('div', { class: 'a9-note' }, 'Drag the yellow handle to turn the line. The small dots are the shadows of each kind on it.'), msg.el);
     paint();
     void normalize;

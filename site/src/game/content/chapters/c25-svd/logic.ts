@@ -52,7 +52,26 @@ export const P2_TILES = [
   { id: 'd', text: '$\\mathbf v_1\\cdot\\mathbf v_2 = 0$, so $A\\mathbf v_1\\cdot A\\mathbf v_2 = 0$: the images are perpendicular' },
 ];
 export const P2_DECOYS = [{ id: 'x', text: '$A$ is symmetric, so $A\\mathbf v_1$ and $A\\mathbf v_2$ are perpendicular' }];
-export const P2_ORDER = ['a', 'b', 'c', 'd'];
+export const P2_ORDER = ['a', 'b', 'c', 'd'];   // the canonical order (Show me, solve)
+/** What is wrong with a tile order, or null. Tile b (AᵀA symmetric) is only needed by d, so it may sit
+ *  anywhere before d: a, b, c, d and b, a, c, d and a, c, b, d are all proofs. */
+export type P2Fault = 'decoy' | 'missing' | 'repeat' | 'last' | 'order' | null;
+export function p2OrderFault(o: readonly string[]): P2Fault {
+  if (o.some((id) => !P2_ORDER.includes(id))) return 'decoy';
+  if (P2_ORDER.some((id) => !o.includes(id))) return 'missing';
+  if (o.length !== P2_ORDER.length) return 'repeat';
+  if (o[o.length - 1] !== 'd') return 'last';
+  if (o.indexOf('c') < o.indexOf('a')) return 'order';
+  return null;
+}
+export const p2OrderOk = (o: readonly string[]): boolean => p2OrderFault(o) === null;
+/** AᵀA times the eigenvectors (1, 1) and (1, −1): 45 (1, 1) and 5 (1, −1). */
+export const P2_ATAV1: Vec = matVec(P2_ATA, [1, 1]);
+export const P2_ATAV2: Vec = matVec(P2_ATA, [1, -1]);
+/** The two usual slips for AᵀA: AAᵀ (rows dotted with rows), and column lengths on the diagonal with a row
+ *  dotted with a row in the corners. */
+export const P2_AAT: Mat = matMul(P1_A, transpose(P1_A));   // [[9, 12], [12, 41]]
+export const P2_ROWCOL: Mat = [[dot(col(P1_A, 0), col(P1_A, 0)), dot(P1_A[0], P1_A[1])], [dot(P1_A[0], P1_A[1]), dot(col(P1_A, 1), col(P1_A, 1))]];   // [[25, 12], [12, 25]]
 /** For v₁ = (1, 1)/√2 fixed and v₂ at angle θ: A v₁ · A v₂ = 45 (v₁ · v₂). */
 export const p2Dot = (thetaDeg: number): number => { const t = (thetaDeg * Math.PI) / 180; return dot(matVec(P1_A, [R2, R2]), matVec(P1_A, [Math.cos(t), Math.sin(t)])); };
 
@@ -73,6 +92,9 @@ export const p3Won = (M: Mat, tol: number): boolean => p3Err(M) <= tol;
 
 export const P4_A: Mat = [[1, 1], [0, 1], [1, 0]];
 export const P4_ATA: Mat = matMul(transpose(P4_A), P4_A);   // [[2, 1], [1, 2]]
+/** The slips that fit a 2 × 2 grid: the top-left corner of the 3 × 3 AAᵀ, and AᵀA without its cross term. */
+export const P4_AAT_CORNER: Mat = matMul(P4_A, transpose(P4_A)).slice(0, 2).map((r) => r.slice(0, 2));   // [[2, 1], [1, 1]]
+export const P4_NO_CROSS: Mat = [[P4_ATA[0][0], 0], [0, P4_ATA[1][1]]];   // [[2, 0], [0, 2]]
 export const P4_EIG = [3, 1];
 export const P4_SIGMA = [Math.sqrt(3), 1];
 export const P4_V: Vec[] = [[R2, R2], [R2, -R2]];
@@ -156,6 +178,8 @@ export const SV_C2 = svdCanon(C2).S;                           // 3, 1, 0: the s
 
 export const P7_A: Mat = [[1, 1], [1, 1]];
 export const P7_B: Vec = [2, 0];
+/** Where the input starts: off the line x₁ + x₂ = 1 (A x = (2, 2), a miss of 2), so nothing is solved before a move. */
+export const P7_START: Vec = [1.5, 0.5];
 /** V Σ⁺ Uᵀ: flip every non-zero stretch, leave the zeros at zero. */
 export function pinv(A: Mat, tol = 1e-9): Mat {
   const d = svd(A);

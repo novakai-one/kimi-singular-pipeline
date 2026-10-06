@@ -13,7 +13,7 @@ import { buildLowRank, buildSvd } from './build';
 import { after, coldOpen, teoChannel, thin } from './scenes';
 import { S } from './script';
 import { AMPLIFY, CONDITION, NOISE, SV_C } from '../../truth';
-import { fmtD } from './logic';
+import { braceFrame, fmtD } from './logic';
 
 const IN_SHORT_ANSWER = 'It turns some perpendicular pair of arrows into another perpendicular pair, stretched. So any matrix is **a turn, a stretch along axes, and a turn**. The biggest stretches carry most of the picture.';
 
@@ -21,7 +21,7 @@ const NAME_SV: Beat = {
   kind: 'name', id: 'name-sv', entry: {
     id: 'singular-value', term: 'singular value', question: 'What does any matrix do to a circle?', nodes: ['N27'],
     saw: 'Turning the input cross, the two images met at a right angle only with the inputs at $(1, 1)/\\sqrt2$ and $(1, -1)/\\sqrt2$. They landed along $(1, 3)$ and $(3, -1)$, 6.71 and 2.24 long: the long and short half-axes of the oval.',
-    means: 'Every matrix has a perpendicular pair of input directions that it sends to a perpendicular pair of output directions. Only the lengths change.',
+    means: 'Every matrix has a perpendicular pair of input directions that it sends to a perpendicular pair of output directions. The right angle survives; the pair can turn (or flip), and each arrow is stretched by its own amount.',
     name: 'The lengths $\\sigma_1 \\ge \\sigma_2 \\ge 0$ are the **singular values** of $A$. The inputs $\\mathbf v_1, \\mathbf v_2$ are the **right singular vectors**; the unit output directions $\\mathbf u_1, \\mathbf u_2$ are the **left singular vectors**: $A\\mathbf v_i = \\sigma_i\\mathbf u_i$.',
     formula: 'A\\cg{\\mathbf v_1} = \\sigma_1\\cg{\\mathbf u_1}, \\quad A\\cr{\\mathbf v_2} = \\sigma_2\\cr{\\mathbf u_2}, \\qquad \\sigma_1\\sigma_2 = |\\det A| = 15',
     why: 'The unit circle lands on an oval whose longest and shortest half-axes are $\\sigma_1$ and $\\sigma_2$. For a square matrix the area scale is $|\\det A| = \\sigma_1\\sigma_2$.',
@@ -82,7 +82,7 @@ const NAME_PINV: Beat = {
   },
 };
 
-const WHY = 'A photo is a matrix of brightness. Keep its 50 largest layers and you store a small fraction of the numbers, and the eye cannot tell. **Recommender systems** split a huge table of users and ratings into a few layers of hidden taste. **LoRA** fine-tunes a language model by learning a low-rank update instead of the full weight matrix.\n\nAnd the ratio $\\sigma_{\\max}/\\sigma_{\\min}$ is how a solver warns you that its answer may be noise: the set piece names it.\n\nYour `low_rank` rebuilds Teo’s voice next; your `svd` puts the decimals on the screen.';
+const WHY = 'A photo is a matrix of brightness. Keep its 50 largest layers and you store a small fraction of the numbers, and the eye cannot tell. **Recommender systems** split a huge table of users and ratings into a few layers of hidden taste. **LoRA** fine-tunes a language model by learning a low-rank update instead of the full weight matrix.\n\nAnd the ratio $\\sigma_{\\max}/\\sigma_{\\min}$ is how a solver warns you that its answer may be noise: the set piece names it.\n\nNext, your `svd` reruns the Collapse pulse’s six decimals, and your `low_rank` rebuilds Teo’s voice.';
 
 const ch: ChapterDef = {
   id: 'c25',
@@ -139,7 +139,8 @@ const ch: ChapterDef = {
     NAME_PINV,
     { kind: 'scene', id: 'sp3-intro', lines: S.sp3Intro, setup: (g) => { void sternShot(g, { braces: true }); } },
     { kind: 'puzzle', id: 'sp3', puzzle: sp3 },
-    { kind: 'scene', id: 'sp4-intro', lines: S.sp4Intro, setup: (g) => { void sternShot(g, { braces: true }); } },
+    // two braces swung aside for the drones (S.sp4Intro): the picture matches sp4's start, the hinge brace on its axis
+    { kind: 'scene', id: 'sp4-intro', lines: S.sp4Intro, setup: (g) => { void sternShot(g).then((set) => set.braces(braceFrame(0))); } },
     { kind: 'puzzle', id: 'sp4', puzzle: sp4 },
     { kind: 'scene', id: 'sp5-intro', lines: S.sp5Intro, setup: bridgeShot },
     { kind: 'puzzle', id: 'sp5', puzzle: sp5 },
