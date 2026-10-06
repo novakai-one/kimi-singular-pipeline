@@ -15,7 +15,7 @@ import { Slider, VectorInput, parseNum } from '../../../ui/widgets';
 import { VectorHandle } from '../../../kit/handle';
 import { AngleArc, Knob, RightAngle, Shadow } from '../../../kit/geom';
 import { StepWorksheet, TileOrder } from '../../../kit/steps';
-import { angle, cross, dot, norm, proj, type Vec } from '../../../math/la';
+import { angle, cross, dot, norm, type Vec } from '../../../math/la';
 import { nice } from '../../../math/frac';
 import { loadModel } from '../../../gfx/models';
 import { makeLantern } from '../../common/set';
@@ -589,7 +589,6 @@ export const p6: PuzzleDef = {
       p.win();
     })());
     // the marker rides the line through u
-    const ud = unit(u);
     const tStep = p.difficulty === 'cadet' ? 0.5 : p.difficulty === 'navigator' ? 0.25 : null;
     const knob = new Knob(p, mark, {
       color: C.result, label: 'mark',
@@ -612,7 +611,6 @@ export const p6: PuzzleDef = {
         } else { gapLine.setOpacity(0); tick(1); }
       },
     });
-    void ud;
     const steps = [
       { prompt: '$\\mathbf v\\cdot\\mathbf u = 3\\cdot 2 + 4\\cdot 1$', answer: P6_STEPS.vu },
       { prompt: '$\\mathbf u\\cdot\\mathbf u = 2\\cdot 2 + 1\\cdot 1$', answer: P6_STEPS.uu, mistakes: [[Math.sqrt(5), 'That is the length of $\\mathbf u$. The formula divides by $\\mathbf u\\cdot\\mathbf u$, its length squared.'] as [number, string]] },
@@ -632,7 +630,6 @@ export const p6: PuzzleDef = {
     });
     r.row('v', '$\\mathbf v$', fmt(P6_V), C.v);
     r.row('u', '$\\mathbf u$', fmt(P6_U), C.w);
-    r.row('m', 'your mark', fmt([0.5, 0.25].map((x) => x * 2)));
     p.tick(() => r.row('m', 'your mark', fmt(mark.slice(0, 2).map((x) => Math.round(x * 100) / 100))));
     return {
       async showMe() { await ws.showMe(350); await knob.moveTo([4, 2, 0.02], 800); mark = [4, 2, 0]; tick(1); },
@@ -721,5 +718,3 @@ export const p7: PuzzleDef = {
   },
 };
 
-export const P4_EXTRA = { rotateAbout };
-void proj;

@@ -81,7 +81,6 @@ const NAME_IMT: Beat = {
 
 const WHY = 'Fine-tuning a large language model changes huge matrices of weights. **LoRA** stores each change as the product of two thin matrices: a **low-rank** update with only a few kept directions. It trains a few million numbers instead of billions.\n\nRank counts the directions that survive. The survey scanner you are about to run reports exactly that for the stern, with your own `rank`.';
 
-const NUMPY = 'Act V in NumPy and SciPy:\n\n- `np.linalg.matrix_rank(C2)` gives `2`. It does not row reduce: it treats numbers below a small tolerance as zero, which matters when rounding blurs a pivot.\n- `scipy.linalg.null_space(C2)` gives one column, along $(1, 1, -1)$ but one unit long.\n- `scipy.linalg.orth(C2)` gives two columns for the column space, one unit long and at right angles to each other.\n\nYour `rank` and `null_space` give the same counts, one row operation at a time. The library versions are faster, and steadier when a number is tiny but not zero. That difference comes back in Act IX.';
 
 const ch: ChapterDef = {
   id: 'c16',
@@ -135,7 +134,6 @@ const ch: ChapterDef = {
     NAME_IMT,
     { kind: 'scene', id: 'review-intro', lines: S.reviewIntro, setup: cutterShot },
     { kind: 'review', id: 'c16-review', review },
-    { kind: 'card', id: 'numpy', card: { kind: 'numpy', title: 'NumPy card V · spaces inside spaces', body: NUMPY } },
     { kind: 'cinematic', id: 'low', run: lowPoint },
   ],
 };

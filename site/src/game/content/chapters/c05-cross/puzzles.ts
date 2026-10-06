@@ -635,6 +635,3 @@ export const p7: PuzzleDef = {
   },
 };
 
-export { P2_TURN, P1_AREA };
-void Quaternion; void dot; void P3_B;
-export type { Vec };

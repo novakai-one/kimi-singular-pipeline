@@ -218,14 +218,14 @@ export class Ping {
 
   setLevel(k: number): void {
     this.level = k;
-    this.halo.material.opacity = 0.15 + 0.7 * k;
-    this.core.material.color = new Color(this.color).multiplyScalar(0.6 + 2.6 * k);
+    this.halo.material.opacity = 0.04 + 0.8 * k;
+    this.core.material.color = new Color(this.color).multiplyScalar(0.2 + 3 * k);
   }
 
   setColor(c: string): void {
     this.color = c;
     this.halo.material.color = new Color(c);
-    this.core.material.color = new Color(c).multiplyScalar(0.6 + 2.6 * this.level);
+    this.core.material.color = new Color(c).multiplyScalar(0.2 + 3 * this.level);
     this.rings.forEach((r) => { r.s.material.color = new Color(c); });
   }
 

@@ -39,9 +39,9 @@ export async function closing(g: Game): Promise<void> {
   g.stage.clearWorld();
   const host = worldHost(g);
   const at: V3 = [0, 0, 0];
-  scanLattice(host, [0, 0, 0.5], 1.2, 0.14);
+  scanLattice(host, [0, 0, 0.5], 0.8, 0.12);
   const pod = new Pod(host, at, { light: AMBER, opacity: 0.55 });
-  orbit(host, [0, 0, 0.2], 6.5, 24, -70, 2);
+  orbit(host, [0, 0, 0.2], 7.5, 26, -70, 2);
   // the flows are routed with the player's solve when it passes its tests
   let mine = false;
   if (isPlayerFn('solve')) {

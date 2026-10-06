@@ -3,7 +3,7 @@
 import type { Line } from '../../lines';
 import {
   ARK, ARK_AFTER, ARK_CLEAR, ARM_ANGLE, B2_LEN, BOW3_REAL, BOW_REAL, CLEARANCE, P1_ANCHOR, P1_SHIP, P2_ANCHOR, P2_SHIP, P3_ANCHOR,
-  P3_SHIP, P3_VELL, PC, TEO_POS, fmtV,
+  P3_SHIP, P3_VELL, PC, fmtV,
 } from './logic';
 
 const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
@@ -17,6 +17,7 @@ export function spell(x: number): string {
 }
 const sayV = (v: readonly number[]) => v.map(spell).join(', ');
 const col = (j: number) => [PC[0][j], PC[1][j]];
+const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
 export const S: Record<string, Line[]> = {
   open: [
@@ -33,7 +34,7 @@ export const S: Record<string, Line[]> = {
     { who: 'bram', text: 'The Anchor counts in its own arms. How many of each arm gets you to that buoy, Nav?' },
   ],
   p1Win: [
-    { who: 'lantern', text: `${P1_ANCHOR[0] === 1 ? 'One' : spell(P1_ANCHOR[0])} of the first arm and ${spell(P1_ANCHOR[1])} of the second reach the buoy. In the Anchor’s numbers it is ${fmtV(P1_ANCHOR)}. The buoy did not move.`, say: `One of the first arm and two of the second reach the buoy. In the Anchor’s numbers it is ${sayV(P1_ANCHOR)}. The buoy did not move.` },
+    { who: 'lantern', text: `${cap(spell(P1_ANCHOR[0]))} of the first arm and ${spell(P1_ANCHOR[1])} of the second reach the buoy. In the Anchor’s numbers it is ${fmtV(P1_ANCHOR)}. The buoy did not move.`, say: `${cap(spell(P1_ANCHOR[0]))} of the first arm and ${spell(P1_ANCHOR[1])} of the second reach the buoy. In the Anchor’s numbers it is ${sayV(P1_ANCHOR)}. The buoy did not move.` },
     { who: 'wren', text: 'Same buoy, two sets of numbers.' },
   ],
   p2Intro: [
@@ -84,14 +85,6 @@ export const S: Record<string, Line[]> = {
   briefing: [
     { who: 'bram', text: 'Holotable. Before anyone touches those spires, I want it in plain words.' },
   ],
-  teoAsk: [
-    { who: 'lantern', text: 'An undelivered message in the stern channel. It was queued before the Collapse.' },
-    { who: 'wren', text: 'Play it.' },
-  ],
-  teoSent: [
-    { who: 'lantern', text: 'Your reply is in the stern channel. It repeats every ninety seconds.' },
-    { who: 'wren', text: 'He asked. He gets an answer.' },
-  ],
   reveal: [
     { who: 'lantern', text: 'A log file has surfaced in the ark’s buffer. Dr Varga.' },
     { who: 'ilselog', text: 'The spires are jammed. The third one will not move. I am still trying.' },
@@ -130,10 +123,14 @@ export const S: Record<string, Line[]> = {
     { who: 'wren', text: 'Dr Varga. You woke my brother.' },
     { who: 'ilse', text: 'I did. He went to the stern to brace the struts. I have not heard him since the last pulse.' },
     { who: 'wren', text: 'Neither have we.' },
+    { who: 'lantern', text: 'There is one undelivered message in the stern channel. It was queued before the Collapse.' },
+    { who: 'wren', text: 'Play it.' },
+  ],
+  teoSent: [
+    { who: 'lantern', text: 'Your reply is in the stern channel. It repeats every ninety seconds.' },
+    { who: 'ilse', text: 'I told him the Anchor counts on its own grid. He listened.' },
+    { who: 'wren', text: 'He always does. Eventually.' },
     { who: 'ilse', text: 'Leave the spires unlocked. Nothing fires again until someone chooses it.' },
     { who: 'bram', text: 'Then we choose carefully.' },
-  ],
-  teoAnswer: [
-    { who: 'lantern', text: `Played as Teo would follow it. From the base, his arrow is ${fmtV(TEO_POS)}.`, say: `Played as Teo would follow it. From the base, his arrow is ${sayV(TEO_POS)}.` },
   ],
 };

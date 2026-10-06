@@ -125,10 +125,10 @@ export async function install(g: Game): Promise<void> {
     const LS = 1.6;
     const set = await arkSet(g, {
       at: ARK_AT, spine: [1, 0.12, 0], shear: 0.16, debris: 10, starLight: 2.6,
-      lantern: { at: [-40, -50, 4], face: [0.6, 0.8, 0.05], scale: LS, thrust: 0.2 },
+      lantern: { at: [-44, -40, 6], face: [0.7, 0.7, 0.05], scale: LS, thrust: 0.2 },
     });
     check(set);
-    const cam = new CamRig(g, set, [-74, -60, 22], [-10, -14, 0]);
+    const cam = new CamRig(g, set, [-80, -62, 20], [-12, -10, 0]);
     cam.drift(0.35);
     await letterbox(g, true, 500);
     // 200 signatures in the sky around the ark
@@ -137,7 +137,7 @@ export async function install(g: Game): Promise<void> {
     const beaconPos = set.ark.localToWorld(new Vector3(...BOW_BEACON));
     const pts: V3[] = sigs.map((s) => (s.ark ? [beaconPos.x, beaconPos.y, beaconPos.z] as V3
       : [-45 + r() * 95, -38 + r() * 64, -16 + r() * 34] as V3));
-    const pings = pts.map((p, i) => new Ping(set, p, { size: i === ARK_INDEX ? 0.45 : 0.32, period: 3 + (i % 7) * 0.4, phase: (i * 0.61) % 3 }));
+    const pings = pts.map((p, i) => new Ping(set, p, { size: i === ARK_INDEX ? 0.45 : 0.3, period: 7 + (i % 9) * 1.3, phase: (i * 0.61) % 7 }));
     pings.forEach((p, i) => p.setLevel(0.35 + 0.5 * Math.min(1, Math.sqrt(sigs[i].sig.reduce((s, x) => s + x * x, 0)) / 30)));
     const panel = h('div', { class: 'glass', style: 'position:absolute;right:24px;top:24px;width:min(340px,36vw);padding:14px 16px;display:flex;flex-direction:column;gap:6px;pointer-events:none' });
     const head = h('div', { class: 'kicker' }, 'Beacon matcher');
@@ -160,7 +160,7 @@ export async function install(g: Game): Promise<void> {
       for (let i = 0; i < sigs.length; i++) {
         if (i > upto) continue;
         const c = ranked[rank.get(i)!].cos;
-        pings[i].setLevel(Math.max(0.04, (c - 0.15) / 0.85) ** 3);
+        pings[i].setLevel(Math.max(0.03, ((c - 0.15) / 0.85) ** 6));
       }
       runOn.textContent = `Ranked ${Math.min(sigs.length, upto + 1)} of ${sigs.length}`;
     }, ease.linear);

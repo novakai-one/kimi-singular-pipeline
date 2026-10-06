@@ -19,7 +19,7 @@ const NAME_DET: Beat = {
     saw: 'The hold with columns $(3, 0)$ and $(1, 2)$ had area 6, and the stabiliser changed its shape but not its area: every grid square kept area 1. In the $4 \\times 3$ box, taking away the six corner pieces left $12 - 3 - 2 - 2 = 5 = 3 \\cdot 2 - 1 \\cdot 1$.',
     means: 'A move scales **every** area by one factor: the area of the image of the unit square. For columns $(a, c)$ and $(b, d)$ that area is $ad - bc$. A minus sign means the grid is turned over. Zero means the plane is flattened.',
     name: 'The **determinant** $\\det A$ is the factor by which $A$ scales area (or volume), with a minus sign if it turns the grid over. It is the **signed area** of the image of the unit square.',
-    formula: '\\det\\begin{bmatrix} \\cg{a} & \\cr{b} \\\\ \\cg{c} & \\cr{d} \\end{bmatrix} = \\cg{a}\\cr{d} - \\cr{b}\\cg{c} \\qquad \\det\\begin{bmatrix} \\cg{3} & \\cr{1} \\\\ \\cg{1} & \\cr{2} \\end{bmatrix} = 6 - 1 = \\cy{5}',
+    formula: '\\det\\begin{bmatrix} \\cg{a} & \\htmlClass{c-red}{b} \\\\ \\cg{c} & \\htmlClass{c-red}{d} \\end{bmatrix} = \\cg{a}\\cr{d} - \\cr{b}\\cg{c} \\qquad \\det\\begin{bmatrix} \\cg{3} & \\htmlClass{c-red}{1} \\\\ \\cg{1} & \\htmlClass{c-red}{2} \\end{bmatrix} = 6 - 1 = \\cy{5}',
     why: 'The box is $(a + b)(c + d)$. Take away two triangles of $\\tfrac12 ac$, two of $\\tfrac12 bd$ and two rectangles of $bc$: $(a + b)(c + d) - ac - bd - 2bc = ad - bc$.',
     cue: 'When you see **“area”**, **“volume”** or **“flattened”**, think **determinant**.',
     use: 'Generative models called normalising flows track how much each layer stretches or squeezes volume with this number.',

@@ -151,14 +151,14 @@ export async function closing(g: Game): Promise<void> {
   g.mood('explore');
   const host = worldHost(g);
   const pod = P2.pod as V3;
-  scanLattice(host, pod, 2.3, 0.18);
+  scanLattice(host, pod, 1.8, 0.14);
   const mine = podField(host, pod, [3, 5, 7], [1, 3, 5]);
   mine.setLight(AMBER);
   new PlaneSet(host, { n: 3, rows: P2.rows, labels: false, showSolution: true, solutionLabel: false, size: 9, focus: pod, axes: false, opacity: 0.6 });
   const tag = new Label('pod bay three · deck five', [pod[0], pod[1], pod[2] + 1.1], { className: 'c08-tag' });
   host.add(tag.object);
   host.onDispose(() => tag.dispose());
-  orbit(host, pod, 17, 22, -60, 3);
+  orbit(host, pod, 22, 22, -60, 3);
   // LANTERN checks the position with the player's check() when it passes its tests, else its backup
   let mineFn = false;
   let res = residuals(P2.rows, P2.pod);
@@ -185,14 +185,14 @@ export function scanScene(kind: 'pods' | 'bay' = 'pods') {
     const host = worldHost(g);
     if (kind === 'pods') {
       const at: V3 = [5, 3, -2];
-      scanLattice(host, at, 2.3, 0.16);
+      scanLattice(host, at, 1.8, 0.12);
       podField(host, at, [3, 5, 7], [1, 3, 5]).setLight(AMBER);
-      orbit(host, at, 16, 22, -60, 2.2);
+      orbit(host, at, 25, 24, -60, 2.2);
     } else {
       const at: V3 = [0, 0, 0];
-      scanLattice(host, [0, 0, 0.5], 1.2, 0.14);
+      scanLattice(host, [0, 0, 0.5], 0.8, 0.12);
       new Pod(host, at, { light: AMBER, opacity: 0.5 });
-      orbit(host, [0, 0, 0.2], 7, 24, -70, 2);
+      orbit(host, [0, 0, 0.2], 9, 24, -70, 2);
     }
   };
 }

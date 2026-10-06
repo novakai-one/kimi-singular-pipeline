@@ -1,7 +1,7 @@
 // Chapter 7: "Where does our path meet the door?" (GDD §6.4, N08) → parametric equation of a line,
 // direction vector, skew lines, Cartesian equation of a plane. The path bead and the glass wall;
-// door picking; then the end of Act II: the docking set piece, Bram's Act II Review, NumPy card II and
-// Ilse's oldest log.
+// door picking; then the end of Act II: the docking set piece, Bram's Act II Review and Ilse's oldest
+// log (the engine shows NumPy card II after this chapter).
 import type { Beat, ChapterDef } from '../../../game/types';
 import { p1, p2, p3, p4, p5, p6, p7 } from './puzzles';
 import { setPiece } from './setpiece';
@@ -54,7 +54,6 @@ const NAME_PLANE: Beat = {
 
 const WHY = 'A renderer finds what each pixel shows by sending the line $\\mathbf p + t\\mathbf d$ from the camera through the pixel, and solving for the $t$ where it meets each surface\'s plane. That is **ray casting**, and clicking an object in any 3-D tool does the same.\n\nA **linear classifier** is a plane $\\mathbf w\\cdot\\mathbf x + b = 0$: which side a point falls on is the sign of a dot product with the normal.\n\nNext: your `ray_plane` turns a click on the hangar door into the docking marker.';
 
-const NUMPY = 'All of Act II is a few lines of NumPy, run in compiled code over whole arrays at once:\n\n- `np.dot(v, w)` and `np.linalg.norm(v)`: the dot product and the length.\n- `np.cross(v, w)`: the arrow straight out of two edges.\n- `np.linalg.det(np.array([u, v, w]))`: the scalar triple product of three struts stacked as rows.\n- the strut scan in one call: `np.einsum(\'ij,ij->i\', U, np.cross(V, W))` for 5,000 nodes.\n\nYour `triple` and `ray_plane` do the same sums one case at a time, in plain lists. NumPy is faster; yours shows every step.';
 
 const ch: ChapterDef = {
   id: 'c07',
@@ -102,7 +101,6 @@ const ch: ChapterDef = {
     { kind: 'puzzle', id: 'sp', puzzle: setPiece },
     { kind: 'scene', id: 'review-intro', lines: S.review, setup: shot(3) },
     { kind: 'review', id: 'c07-review', review: { id: 'c07-review', who: 'bram', title: 'Act II Review', claims: [reviewDot, reviewCross, reviewSwap, reviewPlane] } },
-    { kind: 'card', id: 'numpy', card: { kind: 'numpy', title: 'NumPy card II · measuring space', body: NUMPY } },
     { kind: 'cinematic', id: 'close', run: close },
   ],
 };

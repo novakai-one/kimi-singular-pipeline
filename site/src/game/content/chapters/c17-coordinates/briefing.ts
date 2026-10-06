@@ -17,7 +17,7 @@ import { P2, R2, T } from '../../truth';
 import { col, det, fromCols, matVec, type Mat } from '../../../math/la';
 import { AnchorPath, COPPER, CopperGrid, SHIP_GRID, tag } from './grids';
 import {
-  B1, B2, P1_ANCHOR, P1_SHIP, PC, TEO_ANCHOR, TEO_HATCH, TEO_POS, TEO_REF, anchorOf, fmtN, fmtV, inGrid, lawCore, motionIn, namesPoints,
+  B1, B2, P1_SHIP, PC, TEO_HATCH, TEO_POS, TEO_REF, anchorOf, fmtN, fmtV, inGrid, lawCore, motionIn, namesPoints,
   needsRightHolds, runTeo, sameMotionHolds, similarAreaHolds, texSmall, type GridCase,
 } from './logic';
 
@@ -334,9 +334,7 @@ export const teo: TeoDef = {
       }
     }
     sfx[reply.ok ? 'success' : 'miss']();
-    void TEO_ANCHOR;
     return reply;
   },
 };
 
-export { P1_ANCHOR, B1, B2 };
