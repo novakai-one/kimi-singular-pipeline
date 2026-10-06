@@ -185,7 +185,7 @@ export const p3: PuzzleDef = {
     const live = new InfLine(p.g.stage, [0, 0, 0.004], [1, 1, 0], { color: C.violet, width: 3, opacity: 0 });
     p.add(live.object); p.onDispose(() => live.dispose());
     const r = p.readout('The dial');
-    const plot = new PolyPlot({ lo: -1, hi: 8, ymin: -4, ymax: 14, fn: (x) => charAt(P3_A, x), label: 'det(A − λI)', ticks: [0, 2, 4, 6, 8] });
+    const plot = new PolyPlot({ lo: -1, hi: 8.6, ymin: -4, ymax: 14, fn: (x) => charAt(P3_A, x), label: 'det(A − λI)', ticks: [0, 2, 4, 6, 8] });
     const stops: number[] = [];
     const tol = 1e-6;
     let derived = d === 'cadet';
@@ -227,7 +227,9 @@ export const p3: PuzzleDef = {
       const L = new InfLine(p.g.stage, [0, 0, 0.003], v3(nl), { color: C.violet, width: 2.2, opacity: 0.55, dashed: true });
       p.add(L.object); p.onDispose(() => L.dispose()); lines.push(L);
       const nd = niceDir(nl);
-      const tg = ptag(p, `λ = ${fmtN(x)} · ${fmtV(nd)}`, v3([nd[0] * 2.6 / Math.hypot(nd[0], nd[1]), nd[1] * 2.6 / Math.hypot(nd[0], nd[1])]), 'vi', [0, -18]);
+      // tag on the lower half of the line, clear of the readout and the goal card
+      const sgn = nd[1] > 0 ? -2.6 : 2.6;
+      const tg = ptag(p, `λ = ${fmtN(x)} · ${fmtV(nd)}`, v3([nd[0] * sgn / Math.hypot(nd[0], nd[1]), nd[1] * sgn / Math.hypot(nd[0], nd[1])]), 'vi', [0, -18]);
       lockTags.push(tg);
       sfx.collapse();
       p.g.stage.nudge(0.06);

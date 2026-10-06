@@ -127,7 +127,7 @@ export const p2: PuzzleDef = {
   id: 'c25-p2',
   title: 'Why do those two land at a right angle?',
   goal: '$\\mathbf v_1 = (1, 1)/\\sqrt2$ stays put. Drag $\\mathbf v_2$ round the circle and watch $A\\mathbf v_1\\cdot A\\mathbf v_2$. Then build the reason from $A^{\\mathsf T}A$.',
-  subgoals: ['Make $A\\mathbf v_1\\cdot A\\mathbf v_2 = 0$', 'Where the right angle comes from'],
+  subgoals: ['Make the dot product of the images 0', 'Where the right angle comes from'],
   hints: [
     'The readout shows $A\\mathbf v_1\\cdot A\\mathbf v_2$ and $45(\\mathbf v_1\\cdot\\mathbf v_2)$ side by side. They are always equal.',
     '$A\\mathbf v_1\\cdot A\\mathbf v_2 = \\mathbf v_1^{\\mathsf T}(A^{\\mathsf T}A)\\mathbf v_2$, and $\\mathbf v_1$ is an eigenvector of $A^{\\mathsf T}A$ with eigenvalue 45.',

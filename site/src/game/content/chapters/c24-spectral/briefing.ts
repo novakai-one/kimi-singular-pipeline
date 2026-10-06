@@ -117,7 +117,7 @@ export function circleScene(p: PuzzleCtx, S0: Mat, t0: number) {
     r.row('l', 'largest eigenvalue', fmt2(e.values[0]), v > e.values[0] + 1e-9 ? C.orange : C.white);
     if (!plot || plotFor !== S) {
       plotFor = S;
-      plot = new PolyPlot({ lo: 0, hi: 360, ymin: Math.min(-1, e.values[1] - 0.5), ymax: Math.max(1, e.values[0] + 0.5), fn: (a) => circleValue(S, rad(a)), label: 'xᵀSx round the circle', ticks: [0, 90, 180, 270, 360] });
+      plot = new PolyPlot({ lo: 0, hi: 360, ymin: Math.min(-1, e.values[1] - 0.5), ymax: Math.max(1, e.values[0] + 0.5), fn: (a) => circleValue(S, rad(a)), label: 'xᵀSx round the circle', ticks: [90, 180, 270] });
       plotBox.replaceChildren(plot.el);
     }
     plot.at(((deg(t) % 360) + 360) % 360);

@@ -65,7 +65,7 @@ export const p5: PuzzleDef = {
     let t = rad(160);
     const r = p.readout('Energy on the circle');
     const e = symEig(P5_S);
-    const plot = new PolyPlot({ lo: 0, hi: 360, ymin: 0, ymax: 3.6, fn: (a) => circleValue(P5_S, rad(a)), label: 'E around the circle', ticks: [0, 90, 180, 270, 360] });
+    const plot = new PolyPlot({ lo: 0, hi: 360, ymin: 0, ymax: 3.6, fn: (a) => circleValue(P5_S, rad(a)), label: 'E around the circle', ticks: [90, 180, 270] });
     const msg = msgLine();
     const locks: number[] = [];
     const done = [false, false];
@@ -165,7 +165,7 @@ export const p6: PuzzleDef = {
         if (d === 'cadet') { const tg = tag(`${a.name} · ${fmtN(a.I)}`, v3(u.map((x) => x * 1.08)), 'dim'); tg.object.userData.dispose = () => tg.dispose(); axesG.add(tg.object); void i; }
       });
     }
-    const spinArrow = new Arrow([0, 0, 0], [0, 0, 0.001], { color: C.result, width: 0.05, label: '$\\boldsymbol\\omega$' });
+    const spinArrow = new Arrow([0, 0, 0], [0, 0, 0.001], { color: C.result, width: 0.028, glow: 0.7, opacity: 0.85, label: '$\\boldsymbol\\omega$' });
     p.add(spinArrow);
     spinArrow.object.visible = false;
     const trail = new FatLine(p.g.stage, [[0, 0, 0], [0, 0, 0]], { color: C.accent, width: 1.6, opacity: 0.75 });
@@ -209,7 +209,7 @@ export const p6: PuzzleDef = {
         pts.push([tip.x, tip.y, tip.z]);
         if (pts.length > 2) trail.setPoints(pts.slice(-260));
         const w = normalize(s.w);
-        const wv = new Vector3(w[0], w[1], w[2]).applyQuaternion(q).multiplyScalar(2.6);
+        const wv = new Vector3(w[0], w[1], w[2]).applyQuaternion(q).multiplyScalar(2.2);
         spinArrow.setTo([wv.x, wv.y, wv.z]);
         const drift = deg(Math.acos(Math.max(-1, Math.min(1, w[0] * axis[0] + w[1] * axis[1] + w[2] * axis[2]))));
         r.row('t', 'time', `${(s.t / 60).toFixed(1)} min`, C.accent);
@@ -262,7 +262,7 @@ export const p6: PuzzleDef = {
 export const p7: PuzzleDef = {
   id: 'c24-p7',
   title: 'Can you build an upside-down bowl, and a trough?',
-  goal: 'Set the entries of $S = \\begin{bmatrix} a & b \\\\ b & c \\end{bmatrix}$ to make an **upside-down bowl**, then a **trough**. Then type an arrow where the stress block of panel 4’s brace puzzle is **lowest on the unit sphere**.',
+  goal: 'Set the entries of $S = \\begin{bmatrix} a & b \\\\ b & c \\end{bmatrix}$ to make an **upside-down bowl**, then a **trough**. Then type an arrow where the stress block $\\left[\\begin{smallmatrix} 2 & 1 & 1 \\\\ 1 & 2 & 1 \\\\ 1 & 1 & 2 \\end{smallmatrix}\\right]$ is **lowest on the unit sphere**.',
   subgoals: ['An upside-down bowl', 'A trough: a whole line of lowest points', 'The stress block’s lowest point on the sphere'],
   hints: [
     'Upside-down bowl: both eigenvalues negative. Try $a$ and $c$ negative with $b = 0$.',

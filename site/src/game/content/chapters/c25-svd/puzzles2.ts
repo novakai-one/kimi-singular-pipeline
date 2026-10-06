@@ -298,7 +298,7 @@ export const p7: PuzzleDef = {
   id: 'c25-p7',
   title: 'Which input lands closest, and is the shortest?',
   goal: '$A = \\begin{bmatrix} 1 & 1 \\\\ 1 & 1 \\end{bmatrix}$ sends every input onto the line $y = x$, so nothing lands on $\\mathbf b = (2, 0)$. Drag the input $\\mathbf x$ so $A\\mathbf x$ lands as close to $\\mathbf b$ as it can, using the **shortest** $\\mathbf x$.',
-  subgoals: ['$A\\mathbf x$ at the closest point to $\\mathbf b$', 'The shortest such $\\mathbf x$'],
+  subgoals: ['Land as close to b as anything can', 'The shortest input that does'],
   hints: [
     'The closest point to $(2, 0)$ on the line $y = x$ is $(1, 1)$. Every $\\mathbf x$ with $x_1 + x_2 = 1$ lands there.',
     'Of all the points on the line $x_1 + x_2 = 1$, the shortest arrow is the one at a right angle to the line.',

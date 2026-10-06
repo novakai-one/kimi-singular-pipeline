@@ -65,7 +65,7 @@ export const p1: PuzzleDef = {
   onWin: S.p1Win,
   setup(p) {
     p.grid();
-    void p.g.stage.view2D({ center: [1.6, 1.4], height: 8.5, ms: 0 });
+    void p.g.stage.view2D({ center: [1.2, 1.3], height: 8, ms: 0 });
     const tol = tolFor(p.difficulty);
     const aA = new Arrow([0, 0, 0], v3(P1_A), { color: C.w, label: '$\\mathbf a$' });
     const bA = new Arrow([0, 0, 0], v3(P1_B), { color: C.v, label: '$\\mathbf b$' });
@@ -88,7 +88,7 @@ export const p1: PuzzleDef = {
       p.win();
     };
     const dl = new DropLine(p, {
-      dir: v3(P1_A), target: v3(P1_B), t0: 2.2, step: stepFor(p, 0.25, 0.25), magnet: p.difficulty === 'cadet' ? 0.3 : 0, range: [-2, 3],
+      dir: v3(P1_A), target: v3(P1_B), t0: -0.75, step: stepFor(p, 0.25, 0.25), magnet: p.difficulty === 'cadet' ? 0.3 : 0, range: [-1.25, 2.25],
       onMove: (t) => show(t),
       onEnd: (t) => { if (p1Won(t, tol)) finish(); else if (p.difficulty !== 'cadet') sfx.tick(t); },
     });

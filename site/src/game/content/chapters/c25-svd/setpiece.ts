@@ -122,7 +122,7 @@ export const sp2: PuzzleDef = {
   id: 'c25-sp2',
   title: 'Can the two-decimal model be undone?',
   goal: 'The test lattice lies flat under the two-decimal model $C_2$. Try to **undo** it. Then bring it back with $V\\Sigma^+U^{\\mathsf T}$, and find **two different points** that come back as one.',
-  subgoals: ['Try to undo $C_2$', 'Bring it back with $V\\Sigma^+U^{\\mathsf T}$', 'Two different points that come back as one'],
+  subgoals: ['Try to undo the model', 'Bring it back with the flipped stretches', 'Two different points that come back as one'],
   hints: [
     '$\\det C_2 = 0$: it has no inverse.',
     '$V\\Sigma^+U^{\\mathsf T}$ flips the stretches 3 and 1, and leaves the zero at zero. The lattice comes back as a sheet.',

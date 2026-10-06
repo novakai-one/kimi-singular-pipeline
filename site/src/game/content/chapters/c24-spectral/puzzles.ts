@@ -203,7 +203,7 @@ export const p2: PuzzleDef = {
   id: 'c24-p2',
   title: 'In which grid does the mixed term vanish?',
   goal: 'The surface is $E = 2x^2 + 2xy + 2y^2$ over the panel. Turn the **survey grid** (cyan $\\mathbf u$, $\\mathbf v$) until the $uv$ term in $E$ reads **0**.',
-  subgoals: ['Turn the grid until the $uv$ term is 0', 'The matrix of $E$ and its eigenvalues'],
+  subgoals: ['Turn the grid until the mixed term is 0', 'The matrix of the energy, and its eigenvalues'],
   hints: [
     'The readout writes $E$ in the turned grid. Watch the middle number, the $uv$ term, as you turn.',
     'The surface is longest along a diagonal. Line $\\mathbf u$ up with it.',
@@ -277,7 +277,7 @@ export const p3: PuzzleDef = {
   id: 'c24-p3',
   title: 'Bowl or saddle?',
   goal: '**Panel three**, $\\begin{bmatrix} 1 & 2 \\\\ 2 & 1 \\end{bmatrix}$. Drag the yellow probe to a start and **Release** it. Make it leave the panel along the line $(1, -1)$.',
-  subgoals: ['Panel three: the probe escapes along $(1, -1)$', 'Panel four, $3x^2 + 4xy + 3y^2$: the probe rests at the lowest point'],
+  subgoals: ['Panel three: the probe escapes along the line (1, −1)', 'Panel four: the probe comes to rest at the lowest point'],
   predict: {
     prompt: 'Every entry of $\\begin{bmatrix} 1 & 2 \\\\ 2 & 1 \\end{bmatrix}$ is positive. What shape is its surface $z = \\mathbf x^{\\mathsf T}S\\mathbf x$?',
     choices: [{ id: 'bowl', text: 'A bowl' }, { id: 'saddle', text: 'A saddle' }, { id: 'cap', text: 'An upside-down bowl' }],
@@ -420,7 +420,7 @@ export const p3: PuzzleDef = {
 export const p4: PuzzleDef = {
   id: 'c24-p4',
   title: 'Three braces at right angles, when an eigenvalue repeats',
-  goal: 'Orthogonally diagonalise the stress block $S = \\begin{bmatrix} 2 & 1 & 1 \\\\ 1 & 2 & 1 \\\\ 1 & 1 & 2 \\end{bmatrix}$ by hand: its eigenvalues, a perpendicular pair inside the repeated one’s plane (Gram–Schmidt), and the check $S = \\sum \\lambda_i\\mathbf q_i\\mathbf q_i^{\\mathsf T}$.',
+  goal: 'Orthogonally diagonalise the stress block $S$ (in the readout) by hand: its eigenvalues, a perpendicular pair inside the plane of the repeated one (Gram–Schmidt), and the check $S = \\sum \\lambda_i\\mathbf q_i\\mathbf q_i^{\\mathsf T}$.',
   hints: [
     'Every row of $S$ adds to 4, so $S(1, 1, 1) = 4(1, 1, 1)$. The trace is 6, so the other two eigenvalues add to 2.',
     '$S - I$ has every entry 1: it sends every arrow with $x + y + z = 0$ to the origin. That whole plane has eigenvalue 1.',
@@ -475,11 +475,11 @@ export const p4: PuzzleDef = {
     };
     const ws = new StepWorksheet(p, {
       steps: [
-        { prompt: 'The eigenvalues of $S$, largest first (a repeat is written twice)', answer: [4, 1, 1], mistakes: [[[4, 1, 0], 'The three eigenvalues add up to the trace, 6.'], [[4, 2, 0], 'Try $S - I$: every entry is 1, so it flattens a whole plane.']] },
-        { prompt: 'An eigenvector for 4 (first entry 1)', answer: [1, 1, 1] },
+        { prompt: 'The eigenvalues of $S$, largest first (a repeat is written twice)', answer: [[4, 1, 1]], mistakes: [[[[4, 1, 0]], 'The three eigenvalues add up to the trace, 6.'], [[[4, 2, 0]], 'Try $S - I$: every entry is 1, so it flattens a whole plane.']] },
+        { prompt: 'An eigenvector for 4 (first entry 1)', answer: [[1, 1, 1]] },
         { prompt: 'In the plane $x + y + z = 0$, start from $(1, 0, -1)$. Its shadow on $(1, -1, 0)$ is $c\\,(1, -1, 0)$: $c =$', answer: 0.5, mistakes: [[1, 'Divide by $(1, -1, 0)\\cdot(1, -1, 0) = 2$.']] },
-        { prompt: 'What is left: $(1, 0, -1) - c\\,(1, -1, 0)$', answer: [0.5, 0.5, -1] },
-        { prompt: 'Lengths of $(1, 1, 1)$, $(1, -1, 0)$, $(1, 1, -2)$, to divide by (two decimals)', answer: [Math.sqrt(3), Math.SQRT2, Math.sqrt(6)], tol: 0.006 },
+        { prompt: 'What is left: $(1, 0, -1) - c\\,(1, -1, 0)$', answer: [[0.5, 0.5, -1]] },
+        { prompt: 'Lengths of $(1, 1, 1)$, $(1, -1, 0)$, $(1, 1, -2)$, to divide by (two decimals)', answer: [[Math.sqrt(3), Math.SQRT2, Math.sqrt(6)]], tol: 0.006 },
         { prompt: 'Check one entry: row 1, column 2 of $4\\mathbf q_1\\mathbf q_1^{\\mathsf T} + \\mathbf q_2\\mathbf q_2^{\\mathsf T} + \\mathbf q_3\\mathbf q_3^{\\mathsf T}$', answer: 1, mistakes: [[0, 'Each piece is $\\lambda\\,q_iq_j$: $4\\cdot\\frac13 + 1\\cdot(-\\frac12) + 1\\cdot\\frac16$.']] },
       ],
       onDone: () => void finale(),
