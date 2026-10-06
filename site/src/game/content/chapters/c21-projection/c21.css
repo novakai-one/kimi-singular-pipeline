@@ -19,7 +19,7 @@
 .a8-msg.good { color: var(--good); }
 .a8-msg.bad { color: #ffb347; }
 .a8-btns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.a8-in .cell { width: 58px; height: 34px; }
+.a8-in .cell { width: 74px; height: 34px; }
 .a8-note { font-size: 12.5px; color: var(--muted); line-height: 1.45; max-width: 470px; }
 
 /* a meter (static level, star roundness) */

@@ -39,7 +39,7 @@ export const sayit: SayItDef = {
 // ------------------------------------------------------------------ (F) "After fifty pulses everything ends up at the Anchor."
 
 export function anchorScene(p: PuzzleCtx, x0: Vec = [1, 2]) {
-  void p.g.stage.view2D({ center: [0.8, 0.8], height: 8.2, ms: 0 });
+  void p.g.stage.view2D({ center: [0.8, 1.6], height: 8.6, ms: 0 });
   const grid = p.grid({ main: 0.3, base: 0.08, axis: 0.5 });
   hideLandingLine(grid);
   const eg = new LineGrid(p.g.stage, [[1, 1], [1, -1]], { half: 6, n: 8, opacity: 0.45 });
@@ -97,7 +97,7 @@ export const doubtAnchor: DoubtDef = {
 
 /** A matrix the player drags, with the grid of its lines that hold drawn when there are two. */
 export function diagScene(p: PuzzleCtx, M0: Mat, title: string) {
-  void p.g.stage.view2D({ center: [0.4, 0.4], height: 8.4, ms: 0 });
+  void p.g.stage.view2D({ center: [0.4, 1.0], height: 9.2, ms: 0 });
   const eg = new LineGrid(p.g.stage, [[1, 0], [0, 1]], { half: 6, n: 8, opacity: 0.5 });
   p.add(eg);
   const r = p.readout(title);
@@ -108,7 +108,7 @@ export function diagScene(p: PuzzleCtx, M0: Mat, title: string) {
     if (dd) eg.set(dd[0]);
     r.row('m', '$A$', `$${texSmall(M)}$`);
     r.row('e', 'eigenvalues', e.kind === 'real' ? `${fmt2(e.values[0])} and ${fmt2(e.values[1])}` : `$${fmt2(e.re)} \\pm ${fmt2(e.im)}i$`, C.violet);
-    r.row('g', 'two independent lines that hold', diagonalisable2(M) ? 'yes: diagonalisable' : 'no', diagonalisable2(M) ? C.violet : C.orange);
+    r.row('g', 'diagonalisable?', diagonalisable2(M) ? 'yes: two lines hold' : 'no', diagonalisable2(M) ? C.violet : C.orange);
     r.row('d', '$\\det A$', fmt2(det(M)), Math.abs(det(M)) < 1e-9 ? C.orange : C.white);
   };
   const mv = new MatrixView(p, { M: M0, draggable: true, snap: 0.5, labels: true, onChange: (M) => paint(M) });
@@ -125,7 +125,7 @@ export const doubtInv: DoubtDef = {
   view: '2d',
   setup(p) {
     const sc = diagScene(p, [[2, 1], [1, 2]], 'Diagonalisable? Invertible?');
-    const edges: Mat[] = [[[0, 0], [0, 1]], [[1, 2], [2, 4]]];
+    const edges: Mat[] = [[[0, 0], [0, 1]], [[2, 1], [2, 1]]];
     return {
       holds: () => diagInvHolds(sc.mv.get()),
       describe: () => { const M = sc.mv.get(); return `$A$ = ${texFree(M)}: ${diagonalisable2(M) ? 'diagonalisable' : 'not diagonalisable'}, ${Math.abs(det(M)) > 1e-9 ? 'invertible' : 'det 0, so not invertible'}`; },
@@ -145,14 +145,14 @@ export const doubtDistinct: DoubtDef = {
   goal: 'Drag the grid arrows. When the eigenvalues differ, the violet dashed grid is built from the two lines that hold. **Back it** (Bram will shake it) or **Challenge it**.',
   view: '2d',
   setup(p) {
-    const sc = diagScene(p, [[4, 1], [2, 3]], 'Two different eigenvalues?');
-    const edges: Mat[] = [[[1, 1], [0, 1]], [[0, -1], [1, 0]], [[2, 1], [0, 3]], [[1, 2], [2, 4]]];
+    const sc = diagScene(p, [[3, 1], [0, 2]], 'Two different eigenvalues?');
+    const edges: Mat[] = [[[1, 1], [0, 1]], [[0, -1], [1, 0]], [[2, 1], [0, 2]], [[2, 1], [2, 1]]];
     return {
       holds: () => distinctDiagHolds(sc.mv.get()),
       describe: () => { const M = sc.mv.get(), e = eig2(M); return e.kind === 'real' && Math.abs(e.values[0] - e.values[1]) > 1e-9 ? `$A$ = ${texFree(M)}: eigenvalues ${fmt2(e.values[0])} and ${fmt2(e.values[1])}, two lines, $\\det P = ${fmt2(det(crewDiag(M)![0]))}$` : `$A$ = ${texFree(M)} does not have two different real eigenvalues`; },
-      randomize(r, edge) { sc.mv.set(edge !== undefined ? edges[edge] : randMat(r, 3)); sc.paint(sc.mv.get()); },
+      randomize(r, edge) { sc.mv.set(edge !== undefined ? edges[edge] : randMat(r, 2)); sc.paint(sc.mv.get()); },
       edgeCases: edges.length,
-      async showMe() { await sc.mv.to([[4, 1], [2, 3]], 900); },
+      async showMe() { await sc.mv.to([[3, 1], [0, 2]], 900); },
     };
   },
 };
@@ -163,11 +163,11 @@ export const law: LawDef<PowCase> = {
   ...LAW_CORE,
   frame: ['$(PMP^{-1})^k = PM^kP^{-1}$ ', { slot: 'scope' }, ', because ', { slot: 'why' }, '.'],
   slots: {
-    scope: { options: [{ id: 'every', text: 'for every square $M$ and invertible $P$' }, { id: 'diag', text: 'only when $M$ is diagonal' }] },
+    scope: { options: [{ id: 'every', text: 'for every square M and invertible P' }, { id: 'diag', text: 'only when M is diagonal' }] },
     why: { options: [
-      { id: 'cancel', text: 'each $P^{-1}P$ in the middle cancels to $I$' },
-      { id: 'diagM', text: '$M$ is diagonal' },
-      { id: 'powers', text: 'the powers of $P$ cancel: $(PMP^{-1})^k = P^kM^kP^{-k}$' },
+      { id: 'cancel', text: 'each P⁻¹P in the middle cancels to I' },
+      { id: 'diagM', text: 'M is diagonal' },
+      { id: 'powers', text: 'the powers of P cancel: (PMP⁻¹)ᵏ = PᵏMᵏP⁻ᵏ' },
     ] },
   },
   cadetSlots: ['why'],

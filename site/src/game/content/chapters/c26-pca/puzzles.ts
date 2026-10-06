@@ -26,7 +26,7 @@ import { S } from './script';
 
 /** A line through a cloud: its shadows (yellow) on the line and a few perpendicular drops. */
 function shadowLine(p: PuzzleCtx, X: number[][], drops = 50) {
-  const line = new InfLine(p.g.stage, [0, 0, 0.01], [1, 0, 0], { color: C.result, width: 2, opacity: 0.8, length: 20 });
+  const line = new InfLine(p.g.stage, [0, 0, 0.01], [1, 0, 0], { color: C.result, width: 1.2, opacity: 0.5, length: 20 });
   const shadows = new PointCloud(p, { points: X.map(() => [0, 0, 0]), color: C.result, size: 0.04, glow: 0.3, core: 1.4, opacity: 0.9 });
   const seg = new FatSegments(p.g.stage, [[[0, 0, 0], [0, 0, 0]]], { color: C.result, width: 1, opacity: 0.35 });
   p.add(line.object, seg.object); p.onDispose(() => { line.dispose(); seg.dispose(); });
@@ -108,18 +108,18 @@ export const p1: PuzzleDef = {
       plane.set([0, 0, 0], v3(n));
       sh.set(PANCAKE.map((x) => { const t = dot(x, n); return x.map((v, i) => v - t * n[i]); }));
       const kept = planeKeeps(n);
-      r.row('k', 'spread the plane keeps', `${fmtD(kept)} of ${fmtD(PANCAKE_BEST)} at most`, kept >= 0.95 * PANCAKE_BEST ? C.good : C.result);
+      r.row('k', `spread kept (at most ${fmtD(PANCAKE_BEST, 0)})`, `${fmtD(kept)}`, kept >= 0.95 * PANCAKE_BEST ? C.good : C.result);
       r.row('p', 'share', `${fmtD((100 * kept) / PANCAKE_BEST, 0)}%`, kept >= 0.95 * PANCAKE_BEST ? C.good : C.white);
     };
     const toPlane = async () => {
       await wait(p.g.headless ? 5 : 1100);
       cloud.dispose(); sl.show(false); knob.dispose();
       r.hideRow('a'); r.hideRow('s'); r.hideRow('q'); r.hideRow('t');
-      await p.g.stage.view3D({ target: [0, 0, 0], distance: 15, azimuth: -60, elevation: 22, ms: p.g.headless ? 0 : 900 });
+      await p.g.stage.view3D({ target: [0.6, 0, 0], distance: 21, azimuth: -60, elevation: 26, ms: p.g.headless ? 0 : 900 });
       p.setGoal('**A plane keeps two numbers per reading.** Tilt the viewing plane through the pancake of 500 readings until it keeps at least **95%** of the most a plane can keep.');
       pc = new PointCloud(p, { points: PANCAKE, color: C.accent, size: 0.05, glow: 0.3, core: 1.3, opacity: 0.85 });
       sh = new PointCloud(p, { points: PANCAKE, color: C.result, size: 0.035, glow: 0.2, core: 1.2, opacity: 0.6 });
-      plane = new PlanePatch(p.g.stage, [0, 0, 0], [0, 0, 1], { color: C.result, size: 9, opacity: 0.5 });
+      plane = new PlanePatch(p.g.stage, [0, 0, 0], [0, 0, 1], { color: C.result, size: 8, opacity: 0.16 });
       p.add(plane);
       stageB.style.display = '';
       paintB();
@@ -296,7 +296,7 @@ export const p3: PuzzleDef = {
     };
     return {
       async showMe() { await goTo(bestDeg + (theta > bestDeg + 90 ? 180 : 0), 1500); p.move(); await finish(false); },
-      async solve() { theta = bestDeg; paint(); await finish(true); },
+      async solve() { theta = bestDeg; knob.at([W * Math.cos(rad(theta)), W * Math.sin(rad(theta)), 0.04]); paint(); await finish(true); },
       wrong() { theta = 0; paint(); },
     };
   },
@@ -316,7 +316,7 @@ export const p4: PuzzleDef = {
   par: 7,
   onWin: S.p4Win,
   setup(p) {
-    void p.g.stage.view2D({ center: [4.3, 4.6], height: 8.2, ms: 0 });
+    void p.g.stage.view2D({ center: [2.6, 4.6], height: 8.2, ms: 0 });   // the readings sit right of the worksheet
     p.grid({ main: 0.2, base: 0, axis: 0.42 });
     const dots = P4_X.map((x) => { const dd = new Dot(v3(x, 0.02), { color: C.accent, size: 0.1 }); p.add(dd); return dd; });
     P4_X.forEach((x) => ptag(p, `(${x[0]}, ${x[1]})`, [x[0] + 0.15, x[1] + 0.42, 0], 'dim'));

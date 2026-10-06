@@ -50,7 +50,7 @@ export const p1: PuzzleDef = {
   onWin: S.p1Win,
   setup(p) {
     p.grid();
-    void p.g.stage.view2D({ center: [1.6, 2.3], height: 5.6, ms: 0 });
+    void p.g.stage.view2D({ center: [1.6, 3.2], height: 7.2, ms: 0 });
     const d = p.difficulty;
     const r = p.readout('The fit board');
     let ghost: FatLine | null = null;
@@ -102,13 +102,13 @@ export const p2: PuzzleDef = {
   view: '3d',
   onWin: S.p2Win,
   async setup(p) {
-    await p.g.stage.view3D({ target: [0.6, 1.2, 1.8], distance: 9, azimuth: -8, elevation: 20, ms: 0 });
+    await p.g.stage.view3D({ target: [0.6, 1.0, 2.0], distance: 12.5, azimuth: -8, elevation: 20, ms: 0 });
     p.grid({ base: 0.1, main: 0.2, axis: 0.45 });
     const d = p.difficulty;
     const tol = d === 'commander' ? 0.01 : 0.05;
     const bA = new Arrow([0, 0, 0], v3(P2_B), { color: C.v, label: '$\\mathbf b$' });
     p.add(bA);
-    tag(p, 'data space', [2.6, -1.2, 0], 'dim');
+    tag(p, 'data space', [0.5, 3.8, 0.6], 'dim');
     const board = new MiniBoard({ pts: P2_TS.map((t, i) => [t, P2_B[i]]), tRange: [-0.2, 2.3], yRange: [-0.5, 4.6], title: 'The same line, on the readings' });
     const r = p.readout('Twin view');
     let done = false;
@@ -129,7 +129,7 @@ export const p2: PuzzleDef = {
       p.win();
     };
     const dp = new DropPlane(p, {
-      a: [1, 1, 1], b: [0, 1, 2], target: v3(P2_B), w0: [2, 0], step: d === 'commander' ? null : 1 / 6, magnet: d === 'cadet' ? 0.25 : 0, range: 3, size: 7,
+      a: [1, 1, 1], b: [0, 1, 2], target: v3(P2_B), w0: [2, 0], step: d === 'commander' ? null : 1 / 6, magnet: d === 'cadet' ? 0.25 : 0, range: 3, size: 6, center: [0.6, 1.5, 2.4],
       labels: ['$(1, 1, 1)$', '$(0, 1, 2)$'],
       onMove: (w, q) => show(w, q),
       onEnd: (w) => { if (d === 'cadet' && p2Won(w, tol)) finish(); },
@@ -193,7 +193,7 @@ export const p3: PuzzleDef = {
   onWin: S.p3Win,
   setup(p) {
     p.grid();
-    void p.g.stage.view2D({ center: [2.2, 2.8], height: 6.6, ms: 0 });
+    void p.g.stage.view2D({ center: [0.6, 2.8], height: 7.5, ms: 0 });
     const fl = new FitLine(p, { points: P3_PTS, m: 0, c: 3, squares: false, draggable: false });
     const r = p.readout('The fit board');
     r.eq('A^{\\mathsf T}A\\,\\hat{\\mathbf x} = A^{\\mathsf T}\\mathbf b');
@@ -243,7 +243,7 @@ export const p4: PuzzleDef = {
   onWin: S.p4Win,
   setup(p) {
     p.grid({ base: 0.1, main: 0.18, axis: 0.35 });
-    void p.g.stage.view2D({ center: [4.7, -0.2], height: 10.4, ms: 0 });
+    void p.g.stage.view2D({ center: [2.5, 0.25], height: 11.25, ms: 0 });
     const d = p.difficulty;
     const tol = d === 'cadet' ? 0.5 : d === 'navigator' ? 0.3 : 0.1;
     const pts = P4_PTS.map(([t, y]) => { const w = W(t, y); return [w[0], w[1]]; });
@@ -251,9 +251,9 @@ export const p4: PuzzleDef = {
     // the 380 m level and the axes' numbers
     const level = new FatLine(p.g.stage, [W(-3, P4_TARGET), W(40, P4_TARGET)], { color: C.orange, width: 1.6, opacity: 0.8, dashed: true, dashSize: 0.16, gapSize: 0.1 });
     p.add(level);
-    tag(p, '380 m: the rig stops reaching', W(36, P4_TARGET), 'o', [0, 18]);
-    for (const hr of [0, 10, 20, 30]) tag(p, `hour ${hr}`, W(hr, 380), 'dim', [0, 40]);
-    for (const m of [390, 400, 410]) tag(p, `${m} m`, W(-2.6, m), 'dim', [0, 0]);
+    tag(p, '380 m: the rig stops reaching', W(6, P4_TARGET), 'o', [0, -16]);
+    for (const hr of [0, 10, 20, 30]) tag(p, `hour ${hr}`, W(hr, 380), 'dim', [0, 28]);
+    for (const m of [390, 400, 410]) tag(p, `${m} m`, W(-1.6, m), 'dim', [0, 0]);
     const r = p.readout('Forecast');
     let ghost: FatLine | null = null;
     let fitted = false, hour = 6, done = false;
@@ -290,7 +290,7 @@ export const p4: PuzzleDef = {
     const showCurve = () => {
       if (curve) return;
       const cp: V3[] = [];
-      for (let t = 0; t <= 7.4; t += 0.05) { const y = curve5(t); const w = W(t, y); if (w[1] < -5.4) break; cp.push([w[0], w[1], 0.01]); }
+      for (let t = 0; t <= 7.4; t += 0.05) { const y = curve5(t); const w = W(t, y); if (w[1] < -4.6) break; cp.push([w[0], w[1], 0.01]); }
       curve = new FatLine(p.g.stage, cp, { color: C.orange, width: 2, opacity: 0.85 });
       p.add(curve);
       const end = cp[cp.length - 1];

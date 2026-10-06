@@ -149,6 +149,8 @@ export interface DropPlaneOpts {
   showArrows?: boolean;
   /** Patch size (default 7). */
   size?: number;
+  /** Patch centre, a point of the plane (default the origin). */
+  center?: V3;
   labels?: [string, string];
   onMove?(w: [number, number], p: V3): void;
   onEnd?(w: [number, number], p: V3): void;
@@ -177,9 +179,10 @@ export class DropPlane extends Composite {
     this.n = unit3(cross(this.a, this.b));
     const st = p.g.stage;
     if (o.showPlane !== false) {
-      this.patch = this.own(new PlanePatch(st, [0, 0, 0], this.n, { color: C.u, size: o.size ?? 7, opacity: 0.13 }));
+      const c0: V3 = o.center ?? [0, 0, 0];
+      this.patch = this.own(new PlanePatch(st, c0, this.n, { color: C.u, size: o.size ?? 7, opacity: 0.13 }));
       const [e1, e2] = gramSchmidt([this.a, this.b]);
-      this.patch.setSpan([0, 0, 0], to3(e1), to3(e2));
+      this.patch.setSpan(c0, to3(e1), to3(e2));
     }
     if (o.showArrows !== false) {
       this.arrows.push(this.own(new Arrow([0, 0, 0], this.a, { color: C.v, label: o.labels?.[0] })));

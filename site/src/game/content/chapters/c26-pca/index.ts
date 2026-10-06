@@ -16,7 +16,8 @@ import { AMPLIFY } from '../../truth';
 
 const IN_SHORT_ANSWER = 'Which directions in a cloud of data matter? The ones along which the **centred** cloud spreads most. Keep a few of them and you keep most of the shape.';
 
-const pct = (x: number, d = 1) => `${fmtD(100 * x, d)}\\%`;
+const pct = (x: number, d = 1) => `${fmtD(100 * x, d)}%`;
+const pctM = (x: number, d = 1) => `${fmtD(100 * x, d)}\\%`;
 const v2 = (v: readonly number[], d = 2) => `(${v.map((x) => fmtD(x, d)).join(', ')})`;
 
 const NAME_CENTRE: Beat = {
@@ -35,11 +36,11 @@ const NAME_CENTRE: Beat = {
 const NAME_COV: Beat = {
   kind: 'name', id: 'name-cov', entry: {
     id: 'covariance-matrix', term: 'covariance matrix', question: 'Why is the direction of most spread an eigenvector?', nodes: ['N28'],
-    saw: `Turning $\\mathbf w$ round the unit circle, the spread $\\mathbf w^{\\mathsf T}C\\,\\mathbf w$ peaked at ${fmtD(P3_EIG.values[0])} along ${v2(P3_EIG.vectors[0])}, ${pct(P3_SHARE, 0)} of the total 7: the top eigenvector of $C = \\begin{bmatrix} 4 & 2 \\\\ 2 & 3 \\end{bmatrix}$.`,
+    saw: `Turning $\\mathbf w$ round the unit circle, the spread $\\mathbf w^{\\mathsf T}C\\,\\mathbf w$ peaked at ${fmtD(P3_EIG.values[0])} along ${v2(P3_EIG.vectors[0])}, ${pct(P3_SHARE, 0)} of the total 7: the top eigenvector of $C = \\left[\\begin{smallmatrix} 4 & 2 \\\\ 2 & 3 \\end{smallmatrix}\\right]$.`,
     means: 'One symmetric matrix holds the spread of the cloud in every direction at once. Its eigenvectors are the directions of most and least spread.',
     name: 'For centred readings $X_c$ (one per row), $C = \\frac{1}{n-1}X_c^{\\mathsf T}X_c$ is the **covariance matrix**. Its diagonal holds each reading’s own spread; entry $(i, j)$ says how readings $i$ and $j$ move together. Its unit eigenvectors, largest eigenvalue first, are the **principal components**.',
     formula: `C = \\tfrac{1}{n-1}X_c^{\\mathsf T}X_c, \\qquad \\max_{\\|\\mathbf w\\| = 1}\\mathbf w^{\\mathsf T}C\\,\\mathbf w = \\lambda_1 \\approx ${fmtD(P3_EIG.values[0])}`,
-    why: 'The shadow of $\\mathbf x$ on $\\mathbf w$ is $\\mathbf x\\cdot\\mathbf w$, so the spread is $\\frac{1}{n-1}\\|X_c\\mathbf w\\|^2 = \\mathbf w^{\\mathsf T}C\\,\\mathbf w$: a quadratic form. $C$ is symmetric, so on the unit circle it is largest at the top eigenvector (Chapter 24). These are also the right singular vectors of $X_c$, with $\\lambda_i = \\sigma_i^2/(n - 1)$ (Chapter 25).',
+    why: 'The spread along $\\mathbf w$ is $\\frac{1}{n-1}\\|X_c\\mathbf w\\|^2 = \\mathbf w^{\\mathsf T}C\\,\\mathbf w$, a quadratic form, and $C$ is symmetric: on the unit circle it is largest at the top eigenvector (Chapter 24). These are the right singular vectors of $X_c$ (Chapter 25).',
     cue: 'When you see **“which way does the data vary most?”**, think **top eigenvector of the covariance matrix**.',
     use: 'Portfolio risk is $\\mathbf w^{\\mathsf T}C\\,\\mathbf w$: the covariance matrix of the assets’ returns, with the portfolio weights as $\\mathbf w$.',
   },
@@ -51,7 +52,7 @@ const NAME_PCA: Beat = {
     saw: `The record’s twelve singular values: 9 and 7, then 1.5 and a tail. One component kept ${pct(keptShare(1))} of the squared total; two kept ${pct(keptShare(2))}.`,
     means: 'Each component keeps its share of the spread: its singular value squared, over the sum of all of them. A few large ones carry most of the shape.',
     name: 'That share is the **explained variance**. Centring, finding the principal components and keeping the first $k$ is **principal component analysis** (PCA). Replacing each reading by its $k$ coordinates along them is **dimensionality reduction**.',
-    formula: `\\text{kept}(2) = \\frac{\\sigma_1^2 + \\sigma_2^2}{\\sigma_1^2 + \\cdots + \\sigma_{12}^2} = \\frac{${SQ[0]} + ${SQ[1]}}{${fmtD(SQ_TOTAL)}} \\approx ${pct(keptShare(2))}`,
+    formula: `\\text{kept}(2) = \\frac{\\sigma_1^2 + \\sigma_2^2}{\\sigma_1^2 + \\cdots + \\sigma_{12}^2} = \\frac{${SQ[0]} + ${SQ[1]}}{${fmtD(SQ_TOTAL)}} \\approx ${pctM(keptShare(2))}`,
     why: 'The components are perpendicular, so their squared lengths add, as in Pythagoras: the total spread is $\\lambda_1 + \\cdots + \\lambda_d$, and leaving components out loses exactly their $\\lambda$’s. Keeping the $k$ largest gives the closest $k$-dimensional picture by perpendicular distance.',
     cue: 'When you see **“too many dimensions”** or **“most of the variation”**, think **PCA**.',
     use: 'Maps of high-dimensional data start here: the digits map on the AI Field Explorer site turns hundreds of numbers per picture into two.',

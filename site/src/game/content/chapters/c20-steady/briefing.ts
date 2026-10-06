@@ -177,7 +177,7 @@ export const law: LawDef<ChainCase> = {
   frame: ['If every **column** of $P$ adds to 1 (no entry negative), then ', { slot: 'then' }, '.'],
   slots: {
     then: { options: [
-      { id: 'eig1', text: '1 is an eigenvalue of $P$' },
+      { id: 'eig1', text: '1 is an eigenvalue of P' },
       { id: 'settles', text: 'the chain settles from every start' },
       { id: 'smaller', text: 'every other eigenvalue is smaller than 1 in size' },
       { id: 'unique', text: 'exactly one arrangement never changes' },

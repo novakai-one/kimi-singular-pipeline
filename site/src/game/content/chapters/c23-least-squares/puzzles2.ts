@@ -26,7 +26,7 @@ export const p5: PuzzleDef = {
   id: 'c23-p5',
   title: 'What is the Collapse pulse, past two decimals?',
   goal: 'Twenty drones: white is where each was before the pulse, yellow where it was after. Fit the pulse one row at a time: row $i$ is the best answer to $X\\mathbf c = $ (coordinate $i$ of the after-positions). Then read where $\\mathbf e_3$ lands.',
-  subgoals: ['Set up the fit: what goes in $A$, what goes in $\\mathbf b$', 'Fit all three rows of the pulse', 'Read the third column: where $\\mathbf e_3$ lands'],
+  subgoals: ['Set up the fit: what goes in A, what goes in b', 'Fit all three rows of the pulse', 'Read the third column: where e₃ lands'],
   hints: [
     'The pulse sends each before-position $\\mathbf x$ to $C\\mathbf x$. Row $i$ of $C$ times $\\mathbf x$ is coordinate $i$ of the after-position: twenty equations, three unknowns.',
     'So $A$ is the 20 × 3 matrix of before-positions, and $\\mathbf b$ is coordinate $i$ of the after-positions. Fit each row.',
@@ -63,7 +63,7 @@ export const p5: PuzzleDef = {
       if (done) return;
       done = true;
       r.row('c3', 'third column, fitted', fmtV(col(F as Mat, 2), 3), C.result);
-      r.row('c2', 'third column, two-decimal model', fmtV(col(C2, 2), 2), C.white);
+      r.row('c2', 'two-decimal model', fmtV(col(C2, 2), 2), C.white);
       r.note('Each row was its own best fit. The fit sees the third column at 2.004: the stern is not flat, only thin.');
       p.win();
     };

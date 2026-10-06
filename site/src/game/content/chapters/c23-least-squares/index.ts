@@ -21,7 +21,7 @@ const NAME_LS: Beat = {
     saw: 'Readings 1, 2, 4 made one arrow $\\mathbf b = (1, 2, 4)$. Every line made a point of the plane of $(1, 1, 1)$ and $(0, 1, 2)$. The nearest point, $(5/6, 7/3, 23/6)$, was the best line $y = 5/6 + 1.5t$; its leftover $(1/6, -1/3, 1/6)$ read 0 against both columns.',
     means: 'When no mix of the columns hits $\\mathbf b$, take the nearest point the columns can reach: project $\\mathbf b$ onto the column space. The total square area on the board is the squared length of the leftover in data space.',
     name: 'The weights $\\hat{\\mathbf x}$ that make $A\\hat{\\mathbf x}$ nearest to $\\mathbf b$ are the **least-squares solution**. $\\mathbf b - A\\hat{\\mathbf x}$ is the **residual**. The equations $A^{\\mathsf T}A\\hat{\\mathbf x} = A^{\\mathsf T}\\mathbf b$ are the **normal equations**.',
-    formula: 'A^{\\mathsf T}(\\mathbf b - A\\hat{\\mathbf x}) = \\mathbf 0 \\iff A^{\\mathsf T}A\\,\\hat{\\mathbf x} = A^{\\mathsf T}\\mathbf b, \\qquad \\begin{bmatrix} 3 & 3 \\\\ 3 & 5 \\end{bmatrix}\\hat{\\mathbf x} = \\begin{bmatrix} 7 \\\\ 10 \\end{bmatrix} \\Rightarrow \\hat{\\mathbf x} = \\cy{\\begin{bmatrix} 5/6 \\\\ 3/2 \\end{bmatrix}}',
+    formula: 'A^{\\mathsf T}A\\,\\hat{\\mathbf x} = A^{\\mathsf T}\\mathbf b \\qquad \\begin{bmatrix} 3 & 3 \\\\ 3 & 5 \\end{bmatrix}\\hat{\\mathbf x} = \\begin{bmatrix} 7 \\\\ 10 \\end{bmatrix} \\Rightarrow \\hat{\\mathbf x} = \\cy{\\begin{bmatrix} 5/6 \\\\ 3/2 \\end{bmatrix}}',
     why: 'The residual must be perpendicular to every column (the nearest point, Chapter 21). Each column dotted with it is 0: that is $A^{\\mathsf T}(\\mathbf b - A\\hat{\\mathbf x}) = \\mathbf 0$. Multiply out and move $A^{\\mathsf T}A\\hat{\\mathbf x}$ across.',
     cue: 'When you see **more equations than unknowns** or **noisy data**, think **least squares: $A^{\\mathsf T}A\\hat{\\mathbf x} = A^{\\mathsf T}\\mathbf b$**.',
     use: 'Linear regression, the first model in every machine-learning course, is this: one column per feature, one row per example.',
@@ -32,7 +32,7 @@ const NAME_BEST: Beat = {
   kind: 'name', id: 'name-best-fit', entry: {
     id: 'line-of-best-fit', term: 'line of best fit', question: 'Which line describes the readings?', nodes: ['N25'],
     saw: 'For $(0, 1)$, $(1, 3)$, $(2, 2)$, $(3, 5)$, $(4, 4)$: $A^{\\mathsf T}A = \\begin{bmatrix} 5 & 10 \\\\ 10 & 30 \\end{bmatrix}$, $A^{\\mathsf T}\\mathbf b = (15, 38)$, and the line $y = 1.4 + 0.8t$ with total square area 3.6.',
-    means: 'For a line $y = c_0 + c_1t$, $A$ has a column of 1s and a column of times. The normal equations need only four sums: $n$, $\\sum t$, $\\sum t^2$ and $\\sum y$, $\\sum ty$.',
+    means: 'For a line $y = c_0 + c_1t$, $A$ has a column of 1s and a column of times. The normal equations need only the count $n$ and four sums: $\\sum t$, $\\sum t^2$, $\\sum y$ and $\\sum ty$.',
     name: 'The line $y = \\hat c_0 + \\hat c_1 t$ from the least-squares solution is the **line of best fit** (the regression line).',
     formula: '\\begin{bmatrix} n & \\sum t \\\\ \\sum t & \\sum t^2 \\end{bmatrix}\\begin{bmatrix} c_0 \\\\ c_1 \\end{bmatrix} = \\begin{bmatrix} \\sum y \\\\ \\sum t y \\end{bmatrix}',
     why: 'Row 1 of $A^{\\mathsf T}$ is all 1s, row 2 is the times; dotting them with the columns of $A$ and with $\\mathbf b$ gives exactly these sums.',

@@ -36,7 +36,7 @@ export const p5: PuzzleDef = {
   onWin: S.p5Win,
   setup(p) {
     const d = p.difficulty;
-    void p.g.stage.view2D({ center: [0, 1.6], height: 8, ms: 0 });
+    void p.g.stage.view2D({ center: [-1.2, 2.0], height: 8, ms: 0 });   // clear of the objective card and the dock
     // the bars in the world: tall, labelled, kept ones yellow
     const W = 0.5, X0 = -((REC_D - 1) * W) / 2;
     const segs = new FatSegments(p.g.stage, [[[0, 0, 0], [0, 0, 0]]], { color: C.result, width: 16, opacity: 0.95 });
