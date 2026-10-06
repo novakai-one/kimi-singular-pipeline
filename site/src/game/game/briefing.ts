@@ -288,6 +288,8 @@ export async function runReview(host: BriefingHost, r: ReviewDef): Promise<void>
 export async function runLaw<C>(host: BriefingHost, L: LawDef<C>): Promise<void> {
   const { g, hud } = host;
   const m = await host.mount('2d');
+  // the panel is on the left: put the origin in the right half of the screen for the case drawings
+  if (window.innerWidth > 760) await g.stage.view2D({ center: [-5, 0], height: 14, ms: 0 });
   hud.setObjective('Engrave the Law', 'Fill the statement. Then the Proving Ground fires **500 cases** at it. Surviving is evidence; the reason makes it a proof.');
   const d = g.settings.difficulty;
   const filled: Record<string, string> = {};

@@ -30,7 +30,7 @@ const NAME_PROJECTION: Beat = {
 
 const NAME_BASIS: Beat = {
   kind: 'name', id: 'name-orthogonal-basis', entry: {
-    id: 'orthogonal-basis', term: 'orthogonal basis', question: 'When do the shadows simply add?', nodes: ['N23'],
+    id: 'orthogonal-basis', term: 'orthogonal basis', question: 'When do the shadows add up to the nearest point?', nodes: ['N23'],
     saw: 'With $\\mathbf u_1 = (1, 1, 0)$ and $\\mathbf u_2 = (0, 0, 1)$, at a right angle, the shadows of $(3, 1, 2)$ were $(2, 2, 0)$ and $(0, 0, 2)$. They added to the nearest point $(2, 2, 2)$; the leftover $(1, -1, 0)$ read 0 against both.',
     means: 'When the arrows that span the plane are at right angles to each other, each shadow takes care of its own direction and nothing is counted twice. The nearest point is the sum of the shadows.',
     name: 'A set of vectors that are perpendicular in pairs is an **orthogonal set**. An orthogonal set that is a basis of $W$ is an **orthogonal basis**.',

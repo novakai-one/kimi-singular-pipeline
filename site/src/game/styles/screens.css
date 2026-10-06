@@ -293,6 +293,8 @@
 .chip { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line-2); background: rgba(89, 225, 255, 0.06); color: var(--ink); font-size: 13px; cursor: pointer; }
 .chip:hover { border-color: var(--accent); }
 .brief.doubt, .brief.law { left: 456px; right: 456px; top: 18px; max-width: 700px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; max-height: calc(100vh - 120px); overflow-y: auto; }
+/* the Law sits in the left column so the Proving Ground's cases draw in the open right half */
+.brief.law { left: 20px; right: auto; top: 200px; width: min(560px, 44vw); margin: 0; max-height: calc(100vh - 290px); }
 .doubt-claim { font-size: 19px; line-height: 1.5; font-style: italic; }
 .doubt-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .doubt-verdict { font-size: 15px; line-height: 1.55; color: var(--ink-2); }

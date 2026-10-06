@@ -21,7 +21,7 @@ export const NUMPY_CARDS: Record<number, CardDef> = {
   },
   4: {
     kind: 'numpy', title: 'Moves in NumPy',
-    body: '- `A @ x` applies a matrix to a vector: your `matvec`.\n- `A @ B` composes two moves: your `matmul`. `A.T` is the transpose.\n- `np.linalg.inv(A)` undoes a move: your `inverse`.\n- `np.linalg.det(A)`: your `det`, by the same idea: eliminate, multiply the pivots, flip the sign for each swap.\n\n**Yours and theirs:** in practice nobody computes `inv(A) @ b`. `np.linalg.solve(A, b)` is faster and loses fewer digits.',
+    body: '- `A @ x` applies a matrix to a vector: your `matvec`.\n- `A @ B` composes two moves: your `matmul`. `A.T` is the transpose.\n- `np.linalg.inv(A)` undoes a move: your `inverse`.\n- `np.linalg.det(A)`: your `det`, by the same idea: eliminate, multiply the pivots, flip the sign for each swap.\n\n**Yours and theirs:** in practice nobody computes `inv(A) @ b`. `np.linalg.solve(A, b)` is faster and loses fewer digits. And `np.linalg.det` of the Collapse readings returns about 0.004: a number, not a verdict. Deciding what counts as zero is still your job.',
     code: 'import numpy as np\nA = np.array([[1., -2], [1, -1]])\nprint(A @ np.array([1., 0]), np.linalg.det(A), np.linalg.inv(A))',
   },
   5: {

@@ -145,7 +145,7 @@ export const p6: PuzzleDef = {
   hints: [
     'Most bars are tiny. Look for a stretch where they stand tall in a pattern.',
     'The tall bars come in groups: three single bars, three triple bars, three single bars.',
-    `The pattern runs from sample ${KNOCK_START} to sample ${KNOCK_END - 1}. Put the markers just before the first tall bar and just after the last.`,
+    `The pattern runs from sample ${KNOCK_START} to sample ${KNOCK_END - 1}. Put one marker right before the first tall bar and one right after the last.`,
   ],
   par: 3,
   onWin: S.p6Win,

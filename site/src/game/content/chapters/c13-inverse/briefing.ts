@@ -257,7 +257,7 @@ const procHtml = (m: ReturnType<typeof runProcedure>['steps'][number]['m'], n: n
 export const procedure: ProcedureDef = {
   id: 'c13-proc',
   title: 'Inverse by [A | I]',
-  brief: 'Put the steps LANTERN does **for each column, left to right**. LANTERN runs them literally on a new case, $A = \\begin{bmatrix}0 & 2\\\\ 1 & 1\\end{bmatrix}$, then checks that $A$ times the right half is $I$.',
+  brief: 'Order the steps LANTERN does **for each column, left to right**. It runs them literally on $[A \\mid I]$ for a new $A$, then checks that $A$ times the right half is $I$.',
   tiles: [
     { id: 'find', text: 'FIND PIVOT: the entry on the diagonal in this column', py: 'p = col' },
     { id: 'swap', text: 'SWAP IF ZERO: if the pivot is 0, swap in a lower row that is not 0 there', py: 'if M[p][col] == 0: swap(M, p, below(M, col))' },
@@ -273,11 +273,13 @@ export const procedure: ProcedureDef = {
   async run(g, tileIds) {
     const res = runProcedure(tileIds, PROC_A);
     g.stage.clearWorld();
-    await g.stage.view2D({ center: [0, 0.4], height: 9, ms: 300 });
+    // the step panel sits on the left: put the board and the grid's origin on the right
+    await g.stage.view2D({ center: [-3.4, 0.4], height: 9, ms: 300 });
     const grid = new Grid2D(g.stage, { base: 0.42, main: 0.6 });
     landingLineColour(grid);
     const board = new Label('', [0, 3.2, 0], { color: C.white, size: 20 });
     const step = new Label('', [0, 2.1, 0], { color: C.accent, size: 15 });
+    for (const l of [board, step]) Object.assign(l.el.style, { background: 'rgba(6, 10, 22, 0.78)', padding: '4px 10px', borderRadius: '8px' });
     g.stage.world.add(grid.object, board.object, step.object);
     const n = PROC_A.length;
     // the grid shows the left half as a move: it ends square when the left half is I

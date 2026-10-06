@@ -18,7 +18,7 @@ import { PolyPlot } from '../c18-eigen/parts';
 import { Surface, ptag, tag, v3 } from './act9';
 import {
   AXES, HOLD_DEG, P5_S, SHAPE_WORD, SPIN_MINUTES, circleValue, deg, fmt2, fmtN, fmtV, lineDeg, p5Won, p7CapWon,
-  p7SphereValue, p7SphereWon, p7TroughWon, rad, shapeOf, spin, symEig, texSmall, type SpinRun,
+  p7SphereValue, p7SphereWon, p7TroughWon, rad, shapeOf, spin, symEig, texM, type SpinRun,
 } from './logic';
 import { checklist, msgLine } from './puzzles';
 import { S } from './script';
@@ -173,7 +173,7 @@ export const p6: PuzzleDef = {
     p.onDispose(() => trail.dispose());
     trail.object.visible = false;
     const r = p.readout('The Lantern');
-    r.row('I', 'inertia matrix', `$${texSmall(INERTIA)}$`);
+    r.row('I', 'inertia matrix', `$${texM(INERTIA)}$`);
     const msg = msgLine();
     const input = new VectorInput({ dim: 3, values: [1, 0, 0], label: '\\text{axis} =', step: 1, onSubmit: () => void go() });
     input.el.classList.add('a9-in');
@@ -287,7 +287,7 @@ export const p7: PuzzleDef = {
       const S0 = M();
       surf.setS(S0);
       const e = symEig(S0);
-      r.row('m', '$S$', `$${texSmall(S0)}$`);
+      r.row('m', '$S$', `$${texM(S0)}$`);
       r.row('l', 'eigenvalues', e.values.map(fmt2).join(' and '), C.result);
       r.row('s', 'shape', SHAPE_WORD[shapeOf(S0, 1e-6)]);
       if (p7CapWon(S0)) tick(0);

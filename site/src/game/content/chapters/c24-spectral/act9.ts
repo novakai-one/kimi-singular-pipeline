@@ -46,7 +46,7 @@ export function inWorld<T extends { object: Object3D; dispose(): void }>(g: Game
 
 // ================================================================== the energy surface (DESCEND)
 
-const LOW = new Color('#0f2f5c'), MID = new Color('#2f7fd0'), HIGH = new Color('#c6e8ff');
+const LOW = new Color('#081a36'), MID = new Color('#174f92'), HIGH = new Color('#58aef5');
 function heightColor(t: number): Color {
   // t in [−1, 1]: below the floor dark, above it light
   const c = new Color();
@@ -65,6 +65,8 @@ export interface SurfaceOpts {
   scaleFor?: number;
   /** Draw the survey grid on the surface (default true). */
   grid?: boolean;
+  /** Draw the turned grid's own two axes on the surface (cyan). */
+  gridAxes?: boolean;
   theta?: number;
 }
 
@@ -82,6 +84,7 @@ export class Surface extends Composite {
   private readonly mesh: Mesh;
   private readonly wire: FatSegments | null = null;
   private readonly axesL: FatLine[] = [];
+  private readonly gridAxes: FatLine[] = [];
   readonly probe: Dot;
   private readonly trail: FatLine;
   private readonly rings = 30;
@@ -106,7 +109,7 @@ export class Surface extends Composite {
       idx.push(id(r, s), id(r + 1, s), id(r + 1, s + 1), id(r, s), id(r + 1, s + 1), id(r, s + 1));
     }
     this.geo.setIndex(idx);
-    this.mat = new MeshStandardMaterial({ vertexColors: true, roughness: 0.62, metalness: 0.08, side: DoubleSide, transparent: true, opacity: 0.88, emissive: new Color('#0a1830'), emissiveIntensity: 0.6 });
+    this.mat = new MeshStandardMaterial({ vertexColors: true, roughness: 0.7, metalness: 0.05, side: DoubleSide, transparent: true, opacity: 0.78, depthWrite: false, emissive: new Color('#06122a'), emissiveIntensity: 0.5 });
     this.mesh = new Mesh(this.geo, this.mat);
     this.mesh.renderOrder = 1;
     this.group.add(this.mesh);
@@ -116,7 +119,10 @@ export class Surface extends Composite {
     const rim: V3[] = [];
     for (let i = 0; i <= 96; i++) { const a = (i / 96) * Math.PI * 2; rim.push([this.R * Math.cos(a), this.R * Math.sin(a), 0]); }
     this.own(new FatLine(st, rim, { color: C.white, width: 1.2, opacity: 0.25, dashed: true, dashSize: 0.12, gapSize: 0.1 }));
-    if (o.grid !== false) this.wire = this.own(new FatSegments(st, [[[0, 0, 0], [0, 0, 0]]], { color: '#9fd8ff', width: 1, opacity: 0.38 }));
+    if (o.grid !== false) {
+      this.wire = this.own(new FatSegments(st, [[[0, 0, 0], [0, 0, 0]]], { color: '#bfe3ff', width: 1.1, opacity: 0.5 }));
+      if (o.gridAxes) for (let i = 0; i < 2; i++) this.gridAxes.push(this.own(new FatLine(st, [[0, 0, 0], [0, 0, 0]], { color: C.accent, width: 2.4, intensity: 1.2, opacity: 0.95 })));
+    }
     for (let i = 0; i < 2; i++) { const L = this.own(new FatLine(st, [[0, 0, 0], [0, 0, 0]], { color: [C.v, C.w][i], width: 2.6, intensity: 1.2 })); L.object.visible = false; this.axesL.push(L); }
     this.trail = this.own(new FatLine(st, [[0, 0, 0], [0, 0, 0]], { color: C.result, width: 2, opacity: 0.8 }));
     this.trail.object.visible = false;
@@ -178,6 +184,11 @@ export class Surface extends Composite {
       }
     }
     this.wire.setSegments(segs);
+    [u, v].forEach((d, i) => {
+      const pts: V3[] = [];
+      for (let k = 0; k <= 40; k++) { const s = -this.R + (2 * this.R * k) / 40; pts.push(this.at([d[0] * s, d[1] * s], 0.03)); }
+      this.gridAxes[i]?.setPoints(pts);
+    });
   }
 
   private drawAxes(): void {
@@ -345,8 +356,8 @@ export async function arkSet(g: Game, o: ArkSetOpts = {}): Promise<ArkSet> {
 }
 
 /** Camera on a slow drift around a point (z up); stops when the set leaves the world. */
-export function drift(g: Game, set: { tick(fn: (dt: number, t: number) => void): void }, target: V3, dist: number, elev: number, az0: number, degPerSec: number): void {
-  let az = az0;
+export function drift(g: Game, set: { tick(fn: (dt: number, t: number) => void): void }, target: V3, dist: number, elev: number, az0: number, degPerSec: number): () => void {
+  let az = az0, on = true;
   g.stage.disposeControls();
   g.stage.mode = '3d';
   const t = new Vector3(...target);
@@ -357,7 +368,8 @@ export function drift(g: Game, set: { tick(fn: (dt: number, t: number) => void):
     g.stage.camera.lookAt(t);
   };
   place();
-  set.tick((dt) => { if (g.stage.controls) return; az += dt * degPerSec; place(); });
+  set.tick((dt) => { if (!on || g.stage.controls) return; az += dt * degPerSec; place(); });
+  return () => { on = false; };
 }
 
 /** Scene staging: the flat stern from close by, the Lantern on station beside it. */
@@ -388,3 +400,36 @@ export async function pause(g: Game, ms: number): Promise<void> { await wait(g.h
 
 /** The image of a point under a 2 × 2, as a world point. */
 export const img2 = (M: Mat, x: readonly number[], z = 0): V3 => { const y = matVec(M, x as number[]); return [y[0], y[1], z]; };
+
+// ================================================================== the cracked Anchor (after the 750× pulse)
+
+/** Jagged glowing cracks over the Anchor's core, flickering. Returns a stop function. */
+export function crackAnchor(g: Game, anchor: Object3D, o: { radius?: number; count?: number; seed?: number } = {}): () => void {
+  const R = o.radius ?? 0.62, n = o.count ?? 7;
+  let s = o.seed ?? 750;
+  const rnd = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
+  const group = new Group();
+  const lines: FatLine[] = [];
+  for (let k = 0; k < n; k++) {
+    // a crack: a short random walk over the core's surface
+    let th = rnd() * Math.PI * 2, ph = 0.3 + rnd() * 1.2;
+    const pts: V3[] = [];
+    for (let i = 0; i < 7; i++) {
+      pts.push([R * Math.sin(ph) * Math.cos(th), R * Math.sin(ph) * Math.sin(th), R * Math.cos(ph) * 0.8]);
+      th += (rnd() - 0.5) * 0.7; ph += (rnd() - 0.5) * 0.5;
+    }
+    const L = new FatLine(g.stage, pts, { color: '#ffb36b', width: 2.2, intensity: 2.2, opacity: 0.95 });
+    lines.push(L);
+    group.add(L.object);
+  }
+  const glow = glowSprite('#ff9f43', R * 4, 0.35);
+  group.add(glow);
+  anchor.add(group);
+  const off = g.stage.tick((_dt, t) => {
+    const f = 0.55 + 0.45 * Math.abs(Math.sin(t * 7.3) * Math.sin(t * 2.1));
+    lines.forEach((L, i) => L.setOpacity(Math.max(0.15, f - (i % 3) * 0.12)));
+    glow.material.opacity = 0.2 + 0.25 * f;
+  });
+  group.userData.dispose = () => { off(); lines.forEach((L) => L.dispose()); };
+  return () => { off(); group.removeFromParent(); lines.forEach((L) => L.dispose()); };
+}

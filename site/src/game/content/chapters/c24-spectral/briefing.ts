@@ -15,7 +15,7 @@ import { PolyPlot } from '../c18-eigen/parts';
 import { Surface, v3 } from './act9';
 import {
   LAW_ANSWER, LAW_CORE, SHAPE_WORD, circleMaxHolds, circleValue, deg, fmt2, fmtN, lines2, posBowlHolds, rad,
-  realEigHolds, shapeOf, symEig, texSmall, type EigCase,
+  realEigHolds, shapeOf, symEig, texM, texSmall, type EigCase,
 } from './logic';
 
 export const sayit: SayItDef = {
@@ -66,7 +66,7 @@ export const doubtBowl: DoubtDef = {
     const paint = (S: Mat) => {
       surf.setS(S);
       const e = symEig(S);
-      r.row('m', '$S$', `$${texSmall(S)}$`);
+      r.row('m', '$S$', `$${texM(S)}$`);
       r.row('p', 'every entry positive', S.every((row) => row.every((x) => x > 0)) ? 'yes' : 'no');
       r.row('l', 'eigenvalues', e.values.map(fmt2).join(' and '), C.result);
       r.row('s', 'shape', SHAPE_WORD[shapeOf(S)], shapeOf(S) === 'bowl' ? C.white : C.orange);
@@ -112,7 +112,7 @@ export function circleScene(p: PuzzleCtx, S0: Mat, t0: number) {
     arrow.setTo([Math.cos(t), Math.sin(t), 0.02]);
     knob.at([Math.cos(t), Math.sin(t), 0.03]);
     const v = circleValue(S, t);
-    r.row('m', '$S$', `$${texSmall(S)}$`);
+    r.row('m', '$S$', `$${texM(S)}$`);
     r.row('x', '$\\mathbf x^{\\mathsf T}S\\mathbf x$', fmt2(v), C.result);
     r.row('l', 'largest eigenvalue', fmt2(e.values[0]), v > e.values[0] + 1e-9 ? C.orange : C.white);
     if (!plot || plotFor !== S) {
@@ -170,7 +170,7 @@ export const doubtReal: DoubtDef = {
     const paint = (M: Mat) => {
       sw.setM(M);
       const e = eig2(M);
-      r.row('m', '$A$', `$${texSmall(M)}$`);
+      r.row('m', '$A$', `$${texM(M)}$`);
       r.row('e', 'eigenvalues', e.kind === 'real' ? `${fmt2(e.values[0])} and ${fmt2(e.values[1])}` : `$${fmt2(e.re)} \\pm ${fmt2(e.im)}i$`, e.kind === 'real' ? C.result : C.orange);
       r.row('k', 'real lines kept', e.kind === 'real' ? (lines2(M) ? '2' : '1 or every line') : 'none', e.kind === 'real' ? C.white : C.orange);
     };

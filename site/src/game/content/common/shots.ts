@@ -13,14 +13,7 @@ export async function shipExterior(g: Game, o: { anchor?: boolean; ark?: boolean
   ship.object.position.set(0, 0, 0);
   ship.face([1, 0.3, 0.05]);
   ship.setThrust(0.15);
-  if (o.anchor !== false) {
-    const a = await makeAnchor(g.stage, 4.5);
-    a.position.set(70, 34, -6);
-  }
-  if (o.ark) {
-    const ark = await loadModel('meridian');
-    if (ark) { ark.rotation.x = Math.PI / 2; ark.position.set(-30, 40, 6); ark.scale.setScalar(1.2); g.stage.world.add(ark); }
-  }
+  // the camera tick and its dispose hook exist before any await, so a beat that ends during loading cannot leak them
   let az = -150;
   const off = g.stage.tick((dt) => {
     if (g.stage.controls) return;
@@ -34,14 +27,21 @@ export async function shipExterior(g: Game, o: { anchor?: boolean; ark?: boolean
   ship.object.userData.dispose = (() => { const d = ship.object.userData.dispose as () => void; return () => { off(); d?.(); }; })();
   g.stage.mode = '3d';
   g.stage.disposeControls();
+  const alive = () => !!ship.object.parent;
+  if (o.anchor !== false) {
+    const a = await makeAnchor(g.stage, 4.5);
+    if (!alive()) a.removeFromParent(); else a.position.set(70, 34, -6);
+  }
+  if (o.ark) {
+    const ark = await loadModel('meridian');
+    if (ark && alive()) { ark.rotation.x = Math.PI / 2; ark.position.set(-30, 40, 6); ark.scale.setScalar(1.2); g.stage.world.add(ark); }
+  }
 }
 
 /** The bridge: the holotable with a small lattice hologram, camera drifting around it. */
 export async function bridgeShot(g: Game): Promise<void> {
   const root = new Group();
   g.stage.world.add(root);
-  const m = await loadModel('bridge');
-  if (m) { m.rotation.x = Math.PI / 2; root.add(m); }
   const holo = new Lattice3D(g.stage, { extent: 1, color: '#59e1ff', opacity: 0.9 });
   holo.object.scale.setScalar(0.35);
   holo.object.position.set(0, 0, 1.5);
@@ -49,6 +49,7 @@ export async function bridgeShot(g: Game): Promise<void> {
   const lamp = new PointLight('#59e1ff', 6, 6);
   lamp.position.set(0, 0, 1.6);
   root.add(lamp, new AmbientLight('#223355', 0.4));
+  // camera tick and dispose hook before the model loads (see shipExterior)
   let t0 = 0;
   const off = g.stage.tick((dt) => {
     t0 += dt;
@@ -62,4 +63,6 @@ export async function bridgeShot(g: Game): Promise<void> {
   root.userData.dispose = () => { off(); holo.dispose(); };
   g.stage.mode = '3d';
   g.stage.disposeControls();
+  const m = await loadModel('bridge');
+  if (m && root.parent) { m.rotation.x = Math.PI / 2; root.add(m); }
 }

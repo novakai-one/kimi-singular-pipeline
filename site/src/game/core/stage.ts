@@ -44,15 +44,15 @@ const FinishShader = {
         float dist = length(w);
         float k = (dist - uWaveR) / 0.06;
         ring = exp(-k * k) * uWaveAmp;
-        uv -= normalize(w + 1e-6) / vec2(uAspect, 1.0) * ring * 0.035;
+        // light only: no pixel displacement, so straight lines on screen stay straight during a pulse
       }
       vec2 d = uv - 0.5;
       float r2 = dot(d,d);
-      vec2 off = d * (0.0022 * r2 * 4.0 + ring * 0.01);
+      vec2 off = d * (0.0022 * r2 * 4.0 + ring * 0.003);
       vec4 c = texture2D(tDiffuse, uv);
       c.r = texture2D(tDiffuse, uv + off).r;
       c.b = texture2D(tDiffuse, uv - off).b;
-      c.rgb += vec3(0.35, 0.75, 1.0) * ring * 0.18;
+      c.rgb += vec3(0.35, 0.75, 1.0) * ring * 0.3;
       c.rgb *= 1.0 - uVignette * smoothstep(0.08, 0.55, r2);
       c.rgb += (hash(vUv * 1000.0 + uTime) - 0.5) * uGrain;
       c.rgb = mix(c.rgb, vec3(1.0), uFlash);
@@ -289,7 +289,7 @@ export class Stage {
 
   nudge(amount = 0.15): void { this.shake = Math.max(this.shake, amount); }
 
-  /** A screen-space shockwave ring expanding from a world point. */
+  /** A ring of light expanding from a world point (it never bends the picture: lines stay straight). */
   async shockwave(at: V3 = [0, 0, 0], ms = 1600, amp = 1): Promise<void> {
     const u = this.finish.uniforms as Record<string, { value: unknown }>;
     const p = this.toScreen(at);

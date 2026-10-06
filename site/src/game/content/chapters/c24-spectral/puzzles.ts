@@ -20,7 +20,7 @@ import { Surface, ptag, tag, v3 } from './act9';
 import {
   P1_DECOYS, P1_NONSYM, P1_NONSYM_LINES, P1_ORDER, P1_S, P1_TILES, P2_S, P3_BOWL, P3_SADDLE, P4_S,
   RIM, SHAPE_WORD, fmt2, fmtN, fmtV, formIn, lineDeg, lines2, p2Won, p3EscapeWon, p3SettleWon, rad, randSym2,
-  shapeOf, symEig, texSmall, type Shape,
+  shapeOf, symEig, texM, type Shape,
 } from './logic';
 import { S } from './script';
 
@@ -69,7 +69,7 @@ export const p1: PuzzleDef = {
     let won = false;
     const tick = (i: number) => { if (!done[i]) { done[i] = true; p.subgoal(i); ck.tick(i); } if (done.every(Boolean) && !won) { won = true; sfx.success(); p.win(); } };
     const r = p.readout('Panel one');
-    r.row('S', '$S$', `$${texSmall(P1_S)}$`);
+    r.row('S', '$S$', `$${texM(P1_S)}$`);
     // braces drawn along locked lines
     const braceG = new Group();
     p.add(braceG);
@@ -78,7 +78,8 @@ export const p1: PuzzleDef = {
       for (const c of [...braceG.children]) { c.removeFromParent(); (c.userData.dispose as (() => void) | undefined)?.(); }
       const dirs = hunt.locks.map((l) => normalize(l.dir));
       dirs.forEach((u, i) => {
-        const L = new FatLine(p.g.stage, [v3(u.map((x) => -3.4 * x)), v3(u.map((x) => 3.4 * x))], { color: [C.v, C.w][i % 2], width: 5, intensity: 1.3, opacity: 0.55 });
+        const L = new FatLine(p.g.stage, [v3(u.map((x) => -3.4 * x), -0.01), v3(u.map((x) => 3.4 * x), -0.01)], { color: '#c9d4e6', width: 9, intensity: 1, opacity: 0.22 });
+        void i;
         L.object.userData.dispose = () => L.dispose();
         braceG.add(L.object);
       });
@@ -110,7 +111,7 @@ export const p1: PuzzleDef = {
       const tg = tag(`${Math.round(ang)}°`, v3(normalize([L[0][0] + L[1][0], L[0][1] + L[1][1]]).map((x) => x * 1.15)), kind === 'ok' ? '' : 'o');
       tg.object.userData.dispose = () => tg.dispose();
       shakeG.add(tg.object);
-      r.row('m', kind === 'ok' ? 'Bram’s panel' : 'Chapter 18’s λ-dial matrix', `$${texSmall(M)}$`, kind === 'ok' ? C.white : C.orange);
+      r.row('m', kind === 'ok' ? 'Bram’s panel' : 'Chapter 18’s λ-dial matrix', `$${texM(M)}$`, kind === 'ok' ? C.white : C.orange);
       r.row('a', 'angle between its lines', `${fmt2(ang)}°`, kind === 'ok' ? C.good : C.orange);
     };
     const shake = (): Promise<void> => {
@@ -214,7 +215,7 @@ export const p2: PuzzleDef = {
   setup(p) {
     const d = p.difficulty;
     void p.g.stage.view3D({ target: [0, 0, 0.6], distance: 9.6, azimuth: -62, elevation: 34, ms: 0 });
-    const surf = new Surface(p, { S: P2_S, theta: rad(10) });
+    const surf = new Surface(p, { S: P2_S, theta: rad(10), gridAxes: true });
     surf.showAxes(d === 'cadet');
     let theta = 10;
     const tol = d === 'cadet' ? 2.5 : d === 'navigator' ? 1 : 0.5;
@@ -307,7 +308,7 @@ export const p3: PuzzleDef = {
     const paint = () => {
       const M = stage === 'saddle' ? P3_SADDLE : P3_BOWL;
       const e = symEig(M);
-      r.row('m', '$S$', `$${texSmall(M)}$`);
+      r.row('m', '$S$', `$${texM(M)}$`);
       if (classified && (d !== 'navigator' || stage === 'saddle' || bowlTyped)) r.row('l', 'eigenvalues', e.values.map(fmtN).join(' and '), C.result);
       else r.row('l', 'eigenvalues', '?');
       r.row('s', 'shape', classified ? SHAPE_WORD[shapeOf(M)] : '?');
@@ -443,7 +444,7 @@ export const p4: PuzzleDef = {
     a3.object.visible = false;
     sh.object.visible = false;
     const r = p.readout('The stress block');
-    r.row('S', '$S$', `$${texSmall(P4_S)}$`);
+    r.row('S', '$S$', `$${texM(P4_S)}$`);
     r.row('t', 'trace', '6');
     const marks: RightAngle[] = [];
     let finished = false;

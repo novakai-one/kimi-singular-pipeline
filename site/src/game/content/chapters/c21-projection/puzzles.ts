@@ -170,7 +170,7 @@ export const p2: PuzzleDef = {
 
 export const p3: PuzzleDef = {
   id: 'c21-p3',
-  title: 'When can the shadows simply be added?',
+  title: 'When do two shadows add up to the nearest point?',
   goal: 'The plane is spanned by $\\cg{\\mathbf u_1} = (1, 1, 0)$ and $\\cr{\\mathbf u_2} = (0, 0, 1)$, at a right angle. Find the point of the plane nearest the beacon $\\mathbf b = (3, 1, 2)$ from the two shadows.',
   hints: [
     'The shadow of $\\mathbf b$ on $\\mathbf u_1$ is $\\frac{\\mathbf b\\cdot\\mathbf u_1}{\\mathbf u_1\\cdot\\mathbf u_1}\\mathbf u_1 = \\frac{4}{2}\\mathbf u_1$.',

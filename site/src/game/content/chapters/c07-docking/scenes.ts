@@ -121,10 +121,10 @@ export async function install(g: Game): Promise<void> {
   g.stage.world.add(root);
   const { p, done } = cineCtx(g, root);
   root.userData.dispose = done;
-  void g.stage.view3D({ target: [0.4, 0.8, 1.1], distance: 11.5, azimuth: 30, elevation: 22, ms: 0, orbit: false });
-  new DoorWall(p, { wall: 0.55 });
+  void g.stage.view3D({ target: [0.4, 0.8, 1.1], distance: 16, azimuth: 30, elevation: 22, ms: 0, orbit: false });
+  new DoorWall(p, { wall: 0.55, wallSize: 7 });
   const panel = h('div', { class: 'glass', style: 'position:absolute;right:24px;top:24px;width:min(320px,34vw);padding:14px 16px;display:flex;flex-direction:column;gap:6px;pointer-events:none' });
-  const runOn = h('div', { style: 'font-size:13px;color:var(--ink-2)' }, 'Door picking');
+  const runOn = h('div', { style: 'font-size:13px;color:var(--ink-2)' }, 'Waiting for a click on the door.');
   const out = h('div', { style: 'font-family:var(--mono);font-size:13.5px' });
   panel.append(h('div', { class: 'kicker' }, 'Door picking'), runOn, out);
   g.ui.scene.appendChild(panel);
@@ -158,7 +158,7 @@ export async function install(g: Game): Promise<void> {
     const hit: V3 = [sight.o[0] + t * sight.d[0], sight.o[1] + t * sight.d[1], sight.o[2] + t * sight.d[2]];
     inside = insideDoor(hit, 0.01);
     if (inside) at = hit;
-    out.innerHTML = inline(`t = ${(Math.round(t * 1000) / 1000).toFixed(3)}<br>hit ${fmt(hit.map((x) => Math.round(x * 100) / 100))}<br>${inside ? 'on the door' : 'outside the door'}`);
+    out.innerHTML = [`t = ${(Math.round(t * 1000) / 1000).toFixed(3)}`, `hit ${fmt(hit.map((x) => Math.round(x * 100) / 100))}`, inside ? 'on the door' : 'outside the door'].map((l) => `<div>${inline(l)}</div>`).join('');
   } else out.innerHTML = inline('no single hit');
   // the line of sight, drawn to the hit, and the marker
   const from: V3 = [sight.o[0] + sight.d[0] * 2, sight.o[1] + sight.d[1] * 2, sight.o[2] + sight.d[2] * 2];

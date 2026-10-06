@@ -49,15 +49,16 @@ const texFree = (M: Mat) => `(${M.map((r) => r.map((x) => fmtN(x)).join(', ')).j
 export function sweepScene(p: PuzzleCtx, M0: Mat) {
   void p.g.stage.view2D({ center: [0.4, 0.2], height: 8.6, ms: 0 });
   let sw: Sweep | null = null;
-  const mv = new MatrixView(p, { M: M0, draggable: true, labels: false, snap: 0.5, grid: { main: 0.3, base: 0.08, axis: 0.5 }, onChange: (M) => { sw?.setM(M); paint(M); } });
-  hideLandingLine(mv.grid);
-  sw = new Sweep(p, { M: M0, radius: 1, start: rad(100), labels: { x: '$\\mathbf x$', mx: '$A\\mathbf x$' } });
   const r = p.readout('The move');
+  // declared before the MatrixView: its constructor reports the first matrix through onChange
   const paint = (M: Mat) => {
     const e = eig2(M);
     r.row('m', '$A$', `$${texSmall(M)}$`);
     r.row('l', 'lines that hold', e.kind === 'real' ? (Math.abs(e.values[0] - e.values[1]) < 1e-9 && !(M[0][1] === 0 && M[1][0] === 0) ? 'one' : 'yes') : 'none', e.kind === 'real' ? C.violet : C.orange);
   };
+  const mv = new MatrixView(p, { M: M0, draggable: true, labels: false, snap: 0.5, grid: { main: 0.3, base: 0.08, axis: 0.5 }, onChange: (M) => { sw?.setM(M); paint(M); } });
+  hideLandingLine(mv.grid);
+  sw = new Sweep(p, { M: M0, radius: 1, start: rad(100), labels: { x: '$\\mathbf x$', mx: '$A\\mathbf x$' } });
   paint(M0);
   return {
     mv, get sweep() { return sw!; },
@@ -105,7 +106,7 @@ export const doubtZero: DoubtDef = {
     const ax = new Arrow([0, 0, 0], [0, 0, 0], { color: C.result, width: 0.045, label: '$A\\mathbf x$' });
     const lx = new Arrow([0, 0, 0.01], [0, 0, 0.01], { color: C.violet, width: 0.03, opacity: 0.85, label: '$\\lambda\\mathbf x$' });
     p.add(ax, lx);
-    const origin = ptag(p, '', [0, 0, 0], 'dim', [0, 26]);
+    const origin = ptag(p, '', [0, 0, 0], 'dim', [0, 34]);
     const r = p.readout('Does the zero arrow say anything?');
     r.row('A', '$A$', `$${texSmall(ZA)}$`);
     const xh = new VectorHandle(p, { to: [1, 0, 0], color: C.v, label: '$\\mathbf x$', countMoves: false, limit: 3, onChange: () => paint() });
@@ -115,11 +116,13 @@ export const doubtZero: DoubtDef = {
       ax.setTo([y[0], y[1], 0]);
       lx.set([0, 0, 0.01], [l * x[0], l * x[1], 0.01]);
       const zero = norm(x) < 1e-9;
-      origin.set(zero ? '𝐱 = 0' : '');
+      origin.set(zero ? '𝐱 = 0 · A𝐱 = 0 · λ𝐱 = 0' : '');
       origin.show(zero);
+      for (const a of [ax, lx, xh.arrow]) a.label?.show(!zero);
       r.row('x', '$\\mathbf x$', fmtV(x), C.v);
       r.row('eq', '$A\\mathbf x = \\lambda\\mathbf x$?', Math.hypot(y[0] - l * x[0], y[1] - l * x[1]) < 1e-9 ? 'yes' : 'no');
-      r.row('st', `is ${fmtN(l)} an eigenvalue of $A$?`, isRealEigenvalue(ZA, l) ? 'yes: $A - \\lambda I$ flattens' : 'no: $A - \\lambda I$ does not flatten', isRealEigenvalue(ZA, l) ? C.violet : C.orange);
+      r.row('d', '$\\det(A - \\lambda I)$', fmtN(Math.round(((ZA[0][0] - l) * (ZA[1][1] - l) - ZA[0][1] * ZA[1][0]) * 100) / 100));
+      r.row('st', `is ${fmtN(l)} an eigenvalue of $A$?`, isRealEigenvalue(ZA, l) ? 'yes' : 'no', isRealEigenvalue(ZA, l) ? C.violet : C.orange);
     };
     const slider = new Slider({ label: 'dial $\\lambda$', min: -2, max: 5, step: 0.5, value: l, format: (x) => fmtN(x), onInput: (x) => { l = x; paint(); } });
     p.dock().append(slider.el, h('div', { class: 'a7-btns' }, button('Make x the zero arrow', () => { xh.set([0, 0, 0]); paint(); }, { cls: 'small' })));
@@ -152,7 +155,7 @@ export const doubtTrace: DoubtDef = {
   goal: 'Drag the grid arrows to set a move. The readout gives its eigenvalues, their sum and the trace. **Back it** (Bram will shake it) or **Challenge it**.',
   view: '2d',
   setup(p) {
-    void p.g.stage.view2D({ center: [0.4, 0.4], height: 8.6, ms: 0 });
+    void p.g.stage.view2D({ center: [0.4, 0.9], height: 9.6, ms: 0 });
     const r = p.readout('Sum and trace');
     const paint = (M: Mat) => {
       const e = eig2(M);
@@ -164,11 +167,11 @@ export const doubtTrace: DoubtDef = {
     const mv = new MatrixView(p, { M: [[2, 1], [1, 2]], draggable: true, snap: 0.5, labels: true, onChange: (M) => paint(M) });
     hideLandingLine(mv.grid);
     paint(mv.get());
-    const edges: Mat[] = [R2, [[1, 1], [0, 1]], T, [[1, 2], [2, 4]]];
+    const edges: Mat[] = [R2, [[1, 1], [0, 1]], T, [[2, 1], [2, 1]]];
     return {
       holds: () => traceSumHolds(mv.get()),
       describe: () => { const M = mv.get(); return `$A$ = ${texFree(M)}: eigenvalues add to ${fmt2(eigSum(M))}, trace ${fmt2(trace(M))}`; },
-      randomize(rr, edge) { mv.set(edge !== undefined ? edges[edge] : randMat(rr, 3)); },
+      randomize(rr, edge) { mv.set(edge !== undefined ? edges[edge] : randMat(rr, 2)); },
       edgeCases: edges.length,
       async showMe() { await mv.to([[4, 1], [2, 3]], 900); },
     };

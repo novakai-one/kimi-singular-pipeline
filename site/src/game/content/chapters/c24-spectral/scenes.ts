@@ -17,7 +17,7 @@ export async function coldOpen(g: Game): Promise<void> {
     g.stage.clearWorld();
     g.mood('void');
     const set = await arkSet(g, { stern: 'flat', lantern: { at: [-36, -26, 7], face: [0.5, 1, 0.05], scale: 1.3 } });
-    drift(g, set, [-18, 2, 0], 86, 15, -138, 1.4);
+    const stop1 = drift(g, set, [-14, 4, 0], 112, 19, -132, 1.3);
     void fadeBlack(g, false, 1600);
     await letterbox(g, true, 600);
     void titleCard(g, 'Act IX · Singular', 'Which moves only stretch along perpendicular axes?', 3800);
@@ -25,7 +25,8 @@ export async function coldOpen(g: Game): Promise<void> {
     await g.say(S.open.slice(0, 4));
     set.check();
     // the camera closes in on the sheet while Bram asks for the brace lines
-    drift(g, set, [-21, 0, 0], 44, 22, -95, 1.6);
+    stop1();
+    drift(g, set, [-21, 0, 0], 52, 20, -100, 1.5);
     await g.say(S.open.slice(4));
     set.check();
     await letterbox(g, false, 400);
