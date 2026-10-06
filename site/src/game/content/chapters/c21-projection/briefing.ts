@@ -95,7 +95,7 @@ export const doubtShadows: DoubtDef = {
   goal: 'Drag the two floor arrows. The yellow point is the sum of the shadows of $\\mathbf b$; the white ring is the true nearest point. **Challenge it** (they differ) or **Back it**.',
   view: '3d',
   async setup(p) {
-    await p.g.stage.view3D({ target: [1.6, 1.6, 1.2], distance: 11, azimuth: -64, elevation: 26, ms: 0 });
+    await p.g.stage.view3D({ target: [1.6, 1.4, 1.4], distance: 14, azimuth: -64, elevation: 26, ms: 0 });
     p.grid({ base: 0.12, main: 0.24, axis: 0.5 });
     const b: V3 = [2, 3, 4];
     p.add(new Arrow([0, 0, 0], b, { color: C.white, label: '$\\mathbf b$' }));
@@ -199,8 +199,20 @@ export const doubtTwice: DoubtDef = {
 
 // ------------------------------------------------------------------ the Law
 
+/** A camera direction that sees the plane at about 40°, so both the plane and the leftover read. */
+function viewFor(n: Vec): { azimuth: number; elevation: number } {
+  const u = n.map((x) => x / norm(n));
+  let w = cross(u, [0, 0, 1]);
+  if (norm(w) < 1e-6) w = [1, 0, 0];
+  w = w.map((x) => x / norm(w));
+  const c = u.map((x, i) => 0.6 * x + 0.8 * w[i]);
+  if (c[2] < 0.15) { c[2] = Math.abs(c[2]) + 0.25; }
+  const cn = norm(c);
+  return { azimuth: (Math.atan2(c[1], c[0]) * 180) / Math.PI, elevation: (Math.asin(c[2] / cn) * 180) / Math.PI };
+}
+
 function drawCase(g: Game, c: PlaneCase): void {
-  void g.stage.view3D({ target: [0, 0, 0.5], distance: 15, azimuth: -55, elevation: 24, ms: 0, orbit: false });
+  void g.stage.view3D({ target: [0, 0, 0.5], distance: 16, ...viewFor(cross(c.a, c.b)), ms: 0, orbit: false });
   const W = g.stage.world;
   const n = cross(c.a, c.b);
   const patch = new PlanePatch(g.stage, [0, 0, 0], v3(n), { color: C.u, size: 8, opacity: 0.13 });

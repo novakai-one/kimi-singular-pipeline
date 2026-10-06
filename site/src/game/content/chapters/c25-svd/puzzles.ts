@@ -53,7 +53,7 @@ export const p1: PuzzleDef = {
   onWin: S.p1Win,
   setup(p) {
     const d = p.difficulty;
-    void p.g.stage.view2D({ center: [0.6, 1.2], height: 15.5, ms: 0 });
+    void p.g.stage.view2D({ center: [0.4, 0.9], height: 18, ms: 0 });
     p.grid({ main: 0.16, base: 0, axis: 0.38 });
     circleAndImage(p, P1_A);
     const tol = d === 'cadet' ? 0.6 : d === 'navigator' ? 1 : 0.5;
@@ -115,7 +115,7 @@ export const p1: PuzzleDef = {
     };
     return {
       async showMe() { await goTo(45, 1600); p.move(); check(); },
-      solve() { theta = 45; paint(); check(); },
+      solve() { theta = 45; knob.at([Math.cos(rad(theta)), Math.sin(rad(theta)), 0.03]); paint(); check(); },
       wrong() { theta = 90; paint(); check(); },
     };
   },
@@ -137,7 +137,7 @@ export const p2: PuzzleDef = {
   onWin: S.p2Win,
   setup(p) {
     const d = p.difficulty;
-    void p.g.stage.view2D({ center: [0.9, 1.6], height: 14.5, ms: 0 });
+    void p.g.stage.view2D({ center: [-1.2, 0.8], height: 17, ms: 0 });
     p.grid({ main: 0.16, base: 0, axis: 0.38 });
     circleAndImage(p, P1_A);
     const R2 = Math.SQRT1_2;
@@ -221,7 +221,7 @@ export const p2: PuzzleDef = {
     };
     return {
       async showMe() { await goTo(-45, 1500); p.move(); await finish(false); },
-      async solve() { theta = -45; paint(); await finish(true); },
+      async solve() { theta = -45; knob.at([Math.cos(rad(theta)), Math.sin(rad(theta)), 0.03]); paint(); await finish(true); },
       wrong() { theta = 0; paint(); },
     };
   },
@@ -276,7 +276,7 @@ export const p3: PuzzleDef = {
       ci.set(0);
       await ci.play(['rotate', 'stretch', 'rotate'], { ms: p.g.headless ? 20 : 1300, pause: p.g.headless ? 0 : 250 });
       busy = false;
-      if (p3Won(M, tol)) { won = true; sfx.success(); msg.say('Turn, stretch, turn: the circle landed on the oval of $A$.', 'good'); p.win(); }
+      if (p3Won(M, tol)) { won = true; p.subgoal(0); msg.say('Turn, stretch, turn: the circle landed on the oval of $A$.', 'good'); p.win(); }
       else { sfx.miss(); msg.say(`It missed the oval by up to ${fmtD(p3Err(M))}. Check each move: the first turn, the two stretches, the last turn.`, 'bad'); p.bark('lantern', `Largest miss ${fmtD(p3Err(M))}.`); }
     };
     const rail = h('div', { class: 'a9-col' },
@@ -318,7 +318,6 @@ export const p4: PuzzleDef = {
     const e = new FatLine(p.g.stage, img, { color: C.result, width: 2.2, intensity: 1.1 });
     p.add(c.object, e.object); p.onDispose(() => { c.dispose(); e.dispose(); });
     ptag(p, 'the flat circle', [0.2, -1.35, 0], 'dim');
-    ptag(p, 'its image in space', v3(matVec(P4_A, [0.2, 1]).map((x, i) => x + [0.2, 0.3, 0.45][i])), 'y');
     const R2 = Math.SQRT1_2;
     const v1 = new Arrow([0, 0, 0.01], [R2, R2, 0.01], { color: C.v, width: 0.04, label: '$\\mathbf v_1$' });
     const v2 = new Arrow([0, 0, 0.01], [R2, -R2, 0.01], { color: C.w, width: 0.04, label: '$\\mathbf v_2$' });
@@ -336,7 +335,6 @@ export const p4: PuzzleDef = {
       sfx.success();
       p.win();
     };
-    const f = (x: number) => Math.round(x * 100) / 100;
     const ws = new StepWorksheet(p, {
       onDone: () => void finale(),
       steps: [
@@ -344,7 +342,7 @@ export const p4: PuzzleDef = {
         { prompt: 'Its eigenvalues, larger first', answer: P4_EIG },
         { prompt: 'The singular values $\\sigma_1, \\sigma_2$ (two decimals)', answer: P4_SIGMA, tol: 0.006, mistakes: [[[3, 1], 'Those are $\\sigma^2$. Take the square roots.']] },
         { prompt: '$V$: columns $\\mathbf v_1, \\mathbf v_2$, unit length, first entry positive (two decimals)', answer: [[P4_V[0][0], P4_V[1][0]], [P4_V[0][1], P4_V[1][1]]], tol: 0.006 },
-        { prompt: '$U$: columns $\\mathbf u_i = A\\mathbf v_i/\\sigma_i$ (two decimals)', answer: [[f(P4_U[0][0]), f(P4_U[1][0])], [f(P4_U[0][1]), f(P4_U[1][1])], [f(P4_U[0][2]), f(P4_U[1][2])]], tol: 0.006 },
+        { prompt: '$U$: columns $\\mathbf u_i = A\\mathbf v_i/\\sigma_i$ (two decimals)', answer: [[P4_U[0][0], P4_U[1][0]], [P4_U[0][1], P4_U[1][1]], [P4_U[0][2], P4_U[1][2]]], tol: 0.006 },
       ],
     });
     return {

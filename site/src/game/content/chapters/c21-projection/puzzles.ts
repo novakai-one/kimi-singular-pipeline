@@ -222,8 +222,8 @@ export const p3: PuzzleDef = {
       { prompt: '$\\mathbf u_1\\cdot\\mathbf u_1$', answer: 2, mistakes: [[Math.SQRT2, 'Not the length: the dot product of $\\mathbf u_1$ with itself.']] as [number, string][] },
       { prompt: '$\\mathbf b\\cdot\\mathbf u_2$', answer: 2 },
       { prompt: '$\\mathbf u_2\\cdot\\mathbf u_2$', answer: 1 },
-      { prompt: 'nearest point $\\mathbf p = \\frac42\\mathbf u_1 + \\frac21\\mathbf u_2$', answer: P3_P, mistakes: [[[3, 1, 0], 'That deletes the height. The plane is not the floor.']] as [number[], string][] },
-      { prompt: 'leftover $\\mathbf b - \\mathbf p$', answer: P3_LEFT },
+      { prompt: 'nearest point $\\mathbf p = \\frac42\\mathbf u_1 + \\frac21\\mathbf u_2$', answer: [P3_P], mistakes: [[[3, 1, 0], 'That deletes the height. The plane is not the floor.']] as [number[], string][] },
+      { prompt: 'leftover $\\mathbf b - \\mathbf p$', answer: [P3_LEFT] },
     ];
     if (d === 'cadet') {
       void showShadows();

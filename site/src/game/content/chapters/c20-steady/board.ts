@@ -108,7 +108,8 @@ export class FlowBoard {
     const from = this.spot.map((s) => s.slice());
     const to = dest.map((i, k) => (i === this.at[k] ? this.spot[k] : this.randomSpot(i)));
     if (ms > 1) sfx.whoosh(ms / 1400);
-    await animate(ms, (t) => { for (let k = 0; k < this.total; k++) { if (dest[k] === this.at[k]) continue; const lift = Math.sin(Math.PI * t) * 0.6; this.writePos(k, [from[k][0] + (to[k][0] - from[k][0]) * t, from[k][1] + (to[k][1] - from[k][1]) * t + lift]); } this.flush(); }, ease.inOut);
+    // ms ≤ 1 (solvers, fast runs): no frames at all, the drones land at once
+    if (ms > 1) await animate(ms, (t) => { for (let k = 0; k < this.total; k++) { if (dest[k] === this.at[k]) continue; const lift = Math.sin(Math.PI * t) * 0.6; this.writePos(k, [from[k][0] + (to[k][0] - from[k][0]) * t, from[k][1] + (to[k][1] - from[k][1]) * t + lift]); } this.flush(); }, ease.inOut);
     for (let k = 0; k < this.total; k++) { this.at[k] = dest[k]; this.spot[k] = to[k]; this.writePos(k, to[k]); }
     this.flush();
     this.x = matVec(this.P, this.x);

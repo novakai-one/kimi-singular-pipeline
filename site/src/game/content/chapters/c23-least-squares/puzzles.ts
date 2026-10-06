@@ -140,9 +140,9 @@ export const p2: PuzzleDef = {
     let tiles: TileOrder | null = null;
     const STEPS = [
       { prompt: '$A^{\\mathsf T}A$', answer: P2_ATA },
-      { prompt: '$A^{\\mathsf T}\\mathbf b$', answer: P2_ATB },
-      { prompt: '$\\hat{\\mathbf x}$ from $A^{\\mathsf T}A\\hat{\\mathbf x} = A^{\\mathsf T}\\mathbf b$', answer: P2_X },
-      { prompt: 'leftover $\\mathbf b - A\\hat{\\mathbf x}$', answer: P2_R },
+      { prompt: '$A^{\\mathsf T}\\mathbf b$', answer: [P2_ATB] },
+      { prompt: '$\\hat{\\mathbf x}$ from $A^{\\mathsf T}A\\hat{\\mathbf x} = A^{\\mathsf T}\\mathbf b$', answer: [P2_X] },
+      { prompt: 'leftover $\\mathbf b - A\\hat{\\mathbf x}$', answer: [P2_R] },
     ];
     if (d === 'cadet') {
       p.setGoal('Drag the yellow point across the blue plane until the dashed leftover to $\\mathbf b$ is as short as it goes. The board shows the line that point stands for.');
@@ -208,8 +208,8 @@ export const p3: PuzzleDef = {
     const ws = new StepWorksheet(p, {
       steps: [
         { prompt: '$A^{\\mathsf T}A$', answer: P3_ATA, mistakes: [[[[5, 10], [10, 10]], 'The bottom right is $\\sum t^2 = 0 + 1 + 4 + 9 + 16$.']] },
-        { prompt: '$A^{\\mathsf T}\\mathbf b$', answer: P3_ATB, mistakes: [[[15, 15], 'The second entry is $\\sum t\\,y$, each reading times its time.']] },
-        { prompt: 'intercept and slope $(c_0, c_1)$', answer: P3_FIT },
+        { prompt: '$A^{\\mathsf T}\\mathbf b$', answer: [P3_ATB], mistakes: [[[15, 15], 'The second entry is $\\sum t\\,y$, each reading times its time.']] },
+        { prompt: 'intercept and slope $(c_0, c_1)$', answer: [P3_FIT] },
         { prompt: 'total square area', answer: P3_AREA, tol: 1e-6, mistakes: [[0, 'Five readings cannot all be on one line here: some area is left.']] },
       ],
       onDone: () => { void finish(); },

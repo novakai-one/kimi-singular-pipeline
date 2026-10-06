@@ -12,6 +12,8 @@ import { compare, doubtDet, doubtEig, doubtSquare, law, sayit, teo } from './bri
 import { buildLowRank, buildSvd } from './build';
 import { after, coldOpen, teoChannel, thin } from './scenes';
 import { S } from './script';
+import { AMPLIFY, CONDITION, NOISE, SV_C } from '../../truth';
+import { fmtD } from './logic';
 
 const IN_SHORT_ANSWER = 'It turns some perpendicular pair of arrows into another perpendicular pair, stretched. So any matrix is **a turn, a stretch along axes, and a turn**. The biggest stretches carry most of the picture.';
 
@@ -21,7 +23,7 @@ const NAME_SV: Beat = {
     saw: 'Turning the input cross, the two images met at a right angle only with the inputs at $(1, 1)/\\sqrt2$ and $(1, -1)/\\sqrt2$. They landed along $(1, 3)$ and $(3, -1)$, 6.71 and 2.24 long: the long and short half-axes of the oval.',
     means: 'Every matrix has a perpendicular pair of input directions that it sends to a perpendicular pair of output directions. Only the lengths change.',
     name: 'The lengths $\\sigma_1 \\ge \\sigma_2 \\ge 0$ are the **singular values** of $A$. The inputs $\\mathbf v_1, \\mathbf v_2$ are the **right singular vectors**; the unit output directions $\\mathbf u_1, \\mathbf u_2$ are the **left singular vectors**: $A\\mathbf v_i = \\sigma_i\\mathbf u_i$.',
-    formula: 'A\\cg{\\mathbf v_1} = \\sigma_1\\cg{\\mathbf u_1}, \\quad A\\cr{\\mathbf v_2} = \\sigma_2\\cr{\\mathbf u_2}, \\qquad \\sigma_1 = \\sqrt{45} \\approx 6.71,\\ \\sigma_2 = \\sqrt5 \\approx 2.24,\\ \\sigma_1\\sigma_2 = 15 = |\\det A|',
+    formula: 'A\\cg{\\mathbf v_1} = \\sigma_1\\cg{\\mathbf u_1}, \\quad A\\cr{\\mathbf v_2} = \\sigma_2\\cr{\\mathbf u_2}, \\qquad \\sigma_1\\sigma_2 = |\\det A| = 15',
     why: 'The unit circle lands on an oval whose longest and shortest half-axes are $\\sigma_1$ and $\\sigma_2$. For a square matrix the area scale is $|\\det A| = \\sigma_1\\sigma_2$.',
     cue: 'When you see **“how much does this move stretch, at most and at least?”**, think **singular values**.',
     use: 'The largest singular value of a network’s weight matrix bounds how much one layer can amplify its input; training methods keep it in check.',
@@ -47,7 +49,7 @@ const NAME_LOWRANK: Beat = {
     saw: 'Teo’s voice was 64 by 32 numbers. Rebuilt from its largest layers $\\sigma\\mathbf u\\mathbf v^{\\mathsf T}$, his words were static at 4 layers and clear at 8: his singular values drop off a cliff after the eighth. For the test move, keeping one layer missed by at most $\\sigma_2 = 2.24$.',
     means: 'Every matrix is a sum of layers, each one column times one row, sorted by size. The biggest few carry most of the picture, and what is left out misses by the next singular value.',
     name: 'Each layer $\\sigma_i\\mathbf u_i\\mathbf v_i^{\\mathsf T}$ is a **rank-one matrix**. Keeping the $k$ largest gives the **low-rank approximation** $A_k$, the closest matrix of rank $k$ to $A$.',
-    formula: 'A = \\sigma_1\\mathbf u_1\\mathbf v_1^{\\mathsf T} + \\sigma_2\\mathbf u_2\\mathbf v_2^{\\mathsf T} + \\cdots, \\qquad A_k = \\sum_{i \\le k}\\sigma_i\\mathbf u_i\\mathbf v_i^{\\mathsf T}, \\qquad \\text{storage } k(m + n + 1)',
+    formula: 'A_k = \\sigma_1\\mathbf u_1\\mathbf v_1^{\\mathsf T} + \\cdots + \\sigma_k\\mathbf u_k\\mathbf v_k^{\\mathsf T}, \\qquad \\text{storage } k(m + n + 1)',
     why: 'The left-over $A - A_k$ is the sum of the dropped layers: its own SVD, so its largest stretch is $\\sigma_{k+1}$. No other rank-$k$ matrix does better.',
     cue: 'When you see **“compress”** or **“approximate with fewer numbers”**, think **keep the largest layers**.',
     use: 'Image compression, and LoRA: fine-tuning a language model with a low-rank update instead of the full matrix.',
@@ -57,10 +59,10 @@ const NAME_LOWRANK: Beat = {
 const NAME_COND: Beat = {
   kind: 'name', id: 'name-cond', entry: {
     id: 'condition-number', term: 'condition number', question: 'How badly can an inverse blow up an error?', nodes: ['N27'],
-    saw: 'The raw undo, built from readings with noise 0.01, threw the test cluster 7.5 off along the thin line: the noise times 750.',
+    saw: `The raw undo, built from readings with noise ${NOISE}, threw the test cluster ${fmtD(NOISE * AMPLIFY, 1)} off along the thin line: the noise times ${Math.round(AMPLIFY)}.`,
     means: 'An inverse divides by each singular value, so it multiplies an error in the thinnest direction by $1/\\sigma_{\\min}$. Compared with how it treats the largest direction, that is the most a solver can blow up errors relative to the answer.',
     name: 'The **condition number** of $A$ is $\\sigma_{\\max}/\\sigma_{\\min}$. Large means a solver can multiply small errors in the data into large errors in the answer.',
-    formula: '\\kappa(C) = \\frac{\\sigma_1}{\\sigma_3} = \\frac{3.0027}{0.001333} \\approx 2252, \\qquad 0.01 \\times \\frac{1}{\\sigma_3} = 0.01 \\times 750 = 7.5',
+    formula: `\\kappa = \\frac{\\sigma_{\\max}}{\\sigma_{\\min}} = \\frac{${fmtD(SV_C[0], 4)}}{${fmtD(SV_C[2], 6)}} \\approx ${Math.round(CONDITION)}, \\qquad ${NOISE} \\times ${Math.round(AMPLIFY)} = ${fmtD(NOISE * AMPLIFY, 1)}`,
     why: '$C^{-1} = V\\Sigma^{-1}U^{\\mathsf T}$: the thin direction is stretched by $1/\\sigma_3$. Relative errors grow by at most $\\sigma_1/\\sigma_3$.',
     cue: 'When you see **“how unstable is this inverse?”**, think **condition number**.',
     use: 'Solvers report it as a warning: a condition number near $10^{16}$ means every digit of a double-precision answer can be noise.',
@@ -73,7 +75,7 @@ const NAME_PINV: Beat = {
     saw: 'The two-decimal model had no inverse: rank 2. Its $V\\Sigma^+U^{\\mathsf T}$ brought every point back onto a sheet, with its $(1, 1, -1)$ part set to zero. Two points a step apart along $(1, 1, -1)$ landed together, and came back together.',
     means: 'Where a stretch is exactly zero, nothing can be recovered by anyone. The best an undo can do is give back what was kept.',
     name: 'The **pseudoinverse** $A^+ = V\\Sigma^+U^{\\mathsf T}$ flips every non-zero singular value and leaves the zeros at zero. $A^+\\mathbf b$ is the shortest of the least-squares answers.',
-    formula: 'C_2^+ = \\tfrac13\\,\\mathbf v_1\\mathbf u_1^{\\mathsf T} + \\tfrac11\\,\\mathbf v_2\\mathbf u_2^{\\mathsf T} \\qquad C_2^+C_2 = \\text{projection onto the plane } x + y - z = 0',
+    formula: 'C_2^+ = \\tfrac13\\mathbf v_1\\mathbf u_1^{\\mathsf T} + \\mathbf v_2\\mathbf u_2^{\\mathsf T}, \\qquad C_2^+C_2 = \\text{projection onto } x + y - z = 0',
     why: 'Exactly zero: gone, by anyone. Tiny: still there, under noise multiplied by $1/\\sigma$.',
     cue: 'When a matrix has **no inverse** but you still need the best answer, think **pseudoinverse**.',
     use: 'Least-squares solvers use it when the columns are dependent: `np.linalg.pinv`.',

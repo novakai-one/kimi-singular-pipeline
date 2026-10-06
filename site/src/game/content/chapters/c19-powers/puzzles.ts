@@ -150,6 +150,21 @@ export const p1: PuzzleDef = {
       busy = false;
       if (k >= P1_PULSES) finish();
     };
+    /** The same pulses with no animation (solver and headless Show me): one redraw at the end. */
+    const jump = (n: number) => {
+      if (busy || won) return;
+      n = Math.min(n, P1_PULSES - k);
+      if (n <= 0) return;
+      p.move();
+      let M = cloud.M;
+      for (let i = 0; i < n; i++) { M = matMul(V2, M); cur = matVec(V2, cur); k++; path.push(v3(cur, 0.02)); }
+      cloud.set(M);
+      piece.at(v3(cur, 0.04));
+      trail.setPoints(path);
+      pt.at(v3(cur)); pt.set(`after ${k}`);
+      paint();
+      if (k >= P1_PULSES) finish();
+    };
     const finish = () => {
       cur = forecast2(P1_START, P1_PULSES);
       if (!marker) { msg('Fifty pulses run. Place a forecast first next time: it is the forecast that counts.', 'bad'); return; }
@@ -192,10 +207,10 @@ export const p1: PuzzleDef = {
         if (!regrid) reg.click();
         await ring.moveTo(v3(P1_FORECAST, 0.06), 800);
         placeMarker(P1_FORECAST);
-        await run(P1_PULSES, p.g.headless ? 1 : 50);
+        if (p.g.headless) jump(P1_PULSES); else await run(P1_PULSES, 50);
       },
-      async solve() { placeMarker(P1_FORECAST); await run(P1_PULSES, 1); },
-      async wrong() { placeMarker([0, 0]); await run(P1_PULSES, 1); },
+      solve() { placeMarker(P1_FORECAST); jump(P1_PULSES); },
+      wrong() { placeMarker([0, 0]); jump(P1_PULSES); },
     };
   },
 };

@@ -187,7 +187,7 @@ export const p2: PuzzleDef = {
     });
     const check = () => {
       if (won) return;
-      if (p2Won(c, tol)) { won = true; meanDot.object.visible = true; sfx.success(); msg.say('At the mean, the line runs along the cloud: **centre first**, then look for spread.', 'good'); p.win(); }
+      if (p2Won(c, tol)) { won = true; meanDot.object.visible = true; p.subgoal(0); msg.say('At the mean, the line runs along the cloud: **centre first**, then look for spread.', 'good'); p.win(); }
       else if (norm(c) < 0.3) msg.say('About the origin, the line points at the cloud.');
       else msg.say(`Closer. The line turned ${Math.round(Math.abs(deg(Math.atan2(bestAbout(c)[1], bestAbout(c)[0])) - deg(Math.atan2(bestAbout([0, 0])[1], bestAbout([0, 0])[0]))))}° from where it started.`);
     };

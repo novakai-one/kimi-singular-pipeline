@@ -222,11 +222,11 @@ export const p2: PuzzleDef = {
     const ws = new StepWorksheet(p, {
       steps: [
         { prompt: '$\\frac{\\mathbf x_2\\cdot\\mathbf v_1}{\\mathbf v_1\\cdot\\mathbf v_1}$, with $\\mathbf v_1 = \\mathbf x_1$', answer: P2_C21, mistakes: [[1, 'Divide by $\\mathbf v_1\\cdot\\mathbf v_1 = 2$, not by 1.']] },
-        { prompt: '$\\mathbf v_2 = \\mathbf x_2 - \\tfrac12\\mathbf v_1$', answer: P2_V2 },
+        { prompt: '$\\mathbf v_2 = \\mathbf x_2 - \\tfrac12\\mathbf v_1$', answer: [P2_V2] },
         { prompt: '$\\frac{\\mathbf x_3\\cdot\\mathbf v_1}{\\mathbf v_1\\cdot\\mathbf v_1}$', answer: P2_C31 },
         { prompt: '$\\frac{\\mathbf x_3\\cdot\\mathbf v_2}{\\mathbf v_2\\cdot\\mathbf v_2}$', answer: P2_C32, mistakes: [[1 / 2, 'That is the shadow on the original $\\mathbf x_2$. Use the finished $\\mathbf v_2$.'], [2 / 3, 'Divide by $\\mathbf v_2\\cdot\\mathbf v_2 = 3/2$.']] },
-        { prompt: '$\\mathbf v_3 = \\mathbf x_3 - \\tfrac12\\mathbf v_1 - \\tfrac13\\mathbf v_2$', answer: P2_V3, mistakes: [[[-1 / 2, 1 / 2, 1], 'Only the shadow on $\\mathbf v_1$ is gone. Subtract the one on $\\mathbf v_2$ too.']] },
-        { prompt: 'lengths squared $\\|\\mathbf v_1\\|^2, \\|\\mathbf v_2\\|^2, \\|\\mathbf v_3\\|^2$', answer: P2_LEN2 },
+        { prompt: '$\\mathbf v_3 = \\mathbf x_3 - \\tfrac12\\mathbf v_1 - \\tfrac13\\mathbf v_2$', answer: [P2_V3], mistakes: [[[-1 / 2, 1 / 2, 1], 'Only the shadow on $\\mathbf v_1$ is gone. Subtract the one on $\\mathbf v_2$ too.']] },
+        { prompt: 'lengths squared $\\|\\mathbf v_1\\|^2, \\|\\mathbf v_2\\|^2, \\|\\mathbf v_3\\|^2$', answer: [P2_LEN2] },
       ],
       onDone: () => { void finish(); },
     });
@@ -322,7 +322,7 @@ export const p3: PuzzleDef = {
         title: 'Why one dot product is enough: order the steps', tiles: TILES, submitLabel: 'Check order',
         onSubmit: (o) => {
           p.move();
-          if (o.join() === REF.join()) { tiles!.el.remove(); ws = new StepWorksheet(p, { title: 'The last line', steps: [{ prompt: 'the numbers $\\mathbf c = Q^{\\mathsf T}\\mathbf x$', answer: P3_C }], onDone: () => { void reveal().then(finish); } }); }
+          if (o.join() === REF.join()) { tiles!.el.remove(); ws = new StepWorksheet(p, { title: 'The last line', steps: [{ prompt: 'the numbers $\\mathbf c = Q^{\\mathsf T}\\mathbf x$', answer: [P3_C] }], onDone: () => { void reveal().then(finish); } }); }
           else { sfx.miss(); p.bark('lantern', 'That order does not reach the reason. Start by writing x in Ilse’s grid.'); }
         },
       });
@@ -330,12 +330,12 @@ export const p3: PuzzleDef = {
     return {
       async showMe() {
         if (d === 'cadet') { const w = matVec(P3_Q, P3_C); await knob.moveTo([w[0], w[1], 0.03], 900); c = P3_C.slice(); showC(); finish(); return; }
-        if (tiles) { tiles.el.remove(); ws = new StepWorksheet(p, { title: 'The last line', steps: [{ prompt: 'the numbers $\\mathbf c = Q^{\\mathsf T}\\mathbf x$', answer: P3_C }], onDone: () => {} }); }
+        if (tiles) { tiles.el.remove(); ws = new StepWorksheet(p, { title: 'The last line', steps: [{ prompt: 'the numbers $\\mathbf c = Q^{\\mathsf T}\\mathbf x$', answer: [P3_C] }], onDone: () => {} }); }
         await ws!.showMe(300); await reveal(); finish();
       },
       solve() {
         if (d === 'cadet') { c = P3_C.slice(); const w = matVec(P3_Q, c); knob.at([w[0], w[1], 0.03]); showC(); finish(); return; }
-        if (tiles) { tiles.el.remove(); ws = new StepWorksheet(p, { title: 'The last line', steps: [{ prompt: 'the numbers', answer: P3_C }], onDone: () => {} }); }
+        if (tiles) { tiles.el.remove(); ws = new StepWorksheet(p, { title: 'The last line', steps: [{ prompt: 'the numbers', answer: [P3_C] }], onDone: () => {} }); }
         ws!.solve(); finish();
       },
       wrong() { if (d === 'cadet') { c = [5, 5]; showC(); } else ws?.wrong(); },

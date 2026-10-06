@@ -234,7 +234,7 @@ export const p6: PuzzleDef = {
       if (last.held) {
         won = true;
         msg.say(`Held for ${SPIN_MINUTES} minutes: the axis moved ${fmt2(last.maxDrift)}° at most. ${near ? `The ${near.name}, moment ${fmtN(near.I)}: ${near.I === AXES[2].I ? 'the largest' : 'the smallest'}.` : ''}`, 'good');
-        sfx.success();
+        p.subgoal(0);
         p.win();
       } else if (near && near.I === AXES[1].I) {
         sfx.miss();

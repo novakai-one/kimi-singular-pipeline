@@ -111,11 +111,15 @@ export const sp: PuzzleDef = {
       // fifty honest pulses: the field and the cutter, pulse after pulse
       let cur: Mat = identity(3);
       if (!fast) sfx.whoosh(3);
-      for (let k = 1; k <= 50; k++) {
-        const M0 = cur;
-        await animate(fast || p.g.headless ? 1 : 60, (t) => { const M = matMul(mlerp(identity(3), V, t), M0); f.set(M); f.cutterAt(matVec(M, VELL_CUTTER)); }, ease.linear);
-        cur = mpow(V, k);
+      // (the solver and headless runs skip the frames and land at once)
+      if (!fast && !p.g.headless) {
+        for (let k = 1; k <= 50; k++) {
+          const M0 = cur;
+          await animate(60, (t) => { const M = matMul(mlerp(identity(3), V, t), M0); f.set(M); f.cutterAt(matVec(M, VELL_CUTTER)); }, ease.linear);
+          cur = mpow(V, k);
+        }
       }
+      cur = mpow(V, 50);
       f.set(cur); f.cutterAt(SP_AFTER);
       tick(2); sfx.discover();
       r.row('f', 'cutter after fifty', fmtV(SP_AFTER.map((x) => Math.round(x))), C.result);

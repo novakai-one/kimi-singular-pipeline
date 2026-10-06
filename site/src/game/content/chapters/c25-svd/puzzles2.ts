@@ -112,8 +112,9 @@ export const p5: PuzzleDef = {
     canvas.width = TEO_COLS; canvas.height = TEO_ROWS;
     const texture = new CanvasTexture(canvas);
     texture.colorSpace = SRGBColorSpace; texture.minFilter = LinearFilter; texture.magFilter = LinearFilter;
-    const plane = new Mesh(new PlaneGeometry(6.4, 5.2), new MeshBasicMaterial({ map: texture, transparent: true, opacity: 0 }));
-    plane.position.set(-0.9, 0.1, 0.05);
+    // between the dock (left) and the readout (right)
+    const plane = new Mesh(new PlaneGeometry(4, 5), new MeshBasicMaterial({ map: texture, transparent: true, opacity: 0 }));
+    plane.position.set(1, 0.1, 0.05);
     plane.visible = false;
     p.add(plane);
     p.onDispose(() => { plane.geometry.dispose(); (plane.material as MeshBasicMaterial).dispose(); texture.dispose(); });
@@ -164,9 +165,11 @@ export const p5: PuzzleDef = {
       r.hideRow('x'); r.hideRow('m');
       p.setGoal('**Now Teo’s voice:** one second, 64 frequencies by 32 time slices. Rebuild it from its largest layers $\\sigma\\mathbf u\\mathbf v^{\\mathsf T}$. Send the **fewest** layers that make his words clear and fit the channel’s 800 numbers a second.');
       plane.visible = true;
-      lblK = ptag(p, '', [-0.9, 2.95, 0], 'c');
-      ptag(p, 'time →', [1.6, -2.75, 0], 'dim');
-      ptag(p, 'frequency ↑', [-4.6, 1.9, 0], 'dim');
+      lblK = ptag(p, '', [1.4, 2.95, 0], 'c');
+      ptag(p, 'time →', [2.3, -2.7, 0], 'dim');
+      ptag(p, 'frequency ↑', [-0.45, 2.95, 0], 'dim');
+      const kick = r.el.querySelector('.kicker');
+      if (kick) kick.textContent = 'Teo’s channel';
       setK(1);
       partBEl.style.display = '';
       await animate(p.g.headless ? 1 : 700, (q) => { (plane.material as MeshBasicMaterial).opacity = q; }, ease.out);
@@ -227,7 +230,8 @@ export const p6: PuzzleDef = {
   view: '3d',
   onWin: S.p6Win,
   setup(p) {
-    void p.g.stage.view3D({ target: [0, 0, 0], distance: 11, azimuth: -40, elevation: 14, ms: 0 });
+    // three-quarter view: the sheet's broad face, seen at a slant, with its thin direction across the screen
+    void p.g.stage.view3D({ target: [0, 0, 0], distance: 16, azimuth: 160, elevation: 17, ms: 0 });
     const r0 = rng(7500);
     const pts: number[][] = [];
     while (pts.length < 900) { const q = [r0() * 2 - 1, r0() * 2 - 1, r0() * 2 - 1]; const n = norm(q); if (n > 0.2 && n <= 1) pts.push(q.map((x) => (x / n) * 1.6)); }

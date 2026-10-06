@@ -253,7 +253,7 @@ export const sp3: PuzzleDef = {
     const commit = () => {
       if (won) return;
       p.move();
-      if (sp3Won(N)) { won = true; SP.N = N; sfx.success(); msg.say(`$0.01 \\times 750/\\sqrt{${N}} = ${fmtD(unfoldError(N), 2)}$: inside the tear limit. ${N === READINGS ? 'The fewest that will do.' : ''}`, 'good'); p.win(); return; }
+      if (sp3Won(N)) { won = true; SP.N = N; p.subgoal(0); msg.say(`$0.01 \\times 750/\\sqrt{${N}} = ${fmtD(unfoldError(N), 2)}$: inside the tear limit. ${N === READINGS ? 'The fewest that will do.' : ''}`, 'good'); p.win(); return; }
       sfx.miss();
       if (N > HOLD_LIMIT) msg.say(`${N} readings take too long: Teo cannot hold still that long. Fewer will do.`, 'bad');
       else msg.say(`Error ${fmtD(unfoldError(N), 2)}: above 0.3, the frame tears. More readings.`, 'bad');
@@ -315,7 +315,7 @@ export const sp4: PuzzleDef = {
       r.row('m', 'mixed stress $\\mathbf q_1^{\\mathsf T}C\\,\\mathbf q_3$', fmtD(m, 3), Math.abs(m) < 0.01 ? C.good : C.orange);
     };
     const sl = new Slider({ label: 'turn the braces', min: 0, max: 90, step, value: theta, format: (x) => `${fmtD(x, 1)}°`, onInput: (x) => { theta = x; paint(); } });
-    const check = () => { if (won) return; if (sp4Won(theta, tol)) { won = true; SP.braced = true; sfx.success(); msg.say('No mixed stress: each brace now only pushes or pulls.', 'good'); p.win(); } else msg.say(`Mixed stress ${fmtD(mixedStress(theta), 3)}. Keep turning.`); };
+    const check = () => { if (won) return; if (sp4Won(theta, tol)) { won = true; SP.braced = true; p.subgoal(0); msg.say('No mixed stress: each brace now only pushes or pulls.', 'good'); p.win(); } else msg.say(`Mixed stress ${fmtD(mixedStress(theta), 3)}. Keep turning.`); };
     sl.el.addEventListener('change', () => { p.move(); check(); });
     p.dock().append(sl.el, msg.el);
     paint();
@@ -385,7 +385,7 @@ export const sp5: PuzzleDef = {
       if (won) return;
       p.move();
       if (!cards.length) { msg.say('Put cards on the rail first.', 'bad'); return; }
-      if (sp5Won(cards)) { won = true; SP.settings = true; sfx.success(); msg.say(`It undoes today’s Collapse, read in the Anchor’s grid. Spire lengths ${SPIRE_LENGTHS.map((x) => fmtD(x, 1)).join(', ')}.`, 'good'); p.win(); return; }
+      if (sp5Won(cards)) { won = true; SP.settings = true; p.subgoal(0); msg.say(`It undoes today’s Collapse, read in the Anchor’s grid. Spire lengths ${SPIRE_LENGTHS.map((x) => fmtD(x, 1)).join(', ')}.`, 'good'); p.win(); return; }
       sfx.miss();
       const ids = cards.join(' ');
       if (ids === 'Cinv') msg.say('That undoes the Collapse as it was, in the ship’s grid. Today the stern is turned a quarter: $RCR^{-1}$. And the spires read the Anchor’s grid.', 'bad');
@@ -438,7 +438,7 @@ export const sp7: PuzzleDef = {
       strip.setSegments([[[-3, -0.9, 0], [3, -0.9, 0]], [[-3, -0.9 + Math.max(0.02, th1 * 1.8), 0], [3, -0.9 + Math.max(0.02, th1 * 1.8), 0]], [[-3, 0.9, 0], [3, 0.9, 0]]]);
     };
     const sl = new Slider({ label: 'split $t$', min: 0, max: 1, step: 0.05, value: t, format: (x) => fmtD(x, 2), onInput: (x) => { t = x; paint(); } });
-    sl.el.addEventListener('change', () => { p.move(); if (!won && sp7Won(t)) { won = true; sfx.success(); msg.say(`Both pulses stretch by ${fmtD(SPLIT_BEST, 1)}: the square root of 750.`, 'good'); p.win(); } });
+    sl.el.addEventListener('change', () => { p.move(); if (!won && sp7Won(t)) { won = true; p.subgoal(0); msg.say(`Both pulses stretch by ${fmtD(SPLIT_BEST, 1)}: the square root of 750.`, 'good'); p.win(); } });
     p.dock().append(sl.el, barsEl, msg.el);
     paint();
     return {
@@ -493,7 +493,7 @@ export const sp6: PuzzleDef = {
       set.setStern([[1, 0, 0], [0, 1, 0], [0, 0, 1]]);
       paint(1);
       busy = false;
-      if (g.ok) { won = true; p.g.mood('triumph'); music.stinger(); sfx.solved(); msg.say(`Hull error ${fmtD(g.error, 2)}, inside 0.3. The stern is whole.`, 'good'); p.win(); }
+      if (g.ok) { won = true; p.g.mood('triumph'); music.stinger(); sfx.solved(); msg.say(`Hull error ${fmtD(g.error, 2)}, inside 0.3. The stern is whole.`, 'good'); p.subgoal(0); p.win(); }
       else { sfx.miss(); msg.say(`Hull error ${fmtD(g.error, 2)}: above the tear limit.`, 'bad'); }
     };
     p.dock().append(h('div', { class: 'a9-kick' }, 'Set for the Unfold'), ck, h('div', { class: 'a9-btns' }, button('Commit', () => void commit(), { cls: 'primary' })), msg.el);

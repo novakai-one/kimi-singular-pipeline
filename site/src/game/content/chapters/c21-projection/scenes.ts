@@ -34,13 +34,13 @@ export async function close(g: Game): Promise<void> {
   try {
     g.stage.clearWorld();
     g.mood('explore');
-    await g.stage.view3D({ target: [0.45, 0.45, 0.4], distance: 7.5, azimuth: -60, elevation: 20, ms: 0, orbit: false });
+    await g.stage.view3D({ target: [0.45, 0.45, 0.35], distance: 10, azimuth: -62, elevation: 21, ms: 0, orbit: false });
     const W = g.stage.world;
-    const patch = new PlanePatch(g.stage, [0, 0, 0], [1, 1, -1], { color: C.u, size: 5, opacity: 0.13 });
+    const patch = new PlanePatch(g.stage, [0, 0, 0], [1, 1, -1], { color: C.u, size: 4, opacity: 0.13 });
     const [e1, e2] = gramSchmidt([THR1, THR2]);
     patch.setSpan([0, 0, 0], e1 as V3, e2 as V3);
-    const a1 = new Arrow([0, 0, 0], THR1 as V3, { color: C.v });
-    const a2 = new Arrow([0, 0, 0], THR2 as V3, { color: C.w });
+    const a1 = new Arrow([0, 0, 0], THR1 as V3, { color: C.v, width: 0.035 });
+    const a2 = new Arrow([0, 0, 0], THR2 as V3, { color: C.w, width: 0.035 });
     const hatch = new Beacon(g.stage, HATCH as V3, { color: C.accent });
     const ship = makeLantern(g.stage, 0.07);
     ship.object.position.set(0, 0, 0);

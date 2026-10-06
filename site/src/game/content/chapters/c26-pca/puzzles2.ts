@@ -75,7 +75,7 @@ export const p5: PuzzleDef = {
     const keep = () => {
       if (won) return;
       p.move();
-      if (p5Won(k)) { won = true; sfx.success(); msg.say(`${k} components keep ${fmtD(100 * keptShare(k), 1)}%: the fewest that reach 95%.`, 'good'); p.win(); return; }
+      if (p5Won(k)) { won = true; p.subgoal(0); msg.say(`${k} components keep ${fmtD(100 * keptShare(k), 1)}%: the fewest that reach 95%.`, 'good'); p.win(); return; }
       sfx.miss();
       msg.say(keptShare(k) < 0.95 ? `${fmtD(100 * keptShare(k), 1)}%: not yet 95%.` : `${fmtD(100 * keptShare(k), 1)}% is enough, but fewer components would do. The link carries two numbers per entry.`, 'bad');
     };
@@ -156,7 +156,7 @@ export const p6: PuzzleDef = {
       if (won) return;
       p.move();
       if (chosen.length < 2) { msg.say('Two channels: choose two components.', 'bad'); sfx.miss(); return; }
-      if (p6Won(chosen)) { won = true; sfx.success(); msg.say(`Components 1 and 2 keep ${fmtD(100 * pairShare(chosen), 1)}% of the record. The entries lie on a spiral, with one path marked.`, 'good'); p.win(); return; }
+      if (p6Won(chosen)) { won = true; p.subgoal(0); msg.say(`Components 1 and 2 keep ${fmtD(100 * pairShare(chosen), 1)}% of the record. The entries lie on a spiral, with one path marked.`, 'good'); p.win(); return; }
       sfx.miss();
       msg.say(`This layout keeps ${fmtD(100 * pairShare(chosen), 1)}% of the record. Another keeps much more.`, 'bad');
     };
@@ -212,7 +212,7 @@ export const p7: PuzzleDef = {
       onMove: () => paint(),
       onEnd: () => check(),
     });
-    const check = () => { if (won) return; if (p7Won([Math.cos(rad(theta)), Math.sin(rad(theta))])) { won = true; sfx.success(); msg.say('Separated, along the second direction. The first direction has the most spread, and it does not care which kind is which.', 'good'); p.win(); } };
+    const check = () => { if (won) return; if (p7Won([Math.cos(rad(theta)), Math.sin(rad(theta))])) { won = true; p.subgoal(0); msg.say('Separated, along the second direction. The first direction has the most spread, and it does not care which kind is which.', 'good'); p.win(); } };
     p.dock().append(msg.el);
     paint();
     void normalize;

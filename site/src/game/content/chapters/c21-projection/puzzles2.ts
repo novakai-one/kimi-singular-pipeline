@@ -59,10 +59,10 @@ export const p5: PuzzleDef = {
     const ws = new StepWorksheet(p, {
       steps: [
         { prompt: '$A^{\\mathsf T}A$', answer: P5_ATA, mistakes: [[[[1, 1], [1, 1]], 'Each entry is a column dotted with a column: $\\mathbf a_1\\cdot\\mathbf a_1 = 2$.']] },
-        { prompt: '$A^{\\mathsf T}\\mathbf b$', answer: P5_ATB },
-        { prompt: 'weights $\\hat{\\mathbf x}$ from $A^{\\mathsf T}A\\hat{\\mathbf x} = A^{\\mathsf T}\\mathbf b$', answer: P5_X, mistakes: [[[3, 5], 'That is $A^{\\mathsf T}\\mathbf b$ itself. Solve the 2 × 2 system.']] },
-        { prompt: 'nearest point $\\mathbf p = A\\hat{\\mathbf x}$', answer: P5_P, mistakes: [[[1, 2, 0], 'Deleting a coordinate only works when the plane is a floor or a wall.']] },
-        { prompt: 'leftover $\\mathbf b - \\mathbf p$', answer: P5_LEFT },
+        { prompt: '$A^{\\mathsf T}\\mathbf b$', answer: [P5_ATB] },
+        { prompt: 'weights $\\hat{\\mathbf x}$ from $A^{\\mathsf T}A\\hat{\\mathbf x} = A^{\\mathsf T}\\mathbf b$', answer: [P5_X], mistakes: [[[3, 5], 'That is $A^{\\mathsf T}\\mathbf b$ itself. Solve the 2 × 2 system.']] },
+        { prompt: 'nearest point $\\mathbf p = A\\hat{\\mathbf x}$', answer: [P5_P], mistakes: [[[1, 2, 0], 'Deleting a coordinate only works when the plane is a floor or a wall.']] },
+        { prompt: 'leftover $\\mathbf b - \\mathbf p$', answer: [P5_LEFT] },
       ],
       onDone: () => { void finish(); },
     });
@@ -282,7 +282,7 @@ export const p8: PuzzleDef = {
       steps: [
         { prompt: '$(A^{\\mathsf T}A)^{-1}$', answer: P8_INV },
         { prompt: '$P = A(A^{\\mathsf T}A)^{-1}A^{\\mathsf T}$', answer: P8, mistakes: [[identity(3), 'The identity keeps every point where it is. This matrix drops points onto a plane.']] },
-        { prompt: '$P\\mathbf b$ for $\\mathbf b = (1, 2, 3)$', answer: P5_P },
+        { prompt: '$P\\mathbf b$ for $\\mathbf b = (1, 2, 3)$', answer: [P5_P] },
       ],
       onDone: () => { built = true; r.eq(`P = \\tfrac13${texM(P8.map((row) => row.map((x) => x * 3)))}`); sfx.success(); },
     });
