@@ -2,7 +2,7 @@
 // pulse C (applied to the stern's own vertices), the Anchor, the Lantern, Vell's cutter, the debris
 // pile at the origin, and LANTERN's scan room. Chapter 15's cinematics are at the bottom.
 import {
-  BoxGeometry, ConeGeometry, DirectionalLight, DoubleSide, Group, Matrix4, Mesh, MeshStandardMaterial, Vector3, type Object3D, type Sprite,
+  Box3, BoxGeometry, ConeGeometry, DirectionalLight, DoubleSide, Group, Matrix4, Mesh, MeshStandardMaterial, Vector3, type Object3D, type Sprite,
 } from 'three';
 import type { Game, V3 } from '../../../game/types';
 import { loadModel, type Ship } from '../../../gfx/models';
@@ -47,7 +47,14 @@ export function aimAt(o: Object3D, target: V3): void {
   o.quaternion.setFromUnitVectors(new Vector3(1, 0, 0), d);
 }
 
-/** Vell's cutter: a long dark wedge with white running lights (built here; no model yet). */
+/** Length of the cutter at scale 1 (the old wedge's, x −3.5..6.7), so every caller's scale frames it the same. */
+const CUTTER_LEN = 10.2;
+
+/**
+ * Vell's cutter (tools/game/blender/cutter.py), nose along +x, with blinking white running lights
+ * (`userData.blink` sprites) and engine glows. Returns at once with a dark wedge as the fallback; the
+ * model replaces it when it loads (`userData.ready` resolves then).
+ */
 export function makeCutter(scale = 1): Group {
   const g = new Group();
   const hull = new MeshStandardMaterial({ color: '#2b313d', metalness: 0.75, roughness: 0.32 });
@@ -58,11 +65,35 @@ export function makeCutter(scale = 1): Group {
   const spine = new Mesh(new BoxGeometry(5.2, 0.5, 0.5), trim); spine.position.set(-0.6, 0, 0.62);
   const finL = new Mesh(new BoxGeometry(2.6, 2.6, 0.12), trim); finL.position.set(-2.2, 1.6, 0); finL.rotation.z = 0.35;
   const finR = finL.clone(); finR.position.y = -1.6; finR.rotation.z = -0.35;
-  g.add(body, nose, spine, finL, finR);
-  for (const y of [-0.45, 0.45]) { const e = glowSprite('#cfe3ff', 1.6, 0.85); e.position.set(-3.7, y, 0); g.add(e); }
-  for (const y of [-2.7, 2.7]) { const l = glowSprite('#ffffff', 0.7, 0.9); l.position.set(-2.6, y, 0.1); l.userData.blink = true; g.add(l); }
+  const fallback = [body, nose, spine, finL, finR];
+  g.add(...fallback);
+  const glows = [-0.45, 0.45].map((y) => { const e = glowSprite('#cfe3ff', 1.6, 0.85); e.position.set(-3.7, y, 0); g.add(e); return e; });
+  const lights = [2.7, -2.7].map((y) => { const l = glowSprite('#ffffff', 0.7, 0.9); l.position.set(-2.6, y, 0.1); l.userData.blink = true; g.add(l); return l; });
   g.scale.setScalar(scale);
-  g.userData.dispose = () => { hull.dispose(); trim.dispose(); };
+  let gone = false;
+  g.userData.dispose = () => { gone = true; hull.dispose(); trim.dispose(); };
+  g.userData.ready = loadModel('cutter').then((m) => {
+    if (!m || gone) return;
+    m.rotation.x = Math.PI / 2; // glTF Y-up -> stage Z-up, nose stays +x
+    m.scale.setScalar(CUTTER_LEN / new Box3().setFromObject(m).getSize(new Vector3()).x);
+    g.add(m);
+    fallback.forEach((f) => { f.visible = false; });
+    // move the sprites onto the model's own nodes: running lights at the wing tips, a glow per bell
+    g.updateMatrixWorld(true);
+    const at = (n: Object3D) => g.worldToLocal(n.getWorldPosition(new Vector3()));
+    const lightNodes = [m.getObjectByName('light_l'), m.getObjectByName('light_r')];
+    lightNodes.forEach((n, i) => { if (n) lights[i].position.copy(at(n)); });
+    const nozzles: Object3D[] = [];
+    m.traverse((n) => { if (/^nozzle_\d+$/.test(n.name)) nozzles.push(n); });
+    nozzles.sort((a, b) => a.name.localeCompare(b.name));
+    nozzles.forEach((n, i) => {
+      const e = glows[i] ?? glowSprite('#cfe3ff', 1.6, 0.85);
+      if (!e.parent) { g.add(e); glows.push(e); }
+      e.position.copy(at(n)).add(new Vector3(-0.12, 0, 0));
+      e.scale.setScalar(1.5 * (n.parent?.scale.x ?? 1)); // the side bells are smaller
+    });
+    if (nozzles.length) glows.slice(nozzles.length).forEach((e) => { e.visible = false; });
+  });
   return g;
 }
 
