@@ -121,6 +121,7 @@ export class App implements Game {
     this.stage.clearWorld();
     this.title?.dispose();
     this.title = new TitleScene(this);
+    music.setAct(0); // the title wears the Prologue's colour, whatever was played last
     this.mood('title');
     const last = S().last;
     const lastCh = last ? findChapter(last.chapter) : undefined;

@@ -238,7 +238,7 @@ function colour(ch: number[], a: Arrangement): number[] {
   const d = ch[0];
   if (semis(a, d, d + 2) === 3 && semis(a, d, d + 4) === 6) return ch; // leave diminished colour alone
   const r = a.rng();
-  if (a.c.quartal && r < 0.5 && semis(a, d, d + 3) === 5 && semis(a, d + 3, d + 6) === 5) return [d, d + 3, d + 6, d + 9];
+  if (a.c.quartal && r < 0.5 && [0, 3, 6].every((k) => semis(a, d + k, d + k + 3) === 5)) return [d, d + 3, d + 6, d + 9];
   if (r < 0.35 && semis(a, d, d + 1) === 2 && !ch.includes(d + 8)) return [d, d + 1, ...ch.slice(2)]; // sus2
   if (r < 0.6 && semis(a, d, d + 3) === 5) return [d, d + 3, ...ch.slice(2)];                   // sus4
   if (semis(a, d, d + 1) === 2) return ch.length > 3 ? [d, d + 2, d + 4, d + 8] : [...ch, d + 8]; // add9
