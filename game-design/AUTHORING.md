@@ -131,7 +131,7 @@ const compare: CompareDef = { id: 'c04', page: 'Ilse's page (maths register, mar
 | `content/common/set.ts`, `shots.ts` | `makeAnchor`, `makeLantern`, `SPIRES`; `shipExterior`, `bridgeShot` for scenes |
 | `content/truth.ts` | every story number (T, T3, C, C2, V, DRONES, HATCH, RECORD_SV, …) |
 | `game/caseboard.ts` | `pin(id, question, chapter)`, `answer(id, text, chapter)` |
-| `game/build.ts` `pylib` | `await pylib.call('matvec', A, x)`: the player's Python (or the reference) at story events |
+| `game/build.ts` `pylib` | `await pylib.call('matvec', A, x)`: the player's Python (or the reference) at story events; installs over many points: `const { values, who } = await pylib.map('matvec', cases)` (one worker call; `who` is `'yours'` or `'backup'`) |
 | `gfx/*` | `Arrow`, `Grid2D` (via `p.grid()`), `Parallelogram`, `Parallelepiped`, `PlanePatch`, `InfLine`, `Outline2D`, `Lattice3D`, `Pad`, `Dot`, `Beacon`, `Label`, `burst`/`celebrate` |
 | `ui/widgets.ts` | `MatrixInput`, `VectorInput`, `Slider`, `ChoiceCards`, `Readout`, `parseNum` |
 | `math/la.ts`, `math/rref.ts`, `math/frac.ts` | all numbers; `nice()` for display; exact fractions for row reduction |

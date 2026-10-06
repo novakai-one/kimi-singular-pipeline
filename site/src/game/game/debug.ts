@@ -1,7 +1,7 @@
 // window.__game: the test harness drives the game through this (list chapters, jump anywhere,
 // solve the current puzzle, read state). Also handy in the browser console.
 import type { App } from './app';
-import { buildTest } from './build';
+import { buildTest, pylib } from './build';
 import { CHAPTERS, DEV_CHAPTERS, chapter } from './registry';
 import { S } from '../core/save';
 import { normLine, spoken, voiceId, type Line } from '../content/lines';
@@ -43,6 +43,8 @@ export function installDebug(app: App): void {
       await b.showMe();
       return { mode: b.mode(), ok: b.passed() };
     },
+    /** Batched library call (installs). */
+    pymap: (fn: string, cases: unknown[][]) => pylib.map(fn, cases),
     solveBriefing: async () => (briefingTest.solve ? { kind: briefingTest.kind, ok: await briefingTest.solve() } : null),
     /** Animation speed multiplier (tests). */
     setAnimSpeed: (x: number) => setAnimSpeed(x),

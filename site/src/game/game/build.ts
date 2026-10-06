@@ -9,7 +9,7 @@ import type { Hud } from './hud';
 import { h, md, inline, button } from '../ui/ui';
 import { S, save } from '../core/save';
 import { sfx } from '../audio/sfx';
-import { runPythonTests, callPython, warmPython, pythonState } from './pyrunner';
+import { runPythonTests, callPython, mapPython, warmPython, pythonState } from './pyrunner';
 import { swarmSize, assembleParts, dealOrder, hashStr, fillAnswers, deriveFill, composeFill, testHint, failurePattern, BLANK, type HelpMode } from './codehelp';
 import { rng } from './lawcheck';
 
@@ -85,6 +85,21 @@ export const pylib = {
     const r2 = await callPython(`${pyLibrary(fn)}\n\n${ref}`, fn, args);
     if (r2.error) throw new Error(r2.error);
     return r2.value as T;
+  },
+  /**
+   * Run fn over many argument lists in one Python call (installs, GDD §5.5). The player's version runs when it
+   * passed its tests; otherwise (or on any error) the reference does. `who` says which one produced the values.
+   */
+  async map<T = unknown>(fn: string, cases: unknown[][]): Promise<{ values: T[]; who: 'yours' | 'backup' }> {
+    if (isPlayerFn(fn)) {
+      const r = await mapPython(pyLibrary(), fn, cases);
+      if (r.error === undefined) return { values: r.value as T[], who: 'yours' };
+    }
+    const ref = REF.get(fn);
+    if (!ref) throw new Error(`no library function ${fn}`);
+    const r2 = await mapPython(`${pyLibrary(fn)}\n\n${ref}`, fn, cases);
+    if (r2.error !== undefined) throw new Error(r2.error);
+    return { values: r2.value as T[], who: 'backup' };
   },
   warm: warmPython,
   state: pythonState,

@@ -65,6 +65,11 @@ def __call(lib, fn, args_json):
     ns = {'math': math}
     exec(lib, ns)
     return json.dumps(ns[fn](*json.loads(args_json)))
+def __map(lib, fn, cases_json):
+    ns = {'math': math}
+    exec(lib, ns)
+    f = ns[fn]
+    return json.dumps([f(*a) for a in json.loads(cases_json)])
 \`);
 postMessage({ ready: true });
 onmessage = (e) => {
@@ -74,6 +79,9 @@ onmessage = (e) => {
     if (m.kind === 'test') {
       const r = py.globals.get('__run')(m.lib, m.code, m.fn, JSON.stringify(m.tests)).toJs({ dict_converter: Object.fromEntries });
       postMessage({ id: m.id, ...r, stdout: out.join('\\n') });
+    } else if (m.kind === 'map') {
+      const s = py.globals.get('__map')(m.lib, m.fn, JSON.stringify(m.cases));
+      postMessage({ id: m.id, value: JSON.parse(s), stdout: out.join('\\n') });
     } else if (m.kind === 'call') {
       const s = py.globals.get('__call')(m.lib, m.fn, JSON.stringify(m.args));
       postMessage({ id: m.id, value: JSON.parse(s), stdout: out.join('\\n') });
@@ -135,4 +143,9 @@ export function runPythonTests(lib: string, code: string, fn: string, tests: unk
 
 export function callPython(lib: string, fn: string, args: unknown[], timeoutMs = 3000): Promise<PyResult> {
   return send({ kind: 'call', lib, fn, args }, timeoutMs);
+}
+
+/** Call fn once per argument list, all in one worker message (installs: thousands of points at event time). */
+export function mapPython(lib: string, fn: string, cases: unknown[][], timeoutMs = 8000): Promise<PyResult> {
+  return send({ kind: 'map', lib, fn, cases }, timeoutMs);
 }
