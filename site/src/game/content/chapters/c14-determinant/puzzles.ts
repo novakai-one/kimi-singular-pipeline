@@ -409,7 +409,7 @@ export const p4: PuzzleDef = {
   par: 9,
   onWin: S.p4Win,
   setup(p) {
-    void p.g.stage.view3D({ target: [1.4, 1.6, 1.4], distance: 11, azimuth: -50, elevation: 22, ms: 0 });
+    void p.g.stage.view3D({ target: [1.5, 2.5, 1.5], distance: 15.5, azimuth: -50, elevation: 22, ms: 0 });
     const box = new Parallelepiped(p.g.stage, col3(P4_M3, 0), col3(P4_M3, 1), col3(P4_M3, 2), { color: C.result, opacity: 0.16 });
     const arrows = [C.v, C.w, C.u].map((c, j) => new Arrow([0, 0, 0], col3(P4_M3, j), { color: c, width: 0.045 }));
     const vol = new Label(`volume ${fmtN(det(P4_M3))}`, [1.6, 2.6, 1.8], { className: 'small' });
