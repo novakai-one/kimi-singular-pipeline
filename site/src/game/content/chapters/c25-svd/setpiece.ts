@@ -455,8 +455,8 @@ export const sp7: PuzzleDef = {
     paint();
     return {
       async showMe() { await animate(1000, (k) => { t = 0.2 + 0.3 * k; sl.set(Math.round(t * 20) / 20, false); paint(); }, ease.inOut); t = 0.5; sl.el.dispatchEvent(new Event('change')); },
-      solve() { t = 0.5; sl.set(t, false); paint(); sl.el.dispatchEvent(new Event('change')); },
-      wrong() { t = 0.3; sl.set(t, false); paint(); sl.el.dispatchEvent(new Event('change')); },
+      solve() { t = 0.5; sl.set(t); sl.el.dispatchEvent(new Event('change')); },
+      wrong() { t = 0.3; sl.set(t); sl.el.dispatchEvent(new Event('change')); },
     };
   },
 };

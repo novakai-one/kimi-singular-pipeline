@@ -142,7 +142,7 @@ const scale: PuzzleDef = {
     p.add(...pads);
     // beacon C sits off the thruster's line; its marker goes on the "out of reach" pad
     const beaconC: V3 = [3, 2, 0];
-    const outPos: V3 = [-4, 3, 0];
+    const outPos: V3 = [6, -2, 0]; // lower right: clear of the objective card, the readout and the line
     const padC = new Pad(p.g.stage, beaconC, { label: 'beacon C', color: '#ffb86b' });
     const padOut = new Pad(p.g.stage, outPos, { label: 'out of reach', color: '#9aa7bd' });
     const marker = new Dot([beaconC[0], beaconC[1], 0.05], { color: '#ffb86b', size: 0.13 });

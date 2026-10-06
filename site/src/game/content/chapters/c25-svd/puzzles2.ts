@@ -231,7 +231,7 @@ export const p6: PuzzleDef = {
   onWin: S.p6Win,
   setup(p) {
     // three-quarter view: the sheet's broad face, seen at a slant, with its thin direction across the screen
-    void p.g.stage.view3D({ target: [0, 0, 0], distance: 16, azimuth: 160, elevation: 17, ms: 0 });
+    void p.g.stage.view3D({ target: [0.3, 0, 0], distance: 23, azimuth: 160, elevation: 17, ms: 0 });
     const r0 = rng(7500);
     const pts: number[][] = [];
     while (pts.length < 900) { const q = [r0() * 2 - 1, r0() * 2 - 1, r0() * 2 - 1]; const n = norm(q); if (n > 0.2 && n <= 1) pts.push(q.map((x) => (x / n) * 1.6)); }

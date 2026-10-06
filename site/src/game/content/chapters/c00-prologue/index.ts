@@ -130,7 +130,7 @@ const checkPuzzle: PuzzleDef = {
   goal: 'Call it first. Then **Scan** to light the white and cyan buoys. Lay the **ruler** through the three white buoys (drag its ends; they snap to buoys). Then lay the **step** arrow from the first cyan buoy to the next one.',
   subgoals: ['The white buoys: one straight line', 'The cyan buoys: one step fits every gap'],
   predict: {
-    prompt: 'The pulse moved the buoys. The faint rings show where the three white buoys were: in a straight line. Are they still? Call it before you scan.',
+    prompt: 'The pulse moved the buoys. The faint rings show where the white buoys were: in a straight line. Are they still?',
     choices: [{ id: 'line', text: 'Still in one straight line' }, { id: 'curve', text: 'Bent into a curve' }, { id: 'scatter', text: 'Scattered' }],
     answer: 'line',
     reveal: 'They are still in one straight line, and the cyan buoys are still evenly spaced. The pulse moved the buoys, but **in a way that keeps straight lines straight and even spacing even**.',
@@ -139,9 +139,11 @@ const checkPuzzle: PuzzleDef = {
   par: 3,
   onWin: S.lineWin,
   setup(p) {
-    p.g.stage.view2D({ center: [-0.5, 0.5], height: 11, ms: 0 });
+    // framed a little high, so the old white spots stay clear of the prediction card at the top
+    p.g.stage.view2D({ center: [-0.5, 2], height: 12, ms: 0 });
     p.grid({ main: 0, base: 0.1, axis: 0 });
-    const b = new BuoyField(p.g.stage, { extent: 12 });
+    // wide enough that the sheared field still fills the corners of the frame
+    const b = new BuoyField(p.g.stage, { extent: 20 });
     b.set(T);
     p.add(b);
     // the old spots only: the lit buoys wait for the scan, so the prediction is made blind

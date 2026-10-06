@@ -75,7 +75,7 @@ const NAME_PINV: Beat = {
     saw: 'The two-decimal model had no inverse: rank 2. Its $V\\Sigma^+U^{\\mathsf T}$ brought every point back onto a sheet, with its $(1, 1, -1)$ part set to zero. Two points a step apart along $(1, 1, -1)$ landed together, and came back together.',
     means: 'Where a stretch is exactly zero, nothing can be recovered by anyone. The best an undo can do is give back what was kept.',
     name: 'The **pseudoinverse** $A^+ = V\\Sigma^+U^{\\mathsf T}$ flips every non-zero singular value and leaves the zeros at zero. $A^+\\mathbf b$ is the shortest of the least-squares answers.',
-    formula: 'C_2^+ = V\\Sigma^+U^{\\mathsf T}, \\qquad \\Sigma = \\operatorname{diag}(3, 1, 0) \;\\to\; \\Sigma^+ = \\operatorname{diag}(\\tfrac13, 1, 0)',
+    formula: 'C_2^+ = V\\Sigma^+U^{\\mathsf T}, \\qquad \\Sigma = \\operatorname{diag}(3, 1, 0) \\quad\\Rightarrow\\quad \\Sigma^+ = \\operatorname{diag}(\\tfrac13, 1, 0)',
     why: 'Exactly zero: gone, by anyone. Tiny: still there, under noise multiplied by $1/\\sigma$.',
     cue: 'When a matrix has **no inverse** but you still need the best answer, think **pseudoinverse**.',
     use: 'Least-squares solvers use it when the columns are dependent: `np.linalg.pinv`.',

@@ -201,7 +201,8 @@ export const doubtTwice: DoubtDef = {
 
 /** A camera direction that sees the plane at about 40°, so both the plane and the leftover read. */
 function viewFor(n: Vec): { azimuth: number; elevation: number } {
-  const u = n.map((x) => x / norm(n));
+  // the normal's sign is arbitrary: take the one pointing up, so the camera sits above the plane at a slant
+  const u = n.map((x) => (n[2] < 0 ? -x : x) / norm(n));
   let w = cross(u, [0, 0, 1]);
   if (norm(w) < 1e-6) w = [1, 0, 0];
   w = w.map((x) => x / norm(w));
