@@ -92,8 +92,9 @@ export const scaleRow = (m: Aug, i: number, k: number): Aug => m.map((r, q) => (
 export const scaleHolds = (m: Aug, i: number, k: number): boolean => sameSolutions(m, scaleRow(m, i, k));
 export const D_SCALE_START: Aug = [[2, 1, 4], [1, -1, -1]];
 export function scaleRandom(r: () => number, edge = -1): { m: Aug; i: number; k: number } {
-  let m: Aug;
-  do { m = randConsistent(r, 2, 2).aug; } while (kindOf(m) !== 'one');
+  let m: Aug, x0: number[];
+  // one meeting point, inside the doubt's frame (x from −3 to 5, y from −1.5 to 3)
+  do { ({ aug: m, x0 } = randConsistent(r, 2, 2)); } while (kindOf(m) !== 'one' || x0[1] < -1.5 || x0[1] > 3);
   const ks = [-3, -2, -1, -0.5, 0.5, 2, 3];
   return { m, i: randInt(r, 0, 1), k: edge === 0 ? 0 : ks[randInt(r, 0, ks.length - 1)] };
 }

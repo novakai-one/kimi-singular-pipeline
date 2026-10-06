@@ -109,6 +109,14 @@ export function threeStartsOk(starts: readonly (readonly number[])[], target: re
 export type SetId = 'plane' | 'line' | 'shifted' | 'axes' | 'quarter';
 export const SET_IDS: SetId[] = ['plane', 'line', 'shifted', 'axes', 'quarter'];
 export const IMPOSTORS: SetId[] = ['shifted', 'axes', 'quarter'];
+/** Short names for the candidate buttons. */
+export const SET_SHORT: Record<SetId, string> = {
+  plane: 'plane $z = x + y$',
+  line: 'line along $(1, 1, -1)$',
+  shifted: 'plane $z = x + y + 1$',
+  axes: 'the two axes',
+  quarter: 'a quarter of the floor',
+};
 export const SET_NAMES: Record<SetId, string> = {
   plane: 'the landing plane $z = x + y$',
   line: 'the line through $(1, 1, -1)$',

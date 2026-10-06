@@ -17,7 +17,7 @@ import { sfx } from '../../../audio/sfx';
 import { burst } from '../../../gfx/fx';
 import { C2 } from '../../truth';
 import {
-  ARM, ARM7, HANDLE, IMPOSTORS, NULL_DIR, P5_DECOYS, P5_ESCAPES, P5_TILES, PIPE, SET_IDS, SET_NAMES,
+  ARM, ARM7, HANDLE, IMPOSTORS, NULL_DIR, P5_DECOYS, P5_ESCAPES, P5_TILES, PIPE, SET_IDS, SET_NAMES, SET_SHORT,
   armClear, armGap, armJoints, armMotors, escapes, fmtN, fmtV, gripperAt, inSet, len, offReach7, p5OrderOk, p6Won,
   p7Won, snapToSet, stillCommand, testResult, toSet, winTol, type Diff, type P3, type SetId, type TestOp,
 } from './logic';
@@ -97,7 +97,7 @@ export const p5: PuzzleDef = {
     // chips, op and stretch
     const chips = SET_IDS.map((id) => {
       const b = button('', () => choose(id), { cls: 'small ghost' });
-      b.innerHTML = inline(SET_NAMES[id].replace(/^the /, '').replace(/^one /, ''));
+      b.innerHTML = inline(SET_SHORT[id]);
       return { id, b };
     });
     const paintChips = () => chips.forEach(({ id, b }) => {
@@ -169,6 +169,8 @@ export const p5: PuzzleDef = {
       gap.setOpacity(0); resTag.show(false);
       pu.knob.object.visible = false; pv.knob.object.visible = false;
       pu.knob.setEnabled(false); pv.knob.setEnabled(false);
+      ['u', 'v', 'set', 'r'].forEach((k) => r.hideRow(k));
+      r.note('Each row of $C_2$ against the violet line $(1, 1, -1)$: multiply matching parts and add.');
       p.setGoal('Why is the violet line a landing set too? Its arrows are the starts that land on the origin. Show that each **row** of $C_2$ reads 0 against $(1, 1, -1)$.');
       const rows = C2.map((row, i) => room.arrow(row, { color: [C.v, C.w, C.u][i], label: `$\\text{row } ${i + 1}$` }));
       await Promise.all(rows.map((a) => a.grow(600)));

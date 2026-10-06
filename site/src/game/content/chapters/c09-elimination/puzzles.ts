@@ -13,7 +13,7 @@ import { C } from '../../../core/theme';
 import { sfx } from '../../../audio/sfx';
 import { FatLine } from '../../../gfx/lines';
 import { wait } from '../../../core/tween';
-import { PlaneSet } from '../c08-systems/planes';
+import { PlaneSet, boxFrame } from '../c08-systems/planes';
 import { placeInput } from '../c08-systems/marker';
 import { classifyAug, num, pt, sameSolutions, somePoint, type Aug } from '../c08-systems/act3';
 import {
@@ -26,11 +26,6 @@ type Box = [number, number, number, number];
 /** 2-D sandboxes keep their lines inside a frame, clear of the goal card, the dock and the title. */
 const P4_BOX: Box = [-1.3, -2.2, 5.2, 5];
 const P5_BOX: Box = [-2.5, -4, 7, 3.3];
-function boxFrame(p: PuzzleCtx, b: Box): void {
-  const f = new FatLine(p.g.stage, [[b[0], b[1], -0.01], [b[2], b[1], -0.01], [b[2], b[3], -0.01], [b[0], b[3], -0.01], [b[0], b[1], -0.01]], { color: '#59e1ff', width: 1.2, opacity: 0.3 });
-  p.add(f.object);
-  p.onDispose(() => f.dispose());
-}
 
 const num2 = (m: FMat): Aug => m.map((r) => r.map((x) => x.value()));
 

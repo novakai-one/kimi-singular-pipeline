@@ -209,6 +209,19 @@ export class PlaneSet {
   /** Move the picture's centre (patches re-centre on it). */
   setFocus(f: number[]): void { this.focus = f.slice(); this.drawAll(); }
 
+  /** 3-D: move the focus and the camera's aim to f, keeping the current view direction and distance. */
+  async refocus(f: number[], ms = 300): Promise<void> {
+    this.setFocus(f);
+    if (this.n !== 3) return;
+    const st = this.host.g.stage;
+    const off = st.camera.position.clone().sub(st.target);
+    const d = off.length();
+    if (d < 1e-6) return;
+    const az = (Math.atan2(off.y, off.x) * 180) / Math.PI, el = (Math.asin(off.z / d) * 180) / Math.PI;
+    await st.view3D({ target: [f[0], f[1], f[2]], distance: d, azimuth: az, elevation: el, ms });
+    this.placeLabels();
+  }
+
   /** Choose label places that avoid the panels; call once the camera has settled. */
   placeLabels(): void {
     if (this.disposed) return;
@@ -590,6 +603,13 @@ export function sweepLabels(o: Object3D): void {
     const el = (n as Object3D & { element?: Element }).element;
     if (el instanceof Element) el.remove();
   });
+}
+
+/** A faint frame around a 2-D box: lines clipped to it end at a visible edge. */
+export function boxFrame(host: Host, b: [number, number, number, number]): void {
+  const f = new FatLine(host.g.stage, [[b[0], b[1], -0.01], [b[2], b[1], -0.01], [b[2], b[3], -0.01], [b[0], b[3], -0.01], [b[0], b[1], -0.01]], { color: '#59e1ff', width: 1.2, opacity: 0.3 });
+  host.add(f.object);
+  host.onDispose(() => f.dispose());
 }
 
 /** Clip the line p + s·d to an axis box; null when it misses. */

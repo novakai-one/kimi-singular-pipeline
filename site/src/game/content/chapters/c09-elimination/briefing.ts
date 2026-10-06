@@ -10,7 +10,7 @@ import { h, inline } from '../../../ui/ui';
 import { C } from '../../../core/theme';
 import { wait } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
-import { PlaneSet, worldHost } from '../c08-systems/planes';
+import { PlaneSet, boxFrame, worldHost } from '../c08-systems/planes';
 import { kindOf, pivotPositions, pt, rowTex, somePoint, type Aug } from '../c08-systems/act3';
 import {
   D_REF_START, D_SCALE_START, D_SWAP_START, LAW_C09, PROC_CASE, PROC_DECOYS, PROC_REFERENCE, PROC_TILES, applyLawOp,
@@ -22,6 +22,8 @@ import '../c08-systems/act3.css';
 const nums = (m: FMat): Aug => m.map((r) => r.map((x) => x.value()));
 /** Rows by identity (the board keeps a row's colour when it moves), so a swap moves no plane. */
 const byId = (m: Aug, order: number[]): Aug => { const out: Aug = []; order.forEach((id, pos) => { out[id] = m[pos]; }); return out; };
+/** The scale doubt's lines stay inside this frame, below the cards. */
+const D_SCALE_BOX: [number, number, number, number] = [-3.5, -2.1, 5.5, 3.8];
 const meet = (m: Aug) => { const k = kindOf(m); return k === 'one' ? `meet at ${pt(somePoint(m)!)}` : k === 'many' ? 'meet along a line' : 'never all meet'; };
 
 export const sayit: SayItDef = {
@@ -43,7 +45,9 @@ function boardScene(p: Parameters<DoubtDef['setup']>[0], aug: Aug, o: Constructo
   const planes = new PlaneSet(p, { n: 3, rows: aug });
   void planes.frame({ distance: 23 });
   board.subscribe((m, _op, ms) => { void planes.setRows(byId(nums(m), board.order()), ms); if (ms > 0) planes.pulse(); });
-  return { board, planes };
+  // a new case (Bram's shake): centre the planes and the camera on its meeting point
+  const aim = (rows: Aug) => { const x = somePoint(rows); if (x) void planes.refocus(x, 250); };
+  return { board, planes, aim };
 }
 
 export const doubtSwap: DoubtDef = {
@@ -54,14 +58,14 @@ export const doubtSwap: DoubtDef = {
   view: '3d',
   setup(p) {
     let orig = D_SWAP_START;
-    const { board } = boardScene(p, orig, { ops: ['swap'], title: 'The fan-beam board' });
+    const { board, aim } = boardScene(p, orig, { ops: ['swap'], title: 'The fan-beam board' });
     let swapped = false;
     board.subscribe((_m, op) => { if (op?.kind === 'swap') swapped = true; });
     const cur = () => nums(board.get());
     return {
       holds: () => swapHolds(orig, cur(), swapped),
       describe: () => swapped ? `after the swap the planes still ${meet(cur())}, as before` : 'no rows swapped yet',
-      randomize(r, edge) { const c = swapRandom(r, edge ?? -1); orig = c.orig; board.set(c.cur); swapped = true; },
+      randomize(r, edge) { const c = swapRandom(r, edge ?? -1); orig = c.orig; board.set(c.cur); swapped = true; aim(c.orig); },
       edgeCases: 1,
       async showMe() { if (!swapped) await board.apply({ kind: 'swap', i: 0, j: 2 }); },
     };
@@ -76,7 +80,8 @@ export const doubtScale: DoubtDef = {
   view: '2d',
   setup(p) {
     let m = D_SCALE_START.map((r) => r.slice()), i = 1, k = 2;
-    const planes = new PlaneSet(p, { n: 2, rows: scaleRow(m, i, k), names: ['x', 'y'] });
+    const planes = new PlaneSet(p, { n: 2, rows: scaleRow(m, i, k), names: ['x', 'y'], box: D_SCALE_BOX });
+    boxFrame(p, D_SCALE_BOX);
     void planes.frame({ height: 9, target: [1, 1.5] });
     const r = p.readout('Row 2 times k');
     const paint = () => {
@@ -107,7 +112,7 @@ export const doubtTwoRef: DoubtDef = {
   setup(p) {
     let start = D_REF_START;
     let bram = bramRef(start);
-    const { board } = boardScene(p, start, { title: 'Your board' });
+    const { board, aim } = boardScene(p, start, { title: 'Your board' });
     const r = p.readout('Bram\'s staircase');
     const box = h('div');
     r.el.insertBefore(box, r.el.children[1] ?? null);
@@ -122,7 +127,7 @@ export const doubtTwoRef: DoubtDef = {
     return {
       holds: () => twoRefHolds(board.get(), bram),
       describe: () => board.isREF() ? `your staircase has pivots in columns ${pivotPositions(board.get(), 3).map((c) => c + 1).join(', ')}; Bram's in ${pivotPositions(bram, 3).map((c) => c + 1).join(', ')}` : 'your board is not a staircase yet',
-      randomize(rr, edge) { const c = refRandom(rr, edge ?? -1); start = c.m; bram = bramRef(start); board.set(c.mine); paint(); },
+      randomize(rr, edge) { const c = refRandom(rr, edge ?? -1); start = c.m; bram = bramRef(start); board.set(c.mine); paint(); aim(start); },
       edgeCases: 2,
       async showMe() {
         board.reset();
