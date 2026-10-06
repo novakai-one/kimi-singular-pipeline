@@ -40,9 +40,12 @@ export function orbit(host: Host, target: V3, dist: number, elevDeg: number, az0
 /** The scan lattice: a faint cyan cube of lines around a centre. */
 export function scanLattice(host: Host, at: V3, scaleK = 2.2, opacity = 0.35): Lattice3D {
   const lat = new Lattice3D(host.g.stage, { extent: 3, color: HOLO, opacity });
-  lat.object.position.set(...at);
-  lat.object.scale.setScalar(scaleK);
-  host.add(lat.object);
+  // Lattice3D owns its matrix (matrixAutoUpdate off), so place and scale it through a parent
+  const holder = new Group();
+  holder.position.set(...at);
+  holder.scale.setScalar(scaleK);
+  holder.add(lat.object);
+  host.add(holder);
   host.onDispose(() => lat.dispose());
   return lat;
 }
@@ -117,7 +120,7 @@ export async function coldOpen(g: Game): Promise<void> {
   g.mood('void');
   const host = worldHost(g);
   const pod = P2.pod as V3;
-  scanLattice(host, pod, 2.3, 0.13);
+  scanLattice(host, pod, 1.6, 0.13);
   const mine = podField(host, pod, [1, 3, 5, 7, 9], [-1, 1, 3, 5, 7]);
   mine.setLight(null);
   const start: Aug = P2.rows.map((r, i) => tiltRow(r, pod, [55, -48, 62][i], [[0.3, 1, 0.2], [1, 0.2, 0.4], [0.2, 0.3, 1]][i]));
@@ -151,7 +154,7 @@ export async function closing(g: Game): Promise<void> {
   g.mood('explore');
   const host = worldHost(g);
   const pod = P2.pod as V3;
-  scanLattice(host, pod, 1.8, 0.14);
+  scanLattice(host, pod, 1.6, 0.14);
   const mine = podField(host, pod, [3, 5, 7], [1, 3, 5]);
   mine.setLight(AMBER);
   new PlaneSet(host, { n: 3, rows: P2.rows, labels: false, showSolution: true, solutionLabel: false, size: 9, focus: pod, axes: false, opacity: 0.6 });
@@ -190,7 +193,7 @@ export function scanScene(kind: 'pods' | 'bay' = 'pods') {
       orbit(host, at, 25, 24, -60, 2.2);
     } else {
       const at: V3 = [0, 0, 0];
-      scanLattice(host, [0, 0, 0.5], 0.8, 0.12);
+      scanLattice(host, [0, 0, 0.3], 0.62, 0.12);
       new Pod(host, at, { light: AMBER, opacity: 0.5 });
       orbit(host, [0, 0, 0.2], 9, 24, -70, 2);
     }

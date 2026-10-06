@@ -48,7 +48,7 @@ export async function coldOpen(g: Game): Promise<void> {
   await fadeBlack(g, true, 10);
   g.mood('void');
   const host = worldHost(g);
-  scanLattice(host, [0, 0, 1.5], 1.6, 0.18);
+  scanLattice(host, [0, 0, 1.5], 1.3, 0.18);
   const gens = generators(host, [0, 4, 0]);
   void gens;
   const planes = new PlaneSet(host, { n: 3, rows: P1.aug, labels: false, showSolution: false, size: 7, focus: P1.answer, axes: false });
@@ -70,7 +70,7 @@ export async function closing(g: Game): Promise<void> {
   g.stage.clearWorld();
   g.mood('explore');
   const host = worldHost(g);
-  scanLattice(host, [0, 0, 1.5], 1.2, 0.14);
+  scanLattice(host, [0, 0, 1.2], 1.0, 0.14);
   const gens = generators(host, [0, 0, 0]);
   orbit(host, [0, 0, 1.2], 13, 20, -90, 3);
   // power routing runs on the player's row_echelon and back_sub when both pass their tests
@@ -95,7 +95,7 @@ export async function closing(g: Game): Promise<void> {
 export async function boardScene(g: Game): Promise<void> {
   g.stage.clearWorld();
   const host = worldHost(g);
-  scanLattice(host, [0, 0, 1.5], 1.2, 0.12);
+  scanLattice(host, [0, 0, 1.2], 1.0, 0.12);
   generators(host, [0, 0, 0]);
   orbit(host, [0, 0, 1.2], 13, 20, -90, 2.2);
 }

@@ -18,7 +18,7 @@ export async function coldOpen(g: Game): Promise<void> {
   await fadeBlack(g, true, 10);
   g.mood('void');
   const host = worldHost(g);
-  scanLattice(host, [3, 1, 0], 1.8, 0.18);
+  scanLattice(host, [3, 1, 0], 1.35, 0.18);
   const planes = new PlaneSet(host, { n: 3, rows: P2.aug, labels: false, showSolution: false, size: 8, focus: [3, 1, 0], axes: false });
   planes.setFade(0);
   orbit(host, [3, 1, 0], 18, 22, -120, 2.4);
@@ -39,7 +39,7 @@ export async function closing(g: Game): Promise<void> {
   g.stage.clearWorld();
   const host = worldHost(g);
   const at: V3 = [0, 0, 0];
-  scanLattice(host, [0, 0, 0.5], 0.8, 0.12);
+  scanLattice(host, [0, 0, 0.3], 0.55, 0.12);
   const pod = new Pod(host, at, { light: AMBER, opacity: 0.55 });
   orbit(host, [0, 0, 0.2], 7.5, 26, -70, 2);
   // the flows are routed with the player's solve when it passes its tests
