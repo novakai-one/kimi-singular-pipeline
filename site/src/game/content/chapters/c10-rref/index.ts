@@ -100,12 +100,6 @@ const ch: ChapterDef = {
     { kind: 'puzzle', id: 'sp', puzzle: setPiece },
     { kind: 'scene', id: 'review-intro', lines: S.review, setup: bay },
     { kind: 'review', id: 'c10-review', review },
-    {
-      kind: 'card', id: 'numpy', card: {
-        kind: 'numpy', visual: bay, title: 'NumPy card III: solving',
-        body: '`np.linalg.solve(A, b)` does what you did on the power board: elimination, then climbing back, in compiled code. At each column it swaps the **largest** entry into the pivot position (partial pivoting), so a tiny pivot cannot blow up rounding errors.\n\nIt wants a square $A$ with a pivot in every column, and raises an error otherwise. Your `solve` instead reports `\'none\'` or `\'many\'` and hands back the point and the free directions.\n\n`np.linalg.lstsq` exists for the systems with no exact answer: it finds the closest one. That is a later act.',
-      },
-    },
     { kind: 'cinematic', id: 'close', run: closing },
   ],
 };
