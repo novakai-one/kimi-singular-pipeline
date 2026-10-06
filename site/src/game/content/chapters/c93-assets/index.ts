@@ -1,10 +1,11 @@
 // Developer showcase: every Blender model (tools/game/blender/) in the real engine, one cinematic
 // beat each, framed and slowly orbiting under the game's own lights, bloom and tone mapping.
 // Open with ?chapter=c93 (or the test harness: node tests/game-flow.mjs c93 <outDir>).
-import { Group, Vector3, type Object3D } from 'three';
+import { Group, Vector3, type Object3D, type Sprite } from 'three';
 import type { ChapterDef, Game, V3 } from '../../../game/types';
 import { loadModel, Ship } from '../../../gfx/models';
 import { wait } from '../../../core/tween';
+import { makeCutter } from '../c15-nullspace/scenes';
 
 const HOLD = 9000; // ms each asset stays on screen
 
@@ -65,6 +66,21 @@ async function lantern(g: Game): Promise<void> {
     const stopOrbit = orbit(g, [0.2, 0, 0], 11, 22, -55, 16);
     const off = g.stage.tick(() => { ship.object.position.z = 0.06 * Math.sin(performance.now() / 1300); });
     return () => { stopOrbit(); off(); ship.dispose(); };
+  });
+}
+
+async function cutter(g: Game): Promise<void> {
+  await show(g, '**cutter** · Authority cutter, running lights + 3 nozzles', async (root) => {
+    // the game's own makeCutter: the model, its blinking light_l / light_r sprites and nozzle glows
+    const c = makeCutter(1);
+    root.add(c);
+    await (c.userData.ready as Promise<void>);
+    const stopOrbit = orbit(g, [0, 0, 0], 16, 20, -50, 14);
+    const off = g.stage.tick((_dt, t) => {
+      c.position.z = 0.06 * Math.sin(t / 1.3);
+      c.traverse((n) => { if (n.userData.blink) (n as Sprite).material.opacity = Math.sin(t * 5) > 0.6 ? 0.95 : 0.15; });
+    });
+    return () => { stopOrbit(); off(); };
   });
 }
 
@@ -163,6 +179,7 @@ const ch: ChapterDef = {
   dev: true,
   beats: [
     { kind: 'cinematic', id: 'lantern', run: lantern },
+    { kind: 'cinematic', id: 'cutter', run: cutter },
     { kind: 'cinematic', id: 'meridian', run: meridian },
     { kind: 'cinematic', id: 'meridian-close', run: meridianClose },
     { kind: 'cinematic', id: 'anchor', run: anchor },

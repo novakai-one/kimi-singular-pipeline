@@ -11,6 +11,7 @@ or the Blender app in background mode. Run from the repo root:
 
 ```sh
 python tools/game/blender/lantern.py     # lantern.glb   hero ship (survey tug)
+python tools/game/blender/cutter.py      # cutter.glb    Vell's Survey Authority cutter
 python tools/game/blender/meridian.py    # meridian.glb  colony ark
 python tools/game/blender/anchor.py      # anchor.glb    alien monolith + three spires
 python tools/game/blender/buoy.py        # buoy.glb      navigation buoy
@@ -51,6 +52,7 @@ real lights, bloom and tone mapping.
 | Model | Size | Nodes |
 |---|---|---|
 | `lantern` | about 6 long (x -2.6 to 3.3) | `hull`, `projector` (+ `projector_focus` at the emitter), `pod_fl`, `pod_fr`, `pod_rl`, `pod_rr`, each with `nozzle_fl` / `nozzle_fr` / `nozzle_rl` / `nozzle_rr` at the nozzle exit (exhaust along -X), `light_beacon` |
+| `cutter` | about 9 long (x -4.6 to 4.5, wing span 5.2) | `hull`, `bridge`, `engine_1` (centre) / `engine_2` (port, +Y) / `engine_3` (starboard, -Y), each with `nozzle_1..3` at the bell exit (exhaust along -X; the side bells are scaled 0.8), `light_l` / `light_r` (white running lights at the +Y / -Y wing tips). `makeCutter` in c15 scales it to the old 10.2-long wedge |
 | `meridian` | about 63 long | `bow`, `hangar_door_s` (-Y), `hangar_door_p` (+Y), `truss_fore` / `truss_aft` (origin at the section centre; children `frame_f1..f6` / `frame_a1..a6`, one rectangular frame each in the YZ plane, plus `truss_*_braces`), `hub`, `ring_1..3` (spin about local X), `aft` (`tank_1..6`, `radiator_l/r`, `engine_1..3`), `nozzle_1..3` |
 | `anchor` | spire tips about 2.3 from the core | `core`, `spire_1..3` (origin at the core centre, local +X along the spire; directions (1, 0.2, 0.1), (0.3, 1, 0), (0, 0.2, 1) normalised), `spire_1_tip..spire_3_tip` |
 | `buoy` | about 1.9 tall | `body`, `core` (the glow, can be pulsed), `light_tip` |
