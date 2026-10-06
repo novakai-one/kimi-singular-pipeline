@@ -39,6 +39,7 @@ The act's NumPy card and the catch-up card are automatic. Builds need a `swarm` 
 - The picture does the teaching. Keep scenes uncluttered: at most ~4 arrows, labels never overlapping, readouts for exact numbers.
 - Make winning feel good (motion, sound, a short crew line). Make failing teach (the gap drawn, a literal LANTERN bark).
 - Small whole numbers first; the GDD's seeded ranges by difficulty. Verify every number with `math/la.ts` / `rref.ts`.
+- Notation: basis arrows are e₁, e₂, e₃ (`\mathbf e_1`), never î/ĵ; the shared matrix views label columns A e₁, A e₂.
 - Story lines are short, in character, no exclamation marks, no banned words, maths objects never personified, and no
   term before its naming beat — in dialogue too (an automated check enforces it game-wide).
 - Scenes without their own visuals get the ship exterior automatically; give the important beats their own staging
@@ -56,7 +57,8 @@ The act's NumPy card and the catch-up card are automatic. Builds need a `swarm` 
 6. Interact for real at least once per chapter with a small Playwright script kept in your scratch dir (drag a handle,
    type an answer, press Fire) and confirm the puzzle reacts.
 
-The machine is shared (4 CPU cores, software rendering), so browser tests are slow. Be patient; do not start extra servers.
+The machine is shared (4 CPU cores, software rendering, several agents), so browser tests are slow. Run at most one browser
+process at a time; re-run single beats (`node tests/game-flow.mjs cNN <dir> <beatIndex>`) after a change; do not start extra servers.
 
 ## Rules
 - Create/modify only: `site/src/game/content/chapters/<your chapter dirs>/**` and `tests/unit/game-<chapterId>*.test.ts`.
