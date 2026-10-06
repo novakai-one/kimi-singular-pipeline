@@ -12,13 +12,14 @@ import { interpMat2, mlerp, type Mat } from '../math/la';
 const CORE_DIM = 0.7, CORE_LIT = 1.8;
 
 const haloVert = /* glsl */`
+uniform float uHalo;
 attribute vec3 aColor; attribute float aGlow;
 varying vec2 vUv; varying vec3 vColor; varying float vGlow;
 void main(){
   vUv = uv; vColor = aColor; vGlow = aGlow;
   vec4 c = modelViewMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
   // camera-facing quad
-  c.xy += position.xy * (0.55 + 0.6 * aGlow);
+  c.xy += position.xy * (0.55 + 0.6 * aGlow) * uHalo;
   gl_Position = projectionMatrix * c;
 }`;
 const haloFrag = /* glsl */`
@@ -32,6 +33,8 @@ export interface BuoyOpts {
   dims?: 2 | 3;
   color?: string;
   size?: number;
+  /** Halo size multiplier (default 1). Use less than 1 for dense clouds, where halos merge into blobs. */
+  halo?: number;
   /** Explicit positions instead of a lattice. */
   points?: V3[];
 }
@@ -70,7 +73,7 @@ export class BuoyField {
     this.colors = new Float32Array(pts.length * 3);
     this.glows = new Float32Array(pts.length);
     for (let i = 0; i < pts.length; i++) { this.colors.set([this.baseColor.r, this.baseColor.g, this.baseColor.b], i * 3); this.glows[i] = 0; }
-    const haloMat = new ShaderMaterial({ vertexShader: haloVert, fragmentShader: haloFrag, transparent: true, depthWrite: false, blending: AdditiveBlending });
+    const haloMat = new ShaderMaterial({ uniforms: { uHalo: { value: o.halo ?? 1 } }, vertexShader: haloVert, fragmentShader: haloFrag, transparent: true, depthWrite: false, blending: AdditiveBlending });
     const quad = new PlaneGeometry(1, 1);
     quad.setAttribute('aColor', new InstancedBufferAttribute(this.colors, 3));
     quad.setAttribute('aGlow', new InstancedBufferAttribute(this.glows, 1));

@@ -26,8 +26,8 @@ export const NUMPY_CARDS: Record<number, CardDef> = {
   },
   5: {
     kind: 'numpy', title: 'Rank in NumPy',
-    body: '`np.linalg.matrix_rank(A)` counts the directions that survive.\n\nIt does **not** row-reduce. It measures how much the matrix stretches in each direction and counts the stretches bigger than a tiny **tolerance**. That is the two-decimal model in code form: a direction squeezed below the tolerance counts as flattened.\n\n**Yours and theirs:** your `rank` counts pivots exactly. On measured data, the tolerance decides, so the same matrix can have rank 3 or rank 2 depending on how many decimals you trust.',
-    code: 'import numpy as np\nC2 = np.array([[1., 0, 1], [0, 1, 1], [1, 1, 2]])\nprint(np.linalg.matrix_rank(C2))',
+    body: '`np.linalg.matrix_rank(A)` counts the directions that survive.\n\nIt does **not** row-reduce. It measures how much the matrix stretches in each direction and counts the stretches bigger than a tiny **tolerance**. That is the two-decimal model in code form: a direction squeezed below the tolerance counts as flattened.\n\nNumPy has no null space function; SciPy does: `scipy.linalg.null_space(A)` and `scipy.linalg.orth(A)` return unit arrows for the null space and the column space, found the same way (from the stretches, with a tolerance).\n\n**Yours and theirs:** your `rank` counts pivots exactly. On measured data, the tolerance decides, so the same matrix can have rank 3 or rank 2 depending on how many decimals you trust.',
+    code: 'import numpy as np\nfrom scipy.linalg import null_space\nC2 = np.array([[1., 0, 1], [0, 1, 1], [1, 1, 2]])\nprint(np.linalg.matrix_rank(C2), null_space(C2).ravel())',
   },
   6: {
     kind: 'numpy', title: 'Changing grids in NumPy',
