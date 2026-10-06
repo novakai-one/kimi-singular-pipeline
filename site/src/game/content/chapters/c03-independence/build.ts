@@ -3,12 +3,12 @@
 import type { BuildDef } from '../../../game/types';
 import { findLoopCrew } from './logic.ts';
 
-const FIND_LOOP = 'def find_loop(vs):\n    """Return integer dials (-5 to 5), not all zero, that fire the arrows vs back to the start, or None. Brute force."""\n    dials = [-5] * len(vs)\n    while True:\n        if any(dials) and all(abs(x) < 1e-9 for x in lincomb(dials, vs)):\n            return list(dials)\n        i = len(vs) - 1\n        while i >= 0 and dials[i] == 5:\n            dials[i] = -5\n            i -= 1\n        if i < 0:\n            return None\n        dials[i] += 1\n';
+const FIND_LOOP = 'def find_loop(vs):\n    """Brute force: whole dials -5..5, not all zero, that bring vs back to the start; or None."""\n    dials = [-5] * len(vs)\n    while True:\n        if any(dials) and all(abs(x) < 1e-9 for x in lincomb(dials, vs)):\n            return list(dials)\n        i = len(vs) - 1\n        while i >= 0 and dials[i] == 5:\n            dials[i] = -5\n            i -= 1\n        if i < 0:\n            return None\n        dials[i] += 1\n';
 
 export const buildFindLoop: BuildDef = {
   id: 'c03-find-loop', fn: 'find_loop', title: 'Is one of these thrusters wasted? (brute force)',
   brief: 'Write `find_loop(vs)`. Try every setting of whole-number dials from −5 to 5, one dial per arrow in `vs`. Return the first setting, **not all zero**, whose `lincomb` brings the ship back to the start (every part 0). Return `None` if there is none.\n\nCount through the settings like an odometer: start at `[-5, -5, …]`, step the **last** dial up first, and when a dial passes 5, set it back to −5 and step the one before it.\n\nBrute force again: it only tries whole numbers up to 5. Chapter 15 replaces it.',
-  starter: 'def find_loop(vs):\n    """Return integer dials (-5 to 5), not all zero, that fire the arrows vs back to the start, or None. Brute force."""\n    dials = [-5] * len(vs)\n    while True:\n        # 1. is this setting a loop? (not all zero, and lincomb is all zeros)\n        # 2. step the odometer; return None when it rolls over\n        return None\n',
+  starter: 'def find_loop(vs):\n    """Brute force: whole dials -5..5, not all zero, that bring vs back to the start; or None."""\n    dials = [-5] * len(vs)\n    while True:\n        # 1. is this setting a loop? (not all zero, and lincomb is all zeros)\n        # 2. step the odometer; return None when it rolls over\n        return None\n',
   fill: FIND_LOOP.replace('if any(dials) and', 'if ___ and').replace('dials[i] = -5', 'dials[i] = ___').replace('        dials[i] += 1', '        dials[i] += ___'),
   solution: FIND_LOOP,
   assemble: {

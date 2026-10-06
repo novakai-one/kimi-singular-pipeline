@@ -231,11 +231,12 @@ export const why: CardDef = {
       const on = distToSpan([THRUST3[0], THRUST3[1]], b) < 1e-9;
       g.stage.world.add(new Beacon(g.stage, b, { color: on ? C.good : '#5a6478', beam: true }).object);
     }
-    await g.stage.view3D({ target: [0.3, 0.3, 0.6], distance: 19, azimuth: -40, elevation: 20, ms: 0, orbit: false });
-    let az = -40;
+    await g.stage.view3D({ target: [0.3, 0.3, 0.6], distance: 19, azimuth: -135, elevation: 42, ms: 0, orbit: false });
+    let t = 0;
     const off = g.stage.tick((dt) => {
-      az += dt * 3;
-      const a = (az * Math.PI) / 180, e = (20 * Math.PI) / 180, d = 19;
+      t += dt;
+      // look at the plane nearly face-on, swaying slowly, so lit and dark beacons both show
+      const a = ((-135 + 18 * Math.sin(t * 0.12)) * Math.PI) / 180, e = (42 * Math.PI) / 180, d = 19;
       g.stage.camera.position.set(0.3 + d * Math.cos(e) * Math.cos(a), 0.3 + d * Math.cos(e) * Math.sin(a), 0.6 + d * Math.sin(e));
       g.stage.camera.up.set(0, 0, 1);
       g.stage.camera.lookAt(0.3, 0.3, 0.6);

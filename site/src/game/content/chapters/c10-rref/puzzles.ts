@@ -571,7 +571,7 @@ export const setPiece: PuzzleDef = {
       drone = new Dot([0, 0, 0], { color: '#ffb347', size: 0.13, glow: 2.8, label: 'drone' });
       p.add(edge.object, doorFill, glass, centre, lbl, au, aw, burn, path.object, hit, drone);
       p.onDispose(() => { edge.dispose(); path?.dispose(); doorFill?.geometry.dispose(); doorFill?.material.dispose(); });
-      void p.g.stage.view3D({ target: [0.4, 0.8, 0.9], distance: 9.5, azimuth: -35, elevation: 22, ms: 900 });
+      void p.g.stage.view3D({ target: [0.5, 0.9, 1.1], distance: 12, azimuth: -35, elevation: 22, ms: 900 });
       const step = d === 'cadet' ? 0.5 : d === 'navigator' ? 0.25 : 0.125;
       const sa = new Slider({ label: 'thruster $\\cg{\\mathbf u} = (1, 0, 1)$: weight $a$', min: -1, max: 3, step, value: a, onInput: (v) => { a = v; p.move(); paintDrone(); } });
       const sb = new Slider({ label: 'thruster $\\cr{\\mathbf w} = (0, 1, 1)$: weight $b$', min: -1, max: 3, step, value: b, onInput: (v) => { b = v; p.move(); paintDrone(); } });

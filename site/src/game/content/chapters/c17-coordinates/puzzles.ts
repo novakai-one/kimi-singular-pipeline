@@ -170,9 +170,9 @@ export const p2: PuzzleDef = {
     let at: number[] = [-1, -2];
     let checked = false;
     const paint = () => {
-      r.row('anc', 'listed in the Anchor’s numbers', fmtV(P2_ANCHOR), COPPER);
-      r.row('ship', 'your marker, our numbers', fmtV(at), C.result);
-      r.row('mine', 'your marker, the Anchor’s numbers', live || checked ? fmtV(anchorOf(at)!) : '?', COPPER);
+      r.row('anc', 'listed, Anchor’s numbers', fmtV(P2_ANCHOR), COPPER);
+      r.row('ship', 'marker, our numbers', fmtV(at), C.result);
+      r.row('mine', 'marker, Anchor’s numbers', live || checked ? fmtV(anchorOf(at)!) : '?', COPPER);
       mt.at(v3(at)); mt.set(fmtV(at));
     };
     const place = (x: number[]) => { at = [x[0], x[1]]; marker.at(v3(at, 0.06)); ring.set(v3(at, 0.06), v3(at, 0.06)); input.set(at); paint(); };

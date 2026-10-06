@@ -627,7 +627,7 @@ export const p7: PuzzleDef = {
       p.dock().replaceChildren();
       p.setGoal('The blue lamp fails. Two lamps are left: **warm** $(1, 0.5, 0)$ and **cool** $(0, 0.5, 1)$. The glow shows every colour they mix. Set the probe to a colour **off** that plane, then press **Check**.');
       rig2 = new DialRig(p, {
-        arrows: [to3(LAMP_WARM.map((x) => x * SC)), to3(LAMP_COOL.map((x) => x * SC))], dims: 3, names: ['a', 'b'], tags: ['warm', 'cool'],
+        arrows: [to3(LAMP_WARM.map((x) => x * SC)), to3(LAMP_COOL.map((x) => x * SC))], dims: 3, colors: ['#ffb347', '#7fd8ff'], names: ['a', 'b'], tags: ['warm', 'cool'],
         symbols: ['\\mathbf h', '\\mathbf c'], dials: [0.5, 0.5], range: [0, 1], step: 0.1, preview: 'live', ship: false, fireLabel: null,
         readoutTitle: 'Two lamps', glow: { cell: 0.08 }, sliders: false, typed: false,
       });

@@ -5,7 +5,7 @@ import { crew, swarmVecs } from './logic';
 import { swarmMat } from '../c15-nullspace/logic';
 
 const RANK = `def rank(A):
-    """Return how many directions A keeps: its columns minus the directions it flattens."""
+    """Return how many directions A keeps: columns minus flattened."""
     columns = len(A[0])
     flattened = len(null_space(A))
     return columns - flattened
@@ -14,7 +14,7 @@ const RANK = `def rank(A):
 export const buildRank: BuildDef = {
   id: 'c16-rank', fn: 'rank', title: 'How many directions survive?',
   brief: 'Write `rank(A)`: the number of directions `A` keeps. Every column is kept or flattened, never both, and your `null_space(A)` returns one arrow per flattened direction. So the kept ones are the columns minus those arrows.',
-  starter: 'def rank(A):\n    """Return how many directions A keeps: its columns minus the directions it flattens."""\n    columns = len(A[0])\n    # how many directions does A flatten?\n    return columns\n',
+  starter: 'def rank(A):\n    """Return how many directions A keeps: columns minus flattened."""\n    columns = len(A[0])\n    # how many directions does A flatten?\n    return columns\n',
   fill: RANK.replace('    flattened = len(null_space(A))', '    flattened = len(___)').replace('    return columns - flattened', '    return ___'),
   solution: RANK,
   assemble: { lines: RANK.trimEnd().split('\n'), decoys: ['    columns = len(A)', '    return columns + flattened'] },
@@ -34,7 +34,7 @@ export const buildRank: BuildDef = {
 };
 
 const BASIS = `def basis_for_span(vs):
-    """Return the fewest of the arrows vs that still reach everything vs reaches."""
+    """Return the arrows of vs that hold pivots: a basis of their span."""
     A = [[v[i] for v in vs] for i in range(len(vs[0]))]
     return col_space(A)
 `;
@@ -42,7 +42,7 @@ const BASIS = `def basis_for_span(vs):
 export const buildBasis: BuildDef = {
   id: 'c16-basis', fn: 'basis_for_span', title: 'The fewest arrows with the same reach',
   brief: 'Write `basis_for_span(vs)`. `vs` is a list of arrows of the same length. Return a basis for their span: the arrows from `vs` that hold pivots, in order, so none is wasted.\n\nPut the arrows in a matrix **as columns**, then your `col_space` finds the ones that add a new direction.',
-  starter: 'def basis_for_span(vs):\n    """Return the fewest of the arrows vs that still reach everything vs reaches."""\n    # each arrow becomes a column\n    A = []\n    return A\n',
+  starter: 'def basis_for_span(vs):\n    """Return the arrows of vs that hold pivots: a basis of their span."""\n    # each arrow becomes a column\n    A = []\n    return A\n',
   fill: BASIS.replace('    A = [[v[i] for v in vs] for i in range(len(vs[0]))]', '    A = [[v[i] for v in ___] for i in range(len(vs[0]))]').replace('    return col_space(A)', '    return ___'),
   solution: BASIS,
   assemble: { lines: BASIS.trimEnd().split('\n'), decoys: ['    A = [list(v) for v in vs]'] },

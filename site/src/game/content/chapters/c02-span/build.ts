@@ -36,7 +36,7 @@ export const buildLincomb: BuildDef = {
   payoff: 'LANTERN’s dial planner adds up the thrusters with your `lincomb` from now on.',
 };
 
-const REACHABLE = 'def reachable(v, w, target):\n    """Return dials [a, b] (-10 to 10, steps of 0.1) that land within 0.05 of target, or None. Brute force: to be replaced."""\n    for i in range(-100, 101):\n        a = i / 10\n        for j in range(-100, 101):\n            b = j / 10\n            if all(abs(a * v[k] + b * w[k] - target[k]) <= 0.05 for k in range(len(target))):\n                return [a, b]\n    return None\n';
+const REACHABLE = 'def reachable(v, w, target):\n    """Brute force: dials -10..10, steps 0.1. Return [a, b] within 0.05 of target, or None."""\n    for i in range(-100, 101):\n        a = i / 10\n        for j in range(-100, 101):\n            b = j / 10\n            if all(abs(a * v[k] + b * w[k] - target[k]) <= 0.05 for k in range(len(target))):\n                return [a, b]\n    return None\n';
 
 export const buildReachable: BuildDef = {
   id: 'c02-reachable', fn: 'reachable', title: 'Can two thrusters reach it? (brute force)',
