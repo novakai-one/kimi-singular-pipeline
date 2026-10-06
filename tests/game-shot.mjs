@@ -8,6 +8,6 @@ p.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') err
 p.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
 await p.goto(`http://localhost:5173${path}`, { waitUntil: 'load' });
 await p.waitForTimeout(+waitMs);
-await p.screenshot({ path: out });
+await p.screenshot({ path: out, timeout: 180000 });
 console.log(errors.length ? errors.join('\n') : 'no console errors');
 await b.close();

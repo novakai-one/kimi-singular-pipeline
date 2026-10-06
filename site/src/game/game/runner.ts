@@ -1,7 +1,7 @@
 // Plays chapters beat by beat. Owns the puzzle loop (goal, hints, Show me, Skip, stars),
 // the naming moment, explain-back and the builder terminal.
 import type { Object3D } from 'three';
-import { chapterKicker } from './registry';
+import { chapterKicker, chapterName, CHAPTERS } from './registry';
 import type { Beat, ChapterDef, CodexEntry, ExplainDef, Game, PuzzleCtx, PuzzleDef, PuzzleRuntime, BuildDef } from './types';
 import type { Hud } from './hud';
 import { h, inline, md, button } from '../ui/ui';
@@ -87,6 +87,23 @@ export class Runner {
     });
   }
 
+  /**
+   * Out-of-order play (GDD §3.4): opening a chapter whose prerequisites are not finished shows a short
+   * catch-up card first. Nothing is gated; LANTERN's backup covers any function not yet written.
+   */
+  private async catchUp(ch: ChapterDef): Promise<void> {
+    if (ch.dev || navigator.webdriver) return;
+    const order = CHAPTERS.filter((c) => !c.dev);
+    const idx = order.findIndex((c) => c.id === ch.id);
+    const prereqs = (ch.prereqs ?? (idx > 0 ? [order[idx - 1].id] : [])).map((id) => order.find((c) => c.id === id)).filter(Boolean) as ChapterDef[];
+    const finished = (c: ChapterDef) => { const last = c.beats[c.beats.length - 1]; return !!last && chapterSave(c.id).done.includes(last.id); };
+    const missing = prereqs.filter((c) => !finished(c));
+    if (!missing.length) return;
+    const list = missing.map((c) => `- ${chapterName(c)}: *${c.title}*`).join('\n');
+    const body = `${ch.catchup ? `${ch.catchup}\n\n` : ''}This chapter builds on:\n\n${list}\n\nYou can play on. Any function you have not written yet runs on LANTERN's backup.`;
+    await runCard(this.host(ch), { kind: 'catchup', title: 'Before you start', body });
+  }
+
   async playChapter(ch: ChapterDef, start = 0): Promise<'done' | 'aborted'> {
     this.aborted = false;
     this.chapter = ch;
@@ -95,6 +112,7 @@ export class Runner {
     if (ch.palette) void this.g.bg.setPalette(ch.palette as never, 1800);
     this.g.mood(ch.music ?? 'explore');
     try {
+      if (start === 0) await this.catchUp(ch);
       for (let i = start; i < ch.beats.length; i++) {
         this.beatIndex = i;
         S().last = { chapter: ch.id, beat: i };

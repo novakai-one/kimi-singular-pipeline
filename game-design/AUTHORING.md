@@ -138,6 +138,21 @@ const compare: CompareDef = { id: 'c04', page: 'Ilse's page (maths register, mar
 | `audio/sfx.ts` | `tick`, `snap`, `success`, `miss`, `whoosh`, `collapse`, `thrust`, `warp`, `alarm` |
 | `g.stage` | `view2D`, `view3D`, `shockwave(at, ms, amp)`, `flash`, `nudge` |
 
+## 5b. Builds (GDD §5)
+
+```ts
+{ id: 'c04-dot', fn: 'dot', title, brief, starter, solution, tests: [...],
+  swarm: { gen: (r, difficulty) => [args…], crew: (...args) => expected, tol? },   // required: random cases vs the crew version
+  fill?: 'def dot(v, w):\n    return sum(___ for a, b in zip(v, w))\n',          // optional; derived from the solution if omitted
+  assemble?: { lines: [...solution lines], decoys: ['    return sum(a + b ...)'] }, // optional; decoys are misconceptions
+  docPrompt?, ilseNote?, uses?: ['length'], payoff }
+```
+- The builder offers Assemble / Fill / Write (Settings → Code; Off skips builds). Show me works in every mode.
+- The swarm fires 20 / 100 / 300 cases by difficulty. Compare a canonical form when many answers are right
+  (an RREF, a normalised basis, a sorted list).
+- `ChapterDef.catchup`: one or two literal sentences that re-teach what the chapter assumes (shown when the previous
+  chapter is unfinished; never "recall that"). `prereqs` defaults to the previous chapter.
+
 ## 6. Words (BUILD_BRIEF.md §2a and GDD §1.4 are the law)
 
 - Two registers (GDD §1.4): **story** (Wren, Bram, Teo, Vell, Ilse live) never explains maths and never uses a term
@@ -159,5 +174,6 @@ const compare: CompareDef = { id: 'c04', page: 'Ilse's page (maths register, mar
    (target survives, near-misses break), doubt predicates (canonical construction right, the special case found).
 3. `node tests/game-solve-all.mjs cNN`: every puzzle passes at cadet, navigator and commander, no console errors.
 4. `node tests/game-flow.mjs cNN <dir>`: look at every screenshot; nothing cluttered, overlapping or off screen.
+   Every build prints `assemble true, fill true, write true` (or `not offered` for a one-line body).
 5. `node tests/game-wording.mjs cNN` reports nothing.
 6. Every voiced line is in `script.ts` and reachable from `ChapterDef.script` or a beat.
