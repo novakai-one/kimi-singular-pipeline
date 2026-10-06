@@ -40,12 +40,12 @@ export async function coldOpen(g: Game): Promise<void> {
     beam.scale.set(1, 1, 1);
     set.root.add(beam);
     set.root.userData.dispose = ((d0: () => void) => () => { d0(); beamMat.dispose(); beam.geometry.dispose(); })(set.root.userData.dispose as () => void);
-    await camTo(g, set, [-82, -56, 20], [-24, -4, 4], 0);
+    await camTo(g, set, [-60, -108, 24], [-38, -10, 4], 0);
     void fadeBlack(g, false, 1600);
     await letterbox(g, true, 600);
     set.check();
     void stamp(g, 'Survey Authority cutter, beside the stern', 4200);
-    void camTo(g, set, [-70, -48, 14], [-24, -2, 2], 14000);
+    void camTo(g, set, [-56, -100, 20], [-36, -8, 4], 14000);
     const sweep = animate(9000, (k) => { beam.position.set(-48 + 52 * k, 0, 0); beamMat.opacity = 0.16 * Math.sin(Math.PI * k); }, ease.inOut);
     await g.say(S.open.slice(0, 2));
     set.check();
@@ -62,7 +62,7 @@ export async function coldOpen(g: Game): Promise<void> {
 export async function cutterShot(g: Game): Promise<void> {
   const { set } = await cutterSet(g);
   let t = 0;
-  set.tick((dt) => { t += dt; const a = -2.05 + t * 0.015; g.stage.camera.position.set(-30 + 82 * Math.cos(a), 82 * Math.sin(a), 18 + Math.sin(t * 0.1)); g.stage.camera.up.set(0, 0, 1); g.stage.camera.lookAt(-36, -12, 6); });
+  set.tick((dt) => { t += dt; const a = -2.05 + t * 0.015; g.stage.camera.position.set(-44 + 86 * Math.cos(a), -18 + 86 * Math.sin(a), 18 + Math.sin(t * 0.1)); g.stage.camera.up.set(0, 0, 1); g.stage.camera.lookAt(-44, -18, 7); });
   g.stage.disposeControls();
   g.stage.mode = '3d';
 }
@@ -118,10 +118,10 @@ export async function lowPoint(g: Game): Promise<void> {
     music.setIntensity(0.1);
     const { set } = await cutterSet(g);
     set.check();
-    await camTo(g, set, [-60, -66, 12], [-36, -22, 6], 0);
+    await camTo(g, set, [-66, -96, 14], [-44, -28, 8], 0);
     await fadeBlack(g, false, 900);
     await letterbox(g, true, 600);
-    void camTo(g, set, [-54, -60, 10], [-34, -24, 6], 12000);
+    void camTo(g, set, [-62, -90, 12], [-43, -28, 8], 12000);
     await g.say(S.low);
     set.check();
     // the airlock: close on the Lantern, one warm light

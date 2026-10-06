@@ -325,7 +325,7 @@ export async function close(g: Game): Promise<void> {
     g.stage.clearWorld();
     const set = await actSet(g, { ark: { at: [0, 0, 0] }, anchor: { at: [-150, 95, -18], scale: 7 }, lantern: { at: [-26, -34, 5], face: [0.2, 1, 0], scale: 1.5 } });
     set.check();
-    const cutter = makeCutter(1.1);
+    const cutter = makeCutter(1.5);
     const from: V3 = [-215, 45, 32], to: V3 = [-112, 12, 14];
     cutter.position.set(...from);
     aimAt(cutter, [-20, 0, 0]);
@@ -335,7 +335,7 @@ export async function close(g: Game): Promise<void> {
     await fadeBlack(g, false, 900);
     music.setIntensity(0.2);
     const arrive = animate(9000, (k) => { cutter.position.set(from[0] + (to[0] - from[0]) * k, from[1] + (to[1] - from[1]) * k, from[2] + (to[2] - from[2]) * k); }, ease.out);
-    void camTo(g, set, [-40, -98, 17], [-74, 4, 9], 9000);
+    void camTo(g, set, [-20, -118, 22], [-66, 0, 8], 9000);
     await g.say(S.vell.slice(0, 2));
     set.check();
     await arrive;
