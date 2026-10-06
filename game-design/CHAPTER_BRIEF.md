@@ -28,6 +28,12 @@ procedures: the reference order succeeds and dropping each key step fails). The 
 (`kit/geom.ts`: `Knob`, `RightAngle`, `AngleArc`, `Shadow`, `Sweep`, `UnitCircleImage`; `kit/data.ts`: `PointCloud`,
 `FitLine`, `Projector3D`, `PCAView`); the dev chapter `c92-kit-geom` shows each one in use.
 
+**Also in the engine** (use, do not rebuild): the act **Review** beat (`kind: 'review'`, `ReviewDef`: four claims by one
+speaker, built like doubts) for act-end chapters; the **Broadcast** beat (Epilogue only); **installs** through
+`pylib.map(fn, cases)` / `pylib.call(fn, ...args)` with `isPlayerFn(fn)` to say whose code ran; the Case Board
+`pin` / `answer` and the constellation `lightStar(id)` / `linkStars(a, b)` (game/caseboard.ts, ids in `STARS`).
+The act's NumPy card and the catch-up card are automatic. Builds need a `swarm` (AUTHORING.md §5b).
+
 ## Craft standards
 - The picture does the teaching. Keep scenes uncluttered: at most ~4 arrows, labels never overlapping, readouts for exact numbers.
 - Make winning feel good (motion, sound, a short crew line). Make failing teach (the gap drawn, a literal LANTERN bark).
