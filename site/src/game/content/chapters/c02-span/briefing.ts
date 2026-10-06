@@ -51,9 +51,9 @@ export const doubtDouble: DoubtDef = {
   goal: 'The orange marker is a place Bram’s doubled thrusters reach. Turn the **old** thrusters’ dials. If they land on his marker, **Challenge it**. If you think they cannot, **Back it**.',
   view: '3d',
   setup(p) {
-    void p.g.stage.view3D({ target: [1.4, 1.2, 2.2], distance: 16, azimuth: -58, elevation: 22, ms: 0 });
+    void p.g.stage.view3D({ target: [0.7, 0.9, 3.0], distance: 15, azimuth: -58, elevation: 16, ms: 0 });
     let v = T0, w = T1;
-    let bram: Vec = [1.5, 1];
+    let bram: Vec = [0.5, 1];
     const rig = new DialRig(p, {
       arrows: [v, w], dims: 3, names: ['a', 'b'], tags: ['old thruster two', 'old thruster three'], dials: [1, 1], range: [-5, 5],
       preview: 'live', ship: false, fireLabel: null, dragTip: true, readoutTitle: 'The old thrusters', glow: { cell: 0.1 },
@@ -104,7 +104,7 @@ export const doubtFlip: DoubtDef = {
   goal: 'The yellow glow is everything the two thrusters reach. Press **Flip thruster three**: the cyan glow is everything the flipped pair reaches. **Back it** if they match, **Challenge it** if you can make them differ.',
   view: '3d',
   setup(p) {
-    void p.g.stage.view3D({ target: [0.4, 0.4, 0.8], distance: 15, azimuth: -55, elevation: 24, ms: 0 });
+    void p.g.stage.view3D({ target: [0.3, 0.3, 2.1], distance: 16, azimuth: -55, elevation: 18, ms: 0 });
     let v = T0, w = T1;
     let flipped = false;
     const before = new ReachGlow(p.g.stage, { cell: 0.12 });

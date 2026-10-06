@@ -122,7 +122,8 @@ export const doubtRhs: DoubtDef = {
     const nums = () => board.get().map((r) => r.map((x) => x.value()));
     board.subscribe((m, _op, ms) => { const by: Aug = []; board.order().forEach((id, pos) => { by[id] = m[pos].map((x) => x.value()); }); void planes.setRows(by, ms); });
     const r = p.readout('The right-hand column');
-    p.tick(() => { r.row('piv', 'Has a pivot', rhsPivot(nums()) ? 'yes: a row reads 0 = 1' : 'no'); r.row('s', 'Solutions', meetWords(orig)); });
+    // read the right-hand column only once the board is fully reduced: before that no row need say 0 = 1 yet
+    p.tick(() => { r.row('piv', 'Has a pivot', !board.isRREF() ? 'reduce fully to see' : rhsPivot(nums()) ? 'yes: a row reads 0 = 1' : 'no'); r.row('s', 'Solutions', meetWords(orig)); });
     return {
       holds: () => rhsPivotHolds(nums()),
       describe: () => `${rhsPivot(nums()) ? 'a pivot in the right-hand column' : 'no pivot in the right-hand column'}: ${meetWords(nums())}`,

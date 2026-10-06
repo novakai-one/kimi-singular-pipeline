@@ -52,7 +52,7 @@ function numbersEntry(p: PuzzleCtx, o: { label: string; onWalk: (c: number[]) =>
 
 /** A dashed gap from where a path ended to where it should have. */
 function gapLine(p: PuzzleCtx) {
-  const g = new FatLine(p.g.stage, [[0, 0, 0], [0, 0, 0]], { color: C.orange, width: 2, dashed: true, opacity: 0.9, dashSize: 0.12, gapSize: 0.08 });
+  const g = new FatLine(p.g.stage, [[0, 0, 0], [0, 0, 0]], { color: C.orange, width: 3.5, intensity: 1.5, opacity: 0.95 });
   g.object.visible = false;
   p.add(g.object);
   p.onDispose(() => g.dispose());
@@ -168,10 +168,11 @@ export const p2: PuzzleDef = {
     const r = p.readout('The listed piece');
     const live = p.difficulty === 'cadet';
     let at: number[] = [-1, -2];
+    let checked = false;
     const paint = () => {
       r.row('anc', 'listed in the Anchor’s numbers', fmtV(P2_ANCHOR), COPPER);
       r.row('ship', 'your marker, our numbers', fmtV(at), C.result);
-      r.row('mine', 'your marker, the Anchor’s numbers', live ? fmtV(anchorOf(at)!) : '?', COPPER);
+      r.row('mine', 'your marker, the Anchor’s numbers', live || checked ? fmtV(anchorOf(at)!) : '?', COPPER);
       mt.at(v3(at)); mt.set(fmtV(at));
     };
     const place = (x: number[]) => { at = [x[0], x[1]]; marker.at(v3(at, 0.06)); ring.set(v3(at, 0.06), v3(at, 0.06)); input.set(at); paint(); };
@@ -180,6 +181,7 @@ export const p2: PuzzleDef = {
       p.move();
       bench.dim(true);
       if (fast) { path.show(true); path.set(P2_ANCHOR); } else await path.walk(P2_ANCHOR, p.g.headless ? 10 : 520);
+      checked = true; paint();
       if (p2Won(at, tol(p))) { if (!won) { won = true; gap.hide(); sfx.success(); msg.className = 'c17-msg good'; msg.textContent = `The Anchor’s path ends on your marker: ${fmtV(P2_SHIP)}.`; p.win(); } return; }
       sfx.miss();
       gap.show(at, P2_SHIP);

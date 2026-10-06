@@ -64,7 +64,7 @@ export const doubtZero: DoubtDef = {
   goal: 'Two thrusters and a dead one: the zero arrow. Find dials, not all zero, that bring the ship back, and **Fire**. Then **Back it** (Bram will shake the other arrows) or **Challenge it**.',
   view: '3d',
   setup(p) {
-    void p.g.stage.view3D({ target: [0.3, 0.3, 0.6], distance: 14, azimuth: -55, elevation: 24, ms: 0 });
+    void p.g.stage.view3D({ target: [0.3, 0.3, 1.9], distance: 14, azimuth: -55, elevation: 24, ms: 0 });
     let vs: V3[] = [T0, T1, [0, 0, 0]];
     const zero = new Dot(ORIGIN, { color: C.u, size: 0.12, label: 'zero arrow', labelOffset: [0, 22] });
     p.add(zero);
@@ -99,7 +99,7 @@ export const doubtApart: DoubtDef = {
   goal: 'Drag the arrow tips (Shift-drag for height). **Challenge it** with three arrows that point different ways but still have a loop. **Back it** if you think none exist.',
   view: '3d',
   setup(p) {
-    void p.g.stage.view3D({ target: [0.5, 0.6, 1], distance: 15, azimuth: -55, elevation: 24, ms: 0 });
+    void p.g.stage.view3D({ target: [0.5, 0.6, 2.3], distance: 15, azimuth: -55, elevation: 24, ms: 0 });
     const H = threeHandles(p, [T0, T1, [1, 1, 1]]);
     const r = p.readout('Three arrows');
     const read = () => {
@@ -198,7 +198,7 @@ export const why: CardDef = {
     pl.setSpan(ORIGIN, T0, T1);
     pl.object.userData.dispose = () => pl.dispose();
     g.stage.world.add(pl.object);
-    await g.stage.view3D({ target: [0.6, 0, 0.9], distance: 13, azimuth: -45, elevation: 22, ms: 0, orbit: false });
+    await g.stage.view3D({ target: [0.6, 0, 2.2], distance: 13, azimuth: -45, elevation: 22, ms: 0, orbit: false });
     let az = -45;
     const off = g.stage.tick((dt) => {
       az += dt * 3;
@@ -222,7 +222,7 @@ export const reviewThree: DoubtDef = {
   goal: 'Drag the tips (Shift-drag for height). **Challenge it** with three arrows that reach no more than the first two. **Back it** if you think that cannot happen.',
   view: '3d',
   setup(p) {
-    void p.g.stage.view3D({ target: [0.5, 0.6, 1], distance: 15, azimuth: -55, elevation: 24, ms: 0 });
+    void p.g.stage.view3D({ target: [0.5, 0.6, 2.3], distance: 15, azimuth: -55, elevation: 24, ms: 0 });
     const H = threeHandles(p, [T0, T1, [0, 0, 2]]);
     const r = p.readout('Reach');
     p.tick(() => { const vs = H.vecs(); r.row('2', 'first two reach', SHAPES[spanDim(vs.slice(0, 2))]); r.row('3', 'all three reach', SHAPES[spanDim(vs)], C.result); });
@@ -244,7 +244,7 @@ export const reviewOneWay: DoubtDef = {
   goal: 'Thrusters two, three and the wasted spare. Land on the crate at (2, 3, 5) **twice, with different dials**. Then **Challenge it**.',
   view: '3d',
   setup(p) {
-    void p.g.stage.view3D({ target: [1, 1.5, 2.4], distance: 17, azimuth: -58, elevation: 20, ms: 0 });
+    void p.g.stage.view3D({ target: [1, 1.5, 3.7], distance: 17, azimuth: -58, elevation: 20, ms: 0 });
     let vs: V3[] = [T0, T1, [1, 2, 3]];
     let crate: V3 = [2, 3, 5];
     let firings: number[][] = [];
@@ -335,7 +335,7 @@ export const reviewZero: DoubtDef = {
   goal: 'Bram’s set: thruster two and the zero arrow. Find dials, not all zero, that bring the ship back, and **Fire**. Then **Challenge it**.',
   view: '3d',
   setup(p) {
-    void p.g.stage.view3D({ target: [0.4, 0, 0.5], distance: 12, azimuth: -55, elevation: 24, ms: 0 });
+    void p.g.stage.view3D({ target: [0.4, 0, 1.8], distance: 12, azimuth: -55, elevation: 24, ms: 0 });
     let vs: V3[] = [T0, [0, 0, 0]];
     let shown: number[] = [0, 0];
     const zero = new Dot(ORIGIN, { color: C.w, size: 0.12, label: 'zero arrow', labelOffset: [0, 22] });

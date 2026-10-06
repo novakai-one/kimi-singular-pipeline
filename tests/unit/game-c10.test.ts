@@ -127,7 +127,12 @@ test('Doubt "a pivot on the right means no solution" (true): holds for every cas
   assert.ok(rhsPivotHolds(D_RHS_START));
   const r = seeded(33);
   let withPivot = 0;
-  for (let i = 0; i < 200; i++) { const m = rhsRandom(r, i % 10 === 0 ? 0 : -1); assert.ok(rhsPivotHolds(m)); if (rhsPivot(m)) withPivot++; }
+  for (let i = 0; i < 200; i++) {
+    const m = rhsRandom(r, i % 10 === 0 ? 0 : -1);
+    assert.ok(m.length === 3 && m.every((row) => row.length === 4), 'every case fits the doubt\'s 3 × 4 board');
+    assert.ok(rhsPivotHolds(m));
+    if (rhsPivot(m)) withPivot++;
+  }
   assert.ok(withPivot > 30, 'the Shake includes systems with a pivot on the right');
 });
 

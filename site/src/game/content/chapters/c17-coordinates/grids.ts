@@ -155,14 +155,18 @@ export class AnchorPath {
     this.a2.set(m, t);
     this.end.at([t[0], t[1], 0.04]);
     this.endTag.at([t[0], t[1], 0]);
-    // labels: halfway along each segment, pushed to its right-hand side
-    const side = (a: V3, b: V3, l: Label) => {
+    // labels: halfway along each segment, on the side away from the other segment
+    const d1 = [m[0], m[1]], d2 = [t[0] - m[0], t[1] - m[1]];
+    const side = (a: V3, b: V3, l: Label, away: number[]) => {
       const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy);
       l.show(this.visible && L > 0.25);
-      if (L > 1e-6) l.at([(a[0] + b[0]) / 2 + (dy / L) * 0.34, (a[1] + b[1]) / 2 - (dx / L) * 0.34, 0.02]);
+      if (L < 1e-6) return;
+      let n = [dy / L, -dx / L];
+      if (n[0] * away[0] + n[1] * away[1] > 0) n = [-n[0], -n[1]];
+      l.at([(a[0] + b[0]) / 2 + n[0] * 0.36, (a[1] + b[1]) / 2 + n[1] * 0.36, 0.02]);
     };
-    side([0, 0, 0], m, this.l1);
-    side(m, t, this.l2);
+    side([0, 0, 0], m, this.l1, d2);
+    side(m, t, this.l2, [-d1[0], -d1[1]]);
   }
   show(v: boolean): void {
     this.visible = v;

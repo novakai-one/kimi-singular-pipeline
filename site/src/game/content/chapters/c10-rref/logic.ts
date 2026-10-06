@@ -108,7 +108,8 @@ export const rhsPivot = (m: Aug): boolean => {
 export const rhsPivotHolds = (m: Aug): boolean => !rhsPivot(m) || kindOf(m) === 'none';
 export const D_RHS_START: Aug = [[1, -1, 0, 2], [0, 1, -1, 1], [1, 0, -1, 4]];
 export function rhsRandom(r: () => number, edge = -1): Aug {
-  if (edge === 0) return [[1, 2, 3], [2, 4, 7]].map((x) => [...x.slice(0, 2), 0, x[2]]) as Aug;
+  // the curated case, on the doubt's 3 × 4 board: x + 2y = 3 and 2x + 4y = 7 are parallel, z = 1
+  if (edge === 0) return [[1, 2, 0, 3], [2, 4, 0, 7], [0, 0, 1, 1]];
   if (r() < 0.5) return randConsistent(r, 3, 3, randInt(r, 1, 3)).aug;
   const m = randConsistent(r, 3, 3, 2).aug;
   m[2][3] += randNZ(r, 3);
