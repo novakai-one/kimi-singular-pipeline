@@ -84,6 +84,13 @@ You move space with your own hands, find out *why* each idea works, explain it b
 
 **Play:** `npm install`, then `npm run dev` and open http://localhost:5173/game/ (or **Linear algebra → SINGULAR** in the site menu).
 
+**What is in it**
+
+- A Prologue, 26 chapters in nine acts and an Epilogue: one big idea per chapter, each one found by doing (drag, fire, build), then named, then derived, then done by hand.
+- The **Briefing** after each chapter: write your own Field Manual page first, settle a sceptic's Doubts by building cases, engrave a Law and watch it survive 500 random cases, then compare with Ilse's page.
+- **lantern.py**: an optional Python thread (real Python in the browser). Assemble, Fill or Write each function; a swarm of random cases checks it; the ship then runs on your code. Export `lantern.py` and `test_lantern.py` from the Codex.
+- Three difficulties (Cadet, Navigator, Commander), Viva mode for exam revision, text size and high-contrast settings.
+
 | Where | What |
 |---|---|
 | `game-design/` | the design: `GDD.md`, `curriculum.md` (28 concept nodes), `AUTHORING.md` (how to write a chapter), the three original pitches |
@@ -101,8 +108,8 @@ node tests/game-flow.mjs c01 shots/c01   # screenshots of every beat of a chapte
 node tests/game-wording.mjs              # house wording rules + "no term before it is named"
 ```
 
-**Regenerate the voices** (Kokoro TTS, CPU): `node tests/game-lines.mjs lines.json`, then
-`python tools/game/voices.py lines.json --model <kokoro dir>` and `python tools/game/pack_voices.py lines.json`.
+**Regenerate the voices** (Kokoro TTS, CPU, dev server running): `tools/game/voice-chapters.sh <kokoro dir> <python> c00 c01 …`
+records only the lines that changed and rebuilds those chapters' audio banks.
 
 ---
 
