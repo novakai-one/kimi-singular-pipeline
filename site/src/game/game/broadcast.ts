@@ -2,7 +2,7 @@
 // writes why each link holds, walks "down to the arrows" through their own library, and exports the lecture.
 import type { BroadcastDef } from './types';
 import type { BriefingHost } from './briefing';
-import { briefingTest } from './briefing';
+import { briefingTest, claimSolve, releaseSolve } from './briefing';
 import { chainProblem } from './chain';
 export { chainProblem };
 import { h, inline, md, button, download } from '../ui/ui';
@@ -44,6 +44,7 @@ ${parts}
 }
 
 export async function runBroadcast(host: BriefingHost, B: BroadcastDef): Promise<void> {
+  const gen = claimSolve('broadcast');
   const { g, hud } = host;
   hud.hideObjective();
   const sv = saved(B.id);
@@ -133,7 +134,7 @@ export async function runBroadcast(host: BriefingHost, B: BroadcastDef): Promise
           button('Send the broadcast', () => { sfx.solved(); resolve(); }, { cls: 'primary small' })));
     });
   } finally {
-    briefingTest.solve = null;
+    releaseSolve(gen);
     panelEl.remove();
   }
 }

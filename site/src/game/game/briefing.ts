@@ -27,6 +27,11 @@ export interface BriefingHost {
 
 /** Test hooks: the debug API resolves the active Briefing step through these. */
 export const briefingTest: { solve: (() => Promise<boolean>) | null; kind: string | null } = { solve: null, kind: null };
+let solveGen = 0;
+/** A briefing step starts: name its kind; the token lets the step clear only its own hook. */
+export function claimSolve(kind: string): number { briefingTest.kind = kind; return ++solveGen; }
+/** A step ends: clear the test hook, unless a later step has already set its own. */
+export function releaseSolve(gen: number): void { if (gen === solveGen) briefingTest.solve = null; }
 
 function panel(cls: string): HTMLElement {
   const el = h('div', { class: `brief ${cls} glass` });
@@ -50,9 +55,9 @@ export async function runCard(host: BriefingHost, c: CardDef): Promise<void> {
     ...(c.cue ? [h('div', { class: 'name-cue', html: md(c.cue) })] : []));
   g.ui.scene.appendChild(el);
   if (c.kind === 'inshort') sfx.open();
-  briefingTest.kind = 'card';
+  const gen = claimSolve('card');
   briefingTest.solve = async () => true;
-  try { await host.guard(hud.primary('Continue')); } finally { el.remove(); briefingTest.solve = null; }
+  try { await host.guard(hud.primary('Continue')); } finally { el.remove(); releaseSolve(gen); }
 }
 
 // ------------------------------------------------------------------ Say it (the Field Manual page, written first)
@@ -106,9 +111,9 @@ export async function runSayIt(host: BriefingHost, d: SayItDef): Promise<void> {
     h('div', { style: 'display:flex;gap:8px;align-items:center;flex-wrap:wrap' }, help, bank));
   g.ui.scene.appendChild(el);
   areas[0].ta.focus();
-  briefingTest.kind = 'sayit';
+  const gen = claimSolve('sayit');
   briefingTest.solve = async () => true;
-  try { await host.guard(hud.primary('Save page')); } finally { el.remove(); briefingTest.solve = null; }
+  try { await host.guard(hud.primary('Save page')); } finally { el.remove(); releaseSolve(gen); }
   if (!page.first && (page.see || page.means)) { page.first = { see: page.see, means: page.means, called: page.called, cue: page.cue, at: page.at }; save(); }
   if (SLOTS.some((s) => page[s.key].trim())) g.toast('Saved to your Field Manual', 'Field Manual');
 }
@@ -231,7 +236,7 @@ export async function runDoubt(host: BriefingHost, d: DoubtDef, opts: { kicker?:
     button('Skip', () => { finished = true; resolveDone(); }, { cls: 'ghost small' }));
   card.append(h('div', { class: 'kicker' }, kicker), h('div', { class: 'doubt-claim', html: inline(`“${d.claim}”`) }), actions, verdict);
   g.ui.scene.appendChild(card);
-  briefingTest.kind = 'doubt';
+  const gen = claimSolve('doubt');
   briefingTest.solve = async () => {
     const right = d.isTrue ? 'back' : 'challenge';
     firstStance ??= right;
@@ -242,7 +247,7 @@ export async function runDoubt(host: BriefingHost, d: DoubtDef, opts: { kicker?:
   try {
     await host.guard(done);
   } finally {
-    briefingTest.solve = null;
+    releaseSolve(gen);
     card.remove();
     hud.clearControls();
     scene.dispose?.();
@@ -366,14 +371,14 @@ export async function runLaw<C>(host: BriefingHost, L: LawDef<C>): Promise<void>
       button('Skip', () => resolveDone(), { cls: 'ghost small' })),
     status, reasonBox);
   g.ui.scene.appendChild(card);
-  briefingTest.kind = 'law';
+  const gen = claimSolve('law');
   briefingTest.solve = async () => {
     Object.assign(filled, L.answer); render();
     const ok = await prove();
     if (ok) { const right = L.reason.options.find((o) => o.right)!; (reasonBox.querySelectorAll('.choice-card')[L.reason.options.indexOf(right)] as HTMLElement | undefined)?.click(); }
     return ok && proven;
   };
-  try { await host.guard(done); } finally { briefingTest.solve = null; card.remove(); hud.clearControls(); m.done(); }
+  try { await host.guard(done); } finally { releaseSolve(gen); card.remove(); hud.clearControls(); m.done(); }
   void survived;
 }
 
@@ -407,9 +412,9 @@ export async function runCompare(host: BriefingHost, c: CompareDef): Promise<voi
   const el = panel('compare');
   el.append(h('div', { class: 'cmp-cols' }, mine, ilse));
   g.ui.scene.appendChild(el);
-  briefingTest.kind = 'compare';
+  const gen = claimSolve('compare');
   briefingTest.solve = async () => true;
-  try { await host.guard(hud.primary('Done')); } finally { el.remove(); briefingTest.solve = null; }
+  try { await host.guard(hud.primary('Done')); } finally { el.remove(); releaseSolve(gen); }
 }
 
 // ------------------------------------------------------------------ Procedures (LANTERN runs your steps)
@@ -453,7 +458,7 @@ export async function runProcedure(host: BriefingHost, def: ProcedureDef, teo?: 
     button('Show me', async () => { tiles.set(def.reference); await run(def.reference); }, { cls: 'ghost small' }),
     button('Skip', () => { finished = true; resolveDone(); }, { cls: 'ghost small' })));
   g.ui.scene.appendChild(el);
-  briefingTest.kind = 'procedure';
+  const gen = claimSolve('procedure');
   briefingTest.solve = async () => { tiles.set(def.reference); return run(def.reference); };
-  try { await host.guard(done); } finally { briefingTest.solve = null; el.remove(); hud.clearControls(); }
+  try { await host.guard(done); } finally { releaseSolve(gen); el.remove(); hud.clearControls(); }
 }

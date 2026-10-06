@@ -22,6 +22,8 @@ export interface MatrixInputOpts {
   colourCols?: boolean;
   locked?: boolean[][];
   step?: number;
+  /** Decimal places shown for values that are not whole numbers or simple fractions (default 2). */
+  digits?: number;
   label?: string;           // TeX shown before the bracket, e.g. "A ="
   onChange?: (m: number[][]) => void;
   /** Called when Enter is pressed in a cell. */
@@ -44,7 +46,7 @@ export class MatrixInput {
         const locked = o.locked?.[i]?.[j] ?? false;
         const inp = h('input', {
           class: `cell ${o.colourCols ? `c${j}` : ''} ${locked ? 'locked' : ''}`, type: 'text', inputmode: 'decimal',
-          'aria-label': `row ${i + 1}, column ${j + 1}`, value: nice(this.values[i][j]), readonly: locked || null, spellcheck: 'false',
+          'aria-label': `row ${i + 1}, column ${j + 1}`, value: this.fmt(this.values[i][j]), readonly: locked || null, spellcheck: 'false',
         }) as HTMLInputElement;
         inp.addEventListener('input', () => this.read(i, j));
         inp.addEventListener('focus', () => inp.select());
@@ -54,7 +56,7 @@ export class MatrixInput {
           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
             e.preventDefault();
             const v = (parseNum(inp.value) ?? 0) + (e.key === 'ArrowUp' ? step : -step);
-            inp.value = nice(Math.round(v / step) * step);
+            inp.value = this.fmt(Math.round(v / step) * step);
             this.read(i, j);
             sfx.tick(v);
           } else if (e.key === 'Enter') {
@@ -81,9 +83,15 @@ export class MatrixInput {
 
   get(): number[][] { return this.values.map((r) => r.slice()); }
 
+  /** A value as shown in a cell: whole numbers and simple fractions exactly, others to `digits` places. */
+  private fmt(x: number): string {
+    const t = nice(x), d = this.o.digits;
+    return d === undefined || !t.includes('.') ? t : String(+x.toFixed(d));
+  }
+
   set(m: number[][], notify = false): void {
     this.values = m.map((r) => r.slice());
-    m.forEach((r, i) => r.forEach((x, j) => { this.cells[i][j].value = nice(x); this.cells[i][j].classList.remove('bad'); }));
+    m.forEach((r, i) => r.forEach((x, j) => { this.cells[i][j].value = this.fmt(x); this.cells[i][j].classList.remove('bad'); }));
     if (notify) this.o.onChange?.(this.get());
   }
 

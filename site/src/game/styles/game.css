@@ -230,3 +230,9 @@ code { font-family: var(--mono); font-size: 0.92em; background: rgba(120, 160, 2
 .hc { --ink-2: #f2f6ff; --muted: #c3cde2; --line: rgba(220, 235, 255, 0.45); }
 .hc .glass, .hc .brief, .hc .modal, .hc .build { background: rgba(2, 4, 10, 0.94) !important; backdrop-filter: none; }
 .hc .btn { border-color: rgba(255, 255, 255, 0.6); }
+
+/* the file sheet (ui.download): the file's text with Download and Copy */
+.file-sheet .modal { width: min(760px, calc(100vw - 32px)); }
+.file-text { width: 100%; height: min(46vh, 420px); resize: vertical; box-sizing: border-box; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: rgba(4, 7, 16, 0.75); color: var(--ink); font: 12.5px/1.5 var(--mono); white-space: pre; }
+.file-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+.file-status { font-size: 13px; min-width: 0; }
