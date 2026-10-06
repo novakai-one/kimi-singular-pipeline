@@ -15,7 +15,7 @@ import { DialRig, fmtV, to3, own } from '../c02-span/rig';
 import { VectorHandle } from '../../../kit/handle';
 import {
   THRUST3, SP_ARROWS, spanDim, dependent, loopOf, pairwiseApart, zeroLoopHolds, apartUsefulHolds, threeMoreHolds,
-  oneWayHolds, deckHolds, zeroIndependentHolds, lawCore, isLoop, type SetCase,
+  oneWayHolds, deckHolds, zeroIndependentHolds, lawCore, isLoop, isZero, parallel, type SetCase,
 } from './logic';
 
 const ORIGIN: V3 = [0, 0, 0];
@@ -94,9 +94,9 @@ export const doubtZero: DoubtDef = {
 
 export const doubtApart: DoubtDef = {
   id: 'c03-d-apart', who: 'bram', isTrue: false,
-  claim: 'None of these three point the same way, so all three must be useful.',
-  reason: 'Three arrows can point three different ways and still lie in one plane. Then the third is a combination of the other two: it is wasted, and there is a loop.',
-  goal: 'Drag the arrow tips (Shift-drag for height). **Challenge it** with three arrows that point different ways but still have a loop. **Back it** if you think none exist.',
+  claim: 'No two of these three lie on one line, so all three must be useful.',
+  reason: 'Three arrows can lie on three different lines and still lie in one plane. Then the third is a combination of the other two: it is wasted, and there is a loop.',
+  goal: 'Drag the arrow tips (Shift-drag for height). **Challenge it** with three arrows, no two on one line, that still have a loop. **Back it** if you think none exist.',
   view: '3d',
   setup(p) {
     void p.g.stage.view3D({ target: [0.5, 0.6, 2.3], distance: 15, azimuth: -55, elevation: 24, ms: 0 });
@@ -116,7 +116,11 @@ export const doubtApart: DoubtDef = {
       describe: () => {
         const vs = H.vecs();
         const l = dependent(vs) ? loopOf(vs) : null;
-        return `arrows ${vs.map(fmtV).join(', ')}${l ? `: no two on one line, yet dials ${fmtV(l)} bring the ship back` : ': only all-zero dials bring the ship back'}`;
+        const head = `arrows ${vs.map(fmtV).join(', ')}`;
+        if (!l) return `${head}: only all-zero dials bring the ship back`;
+        if (vs.some((v) => isZero(v))) return `${head}: one of them is the zero arrow, so the claim does not apply (dials ${fmtV(l)} bring the ship back)`;
+        if (!pairwiseApart(vs)) return `${head}: two of them lie on one line, so the claim does not apply (dials ${fmtV(l)} bring the ship back)`;
+        return `${head}: no two on one line, yet dials ${fmtV(l)} bring the ship back`;
       },
       async play() { await wait(p.g.headless ? 10 : 250); },
       randomize(rr, edge) {
@@ -175,12 +179,12 @@ export const law: LawDef<SetCase> = {
 
 export const compare: CompareDef = {
   id: 'c03',
-  page: 'A set of arrows is **linearly dependent** when some dials, not all zero, bring the ship back to the start. It is **linearly independent** when only the all-zero firing does that: the $\\text{trivial combination}$.\n\nA loop and a wasted arrow are the same fact. If $c_1\\mathbf a_1 + \\dots + c_k\\mathbf a_k = \\mathbf 0$ with $c_j \\neq 0$, then $\\mathbf a_j$ is a combination of the others: removing it does not shrink the span.\n\nThree arrows that point different ways can still be dependent: they may lie in one plane. Any set with the zero arrow is dependent. In 3-D, three independent arrows already reach every point, so a fourth is always reachable from them: four arrows in 3-D are always dependent.',
+  page: 'A set of arrows is **linearly dependent** when some dials, not all zero, bring the ship back to the start. It is **linearly independent** when only the all-zero firing does that: the $\\text{trivial combination}$.\n\nA loop and a wasted arrow are the same fact. If $c_1\\mathbf a_1 + \\dots + c_k\\mathbf a_k = \\mathbf 0$ with $c_j \\neq 0$, then $\\mathbf a_j$ is a combination of the others: removing it does not shrink the span.\n\nThree arrows that point different ways can still be dependent: they may lie in one plane. Any set with the zero arrow is dependent. If three of the arrows already loop, dial 0 on the fourth makes it a loop of all four; otherwise the three are independent and reach every point, so the fourth is reachable from them. Either way, four arrows in 3-D are always dependent.',
   formula: 'c_1\\cg{\\mathbf a_1} + c_2\\cr{\\mathbf a_2} + c_3\\cb{\\mathbf a_3} = \\mathbf 0 \\;\\text{ only when }\\; c_1 = c_2 = c_3 = 0',
   keyIdeas: [
     'Did you say a loop needs dials that are not all zero?',
     'Did you say a dependent arrow is one the others can already reach, so removing it loses nothing?',
-    'Did you say why four arrows in 3-D always loop: three directions already reach every point?',
+    'Did you say why four arrows in 3-D always loop: either three of them already loop, or those three reach every point, the fourth tip included?',
   ],
 };
 
@@ -294,10 +298,10 @@ export const reviewOneWay: DoubtDef = {
   },
 };
 
-/** (T) "Two arrows in different directions reach every point of a flat deck." */
+/** (T) "Two arrows that are not on one line reach every point of a flat deck." */
 export const reviewDeck: DoubtDef = {
   id: 'c03-r-deck', who: 'bram', isTrue: true,
-  claim: 'Two arrows in different directions reach every point of a flat deck.',
+  claim: 'Two arrows that are not on one line reach every point of a flat deck.',
   reason: 'On a flat deck, two arrows that are not on one line span the whole plane: any point splits into a stretch of one plus a stretch of the other.',
   goal: 'Set two arrows on the deck. Drag the yellow tip anywhere: the dials follow. **Back it** (Bram will shake the arrows) or **Challenge it** with a point you cannot reach.',
   view: '2d',
@@ -312,7 +316,7 @@ export const reviewDeck: DoubtDef = {
     const sync = () => { void rig.setArrows(H.map((x) => x.vec as V3)); };
     return {
       holds: () => deckHolds(H[0].vec, H[1].vec),
-      describe: () => `v = ${fmtV(H[0].vec.slice(0, 2))}, w = ${fmtV(H[1].vec.slice(0, 2))}: together they reach ${SHAPES[spanDim([H[0].vec, H[1].vec])]}`,
+      describe: () => `v = ${fmtV(H[0].vec.slice(0, 2))}, w = ${fmtV(H[1].vec.slice(0, 2))}: ${parallel(H[0].vec, H[1].vec) ? 'they lie on one line, so the claim does not apply' : 'together they reach the whole deck'}`,
       async play() { await rig.moveDials([rig.dials[0] + 0.5, rig.dials[1] - 0.5], p.g.headless ? 10 : 300); },
       randomize(rr, edge) {
         let a: V3, b: V3;

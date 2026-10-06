@@ -92,6 +92,7 @@ export const doubtNonzero: DoubtDef = {
       holds: () => nonzeroHasUndo(sc.M()),
       describe: () => {
         const M = sc.M();
+        if (M.every((r) => r.every((x) => Math.abs(x) < 1e-9))) return `M with ${rows2(M)}: it is all zeros, so it flattens everything to one point. The claim is only about moves that are not all zeros, so it says nothing here`;
         return `M with ${rows2(M)}: ${Math.abs(det(M)) < 1e-9 ? 'the grid is flattened to a line, so two points land on one spot and nothing undoes it' : 'no two points land together, and it has an undo'}`;
       },
       async play() { const U = inverse(sc.M()); await sc.play(U && Math.abs(det(sc.M())) > 1e-9 ? U : null); },
@@ -144,7 +145,12 @@ export const doubtOrder: DoubtDef = {
     const setPair = (a: Mat, b: Mat) => { A = a; B = b; ia.set(a); ib.set(b); show(); };
     return {
       holds: () => inverseOfProductClaim(A, B),
-      describe: () => `A with ${rows2(A)}, B with ${rows2(B)}: ${inverseOfProductClaim(A, B) ? 'undoing B first, then A, happens to work here' : 'undoing B first, then A, leaves the frames off their ghost'}`,
+      describe: () => {
+        const noA = !inverse(A) || Math.abs(det(A)) < 1e-9, noB = !inverse(B) || Math.abs(det(B)) < 1e-9;
+        const head = `A with ${rows2(A)}, B with ${rows2(B)}`;
+        if (noA || noB) return `${head}: ${noA && noB ? 'neither has an undo' : noA ? 'A has no undo' : 'B has no undo'}, so the claim (which needs both undos) says nothing about this pair`;
+        return `${head}: ${inverseOfProductClaim(A, B) ? 'undoing B first, then A, happens to work here' : 'undoing B first, then A, leaves the frames off their ghost'}`;
+      },
       async play() {
         const iA = inverse(A), iB = inverse(B);
         if (!iA || !iB || Math.abs(det(A)) < 1e-9 || Math.abs(det(B)) < 1e-9) return;

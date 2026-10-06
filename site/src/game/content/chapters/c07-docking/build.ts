@@ -65,5 +65,5 @@ export const buildDistToPlane: BuildDef = {
   },
   docPrompt: 'Why do you divide by the length of the normal, and why the absolute value?',
   ilseNote: 'dist_to_plane: how far off the plane, n . q - k, measured in units of n. Divide by |n| for real distance. Never negative.',
-  payoff: 'The docking clearances are checked with your `dist_to_plane`.',
+  payoff: 'Door picking also reports how far the approach path starts from the door, with your `dist_to_plane`.',
 };

@@ -23,7 +23,7 @@ const NAME_MARKOV: Beat = {
     means: 'A list of shares that are not negative and add to 1 says where things are. A matrix whose columns are such lists moves them on by one step.',
     name: 'A **probability vector** has entries that are not negative and add to 1. A **transition matrix** (or stochastic matrix) has probability vectors as its columns: column $j$ lists where whatever is at state $j$ goes. Repeating one transition matrix, $\\mathbf x_{k+1} = P\\mathbf x_k$, is a **Markov chain**.',
     formula: 'P = \\begin{bmatrix} \\cg{0.8} & \\htmlClass{c-red}{0.2} & \\cb{0.2} \\\\ \\cg{0.1} & \\htmlClass{c-red}{0.7} & \\cb{0.2} \\\\ \\cg{0.1} & \\htmlClass{c-red}{0.1} & \\cb{0.6} \\end{bmatrix} \\qquad P\\begin{bmatrix} 300 \\\\ 0 \\\\ 0 \\end{bmatrix} = \\cy{\\begin{bmatrix} 240 \\\\ 30 \\\\ 30 \\end{bmatrix}}',
-    why: 'Many CS texts write the state as a row and multiply on the right, $\\mathbf x_{k+1}^{\\mathsf T} = \\mathbf x_k^{\\mathsf T}P$: the same idea with the matrix transposed, so there the **rows** add to 1.',
+    why: 'Many CS texts write the state as a row and multiply on the right: $\\mathbf x_{k+1}^{\\mathsf T} = \\mathbf x_k^{\\mathsf T}P^{\\mathsf T}$. Those texts call $P^{\\mathsf T}$ the transition matrix, so there the **rows** add to 1.',
     cue: 'When you see **“fixed chances of moving between states”**, think **transition matrix**.',
     use: 'A text model that picks the next word from the current one, and many reinforcement-learning worlds, are Markov chains.',
   },
@@ -36,7 +36,7 @@ const NAME_STEADY: Beat = {
     means: 'One more hour leaves this arrangement unchanged: $P\\mathbf q = \\mathbf q$. It is an eigenvector with eigenvalue 1, scaled so its entries add to 1.',
     name: 'A **steady-state vector** of a Markov chain is a probability vector $\\mathbf q$ with $P\\mathbf q = \\mathbf q$.',
     formula: '(P - I)\\mathbf q = \\mathbf 0:\\quad \\mathbf q = \\begin{bmatrix} 0.5 \\\\ 0.3 \\\\ 0.2 \\end{bmatrix}, \\quad 300\\,\\mathbf q = \\cy{\\begin{bmatrix} 150 \\\\ 90 \\\\ 60 \\end{bmatrix}}',
-    why: '$P\\mathbf q = \\mathbf q$ is $(P - I)\\mathbf q = \\mathbf 0$: the null space of $P - I$. Any non-zero vector in it, rescaled to add to 1, is the steady state.',
+    why: '$P\\mathbf q = \\mathbf q$ is $(P - I)\\mathbf q = \\mathbf 0$: the null space of $P - I$. When that null space is one line, as here, any non-zero vector in it, rescaled to add to 1, is the steady state.',
     cue: 'When you see **“in the long run”** for a chain, think **solve $(P - I)\\mathbf q = \\mathbf 0$**.',
     use: 'Queueing models size servers from the steady state of a chain of “how many are waiting”.',
   },
@@ -45,7 +45,7 @@ const NAME_STEADY: Beat = {
 const NAME_REGULAR: Beat = {
   kind: 'name', id: 'name-regular', entry: {
     id: 'regular-chain', term: 'regular chain', question: 'Which chains settle from every start?', nodes: ['N22'],
-    saw: 'The swap never settled: 100, 0, 100, 0, for as long as it ran. With 10% staying, the bays settled at 50 and 50.',
+    saw: 'The swap never settled: 100, 0, 100, 0, for as long as it ran. With a stay share added, the bays settled at 50 and 50.',
     means: 'A chain settles from every start when every eigenvalue except 1 is smaller than 1 in size. The swap’s −1 flips sign every hour and never shrinks.',
     name: 'A Markov chain is **regular** when some power of its transition matrix has no zero entry. A regular chain has exactly one steady-state vector, and every start ends there.',
     formula: '\\begin{gathered} \\begin{bmatrix} 0 & 1 \\\\ 1 & 0 \\end{bmatrix}:\\ \\lambda = 1, -1 \\\\ \\begin{bmatrix} 0.1 & 0.9 \\\\ 0.9 & 0.1 \\end{bmatrix}:\\ \\lambda = 1, -0.8 \\end{gathered}',
@@ -69,7 +69,7 @@ const ch: ChapterDef = {
   script: S,
   inShort: `Where do the drones settle?\n\n${IN_SHORT_ANSWER}`,
   prereqs: ['c19', 'c18'],
-  catchup: 'An **eigenvector** with eigenvalue λ is an arrow a move only stretches by λ. Repeating a move multiplies each eigenvector part by its λ every time, so the largest eigenvalue decides the long run. Story so far: Vell plans fifty repeats of his pulse, and the crew has forecast where the debris goes.',
+  catchup: 'An **eigenvector** with eigenvalue λ is an arrow a move only stretches by λ. Repeating a move multiplies each eigenvector part by its λ every time, so the eigenvalues largest in size (largest |λ|) decide the long run. Story so far: Vell plans fifty repeats of his pulse, and the crew has forecast where the debris goes.',
   beats: [
     { kind: 'cinematic', id: 'open', run: coldOpen },
     { kind: 'card', id: 'inshort', card: { kind: 'inshort', title: 'Where do the drones settle?', body: IN_SHORT_ANSWER } },

@@ -29,10 +29,10 @@ const NAME_SIGNED: Beat = {
     saw: 'Node 7 logged $-24$. Swapping two struts in its log gave $+24$. The box never moved.',
     means: 'The size of the number is the space inside. The **sign** says which way round the three arrows are listed: $+$ when $\\mathbf u$ is on the same side of the base as $\\mathbf v\\times\\mathbf w$, $-$ when it is on the other side. Every swap of two arrows flips the sign. A negative result is not an error.',
     name: 'The sign is the box\'s **orientation**. The number with its sign, $\\mathbf u\\cdot(\\mathbf v\\times\\mathbf w)$, is the **signed volume**; the space inside is $|\\mathbf u\\cdot(\\mathbf v\\times\\mathbf w)|$.',
-    formula: '\\begin{gathered}\\cg{\\mathbf a}\\cdot(\\htmlClass{c-red}{\\mathbf b}\\times\\cb{\\mathbf c}) = 24 \\qquad \\htmlClass{c-red}{\\mathbf b}\\cdot(\\cg{\\mathbf a}\\times\\cb{\\mathbf c}) = -24 \\\\[4pt] \\text{tetrahedron} = \\tfrac16\\,|\\mathbf u\\cdot(\\mathbf v\\times\\mathbf w)|\\end{gathered}',
-    why: 'Swapping two arrows swaps the order of a cross product, and $\\mathbf w\\times\\mathbf v = -\\,\\mathbf v\\times\\mathbf w$.',
+    formula: '\\begin{gathered}\\cg{\\mathbf a}, \\htmlClass{c-red}{\\mathbf b}, \\cb{\\mathbf c} = \\text{along, across, up} \\\\[4pt] \\cg{\\mathbf a}\\cdot(\\htmlClass{c-red}{\\mathbf b}\\times\\cb{\\mathbf c}) = 24 \\\\[2pt] \\htmlClass{c-red}{\\mathbf b}\\cdot(\\cg{\\mathbf a}\\times\\cb{\\mathbf c}) = \\cg{\\mathbf a}\\cdot(\\cb{\\mathbf c}\\times\\htmlClass{c-red}{\\mathbf b}) = -24 \\\\[4pt] \\text{tetrahedron} = \\tfrac16\\,|\\mathbf u\\cdot(\\mathbf v\\times\\mathbf w)|\\end{gathered}',
+    why: 'Turning the order round ($\\mathbf u, \\mathbf v, \\mathbf w \\to \\mathbf v, \\mathbf w, \\mathbf u$) builds the same box the same way round, so the number does not change. Swapping the two arrows inside the cross product flips the sign, because $\\mathbf w\\times\\mathbf v = -\\,\\mathbf v\\times\\mathbf w$. Any other swap of two arrows is the order turned round (once or twice), then one swap inside the cross product.',
     cue: 'When a volume comes out **negative**, think **orientation**: the same box, listed the other way round.',
-    use: 'Every 3-D model lists each triangle\'s corners in an agreed order, so each face knows which side is out.',
+    use: 'Every 3-D model lists each triangle\'s corners in an agreed order, so the order fixes which side is out.',
   },
 };
 

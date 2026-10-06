@@ -190,7 +190,8 @@ export const p6: PuzzleDef = {
       if (step === 0) { if (ms > 0) await ws.showMe(300); else ws.solve(); }
       for (let i = 0; i < 40 && step < 1; i++) await wait(20);
       for (let i = 0; i < 400 && !board; i++) await wait(20);
-      if (step === 1 && board) await board.play(P6_UNDO_OPS, ms > 0 ? 700 : 0);
+      // the reference moves only leave a zero row from the reading itself: start the board over first
+      if (step === 1 && board) { board.set(SPIRES_2DP, identity(3)); await board.play(P6_UNDO_OPS, ms > 0 ? 700 : 0); }
       for (let i = 0; i < 400 && braces.length === 0; i++) await wait(20);
       for (const b of P6_BRACES) { if (step !== 2) break; await placeBraces(b, ms); if (ms > 0) await wait(500); }
       for (let i = 0; i < 400 && step < 3; i++) await wait(20);

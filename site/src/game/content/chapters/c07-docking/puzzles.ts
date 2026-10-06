@@ -1,6 +1,6 @@
 // Chapter 7 puzzles (GDD §6.4, Ch 7): the path bead and the glass wall. Every win test is a pure
 // function in logic.ts; the scenes draw paths, beads, the door's plane and its normal.
-import { Mesh, MeshBasicMaterial, Plane, PlaneGeometry, Quaternion, Vector3 } from 'three';
+import { DoubleSide, Mesh, MeshBasicMaterial, Plane, PlaneGeometry, Quaternion, Vector3 } from 'three';
 import type { PuzzleCtx, PuzzleDef, V3 } from '../../../game/types';
 import { Arrow } from '../../../gfx/arrow';
 import { Dot } from '../../../gfx/markers';
@@ -34,9 +34,9 @@ function flourish(p: PuzzleCtx, at: V3, color: string = C.result): void {
   void burst(p.g.stage, at, color, 60, 2.2, false);
 }
 
-/** An invisible sheet over the door's whole plane, for clicking points onto it. */
+/** An invisible sheet over the door's whole plane, for clicking points onto it (from either side). */
 function wallPicker(p: PuzzleCtx): Mesh {
-  const m = new Mesh(new PlaneGeometry(14, 14), new MeshBasicMaterial({ visible: false }));
+  const m = new Mesh(new PlaneGeometry(14, 14), new MeshBasicMaterial({ visible: false, side: DoubleSide }));
   m.position.set(...v3(DOOR_CENTRE));
   m.quaternion.copy(new Quaternion().setFromUnitVectors(new Vector3(0, 0, 1), new Vector3(...v3(DOOR_N)).normalize()));
   p.add(m);
@@ -440,10 +440,11 @@ export const p5: PuzzleDef = {
   subgoals: ['The drop to the door\'s plane', 'The drop to the approach path'],
   hints: [
     'The shortest drop to a plane runs along the normal $\\mathbf n = (6, 3, 2)$. The right-angle mark appears when you are there.',
-    'To the plane: $\\dfrac{\\mathbf n\\cdot(3, 3, 3) - 6}{\\|\\mathbf n\\|} = \\dfrac{27}{7}$. To the path: the bead\'s drop reads 0 against $(1, 2, 3)$ at $t = \\tfrac97$.',
+    'To the plane: $\\dfrac{\\mathbf n\\cdot(3, 3, 3) - 6}{\\|\\mathbf n\\|} = \\dfrac{27}{7}$. To the path: the bead\'s drop reads 0 against $(1, 2, 3)$ at $t = \\tfrac97$, and its length is $\\dfrac{\\|Q\\times\\mathbf d\\|}{\\|\\mathbf d\\|}$.',
     'The foot on the plane is about $(-0.31, 1.35, 1.90)$; the bead goes to $t = \\tfrac97 \\approx 1.29$.',
   ],
-  par: 4,
+  // two drags, then on Navigator seven checked steps by hand
+  par: 9,
   view: '3d',
   onWin: S.p5Win,
   async setup(p) {
@@ -466,6 +467,8 @@ export const p5: PuzzleDef = {
     let F: V3 = v3(DOOR_CENTRE);
     let tb = 0.6;
     const flags = [false, false];
+    /** Each distance's exact value is shown once it is worked out (Cadet: drawn, nothing to type). */
+    const typed = [cadet, cadet];
     let won = false;
     const r = p.readout('Clearances');
     const show = () => {
@@ -478,8 +481,9 @@ export const p5: PuzzleDef = {
       const on1 = p5PlaneWon(F), on2 = p5LineWon(tb);
       m1.set(F, v3(ia), vsub(HOLD, F) as V3); m1.show(on1);
       m2.set(B, v3(P4_DIR), vsub(HOLD, B) as V3); m2.show(on2);
-      r.row('a', 'to the door\'s plane', on1 ? `27/7 ≈ ${HOLD_DIST.toFixed(2)}` : num(Math.round(d1 * 100) / 100), on1 ? C.good : C.result);
-      r.row('b', 'to the approach path', on2 ? `√(27/7) ≈ ${HOLD_LINE_DIST.toFixed(2)}` : num(Math.round(d2 * 100) / 100), on2 ? C.good : C.v);
+      // Navigator and Commander work each distance out by hand: the exact value shows once it is typed
+      r.row('a', 'to the door\'s plane', on1 && typed[0] ? `27/7 ≈ ${HOLD_DIST.toFixed(2)}` : num(Math.round(d1 * 100) / 100), on1 ? C.good : C.result);
+      r.row('b', 'to the approach path', on2 && typed[1] ? `√(27/7) ≈ ${HOLD_LINE_DIST.toFixed(2)}` : num(Math.round(d2 * 100) / 100), on2 ? C.good : C.v);
       if (cadet) r.row('n', 'shortest drops', 'at right angles');
     };
     const tickOff = (i: number) => {
@@ -488,34 +492,80 @@ export const p5: PuzzleDef = {
       (i === 0 ? drop1 : drop2).setColor(i === 0 ? C.result : C.v, 2.2);
       if (flags[0] && flags[1] && !won) { won = true; flourish(p, v3(HOLD)); p.win(); }
     };
+    // ---- the by-hand steps (Navigator: each checked; Commander: only the answer), opened when a drop snaps
+    const sheets = h('div', { style: 'display:flex;flex-direction:column;gap:8px' });
+    const ws: (StepWorksheet | null)[] = [null, null];
+    const qd = cross(HOLD, P4_DIR);
+    const typedDone = (i: number) => { typed[i] = true; show(); tickOff(i); };
+    const openSheet = (i: number) => {
+      if (ws[i]) return;
+      // a finished sheet's answer is in the readout: fold it away so the dock stays short
+      ws.forEach((w) => { if (w?.done) w.el.style.display = 'none'; });
+      if (i === 0) {
+        foot.setEnabled(false);
+        ws[0] = new StepWorksheet(p, {
+          title: 'The drop to the door\'s plane, by hand',
+          mount: sheets,
+          steps: [
+            { prompt: '$\\mathbf n\\cdot(Q - P)$ for $Q = (3, 3, 3)$, $P = (1, 0, 0)$', answer: dot(DOOR_N, vsub(HOLD, DOOR_P)), mistakes: [[dot(DOOR_N, HOLD), 'That is $\\mathbf n\\cdot Q$. Take away $\\mathbf n\\cdot P = 6$: the door does not pass through the origin.']] },
+            { prompt: '$\\|\\mathbf n\\| = \\|(6, 3, 2)\\|$', answer: norm(DOOR_N), mistakes: [[dot(DOOR_N, DOOR_N), 'That is $\\|\\mathbf n\\|^2$. Take its square root.']] },
+            { prompt: 'Distance $\\dfrac{|\\mathbf n\\cdot(Q - P)|}{\\|\\mathbf n\\|}$ (a fraction)', answer: HOLD_DIST, mistakes: [[dot(DOOR_N, vsub(HOLD, DOOR_P)), 'That is the drop measured in units of $\\mathbf n$. Divide by $\\|\\mathbf n\\|$.'], [HOLD_DIST, 'The right size. Type it exactly, as a fraction $a/b$.']] },
+          ],
+          onDone: () => typedDone(0),
+        });
+      } else {
+        bead.knob.setEnabled(false);
+        slider.el.style.display = 'none';
+        ws[1] = new StepWorksheet(p, {
+          title: 'The drop to the path through the origin, by hand',
+          mount: sheets,
+          steps: [
+            { prompt: '$Q\\times\\mathbf d = (3, 3, 3)\\times(1, 2, 3)$', answer: v3(qd), mistakes: [[v3(vsub([0, 0, 0], qd)), 'That is $\\mathbf d\\times Q$: the same length, the other way. Keep the order $Q\\times\\mathbf d$.']] },
+            { prompt: '$\\|Q\\times\\mathbf d\\|^2$', answer: dot(qd, qd) },
+            { prompt: '$\\|\\mathbf d\\|^2 = \\|(1, 2, 3)\\|^2$', answer: dot(P4_DIR, P4_DIR) },
+            { prompt: 'Distance squared $\\dfrac{\\|Q\\times\\mathbf d\\|^2}{\\|\\mathbf d\\|^2}$ (a fraction)', answer: dot(qd, qd) / dot(P4_DIR, P4_DIR), mistakes: [[HOLD_LINE_DIST, 'That is the distance itself. This step wants its square, exactly.'], [dot(qd, qd) / dot(P4_DIR, P4_DIR), 'The right size. Type it exactly, as a fraction $a/b$.']] },
+          ],
+          onDone: () => typedDone(1),
+        });
+      }
+    };
+    /** A drop has snapped straight: Cadet is done with it; Navigator and Commander work it out by hand. */
+    const snapped = (i: number) => { if (flags[i]) return; if (cadet) tickOff(i); else openSheet(i); };
     const magnet = cadet ? 0.45 : 0.25;
     const foot = new Knob(p, F, {
       color: C.result, size: 0.09,
       constrain: (q) => { const w = DoorWall.onWall(q); return dist([w.x, w.y, w.z], HOLD_FOOT) < magnet ? new Vector3(...v3(HOLD_FOOT)) : w; },
       onMove: (q) => { F = q; show(); },
-      onEnd: () => { if (p5PlaneWon(F)) tickOff(0); },
+      onEnd: () => { if (p5PlaneWon(F)) snapped(0); },
     });
-    const bead = new Bead(p, [0, 0, 0], v3(P4_DIR), tb, { color: C.v, min: -0.2, max: 2.2, magnet: { at: HOLD_LINE_T, within: cadet ? 0.12 : 0.06 }, onMove: (t) => { tb = t; slider.set(Math.round(t * 100) / 100, false); show(); }, onEnd: () => { if (p5LineWon(tb)) tickOff(1); } });
+    const bead = new Bead(p, [0, 0, 0], v3(P4_DIR), tb, { color: C.v, min: -0.2, max: 2.2, magnet: { at: HOLD_LINE_T, within: cadet ? 0.12 : 0.06 }, onMove: (t) => { tb = t; slider.set(Math.round(t * 100) / 100, false); show(); }, onEnd: () => { if (p5LineWon(tb)) snapped(1); } });
     const slider = new Slider({ label: 'bead $t$', min: 0, max: 2.2, step: 0.01, value: tb, onInput: (x) => { tb = Math.abs(x - HOLD_LINE_T) < (cadet ? 0.05 : 0.02) ? HOLD_LINE_T : x; bead.at([0, 0, 0], v3(P4_DIR), tb); show(); } });
-    slider.el.querySelector('input')!.addEventListener('change', () => { p.move(); if (p5LineWon(tb)) tickOff(1); });
-    p.dock().append(h('div', { style: 'font-size:13px;color:var(--ink-2);max-width:300px', html: inline('Drag the yellow foot on the glass. Slide the green bead, or use the dial.') }), slider.el);
+    slider.el.querySelector('input')!.addEventListener('change', () => { p.move(); if (p5LineWon(tb)) snapped(1); });
+    const note = cadet ? 'Drag the yellow foot on the glass. Slide the green bead, or use the dial.' : 'Drag the yellow foot on the glass. Slide the green bead, or use the dial. When a drop snaps straight, work out its length by hand.';
+    p.dock().append(h('div', { style: 'font-size:13px;color:var(--ink-2);max-width:300px', html: inline(note) }), slider.el, sheets);
     show();
-    const go = async (ms: number) => {
+    const go = async (ms: number, sheet: (w: StepWorksheet) => Promise<void> | void) => {
       if (!flags[0]) {
-        const F0 = F;
-        await animate(ms, (k) => { F = [F0[0] + (HOLD_FOOT[0] - F0[0]) * k, F0[1] + (HOLD_FOOT[1] - F0[1]) * k, F0[2] + (HOLD_FOOT[2] - F0[2]) * k]; foot.at(F); show(); }, ease.inOut);
-        F = v3(HOLD_FOOT); foot.at(F); show(); tickOff(0);
+        if (!ws[0]) {
+          const F0 = F;
+          await animate(ms, (k) => { F = [F0[0] + (HOLD_FOOT[0] - F0[0]) * k, F0[1] + (HOLD_FOOT[1] - F0[1]) * k, F0[2] + (HOLD_FOOT[2] - F0[2]) * k]; foot.at(F); show(); }, ease.inOut);
+          F = v3(HOLD_FOOT); foot.at(F); show(); snapped(0);
+        }
+        if (ws[0] && !ws[0].done) await sheet(ws[0]);
       }
       if (!flags[1]) {
-        const t0 = tb;
-        await animate(ms, (k) => { tb = t0 + (HOLD_LINE_T - t0) * k; bead.at([0, 0, 0], v3(P4_DIR), tb); show(); }, ease.inOut);
-        tb = HOLD_LINE_T; bead.at([0, 0, 0], v3(P4_DIR), tb); show(); tickOff(1);
+        if (!ws[1]) {
+          const t0 = tb;
+          await animate(ms, (k) => { tb = t0 + (HOLD_LINE_T - t0) * k; bead.at([0, 0, 0], v3(P4_DIR), tb); slider.set(Math.round(tb * 100) / 100, false); show(); }, ease.inOut);
+          tb = HOLD_LINE_T; bead.at([0, 0, 0], v3(P4_DIR), tb); slider.set(Math.round(tb * 100) / 100, false); show(); snapped(1);
+        }
+        if (ws[1] && !ws[1].done) await sheet(ws[1]);
       }
     };
     return {
-      async showMe() { await go(900); },
-      async solve() { await go(0); },
-      wrong() { F = v3(DOOR_CENTRE); foot.at(F); show(); if (p5PlaneWon(F)) tickOff(0); },
+      async showMe() { await go(900, (w) => w.showMe(350)); await until(() => won); },
+      async solve() { await go(0, (w) => w.solve()); await until(() => won); },
+      wrong() { F = v3(DOOR_CENTRE); foot.at(F); show(); if (p5PlaneWon(F)) snapped(0); },
     };
   },
 };
@@ -531,7 +581,7 @@ export const p6: PuzzleDef = {
     'For a point on both, try $x = y = 0$: the hull plate holds, and the door gives $2z = 6$.',
     'The angle between the plates is the angle between their normals: $\\cos\\theta = \\dfrac{\\mathbf n_1\\cdot\\mathbf n_2}{\\|\\mathbf n_1\\|\\|\\mathbf n_2\\|} = \\dfrac{3}{7\\sqrt2}$.',
   ],
-  par: 5,
+  par: 7,
   view: '3d',
   onWin: S.p6Win,
   async setup(p) {
@@ -556,7 +606,8 @@ export const p6: PuzzleDef = {
       sfx.whoosh(1);
       await animate(1000, (k) => { seam.line.setOpacity(k); }, ease.out);
       p.add(new Dot(v3(WELD_POINT), { color: C.result, size: 0.09, label: '(0, 0, 3)', labelOffset: [26, -10] }));
-      const arc = new AngleArc(p, v3(WELD_POINT), vsub([0, 0, 0], DOOR_N) as V3, v3(HULL_N), { label: `$${WELD_DEG.toFixed(1)}°$`, radius: 0.7 });
+      // n1 · n2 = 3 > 0: the arc between n1 and n2 is the 72.4° the player typed (−n1 would draw 107.6°)
+      const arc = new AngleArc(p, v3(WELD_POINT), v3(DOOR_N), v3(HULL_N), { label: `$${WELD_DEG.toFixed(1)}°$`, radius: 0.7 });
       void arc;
       r.row('dir', 'seam direction', fmt(WELD_DIR), C.result);
       r.row('pt', 'through', fmt(WELD_POINT));
@@ -569,7 +620,9 @@ export const p6: PuzzleDef = {
         { prompt: 'Seam direction: $\\mathbf n_1\\times\\mathbf n_2 = (6, 3, 2)\\times(1, -1, 0)$', answer: v3(WELD_DIR), mistakes: [[[-2, -2, 9], 'That is $\\mathbf n_2\\times\\mathbf n_1$: it runs along the same seam, the other way. Keep the order $\\mathbf n_1\\times\\mathbf n_2$.']] },
         { prompt: 'A point on both plates with $x = y = 0$', answer: v3(WELD_POINT) },
         { prompt: '$\\mathbf n_1\\cdot\\mathbf n_2$', answer: dot(v3(DOOR_N), v3(HULL_N)) },
-        { prompt: '$\\cos\\theta = \\dfrac{\\mathbf n_1\\cdot\\mathbf n_2}{\\|\\mathbf n_1\\|\\,\\|\\mathbf n_2\\|} = \\dfrac{3}{7\\sqrt 2}$ (two decimals)', answer: WELD_COS, tol: 0.006 },
+        { prompt: '$\\|\\mathbf n_1\\| = \\|(6, 3, 2)\\|$', answer: norm(DOOR_N) },
+        { prompt: '$\\|\\mathbf n_2\\| = \\|(1, -1, 0)\\|$ (two decimals)', answer: norm(HULL_N), tol: 0.006 },
+        { prompt: '$\\cos\\theta = \\dfrac{\\mathbf n_1\\cdot\\mathbf n_2}{\\|\\mathbf n_1\\|\\,\\|\\mathbf n_2\\|}$ (two decimals)', answer: WELD_COS, tol: 0.006, mistakes: [[3 / 7, 'That is $\\mathbf n_1\\cdot\\mathbf n_2$ over $\\|\\mathbf n_1\\|$ alone. Divide by $\\|\\mathbf n_2\\|$ too.']] },
         { prompt: '$\\theta$ in degrees (one decimal)', answer: WELD_DEG, tol: 0.15, suffix: '°', mistakes: [[0.3, 'That is $\\cos\\theta$. Turn it into an angle.']] },
       ],
       onDone: () => void done(),
@@ -609,13 +662,16 @@ export const p7: PuzzleDef = {
     p.add(bead);
     const r = p.readout('Hit test');
     const np = dot(v3(DOOR_N), start);
+    /** The zero arrow is no direction at all: the same test p7Won uses. */
+    const zero = () => norm(d) <= 1e-9;
     const show = () => {
       path.set(start, d, -6, 6);
       const nd = dot(v3(DOOR_N), d);
       const t = rayPlane(start, d, DOOR_N, DOOR_K);
-      r.row('nd', '$\\mathbf n\\cdot\\mathbf d$', num(Math.round(nd * 100) / 100), Math.abs(nd) < 1e-9 ? C.good : C.v);
-      r.row('t', '$t = \\dfrac{6 - ' + np + '}{\\mathbf n\\cdot\\mathbf d}$', t === null ? 'no single hit' : num(Math.round(t * 100) / 100), t === null ? C.good : C.result);
-      bead.group.visible = t !== null && Math.abs(t) < 8;
+      const z = zero();
+      r.row('nd', '$\\mathbf n\\cdot\\mathbf d$', num(Math.round(nd * 100) / 100), z ? C.orange : Math.abs(nd) < 1e-9 ? C.good : C.v);
+      r.row('t', '$t = \\dfrac{6 - ' + np + '}{\\mathbf n\\cdot\\mathbf d}$', z ? 'no path: d is the zero arrow' : t === null ? 'no single hit' : num(Math.round(t * 100) / 100), z ? C.orange : t === null ? C.good : C.result);
+      bead.group.visible = !z && t !== null && Math.abs(t) < 8;
       if (t !== null) bead.at(along(start, d, t) as V3);
     };
     let won = false;
@@ -628,7 +684,16 @@ export const p7: PuzzleDef = {
     };
     const hd = new VectorHandle(p, { from: start, to: [start[0] + d[0], start[1] + d[1], start[2] + d[2]], color: C.v, label: '$\\mathbf d$', limit: 6, onChange: () => { d = hd.vec; input.set(d); show(); }, onCommit: check });
     const input = new VectorInput({ dim: 3, values: d, label: '\\mathbf d =', step: 1, onChange: (v) => { d = v3(v); hd.arrow.setTo([start[0] + d[0], start[1] + d[1], start[2] + d[2]]); show(); }, onSubmit: () => { p.move(); check(); } });
-    p.dock().append(input.el, button('Test', () => { p.move(); check(); if (!won) { sfx.miss(); p.bark('lantern', `n · d = ${num(dot(v3(DOOR_N), d))}. One hit, at t = ${num(Math.round((rayPlane(start, d, DOOR_N, DOOR_K) ?? 0) * 100) / 100)}.`); } }, { cls: 'primary small' }));
+    const test = () => {
+      p.move(); check();
+      if (won) return;
+      sfx.miss();
+      if (zero()) { p.bark('lantern', 'd is the zero arrow: there is no path to test.'); return; }
+      // any nonzero d with no single hit wins, so here the path has one hit
+      const t = rayPlane(start, d, DOOR_N, DOOR_K)!;
+      p.bark('lantern', `n · d = ${num(dot(v3(DOOR_N), d))}. One hit, at t = ${num(Math.round(t * 100) / 100)}.`);
+    };
+    p.dock().append(input.el, button('Test', test, { cls: 'primary small' }));
     show();
     return {
       async showMe() { await hd.moveTo([start[0] + 1, start[1] - 2, start[2]], 800, start); d = [1, -2, 0]; input.set(d); show(); check(); },

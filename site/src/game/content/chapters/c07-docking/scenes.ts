@@ -1,5 +1,6 @@
 // Chapter 7 staging: the cold open (debris streams crossing the approach to the hangar door), the
-// install (door picking: the player's line of sight meets the door's plane through ray_plane), and
+// install (door picking: the player's line of sight meets the door's plane through ray_plane, and
+// dist_to_plane reports the approach path's standoff from the door), and
 // the act close (docked, the ark dark, Ilse's oldest log).
 import { Group, Raycaster, Vector2, type Object3D } from 'three';
 import type { Game, PuzzleCtx, V3 } from '../../../game/types';
@@ -16,7 +17,7 @@ import { isPlayerFn, pylib } from '../../../game/build';
 import { CamRig, Gone, check, hullSet, hullShot } from '../c06-volume/stage';
 import { DoorWall, FlatRing, v3 } from './parts';
 import { makeLantern } from '../../common/set';
-import { DOOR_CENTRE, DOOR_K, DOOR_N, crew, fmt, insideDoor } from './logic';
+import { DOOR_CENTRE, DOOR_K, DOOR_N, SP_START, crew, fmt, insideDoor, num } from './logic';
 import { S } from './script';
 
 export const shot = (variant: number) => async (g: Game): Promise<void> => { await hullShot(g, variant, { lantern: { at: [12, -18, 2], face: [0.3, 1, 0.02], scale: 1.1, thrust: 0.15 } }); };
@@ -114,6 +115,16 @@ async function pick(origin: V3, dir: V3): Promise<{ t: number | null; mine: bool
   } catch { return { t: want, mine: false }; }
 }
 
+/** How far the approach path starts from the door (7/3), from the player's dist_to_plane when it is theirs and agrees. */
+async function standoff(): Promise<{ d: number; mine: boolean }> {
+  const want = crew.distToPlane(SP_START, DOOR_N, DOOR_K);
+  if (!isPlayerFn('dist_to_plane')) return { d: want, mine: false };
+  try {
+    const d = await pylib.call<number>('dist_to_plane', SP_START, DOOR_N, DOOR_K);
+    return typeof d === 'number' && Math.abs(d - want) < 1e-6 ? { d, mine: true } : { d: want, mine: false };
+  } catch { return { d: want, mine: false }; }
+}
+
 export async function install(g: Game): Promise<void> {
   g.stage.clearWorld();
   g.mood('explore');
@@ -151,7 +162,6 @@ export async function install(g: Game): Promise<void> {
   if (!root.parent) { panel.remove(); return; }
   const { t, mine } = await pick(sight.o, sight.d);
   runOn.innerHTML = inline(mine ? 'Running on: **your** `ray_plane`' : 'Running on: LANTERN backup');
-  void g.say(mine ? S.installMine : S.installBackup);
   let at: V3 = v3(DOOR_CENTRE);
   let inside = false;
   if (t !== null && t > 0) {
@@ -174,7 +184,12 @@ export async function install(g: Game): Promise<void> {
   sfx.success();
   void ring.pulse();
   void burst(g.stage, at, '#3ddc84', 50, 1.6, false);
-  await g.say(inside ? S.installHit : S.installMiss);
+  // the approach path's standoff from the door, for the set piece
+  const so = await standoff();
+  if (!root.parent) { panel.remove(); return; }
+  panel.append(h('div', { style: 'font-size:13px;color:var(--ink-2);margin-top:4px', html: inline(`Path start ${num(so.d)} ≈ ${so.d.toFixed(2)} from the door · ${so.mine ? 'your `dist_to_plane`' : 'LANTERN backup'}`) }));
+  // one dialogue call: two overlapping say() calls would stack two boxes on one Space press
+  await g.say([...(mine ? S.installMine : S.installBackup), ...(inside ? S.installHit : S.installMiss)]);
   await wait(400);
   panel.remove();
 }

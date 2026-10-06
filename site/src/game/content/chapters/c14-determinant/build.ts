@@ -67,6 +67,6 @@ export const buildDet3: BuildDef = {
   ],
   swarm: { gen: (r, d) => [swarmSquare(r, d, 3)], crew: (A) => crewDet3(A as number[][]), tol: 1e-9 },
   docPrompt: 'Where does the + − + pattern come from?',
-  ilseNote: 'det3: the scalar triple product of the columns, written out. The middle term carries the minus sign.',
+  ilseNote: 'det3: row 1 dotted with row 2 × row 3, the triple product of the rows. It equals the triple product of the columns because det Aᵀ = det A. The middle term carries the minus sign.',
   payoff: 'LANTERN checks every `det` it runs against your `det3`.',
 };

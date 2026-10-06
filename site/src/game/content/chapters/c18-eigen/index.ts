@@ -12,7 +12,7 @@ import { buildEig2, buildPower } from './build';
 import { coda, coldOpen, fieldShot, finder, whyVisual } from './scenes';
 import { S } from './script';
 
-const IN_SHORT_ANSWER = 'Which arrows stay on their own line? Most arrows turn. A few only **stretch, shrink or flip**. They sit where the move minus a stretch flattens space. A turn keeps no line at all.';
+const IN_SHORT_ANSWER = 'Which arrows stay on their own line? Most arrows turn. A few only **stretch, shrink or flip**. They sit where the move minus a stretch flattens space. A quarter turn keeps no line at all.';
 
 const NAME_EIG: Beat = {
   kind: 'name', id: 'name-eigen', entry: {
@@ -21,7 +21,7 @@ const NAME_EIG: Beat = {
     means: 'Most arrows change direction when the matrix moves them. A few only get **longer, shorter or flipped**. Along those lines the move is a single number.',
     name: 'An **eigenvector** of $A$ is a non-zero arrow $\\mathbf v$ that $A$ keeps on its own line: $A\\mathbf v = \\lambda\\mathbf v$. The stretch λ is its **eigenvalue**.',
     formula: '\\begin{bmatrix} 2 & 1 \\\\ 1 & 2 \\end{bmatrix}\\cg{\\begin{bmatrix} 1 \\\\ 1 \\end{bmatrix}} = \\cy{3}\\cg{\\begin{bmatrix} 1 \\\\ 1 \\end{bmatrix}} \\qquad \\begin{bmatrix} 2 & 1 \\\\ 1 & 2 \\end{bmatrix}\\cr{\\begin{bmatrix} 1 \\\\ -1 \\end{bmatrix}} = \\cy{1}\\cr{\\begin{bmatrix} 1 \\\\ -1 \\end{bmatrix}}',
-    why: 'Every multiple of an eigenvector is one too: the whole line holds. A negative λ flips the arrow; λ = 0 sends it to the origin.',
+    why: 'Every non-zero multiple of an eigenvector is one too: the whole line holds. A negative λ flips the arrow; λ = 0 sends it to the origin.',
     cue: 'When you see **“stays on its own line”**, think **eigenvector**.',
     use: 'Google’s first ranking of web pages was one eigenvector of a matrix of links.',
   },
@@ -34,7 +34,7 @@ const NAME_CHAR: Beat = {
     means: 'An arrow that $A$ stretches by λ is sent to the origin by $A - \\lambda I$. So $A - \\lambda I$ flattens space and its determinant is 0. The stretches are the roots of one polynomial in λ.',
     name: '$\\det(A - \\lambda I)$ is the **characteristic polynomial** of $A$; setting it to 0 is the **characteristic equation**. For each root λ, the null space of $A - \\lambda I$ (its eigenvectors and the zero arrow) is the **eigenspace** of λ.',
     formula: '\\begin{gathered} \\det(A - \\lambda I) = (4 - \\lambda)(3 - \\lambda) - 2 \\\\ = \\lambda^2 - 7\\lambda + 10 = (\\lambda - 5)(\\lambda - 2) \\end{gathered}',
-    why: '$A\\mathbf v = \\lambda\\mathbf v$ with $\\mathbf v \\neq \\mathbf 0$ ⟺ $(A - \\lambda I)\\mathbf v = \\mathbf 0$ ⟺ $A - \\lambda I$ flattens a direction ⟺ $\\det(A - \\lambda I) = 0$.',
+    why: '$A\\mathbf v = \\lambda\\mathbf v$ for some $\\mathbf v \\neq \\mathbf 0$ ⟺ $(A - \\lambda I)\\mathbf v = \\mathbf 0$ for some $\\mathbf v \\neq \\mathbf 0$ ⟺ $A - \\lambda I$ flattens a direction ⟺ $\\det(A - \\lambda I) = 0$.',
     cue: 'When you need the stretches, think **$\\det(A - \\lambda I) = 0$**.',
     use: 'Vibration analysis finds a bridge’s natural frequencies as the roots of a characteristic equation.',
   },
@@ -44,8 +44,8 @@ const NAME_COMPLEX: Beat = {
   kind: 'name', id: 'name-complex', entry: {
     id: 'complex-eigenvalues', term: 'complex eigenvalues', question: 'What are the stretches of a move that turns?', nodes: ['N20'],
     saw: 'The routine pulse turned every test arrow, and the plot $\\lambda^2 + 1$ never touched zero. $D$ was a turn of 45° and a stretch by 1.41; its roots $1 \\pm i$ added to 2 and multiplied to 2. Four routine pulses made $I$.',
-    means: 'A move with a turn in it keeps no real line. Its roots come as a pair $a \\pm bi$: the size $\\sqrt{a^2 + b^2}$ is the stretch and the angle of $a + bi$ is the turn.',
-    name: 'Roots $a \\pm bi$ with $b \\neq 0$ are **complex eigenvalues**. The sum down the diagonal, $a + d$, is the **trace**. The eigenvalues always add up to the trace and multiply to the determinant.',
+    means: 'A turn by any angle except 0° or 180°, with or without a stretch, keeps no real line. Its roots come as a pair $p \\pm qi$: the size $\\sqrt{p^2 + q^2}$ is the stretch and, in its own slanted grid, the angle of $p + qi$ is the turn.',
+    name: 'Roots $p \\pm qi$ with $q \\neq 0$ are **complex eigenvalues**. The sum down the diagonal, $a + d$, is the **trace**. The eigenvalues always add up to the trace and multiply to the determinant.',
     formula: '\\begin{gathered} \\lambda = 1 \\pm i:\\quad |\\lambda| = \\sqrt 2,\\ \\text{angle } 45^\\circ \\\\ \\lambda_1 + \\lambda_2 = \\operatorname{tr} D = 2, \\qquad \\lambda_1\\lambda_2 = \\det D = 2 \\end{gathered}',
     why: '$\\lambda^2 - (a + d)\\lambda + (ad - bc) = (\\lambda - \\lambda_1)(\\lambda - \\lambda_2)$: match the terms. For the routine pulse $\\lambda = \\pm i$ and $i^4 = 1$, which is why $T^4 = I$.',
     cue: 'When the λ dial never flattens, think **a turn: complex eigenvalues**.',
@@ -66,7 +66,7 @@ const NAME_MULT: Beat = {
   },
 };
 
-const WHY = 'Repeat a move many times and only its stretches matter. Along an eigenvector, $n$ repeats multiply by $\\lambda^n$: larger than 1 in size and it **explodes**, smaller and it **fades**. That is why gradients explode or vanish in recurrent networks, which apply one matrix at every step.\n\nRepeating and rescaling swings any arrow onto the line with the largest stretch, as on the holotable now. That is your next function, `power_iteration`, and LANTERN’s line finder runs on it.';
+const WHY = 'Repeat a move many times and only its stretches matter. Along an eigenvector, $n$ repeats multiply by $\\lambda^n$: larger than 1 in size and it **explodes**, smaller and it **fades**. That is why gradients explode or vanish in recurrent networks, which apply one matrix at every step.\n\nRepeating and rescaling swings almost any arrow (any with a part on that line) onto the line with the largest stretch in size, as on the holotable now. That is your next function, `power_iteration`, and LANTERN’s line finder runs on it.';
 
 const ch: ChapterDef = {
   id: 'c18',

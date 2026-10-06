@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Frac, fmat, fnum, nice } from '../../site/src/game/math/frac.ts';
 import {
-  angle, colspace, cross, det, dot, eig2, eigSym, eigvals3, eigvecFor, gramSchmidt, identity, inverse, leastSquares,
+  angle, colspace, cross, cubicRealRoots, det, dot, eig2, eigSym, eigvals3, eigvals3Mult, eigvecFor, gramSchmidt, identity, inverse, leastSquares,
   lowRank, matMul, matVec, meq, norm, nullspace, pca, powerIteration, proj, qr, rank, solve, svd, transpose, triple,
   veq, fromCols, coordsIn,
 } from '../../site/src/game/math/la.ts';
@@ -150,4 +150,22 @@ test('rotation-aware interpolation never collapses a rotation', async () => {
   assert.ok(eq(interpMat2([[1, 0], [0, 1]], A, 0.5), [[1.5, 0.5], [0, 1]]), 'small turns stay linear');
   const B = [[0, -2], [1, 0]];
   assert.ok(eq(interpMat2([[1, 0], [0, 1]], B, 1, 'polar'), B));
+});
+
+test('eigvals3: repeated eigenvalues are found once each, with their multiplicity', () => {
+  assert.deepEqual(eigvals3Mult([[2, 5, 1], [0, 2, 3], [0, 0, 2]]), [{ value: 2, mult: 3 }]);
+  assert.deepEqual(eigvals3Mult([[2, 3, -1], [0, 4, 0], [0, 0, 4]]), [{ value: 4, mult: 2 }, { value: 2, mult: 1 }]);
+  assert.deepEqual(eigvals3([[-3, -3, 1], [0, -4, 0], [0, 0, -4]]), [-3, -4]);
+  assert.deepEqual(eigvals3([[0, -1, 0], [1, 0, 0], [0, 0, 2]]), [2]); // a quarter turn about z: one real line
+  assert.deepEqual(cubicRealRoots(1, -6, 11, -6), [3, 2, 1]);
+  assert.deepEqual(cubicRealRoots(1, 0, 0, 0), [0]);
+  // triangular matrices: the eigenvalues are the diagonal (2000 seeded cases, many repeats)
+  let seed = 11;
+  const r = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  for (let t = 0; t < 2000; t++) {
+    const dg = [0, 1, 2].map(() => Math.round(r() * 10 - 5));
+    const U = [[dg[0], Math.round(r() * 8 - 4), Math.round(r() * 8 - 4)], [0, dg[1], Math.round(r() * 8 - 4)], [0, 0, dg[2]]];
+    assert.deepEqual(eigvals3(U), [...new Set(dg)].sort((x, y) => y - x));
+    assert.equal(eigvals3Mult(U).reduce((s, m) => s + m.mult, 0), 3);
+  }
 });

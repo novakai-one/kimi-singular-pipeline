@@ -196,7 +196,7 @@ export const p1: PuzzleDef = {
     const gates = () => {
       // commander: forecasts are committed blind (no pulses before the forecast is placed)
       const blind = d === 'commander' && !marker;
-      b1.disabled = blind; b5.disabled = blind;
+      b1.disabled = blind; b5.disabled = blind; b50.disabled = blind;
     };
     p.dock().append(h('div', { class: 'a7-row' }, input.el, button('Place forecast', () => { p.move(); placeMarker(input.get()); }, { cls: 'small' })),
       h('div', { class: 'a7-btns' }, b1, b5, b50, bReset, reg), msgEl);
@@ -270,7 +270,7 @@ export const p2: PuzzleDef = {
     'With the middle gone, the $D$’s stand together: $D\\,D \\cdots D = D^{50} = \\begin{bmatrix} 1 & 0 \\\\ 0 & 0.5^{50} \\end{bmatrix}$.',
     '$V^{50} = PD^{50}P^{-1} \\approx \\begin{bmatrix} 0.5 & 0.5 \\\\ 0.5 & 0.5 \\end{bmatrix}$: every point lands on the line $(1, 1)$.',
   ],
-  par: 4,
+  par: 5,
   onWin: S.p2Win,
   setup(p) {
     const d = p.difficulty;
@@ -297,6 +297,7 @@ export const p2: PuzzleDef = {
       busy = true; p.move();
       await strip.cancel(ms);
       cancelled = true; busy = false; tick(0);
+      if (d === 'cadet') tick(1);   // cadet watches the cancelling: that is where the formula comes from
       cancelBtn.disabled = true;
       msg('Each $P^{-1}P$ in the middle is $I$. What is left: $PD^{50}P^{-1}$.', 'good');
       if (derived) await play(p.g.headless ? 1 : 2600);

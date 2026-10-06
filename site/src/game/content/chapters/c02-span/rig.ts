@@ -200,6 +200,10 @@ export class DialRig {
   private fired = 0;
   private landed: V3 | null = null;
   private lastTickKey = '';
+  /** Set by stop(): the rig never fires again (a puzzle moved on to another scene). */
+  private stopped = false;
+  /** The document-level F (Fire) key listener, kept so stop() can remove it. */
+  private onKey: ((e: KeyboardEvent) => void) | null = null;
   readonly step: number;
   readonly range: [number, number];
   readonly drag: PlaneDrag | null = null;
@@ -318,6 +322,7 @@ export class DialRig {
       const onKey = (e: KeyboardEvent) => {
         if ((e.key === 'f' || e.key === 'F') && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement) && !p.g.dialogue.active) void this.fire();
       };
+      this.onKey = onKey;
       document.addEventListener('keydown', onKey);
       p.onDispose(() => document.removeEventListener('keydown', onKey));
     }
@@ -476,7 +481,7 @@ export class DialRig {
 
   /** Fly the chain. Counts one move. Resolves with the outcome. */
   async fire(): Promise<Outcome> {
-    if (this.flying || this.p.won) return;
+    if (this.stopped || this.flying || this.p.won) return;
     const refuse = this.o.beforeFire?.();
     if (refuse) { this.p.bark('lantern', refuse); sfx.miss(); return 'miss'; }
     this.flying = true;
@@ -496,7 +501,7 @@ export class DialRig {
     }
     this.flying = false;
     this.rows.forEach((r, i) => { if (r.range) r.range.disabled = !this.bolted[i]; if (r.cell) r.cell.disabled = !this.bolted[i]; });
-    if (this.fireBtn) this.fireBtn.disabled = false;
+    if (this.fireBtn) this.fireBtn.disabled = this.stopped;
     this.layout();
     this.afterFlight?.(end, out);
     return out;
@@ -560,6 +565,13 @@ export class DialRig {
     ship.setThrust(1);
     await animate(ms, (k) => ship.object.position.lerpVectors(a, b, k), ease.inOut);
     ship.setThrust(0.2);
+  }
+
+  /** Retire the rig: Fire (button or F key) does nothing from now on. A flight already under way finishes. */
+  stop(): void {
+    this.stopped = true;
+    if (this.onKey) { document.removeEventListener('keydown', this.onKey); this.onKey = null; }
+    if (this.fireBtn) this.fireBtn.disabled = true;
   }
 
   get busy(): boolean { return this.flying; }

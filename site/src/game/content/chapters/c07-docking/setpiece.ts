@@ -34,13 +34,13 @@ export const setPiece: PuzzleDef = {
   hints: [
     'The roll axis must read 0 against both door edges: their cross product $(Q - P)\\times(R - P) = (6, 3, 2)$.',
     'Put the anchor on the centre ring; then slide the bead until the link to the debris track is at a right angle to both. The gap is $\\tfrac{15}{7} \\approx 2.14$.',
-    'The burn is $(2, 1, 5) = 2(1, 0, 1) + 1(0, 1, 1) + 1(0, 0, 2)$: dials 2, 1, 1.',
+    'The burn is $(-1, -1, 0) = -1(1, 0, 1) - 1(0, 1, 1) + 1(0, 0, 2)$: dials $-1$, $-1$, 1.',
   ],
   par: 7,
   view: '3d',
   onWin: S.spWin,
   async setup(p) {
-    await p.g.stage.view3D({ target: [1.1, 0.8, -0.4], distance: 19, azimuth: -20, elevation: 22, ms: 0 });
+    await p.g.stage.view3D({ target: [1.4, 1.0, 0.3], distance: 19, azimuth: -20, elevation: 22, ms: 0 });
     const lvl = p.difficulty;
     const door = new DoorWall(p, { wall: 0.35, wallSize: 5.5 });
     const ring = new FlatRing(p, v3(DOOR_CENTRE), v3(DOOR_N), { r: 0.2 });
@@ -50,7 +50,7 @@ export const setPiece: PuzzleDef = {
     const rocks = [0, 1, 2].map(() => { const d = new Dot([0, 0, 0], { color: DEBRIS, size: 0.12, glow: 0.4 }); p.add(d); return d; });
     let clock = 0;
     p.tick((dt) => { clock += dt; rocks.forEach((rk, i) => { const t = ((clock * 0.04 + i / 3) % 1) * 1.4 - 0.7; rk.at(along(SP_DEB_P, SP_DEB_D, t) as V3); }); });
-    // the Lantern, holding below the door
+    // the Lantern, holding farther out than the path start, on the door's outer side
     const ship = makeLantern(p.g.stage, 0.15);
     p.add(ship);
     ship.object.position.set(...v3(SP_SHIP));

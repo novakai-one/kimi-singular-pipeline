@@ -1147,7 +1147,7 @@ Visual: Vell's cutter; drone swarms; held notes in the music for lines that hold
 
 #### Ch 18 · "Which lines does the pulse not turn?" — N20
 
-**In short.** Which arrows stay on their own line? Most arrows turn. A few only stretch, shrink or flip. They sit where the move minus a stretch flattens space. A turn keeps no line at all.
+**In short.** Which arrows stay on their own line? Most arrows turn. A few only stretch, shrink or flip. They sit where the move minus a stretch flattens space. A quarter turn keeps no line at all.
 
 **Plot beat.** Vell plans to lock his own pulse into the Anchor and repeat it fifty times to gather the debris field onto a line he can tow. The ark's sections must ride lines through the Anchor that his pulse does not turn.
 
@@ -1162,7 +1162,7 @@ Visual: Vell's cutter; drone swarms; held notes in the music for lines that hold
 6. `c18-p6` *Vell's lines.* **Win:** test the candidate lines (1, 1, 1), (1, −1, 0), (1, 1, −2) under Vell's pulse and set their stretches 1, 0.5, 0.2 (Navigator); find them yourself (Commander).
 7. `c18-p7` [S] Row reduce A first, then look for its eigenvalues: the answers change (row operations change eigenvalues).
 
-**Aha.** Most arrows change direction; eigenvectors only stretch, shrink or flip. The stretches are the λ that make A − λI flatten space. A turn keeps no real line, so its eigenvalues are complex: a turn and a stretch.
+**Aha.** Most arrows change direction; eigenvectors only stretch, shrink or flip. The stretches are the λ that make A − λI flatten space. A quarter turn keeps no real line, so its eigenvalues are complex: a turn and a stretch.
 
 **Name it.** After p1: **eigenvector**, **eigenvalue** — "Most arrows change direction when the matrix moves them. Eigenvectors don't. They only get longer, shorter, or flipped." After p3: **characteristic polynomial**, **characteristic equation**, **eigenspace**. After p4: **complex eigenvalues**, **trace**. Coda to p3: the λ dial on the two-decimal model C₂ flattens at λ = 0, and the constellation's star "0 is an eigenvalue" lights. After p5: **algebraic multiplicity**.
 

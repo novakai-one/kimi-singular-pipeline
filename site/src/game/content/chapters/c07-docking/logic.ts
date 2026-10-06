@@ -265,10 +265,12 @@ export const SP_TS = closestTs(DOOR_CENTRE, DOOR_N, SP_DEB_P, SP_DEB_D)!;
 /** The gap from the point at t on our path to the debris track (the bead the player slides). */
 export const spGapAt = (t: number): number => distToLine(along(DOOR_CENTRE, DOOR_N, t), SP_DEB_P, SP_DEB_D);
 export const spMeasured = (t: number, tol = 0.02): boolean => Math.abs(t - SP_TS[0]) <= tol;
-/** Stage 4: one burn from where the Lantern holds to the path's start, built from the three thrusters. */
+/** Stage 4: one burn from where the Lantern holds to the path's start, built from the three thrusters.
+ *  The Lantern holds farther out than the path start, on the same side of the door's plane (and of the
+ *  hull plate x − y = 0), so the burn closes on the door nose first and crosses neither plate. */
 export const THRUSTERS: Vec[] = [[1, 0, 1], [0, 1, 1], [0, 0, 2]];
-export const SP_BURN: Vec = [2, 1, 5];
-export const SP_DIALS: Vec = [2, 1, 1];
+export const SP_BURN: Vec = [-1, -1, 0];
+export const SP_DIALS: Vec = [-1, -1, 1];
 export const SP_SHIP: Vec = vsub(SP_START, SP_BURN);
 export const burnOf = (dials: readonly number[]): Vec => THRUSTERS.reduce((s, t, i) => vadd(s, vscale(t, dials[i])), [0, 0, 0] as Vec);
 export const spBurnWon = (dials: readonly number[], tol = 0.05): boolean => dist(vadd(SP_SHIP, burnOf(dials)), SP_START) <= tol;

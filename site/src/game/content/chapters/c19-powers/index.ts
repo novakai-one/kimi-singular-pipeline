@@ -34,9 +34,9 @@ const NAME_GEOM: Beat = {
     means: 'A repeated eigenvalue can have fewer independent eigenvectors than its count as a root, and then there are too few lines for a grid. A quarter turn has no real line at all; with complex numbers it can be diagonalised.',
     name: 'The number of independent eigenvectors for λ (the dimension of its eigenspace) is its **geometric multiplicity**. A matrix is diagonalisable exactly when every eigenvalue’s geometric multiplicity equals its algebraic multiplicity.',
     formula: '\\begin{bmatrix} 1 & 1 \\\\ 0 & 1 \\end{bmatrix}:\\quad \\lambda = 1,\\ \\text{algebraic } 2,\\ \\text{geometric } 1',
-    why: 'Different eigenvalues always give independent lines, so $n$ different eigenvalues are enough. With a repeated one, count the null space of $A - \\lambda I$.',
+    why: 'Different real eigenvalues always give independent lines, so $n$ different real eigenvalues are enough. With a repeated one, count the null space of $A - \\lambda I$.',
     cue: 'When an eigenvalue repeats, think **count its lines**: geometric against algebraic multiplicity.',
-    use: 'Numerical libraries warn about “defective” matrices, those with too few eigenvectors: forecasting by powers of $D$ fails there.',
+    use: '`np.linalg.eig` gives no warning for a shear. Its two eigenvector columns come back almost on one line, so $P$ is nearly flat: $PD^{50}P^{-1}$ returns $I$ instead of $A^{50}$, and forecasting by powers of $D$ silently fails.',
   },
 };
 
@@ -53,7 +53,7 @@ const NAME_DDS: Beat = {
   },
 };
 
-const WHY = 'Repeated squaring computes $A^{50}$ in fewer than ten products instead of 49, and $A^{1000000}$ in about 40. That is how Fibonacci numbers are computed in $O(\\log n)$ steps.\n\nIn a graph’s link matrix, entry $(i, j)$ of $A^k$ counts the walks of length $k$ from $j$ to $i$. And whether a recurrent network’s signal grows or fades over many steps is decided by the powers of its eigenvalues: $|\\lambda|^k$.\n\nVell’s fifty-pulse forecast, next, runs on your `mat_pow`.';
+const WHY = 'Repeated squaring computes $A^{50}$ in fewer than ten products instead of 49, and $A^{1000000}$ in 27 instead of 999,999. That is how Fibonacci numbers are computed in $O(\\log n)$ steps.\n\nIn a graph’s link matrix, entry $(i, j)$ of $A^k$ counts the walks of length $k$ from $j$ to $i$. And whether a recurrent network’s signal grows or fades over many steps is decided by the powers of its eigenvalues: $|\\lambda|^k$.\n\nVell’s fifty-pulse forecast, next, runs on your `mat_pow`.';
 
 const ch: ChapterDef = {
   id: 'c19',

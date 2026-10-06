@@ -138,8 +138,10 @@ export const startMattersHolds = (P: Mat, a: readonly number[], b: readonly numb
   const ea = after(P, a.map((x) => x / sa), 60), eb = after(P, b.map((x) => x / sb), 60);
   return Math.hypot(...ea.map((x, i) => x - eb[i])) > 1e-3;
 };
-/** (F) "Every chain settles." Holds when, from all in the first bay, one more hour changes nothing after 60. */
-export const settlesHolds = (P: Mat): boolean => { const x = after(P, [1, ...P.slice(1).map(() => 0)], 60); return settled2(P, x, 1e-3); };
+/** Settles from every start: P^256 and P^257 agree (every other eigenvalue smaller than 1 in size has died away). */
+export const settlesFromAll = (P: Mat): boolean => { const A = mpow(P, 256), B = matMul(P, A); return meq(A, B, 1e-6); };
+/** (F) "Every chain settles." The same test as the Law: P^k stops changing (|λ₂| = 0.9 still settles; the swap never does). */
+export const settlesHolds = (P: Mat): boolean => settlesFromAll(P);
 /** (T) "Steady state does not mean the drones stop moving." At the steady state, drones still change station each hour. */
 export function movingAtSteady(P: Mat, total = TOTAL): number {
   const q = steadyOf(P, total);
@@ -157,6 +159,39 @@ export function triangularHolds(U: Mat): boolean {
   return U.every((_, i) => Math.abs(det(U.map((r, a) => r.map((x, b) => x - (a === b ? U[i][i] : 0))))) < 1e-9) && n > 0;
 }
 
+/**
+ * The real eigenvalues of a 3 × 3 matrix, with multiplicity, from det(A − λI) = 0 (never read off the
+ * diagonal, so the Review's readout is independent evidence). One real root by bisection, the cubic deflated
+ * to a quadratic, and a near-zero discriminant (relative) read as a double root: a repeated eigenvalue such
+ * as 2, 2, 2 keeps all three copies. Largest first.
+ */
+export function eigvalsWithMult3(A: Mat): number[] {
+  const tr = A[0][0] + A[1][1] + A[2][2];
+  const m2 = A[0][0] * A[1][1] - A[0][1] * A[1][0] + A[0][0] * A[2][2] - A[0][2] * A[2][0] + A[1][1] * A[2][2] - A[1][2] * A[2][1];
+  const d = det(A);
+  // λ³ + bλ² + cλ + e
+  const b = -tr, c = m2, e = -d;
+  const p = (l: number) => ((l + b) * l + c) * l + e;
+  const R = 1 + Math.max(Math.abs(b), Math.abs(c), Math.abs(e));
+  let lo = -R, hi = R;
+  for (let k = 0; k < 200 && hi - lo > 0; k++) {
+    const mid = (lo + hi) / 2;
+    if (mid === lo || mid === hi) break;
+    if (p(mid) > 0) hi = mid; else lo = mid;
+  }
+  let r = (lo + hi) / 2;
+  // polish where the slope allows (a simple root); a repeated root stays where bisection put it
+  for (let k = 0; k < 4; k++) { const s = (3 * r + 2 * b) * r + c; if (Math.abs(s) < 1e-6) break; const nr = r - p(r) / s; if (!Number.isFinite(nr) || Math.abs(p(nr)) > Math.abs(p(r))) break; r = nr; }
+  // deflate: λ² + Bλ + C
+  const B = b + r, Cq = c + r * B;
+  const disc = B * B - 4 * Cq;
+  const tol = 1e-8 * (B * B + 4 * Math.abs(Cq)) + 1e-12;
+  const out = [r];
+  if (Math.abs(disc) <= tol) out.push(-B / 2, -B / 2);
+  else if (disc > 0) { const q = -(B + Math.sign(B || 1) * Math.sqrt(disc)) / 2; out.push(q, q !== 0 ? Cq / q : -B - q); }
+  return out.sort((x, y) => y - x);
+}
+
 // ------------------------------------------------------------------ the Law
 
 export interface ChainCase { P: Mat }
@@ -165,7 +200,6 @@ export function randChain(r: () => number, n = r() < 0.5 ? 2 : 3, floor = 0): Ma
   const cols = Array.from({ length: n }, () => { const c = Array.from({ length: n }, () => floor + rint(r, 0, 10)); const s = c.reduce((a, b) => a + b, 0) || 1; return c.map((x, i) => (s === 0 ? (i === 0 ? 1 : 0) : x / s)); });
   return fromCols(cols.map((c) => (c.every((x) => x === 0) ? c.map((_, i) => (i === 0 ? 1 : 0)) : c)));
 }
-const settlesFromAll = (P: Mat): boolean => { const A = mpow(P, 256), B = matMul(P, A); return meq(A, B, 1e-6); };
 export const LAW_CORE: LawCore<ChainCase> & { answer: Record<string, string> } = {
   id: 'c20-law',
   answer: { then: 'eig1' },
@@ -200,6 +234,8 @@ export const PROC_KEYS = ['apply', 'rescale', 'repeat'];
 export const PROC_START: Vec = DRONES_START.slice();
 export interface ProcRun { ok: boolean; message: string; trace: Vec[]; result: Vec | null; repeats: number; fault: string | null }
 
+/** Shares to three decimals, zeros kept: (0.501, 0.299, 0.200). */
+export const procShares = (x: readonly number[]): string => `(${x.map((t) => t.toFixed(3).replace(/^-/, '−')).join(', ')})`;
 /** Run the tiles literally on the drone chain. "Repeat" repeats every step above it until the change is under 0.001. */
 export function runProc(ids: readonly string[]): ProcRun {
   const at = ids.indexOf('repeat');
@@ -212,8 +248,9 @@ export function runProc(ids: readonly string[]): ProcRun {
     else if (id === 'expect') x = [0.4, 0.3, 0.3];
     else if (!x) return;
     else if (id === 'apply') x = matVec(DRONES, x);
-    else if (id === 'rescale') { const s = x.reduce((a, b) => a + b, 0); x = x.map((t) => t / s); }
-    else if (id === 'len') { const s = Math.hypot(...x); x = x.map((t) => t / s); }
+    // a zero arrangement (after SOLVE Pq = 0) has nothing to rescale: leave it, never divide by zero
+    else if (id === 'rescale') { const s = x.reduce((a, b) => a + b, 0); if (Math.abs(s) > 1e-12) x = x.map((t) => t / s); }
+    else if (id === 'len') { const s = Math.hypot(...x); if (s > 1e-12) x = x.map((t) => t / s); }
     else if (id === 'solve0') x = matVec(inverse(DRONES)!, [0, 0, 0]);
     if (x) trace.push(x.slice());
   };
@@ -245,7 +282,8 @@ export function runProc(ids: readonly string[]): ProcRun {
   const sum = res.reduce((a, b) => a + b, 0);
   if (Math.abs(sum - 1) > 1e-6) return fail(ids.includes('len') ? 'len' : 'norescale', ids.includes('len') ? `LANTERN rescaled to length 1: ${fmtV(res.map((t) => Math.round(t * 1000) / 1000))}, which adds to ${fmtN(Math.round(sum * 100) / 100)}. Shares must add to 1.` : `LANTERN reports ${fmtV(res.map((t) => Math.round(t * 10) / 10))}: drone counts, not shares. They add to ${fmtN(Math.round(sum))}. Rescale so they add to 1.`);
   if (!veq(res, want, 2e-3)) return fail('values', `LANTERN reports ${fmtV(res.map((t) => Math.round(t * 1000) / 1000))}. The drones settle at (0.5, 0.3, 0.2).`);
-  return { ok: true, message: `After ${repeats} repeats the change is under 0.001: shares (0.5, 0.3, 0.2), so 150, 90 and 60 of the 300 drones.`, trace, result: res, repeats, fault: null };
+  const [b3, m3, s3] = res.map((t) => Math.round(t * TOTAL));
+  return { ok: true, message: `After ${repeats} repeats the change is under 0.001. To three decimals the shares are ${procShares(res)}: about ${b3}, ${m3} and ${s3} of the ${TOTAL} drones. The exact steady state is ${fmtV(want.map((t) => Math.round(t * 1000) / 1000))}.`, trace, result: res, repeats, fault: null };
 }
 
 // ------------------------------------------------------------------ build: the crew version

@@ -61,6 +61,8 @@ export class UndoBench {
   private fired = false;
   private busy = false;
   private landed = false;
+  /** Off once the puzzle moves past the bench (c13-p6's probe): no drags, no typing, no Fire. */
+  private enabled = true;
 
   constructor(p: PuzzleCtx, o: UndoBenchOpts) {
     this.p = p;
@@ -95,12 +97,16 @@ export class UndoBench {
 
     this.input = new MatrixInput({
       rows: 2, cols: 2, values: this.U, colourCols: true, label: 'U =', step: o.snap ?? 0.5,
-      onChange: (m) => { this.U = m; this.c1.arrow.setTo(col(m, 0)); this.c2.arrow.setTo(col(m, 1)); this.changed(true); },
+      onChange: (m) => {
+        // a locked cell still takes arrow keys, so put the value back
+        if (!this.enabled) { this.input.set(this.U); return; }
+        this.U = m; this.c1.arrow.setTo(col(m, 0)); this.c2.arrow.setTo(col(m, 1)); this.changed(true);
+      },
       onSubmit: () => void this.fire(),
     });
     this.fireBtn = button('Fire the undo', () => void this.fire(), { cls: 'primary', kbd: 'Space' });
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== ' ' || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || p.g.dialogue.active) return;
+      if (!this.enabled || e.key !== ' ' || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || p.g.dialogue.active) return;
       e.preventDefault();
       void this.fire();
     };
@@ -159,7 +165,7 @@ export class UndoBench {
 
   /** Play U on top of the damage. Resolves true when every point is back. */
   async fire(): Promise<boolean> {
-    if (this.busy || this.p.won) return false;
+    if (this.busy || this.p.won || !this.enabled) return false;
     if (this.landed) await this.backToDamage();
     this.busy = true;
     this.p.move();
@@ -184,9 +190,9 @@ export class UndoBench {
       return ok;
     } finally {
       this.busy = false;
-      this.c1.setEnabled(true);
-      this.c2.setEnabled(true);
-      this.fireBtn.disabled = false;
+      this.c1.setEnabled(this.enabled);
+      this.c2.setEnabled(this.enabled);
+      this.fireBtn.disabled = !this.enabled;
       if (!this.p.won) this.paint();
     }
   }
@@ -215,7 +221,13 @@ export class UndoBench {
     return [[a[0], a[1], 0], [b[0], b[1], 0]];
   }
 
-  setEnabled(on: boolean): void { this.c1.setEnabled(on); this.c2.setEnabled(on); this.fireBtn.disabled = !on; }
+  setEnabled(on: boolean): void {
+    this.enabled = on;
+    this.c1.setEnabled(on);
+    this.c2.setEnabled(on);
+    this.fireBtn.disabled = !on;
+    for (const i of [0, 1]) for (const j of [0, 1]) this.input.setLocked(i, j, !on);
+  }
 
   /** A short pause the tests can wait on. */
   static async settle(ms = 200): Promise<void> { await wait(ms); }

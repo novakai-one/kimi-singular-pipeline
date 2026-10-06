@@ -183,8 +183,8 @@ export const law: LawDef<PlaneCase> = {
 
 export const compare: CompareDef = {
   id: 'c07',
-  page: 'A **line** is a point plus any multiple of a direction: $\\mathbf r = \\mathbf p + t\\mathbf d$. Turning $t$ slides a point along it.\n\nA **plane** is every point $X$ whose arrow from a fixed point $P$ is at a right angle to one arrow $\\mathbf n$ sticking out of it: $\\mathbf n\\cdot(X - P) = 0$. That is a dot product equal to zero. Expanded it reads $ax + by + cz = d$: one linear equation, so the surface is flat. The numbers $(a, b, c)$ are $\\mathbf n$.\n\nTo find where a path meets a plane, substitute $\\mathbf p + t\\mathbf d$ into the equation and solve for $t$. Two lines in space can miss without being parallel: skew lines.',
-  formula: '\\mathbf n\\cdot(X - P) = 0 \\iff ax + by + cz = d \\qquad t = \\frac{d - \\mathbf n\\cdot\\mathbf p}{\\mathbf n\\cdot\\mathbf d}',
+  page: 'A **line** is a point plus any multiple of a direction: $\\mathbf r = \\mathbf p + t\\mathbf d$. Turning $t$ slides a point along it.\n\nA **plane** is every point $X$ whose arrow from a fixed point $P$ is at a right angle to one arrow $\\mathbf n$ sticking out of it: $\\mathbf n\\cdot(X - P) = 0$. That is a dot product equal to zero. Expanded it reads $ax + by + cz = k$, with the number $k = \\mathbf n\\cdot P$ (the Law called it $d$): one linear equation, so the surface is flat. The numbers $(a, b, c)$ are $\\mathbf n$.\n\nTo find where a path meets a plane, substitute $\\mathbf p + t\\mathbf d$ into the equation and solve for $t$. Two lines in space can miss without being parallel: skew lines.',
+  formula: '\\mathbf n\\cdot(X - P) = 0 \\iff ax + by + cz = k \\qquad t = \\frac{k - \\mathbf n\\cdot\\mathbf p}{\\mathbf n\\cdot\\mathbf d}',
   keyIdeas: [
     'Did you say the plane is every point whose arrow from P is at a right angle to the normal?',
     'Did you say the numbers in front of x, y and z are the normal?',

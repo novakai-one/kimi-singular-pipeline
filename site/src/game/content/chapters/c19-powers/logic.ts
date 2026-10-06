@@ -141,7 +141,7 @@ export function diagonalisable2(A: Mat): boolean {
 export const allAtAnchorHolds = (x: readonly number[]): boolean => norm(matVec(mpow(V2, 50), x as Vec)) < 0.01;
 /** (F) "Diagonalisable means invertible." */
 export const diagInvHolds = (A: Mat): boolean => !diagonalisable2(A) || Math.abs(det(A)) > 1e-9;
-/** (T) "A 2 × 2 with two different eigenvalues can always be diagonalised." */
+/** (T) "A 2 × 2 with two different real eigenvalues can always be diagonalised." Complex or repeated: the claim says nothing, so the case agrees. */
 export function distinctDiagHolds(A: Mat): boolean {
   const e = eig2(A);
   if (e.kind !== 'real' || Math.abs(e.values[0] - e.values[1]) < 1e-9) return true;
@@ -181,7 +181,11 @@ export const LAW_CORE: LawCore<PowCase> & { answer: Record<string, string> } = {
   },
   describe: (c) => {
     const plain = (M: Mat) => `(${M.map((r) => r.map(fmtN).join(', ')).join('; ')})`;
-    return `P = ${plain(c.P)}, M = ${plain(c.M)}${isDiag(c.M) ? ' (diagonal)' : ' (not diagonal)'}, k = ${c.k}: (PMP⁻¹)^${c.k} = P M^${c.k} P⁻¹ = ${plain(conjPow(c).map((r) => r.map((x) => Math.round(x * 100) / 100)))}`;
+    const r2 = (A: Mat) => A.map((r) => r.map((x) => Math.round(x * 100) / 100));
+    // the powers-of-P side, shown only where it differs: that is the evidence against "the powers of P cancel"
+    const lhs = conjPow(c), q = matMul(matMul(mpow(c.P, c.k), mpow(c.M, c.k)), inverse(mpow(c.P, c.k))!);
+    return `P = ${plain(c.P)}, M = ${plain(c.M)}${isDiag(c.M) ? ' (diagonal)' : ' (not diagonal)'}, k = ${c.k}: (PMP⁻¹)^${c.k} = P M^${c.k} P⁻¹ = ${plain(r2(lhs))}`
+      + (meq(lhs, q, 1e-6) ? '' : `, but P^${c.k} M^${c.k} P^−${c.k} = ${plain(r2(q))}`);
   },
 };
 export const LAW_NEAR_MISSES: Record<string, string>[] = [{ scope: 'diag', why: 'cancel' }, { scope: 'every', why: 'diagM' }, { scope: 'every', why: 'powers' }];

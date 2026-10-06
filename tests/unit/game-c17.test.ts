@@ -6,6 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import * as L from '../../site/src/game/content/chapters/c17-coordinates/logic.ts';
 import { S, spell } from '../../site/src/game/content/chapters/c17-coordinates/script.ts';
 import {
@@ -116,6 +117,17 @@ test('p6 [D]: area, diagonal sum and the fourth pulse match; entries and the lan
   }
 });
 
+test('p6 par: reachable on every difficulty (measurements, marks, checked lines, slider changes and tile submits count a move)', () => {
+  // five measurements and five marks, then the reason: cadet one slider change (two through the ½ step),
+  // navigator four checked worksheet lines, commander the tile submit and the last line
+  const p6Min = { cadet: 5 + 5 + 2, navigator: 5 + 5 + 4, commander: 5 + 5 + 1 + 1 };
+  assert.deepEqual(L.P6_MIN, p6Min);
+  assert.equal(L.P6_PAR, Math.max(...Object.values(p6Min)));
+  assert.equal(L.P6_PAR, 14);
+  const src = readFileSync(new URL('../../site/src/game/content/chapters/c17-coordinates/puzzles2.ts', import.meta.url), 'utf8');
+  assert.match(src, /export const p6: PuzzleDef = \{[\s\S]*?\n  par: P6_PAR,/, 'p6 uses the computed par');
+});
+
 test('p7 [S]: the translated forecast lands on (1, 1, 0), where the bow went (TT5)', () => {
   assert.ok(meq(L.railProduct([inverse(P)!, S_now, P]), T3));
   assert.ok(veq(L.BOW3_REAL, [1, 1, 0]) && veq(L.BOW3_SPIRE, [0, 1, 0]));
@@ -160,7 +172,8 @@ test('Doubts: right angles are not needed; same numbers, different motion; simil
 
 test('Review: the point does not move; P goes B → standard; four pulses carry over; entries change', () => {
   assert.equal(L.basisMovesPointHolds(L.P1_SHIP, P2), false);
-  assert.equal(L.basisMovesPointHolds(L.P1_SHIP, identity(2)), false);
+  assert.equal(L.basisMovesPointHolds(L.P1_SHIP, identity(2)), true, 'the starting grid agrees with the claim: nothing has changed yet');
+  assert.equal(L.basisMovesPointHolds(L.P1_SHIP, [[-1, 3], [0, 1]]), false, 'a changed basis whose numbers for (3, 2) happen to be (3, 2) still breaks it');
   assert.equal(L.pToBHolds(P2, L.P1_SHIP), false, 'P(3, 2) = (5, 2), but the B-numbers are (1, 2)');
   assert.equal(L.pToBHolds(identity(2), [2, 5]), true, 'in our own grid both directions agree');
   assert.equal(L.sameEntriesHolds(R2, P2), false);

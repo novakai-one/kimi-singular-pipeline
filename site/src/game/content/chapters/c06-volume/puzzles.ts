@@ -18,9 +18,9 @@ import { rng, rint } from '../../../game/lawcheck';
 import { StrutBox, Tetra } from './crystal';
 import { until } from './stage';
 import {
-  C_A, C_AB, C_B, C_C0, C_K, CL_P, CL_Q, CL_R, CL_S, CL_S_BENT, CL_TRAP, H_A, H_B, H_C, N7, N7_LOG0, N7_NAMES, P1_SPOTS,
-  P1_U, P1_U0, P1_V, P1_W, P1_W0, P2, P4, P6, boxVol, braceVol, fmt, isCyclicOfRule, logVol, num, p1Accept, p1Won,
-  p2OrderOk, p3Won, p5Won, sixTets, swapLog, triple,
+  C_A, C_AB, C_B, C_C0, C_K, C_MID, CL_P, CL_Q, CL_R, CL_S, CL_S_BENT, CL_TRAP, H_A, H_B, H_C, N7, N7_LOG0, N7_NAMES, P1_SPOTS,
+  P1_U, P1_U0, P1_V, P1_VOLUME, P1_W, P1_W0, P2, P4, P6, boxVol, braceVol, fmt, isCyclicOfRule, logVol, num, p1Accept, p1Won,
+  p2OrderOk, p3Won, p5NextSwap, p5Won, sixTets, swapLog, triple,
 } from './logic';
 import { S } from './script';
 
@@ -67,6 +67,10 @@ export const p1: PuzzleDef = {
     await p.g.stage.view3D({ target: [1.2, 1.4, 2.6], distance: 21, azimuth: -62, elevation: 21, ms: 0 });
     floor(p);
     const cadet = p.difficulty === 'cadet';
+    // the height tolerance (GDD: ±0.05, commander ±0.01); the volume tolerance is base area 6 times it
+    const tol = p.difficulty === 'commander' ? 0.01 : 0.05;
+    let gone = false;
+    p.onDispose(() => { gone = true; });
     let w: V3 = v3(P1_W0), u: V3 = v3(P1_U0);
     const av = new Arrow([0, 0, 0], v3(P1_V), { color: C.v, label: '$\\mathbf v$' });
     const aw = new Arrow([0, 0, 0], w, { color: C.w, label: '$\\mathbf w$' });
@@ -97,7 +101,7 @@ export const p1: PuzzleDef = {
     if (cadet) { deck.setOpacity(0.6); }
     const accept = (t: V3) => {
       if (won || !pulsed) return;
-      if (p1Accept(spots, t)) {
+      if (p1Accept(spots, t, tol)) {
         spots.push(t);
         const gh = new Arrow([0, 0, 0], t, { color: BLUE, opacity: 0.35, width: 0.03 });
         p.add(gh); ghosts.push(gh);
@@ -108,7 +112,7 @@ export const p1: PuzzleDef = {
         return;
       }
       const vol = boxVol(t, P1_V, w);
-      if (Math.abs(vol - 24) > 0.6) { sfx.miss(); p.bark('lantern', `Volume ${num(vol)}. The tip is ${num(t[2])} above the base, so the box holds 6 × ${num(t[2])}.`); }
+      if (Math.abs(vol - P1_VOLUME) > tol * P2.base) { sfx.miss(); p.bark('lantern', `Volume ${num(vol)}. The tip is ${num(t[2])} above the base, so the box holds 6 × ${num(t[2])}.`); }
       else p.bark('lantern', 'Still 24, but that spot is too close to one already counted. Find a new one.');
     };
     const pulse = async () => {
@@ -120,10 +124,12 @@ export const p1: PuzzleDef = {
       void p.g.stage.shockwave([0, 0, 0], 1400, 0.5);
       const w0 = w, u0 = u;
       await animate(1400, (k) => {
+        if (gone) return;
         w = [w0[0] + (P1_W[0] - w0[0]) * k, 3, 0];
         u = [u0[0] + (P1_U[0] - u0[0]) * k, u0[1] + (P1_U[1] - u0[1]) * k, 4];
         aw.setTo(w); hu.arrow.setTo(u); box.set(v3(P1_V), w, u); show();
       }, ease.inOut);
+      if (gone) return;
       w = v3(P1_W); u = v3(P1_U);
       hu.setEnabled(true);
       p.subgoal(0);
@@ -198,6 +204,9 @@ export const p2: PuzzleDef = {
     // the pieces arrive one at a time (cadet watches them)
     const layers = [box.base!.object, box.normal!.object, box.shadow!.object];
     let revealed = d !== 'cadet';
+    // a Skip during the reveal must not bark or tick over the next beat
+    let gone = false;
+    p.onDispose(() => { gone = true; });
     if (d === 'cadet') {
       layers.forEach((o) => { o.visible = false; });
       r.hideRow('h'); r.hideRow('v'); r.hideRow('t');
@@ -210,13 +219,14 @@ export const p2: PuzzleDef = {
         ];
         for (const [i, text, rows] of steps) {
           await wait(p.g.headless ? 10 : 1300);
-          if (p.won) return;
+          if (p.won || gone) return;
           layers[i].visible = true;
           rows.forEach((k) => r.hideRow(k, false));
           sfx.tick(i);
           p.bark('lantern', text);
         }
         await wait(p.g.headless ? 10 : 1200);
+        if (p.won || gone) return;
         r.hideRow('v', false); r.hideRow('t', false);
         revealed = true;
         hu.setEnabled(true);
@@ -302,22 +312,30 @@ export const p3: PuzzleDef = {
     const ac = new Arrow([0, 0, 0], c(), { color: BLUE, label: '$\\mathbf c$' });
     p.add(ac);
     const box = new StrutBox(p, v3(C_A), v3(C_B), c(), { numbers: d === 'cadet' });
-    const plane = new PlanePatch(p.g.stage, [0.8, 0.9, 0.6], v3(C_AB), { color: '#9fb6d8', size: 5, opacity: 0.08 });
-    plane.setOpacity(0.5);
+    // the plane of a and b, through the origin (anchored at C_MID, the centre of 0, a, b and the flat c)
+    const plane = new PlanePatch(p.g.stage, v3(C_MID), v3(C_AB), { color: '#9fb6d8', size: 5, opacity: 0.08 });
     p.add(plane);
-    if (d === 'commander') { box.show(false); plane.setOpacity(0); }
+    // the Call it asks before the box is drawn: box, plane and volume appear with the first brace
+    box.show(false); plane.setOpacity(0);
+    let drawn = false;
+    const draw = () => {
+      if (drawn) return;
+      drawn = true;
+      box.show(true);
+      if (d !== 'commander') plane.setOpacity(0.5);
+    };
     const r = p.readout('Section C · one node');
     const show = (withVol: boolean) => {
       r.row('c', '$\\mathbf c$', fmt(c()), BLUE);
       if (withVol) r.row('v', 'volume $(\\mathbf a\\times\\mathbf b)\\cdot\\mathbf c$', num(braceVol(k)), C.result);
     };
-    show(d === 'cadet');
+    show(false);
     let won = false;
     const brace = async (kk: number, ms = 1100) => {
       if (won) return;
       p.move();
       const k0 = k;
-      box.show(true);
+      draw();
       sfx.thrust(0.6);
       await animate(ms, (t) => { k = k0 + (kk - k0) * t; ac.setTo(c()); box.set(v3(C_A), v3(C_B), c()); show(d !== 'commander' || t > 0.99); }, ease.inOut);
       k = kk;
@@ -338,7 +356,7 @@ export const p3: PuzzleDef = {
     };
     let solveD: () => void | Promise<void>;
     if (d === 'cadet') {
-      const slider = new Slider({ label: 'brace $k$', min: 0, max: 6, step: 0.5, value: 1, onInput: (x) => { k = x; ac.setTo(c()); box.set(v3(C_A), v3(C_B), c()); show(true); } });
+      const slider = new Slider({ label: 'brace $k$', min: 0, max: 6, step: 0.5, value: 1, onInput: (x) => { draw(); k = x; ac.setTo(c()); box.set(v3(C_A), v3(C_B), c()); show(true); } });
       p.dock().append(slider.el, button('Brace', () => void brace(k, 300), { cls: 'primary small' }));
       solveD = async () => { slider.set(C_K, false); await brace(C_K, 400); };
     } else {
@@ -447,7 +465,7 @@ export const p4: PuzzleDef = {
         steps: [
           { prompt: '$(R - P)\\times(S - P) = (0, 1, 1)\\times(1, 2, 3)$', answer: P4.crossBent },
           { prompt: 'The box: $(Q - P)\\cdot\\big((R - P)\\times(S - P)\\big)$', answer: P4.box },
-          { prompt: 'The tetrahedron PQRS', answer: P4.tet, mistakes: [[2, 'That is the whole box. The tetrahedron on the same three edges is one sixth of it.'], [1, 'Half the box is a prism; the tetrahedron is a third of that prism.']] },
+          { prompt: 'The tetrahedron PQRS (exactly; fractions like 2/6 are fine)', answer: P4.tet, mistakes: [[2, 'That is the whole box. The tetrahedron on the same three edges is one sixth of it.'], [1, 'Half the box is a prism; the tetrahedron is a third of that prism.'], [0.33, 'Close, but that is rounded. Type it exactly, as a fraction: one sixth of 2.']] },
         ],
         onDone: () => void done(),
       });
@@ -495,8 +513,8 @@ export const p5: PuzzleDef = {
   },
   hints: [
     'The log lists the struts as 1, 2, 3. Compare it with the rule: along, across, up.',
-    'Strut 1 is the across strut and strut 2 is the along strut. They are the swapped pair.',
-    'Swap 1 ↔ 2.',
+    'Read the log against the rule, place by place. Find a strut that is not where the rule puts it.',
+    'Swap that strut into its place. If the log then reads +24 but in a turned-round order, swap once more. If the log still reads across, along, up: **Swap 1 ↔ 2**.',
   ],
   par: 1,
   view: '3d',
@@ -547,9 +565,18 @@ export const p5: PuzzleDef = {
     };
     const btn = (i: number, j: number) => button(`Swap ${i + 1} ↔ ${j + 1}`, () => void swap(i, j), { cls: 'small' });
     p.dock().append(h('div', { class: 'kicker' }, 'Node 7 log'), chips, h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' }, btn(0, 1), btn(1, 2), btn(0, 2)));
+    // from any log the player has reached: put each place's strut there, one swap at a time (at most two)
+    const fix = async (ms?: number) => {
+      await until(() => !busy);
+      for (let n = 0; n < 3 && !p5Won(order); n++) {
+        const [i, j] = p5NextSwap(order);
+        await swap(i, j, ms);
+        await until(() => !busy);
+      }
+    };
     return {
-      async showMe() { await swap(0, 1); },
-      async solve() { await swap(0, 1, 0); },
+      async showMe() { await fix(); },
+      async solve() { await fix(0); },
       async wrong() { await swap(1, 2, 0); },
     };
   },

@@ -5,7 +5,7 @@ import type { Line } from '../../lines';
 export const S: Record<string, Line[]> = {
   open: [
     { who: 'lantern', text: 'Bow frame survey complete. Every frame in the bow is out of square.' },
-    { who: 'bram', text: 'Three years of pulses. The frames moved with the space they sit in, and nothing ever pushed them back.' },
+    { who: 'bram', text: 'One pulse did this. The frames move with the space they sit in, and the last pulse leaned every one of them.' },
     { who: 'wren', text: 'Can anything push them back now?' },
     { who: 'bram', text: 'The bow has frame jacks. Give them one move and they push every joint along it. We need the move that undoes the damage.' },
     { who: 'lantern', text: 'Practice frame on the bench. Same plan as the bow. It took one quarter turn.' },
@@ -66,7 +66,9 @@ export const S: Record<string, Line[]> = {
     { who: 'bram', text: 'Optional, Nav. LANTERN keeps the multipliers from every elimination. Show me why that is worth the memory.' },
   ],
   p7Win: [
-    { who: 'lantern', text: 'Stored: L holds the multipliers, U is the row echelon form, and L times U is the joint\'s matrix again. This is the LU factorisation.' },
+    { who: 'lantern', text: 'Stored: L holds the multipliers, U is the row echelon form, and L times U is A again. This is the LU factorisation.' },
+    { who: 'lantern', text: 'With L and U stored, each new right-hand side takes two quick substitutions: down through L, then back up through U. No new elimination.' },
+    { who: 'bram', text: 'Eliminate once, reuse it every time. Worth the memory.' },
   ],
   brief: [
     { who: 'bram', text: 'Before the jacks touch another frame, you brief me. Holotable.' },

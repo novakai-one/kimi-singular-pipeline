@@ -115,7 +115,7 @@ export const doubtRight: DoubtDef = {
 export const doubtArea: DoubtDef = {
   id: 'c17-d-area', who: 'bram', isTrue: true,
   claim: 'Write a move in any grid you like. It still scales area by the same amount.',
-  reason: 'Written in the grid with arrows $P$, the move $A$ becomes $P^{-1}AP$, and $\\det(P^{-1}AP) = \\det P^{-1}\\cdot\\det A\\cdot\\det P = \\det A$ because $\\det P^{-1} = 1/\\det P$. Area does not care whose grid you count in: that is why the spire numbers forecast the volume exactly.',
+  reason: 'Written in the grid with arrows $P$, the move $A$ becomes $P^{-1}AP$, and $\\det(P^{-1}AP) = \\det P^{-1}\\cdot\\det A\\cdot\\det P = \\det A$ because $\\det P^{-1} = 1/\\det P$. Area scaling does not depend on the grid you count in: that is why the spire numbers forecast the volume exactly.',
   goal: 'Set a move $A$ and drag the grid arrows. The yellow tile is what $A$ does to a square of our grid; the copper tile, to a cell of the copper grid. **Back it** (Bram will shake it) or **Challenge it**.',
   view: '2d',
   setup(p) {
@@ -234,7 +234,7 @@ export const law: LawDef<GridCase> = {
     options: [
       { id: 'a', text: '$P\\mathbf c = c_1\\mathbf b_1 + c_2\\mathbf b_2$: the new numbers weight the new arrows, and the arrows are written in old numbers, so the sum is the point in old numbers.', right: true, why: 'Yes. A matrix times a vector mixes its columns with the vector’s numbers as weights. Here the columns are the new arrows, so the mix is the point, in old numbers. Going the other way needs $P^{-1}$: solve $P\\mathbf c = \\mathbf x$.' },
       { id: 'b', text: 'Multiplying by $P$ moves the point onto the new grid.', right: false, why: 'The point never moves. $P\\mathbf c$ is the same point, written in the old numbers. Only its description changes.' },
-      { id: 'c', text: 'Its columns are the new arrows, so it hands out numbers in the new grid.', right: false, why: 'Its columns are the new arrows **written in old numbers**. Feed it weights on the new arrows and old numbers come out. That is the most common mix-up, and it was Ilse’s.' },
+      { id: 'c', text: 'Its columns are the new arrows, so it hands out numbers in the new grid.', right: false, why: 'Its columns are the new arrows **written in old numbers**. Feed it weights on the new arrows and old numbers come out. That is the most common mix-up.' },
     ],
   },
 };

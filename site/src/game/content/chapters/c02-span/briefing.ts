@@ -190,11 +190,12 @@ export const law: LawDef<SpanCase> = {
     if (Math.hypot(...w) > 1e-9) g.stage.world.add(own(new Arrow([0, 0, 0], w, { color: C.w, label: '$\\mathbf w$' })).object);
   },
   reason: {
-    ask: 'Your Law survived. **Why** do two arrows that are not on one line reach the whole plane?',
+    // Three fillings survive (plane/apart, line/onelineNZ, point/zero), so the reason covers all of them.
+    ask: 'Your Law survived. **Why** does it all come down to whether $\\mathbf v$ and $\\mathbf w$ lie on one line?',
     options: [
-      { id: 'split', text: 'Through any point, draw a line along $\\mathbf w$. It crosses the line of $\\mathbf v$, so the point is a stretch of $\\mathbf v$ plus a stretch of $\\mathbf w$.', right: true, why: 'Yes. The two lines through the origin cross, so every point splits into a part along v and a part along w. Each part is one dial setting.' },
+      { id: 'split', text: 'Not on one line: through any point, draw a line along $\\mathbf w$. It crosses the line of $\\mathbf v$, so the point is a stretch of $\\mathbf v$ plus a stretch of $\\mathbf w$: the whole plane. On one line: every stretch and every sum stays on that line. If both arrows are zero, that is only the origin.', right: true, why: 'Yes. When the two lines through the origin cross, every point splits into a part along v and a part along w, one dial setting each. When v and w share a line, nothing leaves it, and two zero arrows never leave the origin.' },
       { id: 'between', text: 'The two arrows fill the space between them, and the dials push that space outwards.', right: false, why: 'The reach is not built from the space between the arrows. Dials can be negative, so the reach also covers the far side, where neither arrow points.' },
-      { id: 'two', text: 'Two arrows always reach everything.', right: false, why: 'Not when they lie on one line: every stretch and every sum stays on that line. Your own Law says when it works.' },
+      { id: 'two', text: 'Two arrows always reach everything.', right: false, why: 'Not when they lie on one line: every stretch and every sum stays on that line. And two zero arrows reach only the origin.' },
     ],
   },
 };

@@ -49,6 +49,16 @@ test('p1: both lines with their stretches win; one line, a wrong stretch or a tu
   assert.ok(L.onLine(L.P1_A, [Math.cos(Math.PI / 4 + 0.01), Math.sin(Math.PI / 4 + 0.01)], 2), 'within 2° of the diagonal counts');
 });
 
+test('p1 Cadet: the Sweep finds a line up to 3° off it, where A x can be turned more; autoLock locks the line found', () => {
+  // the Sweep's onFound fires once, at the first angle within tol = 3°; near (1, −1) the turn is about twice the offset
+  const at = (deg: number) => [Math.cos((deg * Math.PI) / 180), Math.sin((deg * Math.PI) / 180)];
+  assert.ok(L.turnDeg(L.P1_A, at(-45 + 3)) > 3, 'λ = 1: 3° off the line, A x is turned more than 3°');
+  assert.ok(L.turnDeg(L.P1_A, at(-45 + 2)) > 3, 'λ = 1: even 2° off');
+  assert.ok(L.turnDeg(L.P1_A, at(45 + 3)) <= 3, 'λ = 3: the turn is (2/3) of the offset');
+  // locking the found line itself (its exact angle) always holds
+  for (const M of [L.P1_A, L.P7_U]) for (const l of L.eigenLines(M)) assert.ok(L.turnDeg(M, [Math.cos(Math.atan2(l.dir[1], l.dir[0])), Math.sin(Math.atan2(l.dir[1], l.dir[0]))]) < 1e-6);
+});
+
 test('p2: the shear keeps one line; the win needs the full sweep as evidence', () => {
   const lock: L.Lock[] = [{ dir: [1, 0], stretch: 1 }];
   assert.equal(L.eigenLines(L.P2_A).length, 1);
@@ -95,6 +105,12 @@ test('p6: Vell’s three lines with stretches 1, 0.5, 0.2; the decoy candidates 
   const holds = L.P6_CANDIDATES.filter((c) => L.onLine(V, c, 0.5));
   assert.equal(holds.length, 3);
   assert.ok(!L.onLine(V, [1, 0, 0], 1) && !L.onLine(V, [1, 1, 0], 1));
+  // the win message: arrows with a part along (1, 1, 1) turn towards it; the plane x + y + z = 0 stays put
+  const x: number[] = [1, 0, -1];
+  close(matVec(V, x).reduce((a, b) => a + b, 0), 0, 1e-12);
+  assert.ok(Math.hypot(...matVec(mpow(V, 50), x)) < 1e-12, 'V⁵⁰(1, 0, −1) fades to 0, not onto (1, 1, 1)');
+  // the hint: where x has a 0, V x has a 0 too (the third entry of (1, −1, 0))
+  close(matVec(V, [1, -1, 0])[2], 0, 1e-12);
 });
 
 test('p7 [S]: row reducing first changes the stretches (4 and 2.5, not 5 and 2)', () => {
@@ -152,6 +168,31 @@ test('Procedure: the reference finds λ = 4, 1 along (1, 1), (2, −1); each mis
   assert.equal(L.runProc(['rowred', ...L.PROC_REF]).fault, 'values');
   assert.equal(L.runProc(['direct', 'foreach', 'null', 'exclude']).fault, 'direct');
   assert.ok(L.PROC_KEYS.every((k) => L.PROC_REF.includes(k)));
+});
+
+test('Procedure: a decoy at the start, in the middle or at the end never passes, and names its own fault', () => {
+  const REF = L.PROC_REF;
+  const put = (t: string, i: number) => [...REF.slice(0, i), t, ...REF.slice(i)];
+  // every position of each decoy fails
+  for (const t of ['rowred', 'direct']) for (let i = 0; i <= REF.length; i++) assert.equal(L.runProc(put(t, i)).ok, false, `${t} at ${i}`);
+  // SOLVE (A − λI)v = 0 STRAIGHT AWAY: “without choosing λ” only while λ is not chosen yet
+  const early = L.runProc(['direct', ...REF]), mid = L.runProc(put('direct', REF.indexOf('solve') + 1)), end = L.runProc([...REF, 'direct']);
+  for (const r of [early, mid, end]) assert.equal(r.fault, 'direct');
+  assert.ok(early.message.includes('without choosing'));
+  for (const r of [mid, end]) { assert.ok(!r.message.includes('without choosing'), r.message); assert.ok(r.message.includes('zero arrow')); }
+  // ROW REDUCE A FIRST: before the roots it changes the stretches; after them it changes the null spaces or the lines
+  assert.equal(L.runProc(['rowred', ...REF]).fault, 'values');
+  assert.equal(L.runProc(put('rowred', REF.indexOf('solve'))).fault, 'values');
+  const afterRoots = L.runProc(put('rowred', REF.indexOf('solve') + 1));
+  assert.equal(afterRoots.fault, 'rowred');
+  assert.ok(!afterRoots.message.includes('find the null space'), afterRoots.message);
+  assert.ok(afterRoots.message.includes('U - 4I') && afterRoots.message.includes('U - I'), afterRoots.message);
+  assert.ok(afterRoots.message.includes('2 & 2 \\\\ 0 & 2'), 'U = [[2, 2], [0, 2]]');
+  const afterLines = L.runProc([...REF, 'rowred']);
+  assert.equal(afterLines.fault, 'rowred');
+  assert.ok(afterLines.message.includes('the one stretch 2'), afterLines.message);
+  // no null step at all is still “find the null space”
+  assert.equal(L.runProc(REF.filter((x) => x !== 'null')).fault, 'novectors');
 });
 
 // ------------------------------------------------------------------ builds in CPython

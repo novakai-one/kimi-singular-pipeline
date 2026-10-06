@@ -8,15 +8,16 @@ import { FatLine, FatSegments } from '../../../gfx/lines';
 import { Parallelepiped } from '../../../gfx/shapes';
 import { loadModel } from '../../../gfx/models';
 import { RightAngle } from '../../../kit/geom';
-import { MatrixInput } from '../../../ui/widgets';
+import { MatrixInput, VectorInput } from '../../../ui/widgets';
 import { h, button } from '../../../ui/ui';
 import { C } from '../../../core/theme';
 import { animate, ease, wait } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
 import { rint, rng } from '../../../game/lawcheck';
+import { isPlayerFn, pylib } from '../../../game/build';
 import { makeAnchor } from '../../common/set';
-import { C as COLLAPSE, P2, R, R2, T } from '../../truth';
-import { col, det, identity, matVec, mpow, type Mat } from '../../../math/la';
+import { C as COLLAPSE, ILSE_MEANT, P, P2, R, R2, T } from '../../truth';
+import { col, det, identity, matVec, meq, mpow, type Mat } from '../../../math/la';
 import { AnchorPath, COPPER, CopperGrid, SHIP_GRID, tag } from './grids';
 import { gridHandles, randGrid } from './briefing';
 import {
@@ -24,6 +25,7 @@ import {
   motionIn, basisMovesPointHolds, pToBHolds, sameEntriesHolds, shipMove, spClear, spFootOk, spForecast, spSettingOk, spVolumeOk, streamFoot,
   texSmall, turn3,
 } from './logic';
+import { normLine } from '../../lines';
 import { S } from './script';
 
 const v3 = (v: readonly number[], z = 0): V3 => [v[0], v[1], (v[2] ?? 0) + z];
@@ -82,6 +84,16 @@ export function debrisStream(parent: Object3D, tick: (f: (dt: number) => void) =
 }
 
 // ------------------------------------------------------------------ [SP] Set the spires right
+
+/** The spire translator checks the setting before it fires: the player's in_grid(P, R), else Lantern's backup. */
+async function translator(): Promise<'mine' | 'backup'> {
+  if (!isPlayerFn('in_grid')) return 'backup';
+  try {
+    const r = await Promise.race([pylib.call<number[][]>('in_grid', P, R), new Promise<null>((res) => setTimeout(() => res(null), 8000))]);
+    if (r && meq(r, ILSE_MEANT, 1e-6)) return 'mine';
+  } catch { /* the backup runs */ }
+  return 'backup';
+}
 
 const STEPS = ['A true quarter turn, written in the Anchor’s grid', 'It keeps volume', `The ark ends at least ${CLEARANCE} from the stream`, 'Fire it once, unlocked'];
 
@@ -152,7 +164,11 @@ export const sp: PuzzleDef = {
     const d = p.difficulty;
     let S0: Mat = R.map((r) => r.slice());
     const flags = [false, false, false, false];
-    const tick = (i: number) => { if (!flags[i]) { flags[i] = true; p.subgoal(i); } };
+    let won = false, firing = false;
+    const tick = (i: number) => {
+      if (!flags[i]) { flags[i] = true; p.subgoal(i); }
+      fireBtn.disabled = won || firing || !(flags[0] && flags[1] && flags[2]);
+    };
     const r = p.readout('The spires');
     let checked = false;
     const paint = () => {
@@ -174,6 +190,12 @@ export const sp: PuzzleDef = {
     input.el.classList.add('c17-in');
     const msg = h('div', { class: 'c17-msg' }, 'Ilse’s original setting is loaded. It was right for our grid, not for the Anchor’s.');
     const say = (t: string, kind: '' | 'good' | 'bad' = '') => { msg.className = `c17-msg ${kind}`; msg.innerHTML = t; };
+    // the foot's height on the stream, typed (Commander drags with no snap, so exact values are typed)
+    const footIn = new VectorInput({
+      dim: 1, values: [-1], label: '\\text{foot } y =', step: p.snap() ?? 0.25,
+      onChange: (v) => placeFoot(v[0], false), onSubmit: () => { if (won || firing) return; p.move(); checkFoot(); },
+    });
+    footIn.el.classList.add('c17-in');
     const checkSetting = () => {
       p.move(); checked = true; paint();
       if (spSettingOk(S0)) { tick(0); sfx.success(); say('A true quarter turn in our grid, third spire upright.', 'good'); return true; }
@@ -192,7 +214,11 @@ export const sp: PuzzleDef = {
       else await cube.morph(v3(col(M, 0)), v3(col(M, 1)), v3(col(M, 2)), p.g.headless ? 10 : 900);
       ct.set(`volume × ${fmtN(det(M))}`);
       if (spVolumeOk(S0)) { tick(1); sfx.success(); paint(); say('The unit cube keeps its volume: × 1.', 'good'); return; }
-      paint(); sfx.miss(); say(`This setting scales volume by ${fmtN(det(M))}. The ark would come out ${det(M) < 1 ? 'crushed' : 'stretched'}.`, 'bad');
+      const dM = det(M);
+      const how = Math.abs(dM) < 1e-9 ? 'flattened'
+        : dM < 0 ? (Math.abs(Math.abs(dM) - 1) < 1e-9 ? 'mirrored (turned over), though the same size' : `mirrored (turned over) and ${Math.abs(dM) < 1 ? 'crushed' : 'stretched'}`)
+        : dM < 1 ? 'crushed' : 'stretched';
+      paint(); sfx.miss(); say(`This setting scales volume by ${fmtN(dM)}. The ark would come out ${how}.`, 'bad');
     };
     const forecast = () => {
       p.move();
@@ -201,27 +227,32 @@ export const sp: PuzzleDef = {
       gt.show(true); gt.at(v3(f)); gt.set(`forecast ${fmtV(f)}`);
       foot.setOpacity(1); footRing.object.visible = true; ft.show(true);
       placeFoot(footY);
-      say('Drag the white marker along the stream to the point closest to the forecast.');
+      say('Drag the white marker along the stream, or type its height y, to the point closest to the forecast.');
     };
     let footY = -1;
-    const placeFoot = (y: number) => {
+    const placeFoot = (y: number, sync = true) => {
       footY = y;
+      if (sync) footIn.set([y]);
+      if (!footRing.object.visible) return;
       const fp: V3 = [STREAM_X, y, 0.06];
       foot.at(fp); footRing.set(fp, fp); ft.at([STREAM_X, y, 0]);
       const f = spForecast(S0);
       drop.setPoints([v3(f, 0.04), [STREAM_X, y, 0.04]]); drop.object.visible = true;
-      ft.set(`gap ${Math.hypot(f[0] - STREAM_X, f[1] - y, f[2] ?? 0).toFixed(2)}`);
+      ft.set(`foot (${fmtN(STREAM_X)}, ${y.toFixed(2).replace(/^-/, '−')})`);
     };
     const checkFoot = () => {
+      if (won || firing) return;
+      if (!footRing.object.visible) { sfx.miss(); say('Forecast first: the marker goes straight across from the forecast.', 'bad'); return; }
       const f = spForecast(S0);
-      if (!spFootOk([STREAM_X, footY, 0], f, d === 'commander' ? 0.01 : 0.05)) return;
+      if (!spFootOk([STREAM_X, footY, 0], f, d === 'commander' ? 0.01 : 0.05)) {
+        sfx.miss(); say(`The foot is at ${fmtV([STREAM_X, footY, 0])}. The dashed line does not meet the stream at a right angle yet.`, 'bad'); return;
+      }
       placeFoot(streamFoot(f)[1]);
       mark ??= new RightAngle(p, [STREAM_X, footY, 0.05], [0, -1, 0], [f[0] - STREAM_X, 0, 0], 0.3);
       mark.set([STREAM_X, footY, 0.05], [0, -1, 0], [f[0] - STREAM_X, 0, 0]); mark.show(true);
       const dd = distToStream(f);
       if (spClear(S0)) { tick(2); sfx.success(); paint(); say(`The closest point of the stream is ${fmtV(streamFoot(f))}: the ark would be ${fmtN(dd)} steps clear.`, 'good'); }
       else { sfx.miss(); paint(); say(`Only ${fmtN(dd)} from the stream. Clearance needed: ${CLEARANCE}.`, 'bad'); }
-      fireBtn.disabled = !(flags[0] && flags[1] && flags[2]);
     };
     p.g.drag.add({
       target: footRing.grab, getPos: () => new Vector3(STREAM_X, footY, 0.06), snap: () => p.snap(), planar: true,
@@ -229,10 +260,14 @@ export const sp: PuzzleDef = {
       onMove: (q) => { placeFoot(q.y); sfx.tick(q.y); },
       onEnd: () => { p.move(); checkFoot(); },
     });
-    let won = false;
     const fire = async (fast = false) => {
-      if (won || !(flags[0] && flags[1] && flags[2])) return;
+      if (won || firing || !(flags[0] && flags[1] && flags[2])) return;
+      firing = true; fireBtn.disabled = true;
       p.move();
+      // the spire translator checks the setting before the one unlocked pulse
+      const line = normLine(((await translator()) === 'mine' ? S.translatorMine : S.translatorBackup)[0]);
+      p.bark(line.who, line.text);
+      say(line.text, 'good');
       ghost.object.visible = false; gt.show(false); drop.object.visible = false; footRing.object.visible = false; foot.setOpacity(0); ft.show(false); mark?.show(false);
       sfx.collapse(); p.g.stage.flash(0.18, 400); void p.g.stage.shockwave([0, 0, 0], 1800, 0.8);
       // the pulse moves the ark (a quarter turn about the Anchor); the stream keeps its course
@@ -248,7 +283,7 @@ export const sp: PuzzleDef = {
       };
       if (fast) place(1); else await animate(p.g.headless ? 20 : 2400, place, ease.inOut);
       at.set(`ark ${fmtV(ARK_AFTER)}`);
-      won = true; tick(3); sfx.success();
+      won = true; firing = false; tick(3); sfx.success();
       say(`The ark is at ${fmtV(ARK_AFTER)}, clear of the stream.`, 'good');
       p.win();
     };
@@ -256,7 +291,7 @@ export const sp: PuzzleDef = {
     fireBtn.disabled = true;
     p.dock().append(
       h('div', { class: 'c17-row' }, input.el),
-      h('div', { class: 'c17-btns' }, button('Check setting', () => void checkSetting(), { cls: 'small' }), button('Measure volume', () => void measure(), { cls: 'small' }), button('Forecast', () => forecast(), { cls: 'small' }), fireBtn),
+      h('div', { class: 'c17-btns' }, button('Check setting', () => void checkSetting(), { cls: 'small' }), button('Measure volume', () => void measure(), { cls: 'small' }), button('Forecast', () => forecast(), { cls: 'small' }), footIn.el, fireBtn),
       msg);
     paint();
     const solveAll = async (fast: boolean) => {
@@ -301,7 +336,12 @@ const ilseMoves: DoubtDef = {
     });
     return {
       holds: () => basisMovesPointHolds(P1_SHIP, gh.G),
-      describe: () => { const c = anchorOf(P1_SHIP, gh.G); return c ? `basis ${fmtV(col(gh.G, 0))}, ${fmtV(col(gh.G, 1))}: the point is still at ${fmtV(P1_SHIP)}; its numbers are ${fmtV(c)}` : 'the arrows lie on one line'; },
+      describe: () => {
+        const c = anchorOf(P1_SHIP, gh.G);
+        if (!c) return 'the arrows lie on one line';
+        if (meq(gh.G, identity(2), 1e-9)) return `basis ${fmtV(col(gh.G, 0))}, ${fmtV(col(gh.G, 1))}: the basis has not changed yet, so the point is at ${fmtV(P1_SHIP)} and its numbers are ${fmtV(c)}`;
+        return `basis ${fmtV(col(gh.G, 0))}, ${fmtV(col(gh.G, 1))}: the point is still at ${fmtV(P1_SHIP)}; its numbers are ${fmtV(c)}`;
+      },
       randomize(rr, edge) { gh.set(edge === 0 ? P2 : randGrid(rr)); },
       edgeCases: 1,
       async showMe() { await gh.to(P2, 900); },
@@ -313,7 +353,7 @@ const ilseMoves: DoubtDef = {
 const ilseP: DoubtDef = {
   id: 'c17-r-p', who: 'ilse', isTrue: false,
   claim: '$P$ converts standard numbers into B-numbers.',
-  reason: '$P$ goes the other way: its columns are the basis arrows in standard numbers, so $P[\\mathbf x]_\\mathcal B = \\mathbf x$. B-numbers come from solving, $P^{-1}\\mathbf x$. For the Anchor’s basis and $(3, 2)$: $P(3, 2) = (5, 2)$, but the B-numbers are $(1, 2)$. I made exactly this mistake.',
+  reason: '$P$ goes the other way: its columns are the basis arrows in standard numbers, so $P[\\mathbf x]_\\mathcal B = \\mathbf x$. B-numbers come from solving, $P^{-1}\\mathbf x$. For the Anchor’s basis and $(3, 2)$: $P(3, 2) = (5, 2)$, but the B-numbers are $(1, 2)$. My mistake was not this one. I never translated at all: I entered $R$ as it was, and the Anchor read it in its own grid.',
   goal: 'Drag the basis arrows and the point $\\mathbf x$. The orange dot is $P\\mathbf x$; the readout gives the B-numbers of $\\mathbf x$. **Challenge it** or **Back it**.',
   view: '2d',
   setup(p) {
@@ -339,7 +379,7 @@ const ilseP: DoubtDef = {
     gh.onChange(() => draw());
     return {
       holds: () => pToBHolds(gh.G, x),
-      describe: () => { const c = anchorOf(x, gh.G); return c ? `basis ${fmtV(col(gh.G, 0))}, ${fmtV(col(gh.G, 1))}, $\\mathbf x$ = ${fmtV(x)}: $P\\mathbf x$ = ${fmtV(matVec(gh.G, x))}, but the B-numbers are ${fmtV(c)}` : 'the basis arrows lie on one line'; },
+      describe: () => { const c = anchorOf(x, gh.G); return c ? `basis ${fmtV(col(gh.G, 0))}, ${fmtV(col(gh.G, 1))}, $\\mathbf x$ = ${fmtV(x)}: $P\\mathbf x$ = ${fmtV(matVec(gh.G, x))}, ${pToBHolds(gh.G, x) ? 'and the B-numbers are also' : 'but the B-numbers are'} ${fmtV(c)}` : 'the basis arrows lie on one line'; },
       randomize(rr, edge) { if (edge === 0) { gh.set(P2); setX(P1_SHIP); } else { gh.set(randGrid(rr)); setX([rint(rr, -2, 3), rint(rr, -2, 3)]); } },
       edgeCases: 1,
       async showMe() { setX(P1_SHIP); await gh.to(P2, 900); },
@@ -354,6 +394,10 @@ const FOUR_HOME: { id: string; name: string; M: Mat }[] = [
   { id: 'flip', name: 'flip', M: [[0, 1], [1, 0]] },
   { id: 'stretch', name: 'stretch', M: [[2, 0], [0, 1]] },
 ];
+/** Four pulses bring every point home: A⁴ = I. */
+const home4 = (M: Mat): boolean => meq(mpow(M, 4), identity(2), 1e-9);
+/** The Shake tests the claim's condition, so it only picks moves that come home (not the stretch). */
+const FOUR_HOME_SHAKE = FOUR_HOME.filter((f) => home4(f.M));
 const ilseFour: DoubtDef = {
   id: 'c17-r-four', who: 'ilse', isTrue: true,
   claim: 'If four pulses of one matrix bring every point home, four pulses of any similar matrix do too.',
@@ -378,9 +422,8 @@ const ilseFour: DoubtDef = {
       trailA.setSegments(seg(A));
       if (B) trailB.setSegments(seg(B));
       trailB.object.visible = !!B;
-      const home = (M: Mat) => mpow(M, 4).every((row, i) => row.every((v, j) => Math.abs(v - (i === j ? 1 : 0)) < 1e-9));
-      r.row('a', `four pulses of $A$ (${FOUR_HOME.find((f) => f.M === A)?.name ?? 'your move'})`, home(A) ? 'home' : 'not home', C.white);
-      r.row('b', 'four pulses of $PAP^{-1}$', B ? (home(B) ? 'home' : 'not home') : 'no grid', COPPER);
+      r.row('a', `four pulses of $A$ (${FOUR_HOME.find((f) => f.M === A)?.name ?? 'your move'})`, home4(A) ? 'home' : 'not home', C.white);
+      r.row('b', 'four pulses of $PAP^{-1}$', B ? (home4(B) ? 'home' : 'not home') : 'no grid', COPPER);
     };
     gh.onChange(() => draw());
     const picks = h('div', { class: 'c17-btns' }, ...FOUR_HOME.map((f) => button(f.name, () => { A = f.M; draw(); sfx.click(); }, { cls: 'small' })));
@@ -389,14 +432,19 @@ const ilseFour: DoubtDef = {
     const edges: [Mat, Mat][] = [[T, PC], [R2, [[0, 1], [1, 0]]], [[[-1, 0], [0, -1]], [[3, 1], [1, 1]]]];
     return {
       holds: () => fourHomeHolds(A, gh.G),
-      describe: () => { const B = motionIn(A, gh.G); return B ? `$A$ = ${texFree(A)}, read in the grid ${fmtV(col(gh.G, 0))}, ${fmtV(col(gh.G, 1))}: four pulses of each bring $(1, 0.5)$ ${fourHomeHolds(A, gh.G) ? 'home' : 'somewhere else'}` : 'the grid arrows lie on one line'; },
+      describe: () => {
+        const B = motionIn(A, gh.G);
+        if (!B) return 'the grid arrows lie on one line';
+        const where = (M: Mat) => (home4(M) ? 'home' : `to ${fmtV(matVec(mpow(M, 4), start))}`);
+        return `$A$ = ${texFree(A)}, read in the grid ${fmtV(col(gh.G, 0))}, ${fmtV(col(gh.G, 1))}: four pulses of $A$ bring $(1, 0.5)$ ${where(A)}, four pulses of $PAP^{-1}$ bring it ${where(B)}${home4(A) ? '' : ' ($A$ does not come home, so the claim says nothing about this case)'}`;
+      },
       async play() {
         const B = motionIn(A, gh.G) ?? A;
         for (let k = 1; k <= 4; k++) { dotA.at(v3(matVec(mpow(A, k), start), 0.05)); dotB.at(v3(matVec(mpow(B, k), start), 0.06)); await wait(p.g.headless ? 2 : 90); }
       },
       randomize(rr, edge) {
         if (edge !== undefined) { const [a, g] = edges[edge]; A = a; gh.set(g); }
-        else { A = FOUR_HOME[rint(rr, 0, FOUR_HOME.length - 1)].M; gh.set(randGrid(rr)); }
+        else { A = FOUR_HOME_SHAKE[rint(rr, 0, FOUR_HOME_SHAKE.length - 1)].M; gh.set(randGrid(rr)); }
         draw();
       },
       edgeCases: edges.length,

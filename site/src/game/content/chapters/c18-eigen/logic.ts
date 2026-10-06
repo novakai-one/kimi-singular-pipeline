@@ -183,7 +183,7 @@ export const isRealEigenvalue = (A: Mat, l: number, tol = 1e-6): boolean => {
   return e.kind === 'real' && e.values.some((v) => Math.abs(v - l) <= tol);
 };
 export const zeroArrowHolds = (A: Mat, x: readonly number[], l: number): boolean => norm(x as Vec) > 1e-9 || isRealEigenvalue(A, l);
-/** (T) "The eigenvalues add up to the trace." Real pair: λ₁ + λ₂; complex pair: (a + bi) + (a − bi) = 2a. */
+/** (T) "The eigenvalues add up to the trace." Real pair: λ₁ + λ₂; complex pair: (p + qi) + (p − qi) = 2p. */
 export function eigSum(M: Mat): number {
   const e = eig2(M);
   return e.kind === 'real' ? e.values[0] + e.values[1] : 2 * e.re;
@@ -251,16 +251,18 @@ const realRoots = (A: Mat): number[] => { const e = eig2(A); return e.kind === '
 const unitLine = (v: Vec): Vec => { const u = normalize(v); return u[0] < -1e-9 || (Math.abs(u[0]) < 1e-9 && u[1] < 0) ? u.map((x) => -x) : u; };
 
 const DIRECT_MSG = 'LANTERN solved $(A - \\lambda I)\\mathbf v = \\mathbf 0$ without choosing $\\lambda$. For almost every $\\lambda$ the only answer is the zero arrow, so that is all it found. Find the $\\lambda$ that flatten first: $\\det(A - \\lambda I) = 0$.';
+/** The decoy 'direct' placed after the roots are found: it is still the step det(A − λI) = 0 replaces. */
+const DIRECT_LATE_MSG = 'SOLVE $(A - \\lambda I)\\mathbf v = \\mathbf 0$ STRAIGHT AWAY is the step $\\det(A - \\lambda I) = 0$ replaces. Solved for a general $\\lambda$, it only ever returns the zero arrow. Take it out.';
 
 /** Run the tiles literally on PROC_A. A missing or misplaced key step is replaced by its misconception. */
 export function runProc(ids: readonly string[], A0: Mat = PROC_A): ProcRun {
   let A = A0.map((r) => r.slice());
   let formed = false, equation: 'char' | 'detA' | null = null, values: number[] | null = null;
-  let loop = false, vectors: Vec[] = [], zero = false, direct = false;
+  let loop = false, vectors: Vec[] = [], zero = false, direct = false, nullRan = false;
   const steps: ProcStep[] = [];
   const fail = (fault: string, message: string): ProcRun => ({ ok: false, message, values, vectors, zero, steps, fault });
   for (const id of ids) {
-    if (id === 'rowred') { A = rowReduce2(A); steps.push({ tile: id, label: 'Row reduce $A$ first', M: A }); }
+    if (id === 'rowred') { A = rowReduce2(A); steps.push({ tile: id, label: values ? 'Row reduce $A$' : 'Row reduce $A$ first', M: A }); }
     else if (id === 'diag') { values = A.map((r, i) => r[i]); steps.push({ tile: id, label: `Diagonal entries: $\\lambda = ${values.map(fmtN).join(', ')}$` }); }
     else if (id === 'form') { formed = true; steps.push({ tile: id, label: 'Form $A - \\lambda I$', M: A }); }
     else if (id === 'det0') {
@@ -279,6 +281,7 @@ export function runProc(ids: readonly string[], A0: Mat = PROC_A): ProcRun {
     else if (id === 'null') {
       if (!values || !values.length) return direct ? fail('direct', DIRECT_MSG) : fail('novalues', 'LANTERN reached “find the null space” with no $\\lambda$ to use.');
       const use = loop ? values : values.slice(0, 1);
+      nullRan = true;
       for (const l of use) {
         const line = nullLine(A, l);
         if (line) vectors.push(unitLine(line));
@@ -290,14 +293,30 @@ export function runProc(ids: readonly string[], A0: Mat = PROC_A): ProcRun {
       steps.push({ tile: id, label: vectors.length ? 'Leave out the zero arrow' : 'Leave out the zero arrow (nothing listed yet)' });
     }
   }
-  if (direct && (!values || !values.length)) return fail('direct', DIRECT_MSG);
+  // the decoys, checked after the run: a plan that contains a misconception step does not pass
+  const at = (t: string) => ids.indexOf(t);
+  const solveAt = at('solve');
+  if (direct) return fail('direct', solveAt < 0 || at('direct') < solveAt ? DIRECT_MSG : DIRECT_LATE_MSG);
   if (!values) return fail('novalues', 'LANTERN never found a value of $\\lambda$. Form $A - \\lambda I$, set its determinant to 0 and solve.');
   const rightValues = values.length === PROC_VALUES.length && PROC_VALUES.every((v) => values!.some((x) => Math.abs(x - v) < 1e-9));
   if (!rightValues) {
     const why = ids.includes('rowred') ? 'Row operations change the move, so they change its stretches.' : ids.includes('diag') ? 'Only a triangular matrix has its stretches on the diagonal.' : '';
     return fail('values', `LANTERN reports $\\lambda = ${values.map(fmtN).join(', ')}$. The move’s stretches are 4 and 1. ${why}`.trim());
   }
-  if (!vectors.length) return fail('novectors', 'LANTERN found $\\lambda = 4$ and $\\lambda = 1$ and stopped. It has the stretches but not the lines: find the null space of $A - \\lambda I$.');
+  if (ids.includes('rowred')) {
+    // row reduced after the roots were found: the roots are A's, but the null spaces (or the lines) are not
+    const U = rowReduce2(A0), uVals = realRoots(U);
+    const nullAt = at('null'), rowAt = at('rowred');
+    const shifts = values.map((l) => `$U - ${l === 1 ? '' : fmtN(l)}I$`).join(' and ');
+    return fail('rowred', nullAt < 0 || rowAt < nullAt
+      ? `LANTERN row reduced $A$ to $U = ${texSmall(U)}$ after finding $\\lambda = ${values.map(fmtN).join('$ and $')}$. ${shifts} do not flatten, so their null spaces hold only the zero arrow. Row operations change the move, so they change its stretches and its lines.`
+      : `LANTERN found the lines, then row reduced $A$ to $U = ${texSmall(U)}$. $U$ is a different move, with ${uVals.length === 1 ? `the one stretch ${fmtN(uVals[0])}` : `stretches ${uVals.map(fmtN).join(' and ')}`}, so the lines it reports are not $U$’s. Row operations change the move, so they change its stretches and its lines. Take that step out.`);
+  }
+  if (!vectors.length) {
+    return nullRan
+      ? fail('emptynull', 'LANTERN found the null space of $A - \\lambda I$, and it held only the zero arrow: at that point $A - \\lambda I$ did not flatten. Nothing may change $A$ between solving for $\\lambda$ and finding the null space.')
+      : fail('novectors', 'LANTERN found $\\lambda = 4$ and $\\lambda = 1$ and stopped. It has the stretches but not the lines: find the null space of $A - \\lambda I$.');
+  }
   if (vectors.length < PROC_VALUES.length) return fail('one', `LANTERN found $\\lambda = 4$ and $\\lambda = 1$, then the null space for $\\lambda = 4$ only. One eigenvector reported: ${fmtV(PROC_VECS[0])}. Your steps never said to do it **for each** $\\lambda$.`);
   if (zero) return fail('zero', 'LANTERN lists the zero arrow under $\\lambda = 4$ and under $\\lambda = 1$. $A\\mathbf 0 = \\lambda\\mathbf 0$ for every $\\lambda$, so it would make every number a stretch. Leave it out, after the null space is found.');
   const [v1, v2] = PROC_VECS;

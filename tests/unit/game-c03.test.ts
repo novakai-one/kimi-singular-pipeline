@@ -3,9 +3,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import * as L from '../../site/src/game/content/chapters/c03-independence/logic.ts';
 import { buildFindLoop } from '../../site/src/game/content/chapters/c03-independence/build.ts';
 import { buildLincomb } from '../../site/src/game/content/chapters/c02-span/build.ts';
+import { S } from '../../site/src/game/content/chapters/c03-independence/script.ts';
 import { checkLaw, rng, rint } from '../../site/src/game/game/lawcheck.ts';
 import { combo, norm, veq, solve, fromCols, det } from '../../site/src/game/math/la.ts';
 
@@ -16,6 +18,25 @@ test('p1 [F]: 2u + 3v − w = 0; all-zero dials and near misses do not count', (
   assert.ok(!L.p1Won([0, 0, 0]), 'the all-zero firing is not a loop');
   assert.ok(!L.p1Won([2, 3, 1]), 'w fired forwards');
   assert.equal(L.spanDim([L.P1_U, L.P1_V, L.P1_W]), 2);
+});
+
+test('loops are scale-invariant: tiny dials are not a loop, a small real loop still is', () => {
+  const P1 = [L.P1_U, L.P1_V, L.P1_W];
+  assert.ok(!L.p1Won([0.01, 0, 0]), 'typed 0.01 barely moves the ship but is no loop (cadet / navigator tolerance)');
+  assert.ok(!L.isLoop(P1, [0.004, 0, 0], 0.01), 'commander tolerance');
+  assert.ok(!L.isLoop(P1, [1e-6, 1e-6, 0]), 'tiny is not zero');
+  assert.ok(L.isLoop(P1, [0.2, 0.3, -0.1], 0.01), 'a loop scaled down is still a loop');
+  assert.ok(L.isLoop(P1, [20, 30, -10], 0.01), 'and scaled up');
+  assert.ok(!L.isLoop(P1, [2, 3, 1]));
+  // Review (F) zero arrow: (0.02, 0) on (1, 0, 1) and the zero arrow is not a loop, so it does not break the claim
+  assert.equal(L.zeroIndependentHolds([[1, 0, 1], [0, 0, 0]], [0.02, 0]), true);
+  assert.equal(L.zeroIndependentHolds([[1, 0, 1], [0, 0, 0]], [0, 0.02]), false, 'any non-zero dial on the zero arrow alone is a loop');
+  // Review (F) one way: near-identical firings are one way, not two
+  const SPARE = [[1, 0, 1], [0, 1, 1], [1, 2, 3]];
+  assert.equal(L.oneWayHolds(SPARE, [2, 3, 5], [[2, 3, 0], [2.02, 3, 0]]), true, 'one way only');
+  assert.equal(L.oneWayHolds(SPARE, [2, 3, 5], [[2, 3, 0], [1, 1, 1]]), false, 'the loop (1, 2, −1) between them');
+  const I3 = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+  assert.equal(L.oneWayHolds(I3, [1, 1, 1], [[1, 1, 1], [1.02, 1, 1]]), true, 'independent arrows give one way only');
 });
 
 test('p2: the spare (1, 2, 3) is 1 of (1, 0, 1) plus 2 of (0, 1, 1); the signal stays out of reach', () => {
@@ -108,6 +129,36 @@ test('doubts: zero arrow (T) holds for every case; pairwise-apart (F) breaks on 
   // Review (F) zero arrow in an independent set: the loop (0, 1) breaks it
   assert.equal(L.zeroIndependentHolds([[1, 0, 1], [0, 0, 0]], [0, 1]), false);
   assert.equal(L.zeroIndependentHolds([[1, 0, 1], [0, 0, 0]], [1, 0]), true);
+});
+
+test('doubt and review wording: the claims say "not on one line", the edge cases they exclude stay vacuous', () => {
+  const src = readFileSync(new URL('../../site/src/game/content/chapters/c03-independence/briefing.ts', import.meta.url), 'utf8');
+  assert.ok(src.includes("claim: 'No two of these three lie on one line, so all three must be useful.'"));
+  assert.ok(src.includes("claim: 'Two arrows that are not on one line reach every point of a flat deck.'"));
+  assert.ok(!src.includes('in different directions reach every point'));
+  assert.ok(src.includes('Either way, four arrows in 3-D are always dependent.'), 'Ilse’s page covers three arrows that already loop');
+  // opposite arrows and the zero arrow lie on one line with another arrow: the claims do not apply to them
+  assert.equal(L.pairwiseApart([[1, 0, 0], [-1, 0, 0], [0, 1, 0]]), false);
+  assert.equal(L.pairwiseApart([[0, 0, 0], [1, 0, 0], [0, 1, 0]]), false);
+  assert.equal(L.apartUsefulHolds([[1, 0, 0], [-1, 0, 0], [0, 1, 0]]), true);
+  assert.equal(L.apartUsefulHolds([[0, 0, 0], [1, 0, 0], [0, 1, 0]]), true);
+  assert.ok(L.parallel([1, 0, 0], [-1, 0, 0]) && L.deckHolds([1, 0, 0], [-1, 0, 0]));
+});
+
+test('p5 [D]: the derivation splits on whether the first three already loop', () => {
+  const src = readFileSync(new URL('../../site/src/game/content/chapters/c03-independence/puzzles.ts', import.meta.url), 'utf8');
+  const tiles = src.slice(src.indexOf('const P5_TILES'), src.indexOf('const P5_DECOY'));
+  assert.deepEqual([...tiles.matchAll(/id: '(\w+)'/g)].map((m) => m[1]), ['split', 'indep', 'reach', 'combo', 'move', 'loop']);
+  // the split case: a loop of the first three, with dial 0 on a fourth, is a loop of all four
+  const flat = [[1, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1]];
+  const l = L.loopOf(flat.slice(0, 3))!;
+  assert.ok(L.isLoop(flat, [...l, 0], 1e-9));
+});
+
+test('wording: earned terms only, and LANTERN keeps "not all zero" in the p6 task', () => {
+  assert.ok(!/null space/i.test(buildFindLoop.ilseNote ?? ''), 'null space is a Chapter 15 term');
+  assert.match(buildFindLoop.ilseNote ?? '', /Chapter 15 finds every loop at once/);
+  assert.equal(S.p6[0].text, 'Optional. Three arrows on the flat holotable. Try to place them so that only the all-zero firing brings the ship back.');
 });
 
 test('Law: the target survives 500 cases; only the true fillings survive; "two are parallel" breaks', () => {

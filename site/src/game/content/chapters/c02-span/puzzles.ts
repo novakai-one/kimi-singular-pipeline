@@ -40,6 +40,9 @@ function dragPad(p: PuzzleCtx, at: V3, onDrop: (q: V3) => void, label = 'beacon'
   return pad;
 }
 
+/** LANTERN's line for a beacon just off the line (p1, p5): out of reach, but the gap is too small to see. */
+const nearMiss = (d: number): string => `Just off the line, by ${d.toFixed(2)}: the pair cannot reach it, but the gap is too small to see. Drag it further off.`;
+
 /** A soft extra point light on a beacon when it is reached. */
 function flare(p: PuzzleCtx, at: V3, color: string = C.good): void { void burst(p.g.stage, at, color, 60, 2.6, p.g.stage.mode === '2d'); }
 
@@ -129,9 +132,19 @@ export const p1: PuzzleDef = {
         sfx.miss();
         return;
       }
-      if (distToSpan([P1_V], q.slice(0, 2)) < 0.3) {
+      const q2 = q.slice(0, 2);
+      const off = distToSpan([P1_V], q2);
+      if (off < 1e-6) {
+        gap.clear();
         const t = (q[0] * 1 + q[1] * 2) / 5;
         p.bark('lantern', `On the line: $${nice(t)}\\,\\mathbf v$ reaches it.`);
+        sfx.miss();
+        return;
+      }
+      if (off < 0.3) {
+        // off the line, so out of reach, but too close to see: say so, never claim it is reachable
+        gap.show(to3(nearestInSpan([P1_V], q2)), [q[0], q[1], 0]);
+        p.bark('lantern', nearMiss(off));
         sfx.miss();
         return;
       }
@@ -144,9 +157,12 @@ export const p1: PuzzleDef = {
         const x = parseNum(cell.value);
         if (x === null) return;
         if (Math.abs(x - P1_K) < 1e-9) {
-          typedOk = true; cell.style.borderColor = C.good; msg.textContent = '1 · k = 2 · 2';
+          const first = !typedOk;
+          typedOk = true; cell.classList.remove('bad'); cell.style.borderColor = C.good; msg.textContent = '1 · k = 2 · 2';
+          // w may already sit on k = 4, so the collapse will not fire again: tick the subgoal here
+          if (first && collapsed) p.subgoal(0);
           void w.moveTo([2, P1_K, 0], 700);
-        } else { sfx.miss(); cell.classList.add('bad'); msg.textContent = `With k = ${fmtN(x)}, w = (2, ${fmtN(x)}) leaves v's line.`; }
+        } else { sfx.miss(); cell.classList.add('bad'); cell.style.borderColor = ''; msg.textContent = `With k = ${fmtN(x)}, w = (2, ${fmtN(x)}) leaves v's line.`; }
       };
       cell.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') go(); });
       cell.addEventListener('change', go);
@@ -296,11 +312,20 @@ export const p5: PuzzleDef = {
     });
     const pad = dragPad(p, [4, 2, 0], (q) => {
       if (won) return;
-      const d = distToSpan([V], q.slice(0, 2));
-      if (d < 0.3) {
-        const [a, b] = weights2(V, BACKUP, q.slice(0, 2), rig.dials[1]);
+      const q2 = q.slice(0, 2);
+      const d = distToSpan([V], q2);
+      if (d < 1e-6) {
+        rig.gap.clear();
+        const [a, b] = weights2(V, BACKUP, q2, rig.dials[1]);
         void rig.moveDials([a, b], 600);
         p.bark('lantern', `On the line: $a = ${nice(a)}$, $b = ${nice(b)}$ reaches it.`);
+        sfx.miss();
+        return;
+      }
+      if (d < 0.3) {
+        // off the line, so out of reach, but too close to see: say so, never claim it is reachable
+        rig.gap.show(to3(nearestInSpan([V], q2)), [q[0], q[1], 0]);
+        p.bark('lantern', nearMiss(d));
         sfx.miss();
         return;
       }
@@ -352,7 +377,7 @@ export const p6: PuzzleDef = {
   goal: 'P and Q are reachable. Slide R along the line through them: watch its dials.',
   subgoals: ['Show R stays reachable along the line', 'Light the beacon at (2, 3, 5)', 'Turn the view edge-on to the glow'],
   hints: [
-    'R = P + t(Q − P). Its dials are $(1 - t,\\ t)$: they change smoothly, so R never leaves the reach.',
+    '$R = P + t\\,(Q - P) = (1 - t)\\,\\mathbf v + t\\,\\mathbf w$. For every $t$, the dials $1 - t$ and $t$ are numbers, so $R$ is a stretch of $\\mathbf v$ plus a stretch of $\\mathbf w$: reachable, even past Q.',
     'After the unlock: $a\\,(1, 0, 1) + b\\,(0, 1, 1) = (a, b, a + b)$. For (2, 3, 5) take $a = 2$, $b = 3$.',
     'Drag empty space to turn the view until the glowing plane is a thin line. The signal sits below it.',
   ],
@@ -388,7 +413,7 @@ export const p6: PuzzleDef = {
       r.row('R', '$R$', fmtV(Rpos(t).slice(0, 2)), C.result);
       r.row('d', 'dials of $R$', `(${fmtN(dl[0])}, ${fmtN(dl[1])})`, C.result);
       r.eq('R = (1 - t)\\,\\cg{\\mathbf v} + t\\,\\cr{\\mathbf w}');
-      r.note('$R = P + t\\,(Q - P)$: each dial changes steadily with $t$, so $R$ stays reachable.');
+      r.note('For every $t$, $R$ is a stretch of $\\mathbf v$ plus a stretch of $\\mathbf w$, so $R$ stays reachable.');
     };
     const setT = (tt: number) => { const t0 = t; t = tt; glow1.trail(p6Dials(t0), p6Dials(t)); show1(); };
     show1();
@@ -617,6 +642,8 @@ export const p7: PuzzleDef = {
     async function toPart2(): Promise<void> {
       if (part === 2) return;
       part = 2;
+      // the three-lamp rig is done: its F (Mix) key must not fly the amber mix again over the two-lamp scene
+      rig.stop();
       sfx.success();
       await wait(600);
       rig.result.setOpacity(0); rig.tipDot.setOpacity(0);
@@ -625,7 +652,7 @@ export const p7: PuzzleDef = {
       void rig.glow?.fadeOut(600);
       target.dispose();
       p.dock().replaceChildren();
-      p.setGoal('The blue lamp fails. Two lamps are left: **warm** $(1, 0.5, 0)$ and **cool** $(0, 0.5, 1)$. The glow shows every colour they mix. Set the probe to a colour **off** that plane, then press **Check**.');
+      p.setGoal('The holotable switches to its two spare lamps: **warm** $(1, 0.5, 0)$ and **cool** $(0, 0.5, 1)$. The glow shows every colour they mix. Set the probe to a colour **off** that plane, then press **Check**.');
       rig2 = new DialRig(p, {
         arrows: [to3(LAMP_WARM.map((x) => x * SC)), to3(LAMP_COOL.map((x) => x * SC))], dims: 3, colors: ['#ffb347', '#7fd8ff'], names: ['a', 'b'], tags: ['warm', 'cool'],
         symbols: ['\\mathbf h', '\\mathbf c'], dials: [0.5, 0.5], range: [0, 1], step: 0.1, preview: 'live', ship: false, fireLabel: null,
@@ -656,8 +683,11 @@ export const p7: PuzzleDef = {
         p.subgoal(1);
         p.win();
       } else {
-        const [a, b] = weights2(LAMP_WARM, LAMP_COOL, probe);
-        p.bark('lantern', `That colour is a mix: ${nice(a)} warm plus ${nice(b)} cool.`);
+        // name the weights only when they rebuild the probe exactly (then both lie in 0..1)
+        if (distToSpan([LAMP_WARM, LAMP_COOL], probe) < 1e-6) {
+          const [a, b] = weights2(LAMP_WARM, LAMP_COOL, probe);
+          p.bark('lantern', `That colour is a mix: ${nice(a)} warm plus ${nice(b)} cool.`);
+        } else p.bark('lantern', 'Off the plane, but only just. Move it further off.');
         sfx.miss();
       }
     }

@@ -10,6 +10,7 @@ import { FatLine, FatSegments } from '../../../gfx/lines';
 import { Lattice3D, Parallelepiped } from '../../../gfx/shapes';
 import { Label } from '../../../gfx/label';
 import { h, button } from '../../../ui/ui';
+import { MatrixInput, VectorInput } from '../../../ui/widgets';
 import { StepWorksheet } from '../../../kit/steps';
 import { VectorHandle } from '../../../kit/handle';
 import { C } from '../../../core/theme';
@@ -17,9 +18,9 @@ import { animate, ease, wait } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
 import { burst } from '../../../gfx/fx';
 import { det, identity, matMul, matVec, mlerp, type Mat } from '../../../math/la';
-import type { RowOp } from '../../../math/rref';
+import { gaussJordanSteps, opTex, type RowOp } from '../../../math/rref';
 import { UndoBench, colsOf } from './bench';
-import { AugBoard, opText } from './augboard';
+import { AugBoard } from './augboard';
 import { FlatGrid, playMove } from './play';
 import { FramePlan, BOW_CORNERS, PLAN_COLOR } from './frames';
 import {
@@ -102,7 +103,7 @@ export const p1: PuzzleDef = {
 export const p2: PuzzleDef = {
   id: 'c13-p2',
   title: 'Which points did the move send to the grid arrows?',
-  goal: 'The move sends $(1, 0)$ to $(2, 1)$ and $(0, 1)$ to $(1, 1)$. Drag the **green** point until the move lands it on $\\mathbf e_1$, and the **red** point until it lands on $\\mathbf e_2$. Those two points are the undo\'s columns.',
+  goal: 'The move sends $(1, 0)$ to $(2, 1)$ and $(0, 1)$ to $(1, 1)$. Drag the **green** point until the move lands it on $\\mathbf e_1$, and the **red** point until it lands on $\\mathbf e_2$, or type them. Those two points are the undo\'s columns.',
   subgoals: ['The green point lands on e₁ = (1, 0)', 'The red point lands on e₂ = (0, 1)', 'Play the undo, then the move: every point comes back'],
   hints: [
     'The yellow dot shows where the move sends your point. Move the green point until its yellow dot sits on the ring at $(1, 0)$.',
@@ -129,9 +130,22 @@ export const p2: PuzzleDef = {
     const done = [false, false];
     let U: Mat = identity(2);
     let playing = false;
+    let typing = false;
     const handles: VectorHandle[] = [];
+    // typed entry (GDD §7.1: commander drags freely and types exact values); its columns are the two points
+    const input = new MatrixInput({
+      rows: 2, cols: 2, values: colsOf([0, -1], [1, 1]), colourCols: true, label: 'U =', step: p.snap() ?? 0.5,
+      onChange: (m) => {
+        if (playing) { input.set(U); return; }
+        typing = true;
+        try { handles[0].set([m[0][0], m[1][0], 0]); handles[1].set([m[0][1], m[1][1], 0]); } finally { typing = false; }
+      },
+      onSubmit: () => void play(),
+    });
+    const lockInput = (on: boolean) => { for (const i of [0, 1]) for (const j of [0, 1]) input.setLocked(i, j, on); };
     const sync = () => {
       U = colsOf(handles[0].tip, handles[1].tip);
+      if (!typing) input.set(U);
       for (const j of [0, 1] as const) {
         const tip = handles[j].tip;
         const L = matVec(P2_A, [tip[0], tip[1]]);
@@ -162,6 +176,7 @@ export const p2: PuzzleDef = {
       p.move();
       sync();
       handles.forEach((x) => x.setEnabled(false));
+      lockInput(true);
       lands.forEach((d) => d.setOpacity(0));
       links.forEach((l) => l.setOpacity(0));
       ghost.set(I2); plan.set(I2);
@@ -180,12 +195,16 @@ export const p2: PuzzleDef = {
         sfx.miss();
         p.bark('lantern', 'The move after your undo did not bring the frames home.');
         handles.forEach((x) => x.setEnabled(true));
+        lockInput(false);
         playing = false;
       }
     };
     const playBtn = button('Play the undo, then the move', () => void play(), { cls: 'primary' });
     playBtn.disabled = true;
-    p.dock().append(h('div', { class: 'kicker' }, 'The undo\'s columns'), h('div', { class: 'c-muted', style: 'font-size:13px;max-width:400px;line-height:1.4' }, 'Each point is where the undo sends a grid arrow. The yellow dot is where the move sends it back.'), playBtn);
+    p.dock().append(
+      h('div', { class: 'kicker' }, 'The undo\'s columns'),
+      h('div', { style: 'display:flex;gap:14px;align-items:center;flex-wrap:wrap' }, input.el, playBtn),
+      h('div', { class: 'c-muted', style: 'font-size:13px;max-width:400px;line-height:1.4' }, 'Each point is where the undo sends a grid arrow: drag the tips or type the columns. The yellow dot is where the move sends it back.'));
     sync();
     const setBoth = async (a: V3, b: V3, ms: number) => {
       if (ms > 0) await Promise.all([handles[0].moveTo(a, ms), handles[1].moveTo(b, ms)]);
@@ -292,7 +311,7 @@ export const p4: PuzzleDef = {
       const n = ops.length;
       r.row('m', 'left half (the box)', `$${texM(leftOf(board.get(), 3))}$`);
       const last = ops[n - 1];
-      if (last) r.row('E', `$E_{${n}}$: ${opText(last).replace(/·/g, '')}`, `$${texM(elementary(last, 3))}$`, C.result);
+      if (last) r.row('E', `$E_{${n}}$: $${opTex(last)}$`, `$${texM(elementary(last, 3))}$`, C.result);
       r.eq(n ? `${ops.map((_, i) => `E_{${n - i}}`).join('')}\\,A = \\text{left half}` : null);
     };
     const board = new AugBoard(p, {
@@ -317,17 +336,21 @@ export const p4: PuzzleDef = {
         title: 'Type $A^{-1}$ (LANTERN checks only that $A$ times it is $I$)',
         steps: [{ prompt: '$A^{-1} =$', answer: P4_INV, tol: 1e-6 }],
         onDone: () => {
+          // the typed answer alone does not finish [D]: the row operations must write it down
+          if (!board.leftIsI()) { p.bark('lantern', 'A times your matrix is I. Now do it with row operations: reduce the left half of [A | I].'); return; }
           tick(0);
           replayBtn.hidden = false;
-          p.bark('lantern', 'Checked: A times your matrix is I.');
+          p.bark('lantern', `Checked: A times your matrix is I, and your ${ops.length} moves wrote it down on the right.`);
         },
       });
     }
     const replay = async (instant = false) => {
       if (!flags[0] || flags[1]) return;
+      // only the player's own moves: the ones that turned the left half of [A | I] into I
+      if (!board.leftIsI() || !ops.length) { p.bark('lantern', 'Reduce [A | I] first: the left half must be the identity.'); return; }
       replayBtn.disabled = true;
       p.move();
-      const moves = board.leftIsI() && ops.length ? ops.slice() : P4_REF_OPS;
+      const moves = ops.slice();
       board.set(P4_A, P4_B, 'B');
       setM(P4_A);
       ops.length = 0;
@@ -335,28 +358,30 @@ export const p4: PuzzleDef = {
       await queue;
       const X = rightOf(board.get(), 3);
       r.row('X', 'right half now', `$X = ${texM(X)}$`, C.result);
+      // the same moves that turned A into I turn B into A⁻¹B, exactly
       if (meqTol(X, P4_X, 1e-9)) {
         p.bark('lantern', `Same moves, new right half: X. Check: A times X is B.`);
         tick(1);
-      } else {
-        p.bark('lantern', 'The same moves did not finish the left half. Undo back and reduce [A | I] first.');
-        replayBtn.disabled = false;
       }
     };
+    /** The rest of the reduction from where the board is now (the reference five from a fresh board). */
+    const finishOps = (): RowOp[] => (ops.length ? gaussJordanSteps(board.get(), 3).ops : P4_REF_OPS);
     p.dock().append(replayBtn);
     showStack();
     return {
       async showMe() {
-        await board.play(P4_REF_OPS, 700);
+        // continue from the player's moves (A is invertible, so the left half always reaches I)
         await queue;
-        if (typed) { await typed.showMe(200); }
+        await board.play(finishOps(), 700);
+        await queue;
+        if (typed && !typed.done) { await typed.showMe(200); }
         await wait(200);
         await replay();
       },
       async solve() {
         fast = true;
-        await board.play(P4_REF_OPS, 0);
-        typed?.solve();
+        await board.play(finishOps(), 0);
+        if (typed && !typed.done) typed.solve();
         await replay(true);
       },
       async wrong() {
@@ -512,9 +537,25 @@ export const p6: PuzzleDef = {
     p.onDispose(() => { links.forEach((l) => l.dispose()); tag.dispose(); });
     const r2 = p.readout('Two starts');
     r2.el.hidden = true;
+    // commander drags freely, so the two starts can also be typed exactly (GDD §7.1)
+    let typing = false;
+    const startIns: VectorInput[] | null = p.difficulty === 'commander'
+      ? starts.map((s, i) => new VectorInput({
+        dim: 2, values: [s[0], s[1]], label: i === 0 ? '\\text{green} =' : '\\text{red} =', step: 0.5,
+        onChange: (v) => {
+          if (phase !== 'probe' || p.won) { startIns?.[i].set([starts[i][0], starts[i][1]]); return; }
+          starts[i] = [v[0], v[1], 0];
+          typing = true;
+          try { syncProbe(); } finally { typing = false; }
+        },
+      }))
+      : null;
+    const startsBox = startIns ? h('div', { style: 'display:flex;gap:14px;align-items:center;flex-wrap:wrap' }, ...startIns.map((x) => x.el)) : null;
+    if (startsBox) startsBox.hidden = true;
     const syncProbe = () => {
       starts.forEach((s, i) => {
         const L = matVec(P6_A, [s[0], s[1]]);
+        if (startIns && !typing) startIns[i].set([s[0], s[1]]);
         dots[i].at([s[0], s[1], 0.05]);
         lands[i].at([L[0], L[1], 0.06]);
         links[i].setPoints([[s[0], s[1], 0.03], [L[0], L[1], 0.03]]);
@@ -542,8 +583,9 @@ export const p6: PuzzleDef = {
       declare.disabled = true;
       ro.r.el.hidden = true;
       r2.el.hidden = false;
+      if (startsBox) startsBox.hidden = false;
       await animate(300, (k) => { [...dots, ...lands].forEach((d) => d.setOpacity(k)); links.forEach((l) => l.setOpacity(0.75 * k)); });
-      p.setGoal('Drag the **green** and **red** points. Put two different points where the move lands them **on the same spot**.');
+      p.setGoal(`Drag the **green** and **red** points${startIns ? ', or type them' : ''}. Put two different points where the move lands them **on the same spot**.`);
       syncProbe();
     };
     starts.forEach((_, i) => {
@@ -556,6 +598,7 @@ export const p6: PuzzleDef = {
     });
     const declare = button('Declare: no undo exists', () => void toProbe(), { cls: 'small' });
     p.dock().append(declare);
+    if (startsBox) p.dock().append(startsBox);
     syncProbe();
     const putPair = async (a: V3, b: V3, ms: number) => {
       if (ms > 0) {

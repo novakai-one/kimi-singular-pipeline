@@ -22,6 +22,17 @@ test('p1: the upright box holds 24; the pulse leans it and it still holds 24; th
   assert.ok(!L.p1Accept([[2, 1, 4]], [2.2, 1, 4]), 'the same spot twice does not count');
 });
 
+test('p1: the volume tolerance is base area 6 times the height tolerance (±0.05; commander ±0.01)', () => {
+  // a tip 3.92 up reads 23.52: not 24 at any difficulty
+  assert.ok(!L.p1Accept([], [2, 1, 3.92]), '23.52 is not 24 (height off by 0.08)');
+  assert.ok(!L.p1Accept([], [2, 1, 3.92], 0.01));
+  // 3.96 up reads 23.76: within ±0.05 in height, not within ±0.01
+  assert.ok(L.p1Accept([], [2, 1, 3.96]));
+  assert.ok(!L.p1Accept([], [2, 1, 3.96], 0.01));
+  assert.ok(L.p1Accept([], [2, 1, 3.995], 0.01));
+  close(L.baseArea(L.P1_V, L.P1_W), 6);
+});
+
 test('p2: base 6 (|v × w|), height 4 (shadow on the unit normal), volume 24 = u · (v × w); tile orders', () => {
   assert.deepEqual(L.P2.cross, [0, 0, 6]);
   close(L.P2.base, 6); close(L.P2.height, 4); close(L.P2.volume, 24); close(L.P2.triple, 24);
@@ -51,6 +62,12 @@ test('p3: Section C is flat (a × b = (2, −4, 2), volume 0, c = ½a + ½b); th
   close(L.braceVol(-2), -6);
 });
 
+test('p3: the plane patch is anchored on the plane of a and b (through the origin and the flat c)', () => {
+  assert.deepEqual(L.C_MID, [0.75, 0.75, 0.75]);
+  close(dot(L.C_AB, L.C_MID), 0);
+  for (const q of [L.C_A, L.C_B, L.C_C0]) close(dot(L.C_AB, q), 0);
+});
+
 test('p4: the clamps share a plane (edge arrows from P enclose 0); positions from the origin give −1; bent S gives 1/3', () => {
   assert.deepEqual(L.P4.e1, [1, 1, 0]); assert.deepEqual(L.P4.e2, [0, 1, 1]); assert.deepEqual(L.P4.e3, [1, 2, 1]);
   assert.deepEqual(L.P4.cross, [-1, 1, -1]);
@@ -74,6 +91,26 @@ test('p5: the log (across, along, up) reads −24; swapping the first two restor
   assert.ok(!L.p5Won(L.swapLog(L.N7_LOG0, 1, 2)), 'positive, but a turn of the rule, not the rule');
   assert.ok(L.isCyclicOfRule(L.swapLog(L.N7_LOG0, 1, 2)));
   assert.ok(!L.p5Won(L.N7_LOG0));
+});
+
+test('p5: Show me reaches the rule from every log the player can reach, in at most two swaps', () => {
+  const perms = [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]];
+  for (const start of perms) {
+    let order = start.slice();
+    let n = 0;
+    while (!L.p5Won(order) && n < 3) {
+      const [i, j] = L.p5NextSwap(order);
+      assert.ok(i >= 0 && j >= 0 && i !== j, `${order}`);
+      order = L.swapLog(order, i, j);
+      n++;
+    }
+    assert.ok(L.p5Won(order), `from ${start}`);
+    assert.ok(n <= 2, `from ${start}: ${n} swaps`);
+    close(L.logVol(order), 24);
+  }
+  // after the player's Swap 2 ↔ 3 (or 1 ↔ 3) from the first log, a fixed Swap 1 ↔ 2 would not win
+  assert.ok(!L.p5Won(L.swapLog(L.swapLog(L.N7_LOG0, 1, 2), 0, 1)));
+  assert.ok(!L.p5Won(L.swapLog(L.swapLog(L.N7_LOG0, 0, 2), 0, 1)));
 });
 
 test('p6: (0, 3, 0) × (1, 1, 4) = (12, 0, −3); the box holds 24; the six tetrahedra hold 4 each; piece 0 is the housing', () => {
@@ -123,6 +160,26 @@ test('doubt (T) a swap flips the sign: holds on random struts and on the edge ca
   assert.ok(L.swapFlips([1, 1, 0], [1, 0, 0], [0, 1, 0]));
   assert.ok(L.swapFlips([0, 0, 0], [1, 2, 3], [3, 1, 2]));
   assert.ok(L.swapFlips([2, 4, 6], [1, 2, 3], [0, 1, 5]));
+});
+
+test('doubt (T) the reason: b · (a × c) is a turn of a · (c × b), and c × b = −b × c', () => {
+  const r = rng(21);
+  for (let i = 0; i < 200; i++) {
+    const a = [r() * 8 - 4, r() * 8 - 4, r() * 8 - 4], b = [r() * 8 - 4, r() * 8 - 4, r() * 8 - 4], c = [r() * 8 - 4, r() * 8 - 4, r() * 8 - 4];
+    close(L.triple(b, a, c), L.triple(a, c, b), 1e-9);
+    close(L.triple(a, c, b), -L.triple(a, b, c), 1e-9);
+  }
+  // the signed-volume card: node 7's struts (along, across, up)
+  const [a, b, c] = L.N7;
+  close(L.triple(a, b, c), 24); close(L.triple(b, a, c), -24); close(L.triple(a, c, b), -24);
+});
+
+test('Say it: zero volume with a base of no area, though the third arrow is not built from the other two', () => {
+  const v = [1, 0, 0], w = [2, 0, 0], u = [0, 0, 1];
+  close(L.triple(u, v, w), 0);
+  close(L.baseArea(v, w), 0);
+  assert.equal(rank([v, w, u]), 2, 'still one plane: v is half of w');
+  assert.equal(rank([v, w]), 1);
 });
 
 test('Law: "coplanar exactly when u · (v × w) is zero" survives 500 cases; every near-miss breaks', () => {

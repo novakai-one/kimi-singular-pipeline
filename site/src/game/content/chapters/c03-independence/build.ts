@@ -38,6 +38,6 @@ export const buildFindLoop: BuildDef = {
     crew: (...a: unknown[]) => findLoopCrew(a[0] as number[][]),
   },
   docPrompt: 'What question does `find_loop` answer, and what does a loop tell you about the thrusters? Write it the way you would tell Bram.',
-  ilseNote: 'find_loop: some firing, not all zero, that comes back to the start. If there is one, an arrow is wasted: the others already reach its tip. Searching whole numbers is a start; the null space finds every loop at once.',
+  ilseNote: 'find_loop: some firing, not all zero, that comes back to the start. If there is one, an arrow is wasted: the others already reach its tip. Searching whole numbers is a start; Chapter 15 finds every loop at once.',
   payoff: 'The thruster audit flags wasted mounts with your `find_loop` from now on.',
 };

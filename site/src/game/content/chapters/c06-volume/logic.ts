@@ -40,7 +40,8 @@ export const P1_VOLUME = 24;
 export const P1_SPOTS: Vec[] = [[2, 1, 4], [-1, 2, 4], [0, -1, 4]];
 /** A new spot counts when the volume is still 24 and the tip is somewhere new (≥ 0.75 from the start and from every counted spot). */
 export function p1Accept(spots: readonly Vec[], tip: readonly number[], tol = 0.05): boolean {
-  if (!near(boxVol(tip, P1_V, P1_W), P1_VOLUME, tol * 12)) return false;
+  // tol is a height tolerance; the base area is 6, so the volume may be off by 6 · tol
+  if (!near(boxVol(tip, P1_V, P1_W), P1_VOLUME, tol * baseArea(P1_V, P1_W))) return false;
   if (dist(tip, P1_U) < 0.75) return false;
   return spots.every((s) => dist(s, tip) >= 0.75);
 }
@@ -67,6 +68,8 @@ export function p2OrderOk(order: readonly string[]): boolean {
 export const C_A: Vec = [2, 1, 0];
 export const C_B: Vec = [0, 1, 2];
 export const C_C0: Vec = [1, 1, 1];
+/** The centre of 0, a, b and the flat c: a point on the plane of a and b (where its patch is drawn). */
+export const C_MID: Vec = vscale(vadd(vadd(C_A, C_B), C_C0), 1 / 4);
 /** Section C's base normal a × b = (2, −4, 2). */
 export const C_AB: Vec = cross(C_A, C_B);
 /** The volume with the brace set to k, c = (1, 1, k): (a × b) · c = 2k − 2. */
@@ -117,6 +120,11 @@ export const N7_LOG0 = [1, 0, 2];
 export const logVol = (order: readonly number[]): number => triple(N7[order[0]], N7[order[1]], N7[order[2]]);
 export const swapLog = (order: readonly number[], i: number, j: number): number[] => { const o = order.slice(); [o[i], o[j]] = [o[j], o[i]]; return o; };
 export const p5Won = (order: readonly number[]): boolean => order.join() === '0,1,2';
+/** Show me, from any log: the first place whose strut is wrong, swapped with the place holding the strut it needs. */
+export function p5NextSwap(order: readonly number[]): [number, number] {
+  const i = order.findIndex((s, k) => s !== k);
+  return [i, order.indexOf(i)];
+}
 /** A log order that is a turn of the rule (cyclic) reads +24 too, but is not the rule. */
 export const isCyclicOfRule = (order: readonly number[]): boolean => ['0,1,2', '1,2,0', '2,0,1'].includes(order.join());
 

@@ -179,7 +179,7 @@ export const law: LawDef<DetCase> = {
   ...lawCore,
   frame: ['$\\det A$ is ', { slot: 'value' }, ' exactly when ', { slot: 'cond' }, '.'],
   slots: {
-    value: { options: [{ id: 'zero', text: 'zero' }, { id: 'negative', text: 'negative' }, { id: 'one', text: 'one' }] },
+    value: { options: [{ id: 'zero', text: 'zero' }, { id: 'one', text: 'one' }] },
     cond: { options: [
       { id: 'flat', text: 'A flattens space: two different points land on one spot' },
       { id: 'zero-entry', text: 'A has a zero entry' },

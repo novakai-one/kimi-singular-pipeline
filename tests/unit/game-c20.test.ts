@@ -80,6 +80,8 @@ test('p6: the swap never settles (eigenvalue −1); a 10% stay share settles at 
   assert.ok(L.p6Won(4, 0.1, true));
   assert.ok(!L.p6Won(2, 0.1, true), 'run the swap first');
   assert.ok(!L.p6Won(4, 0, false), 'the swap alone never settles');
+  // any stay share can win, so the fixed lines must not name one
+  assert.ok(!/ten percent|10%/.test(said(S.p6Win)), 'the win line holds for any stay share');
 });
 
 test('p7 [S] PageRank: C 0.394, A 0.373, B 0.196, D 0.038; 13 steps to settle', () => {
@@ -97,6 +99,15 @@ test('Doubts: the start matters (F), every chain settles (F), settled drones kee
   assert.equal(L.startMattersHolds(L.SWAP, [1, 0], [0, 1]), true, 'the swap: two starts stay apart');
   assert.equal(L.settlesHolds(L.SWAP), false);
   assert.equal(L.settlesHolds([[0.3, 0.8], [0.7, 0.2]]), true);
+  // |λ₂| = 0.9 is slow but still settles: the Doubt must not call it a swing
+  assert.equal(L.settlesHolds([[0, 0.9], [1, 0.1]]), true);
+  assert.equal(L.settlesHolds([[0.1, 1], [0.9, 0]]), true);
+  // every pair of slider stay shares (0% to 90%) settles except the swap, and the Doubt agrees with the Law
+  for (let a = 0; a <= 9; a++) for (let b = 0; b <= 9; b++) {
+    const P: Mat = [[a / 10, 1 - b / 10], [1 - a / 10, b / 10]];
+    assert.equal(L.settlesHolds(P), !(a === 0 && b === 0), `stay shares ${a * 10}% and ${b * 10}%`);
+    assert.equal(L.settlesHolds(P), L.settlesFromAll(P));
+  }
   // (T) still moving: 81 drones change section every hour at (150, 90, 60)
   close(L.movingAtSteady(DRONES), 81, 1e-9);
   assert.ok(L.stillMovingHolds(DRONES));
@@ -111,6 +122,18 @@ test('Review (Vell): triangular eigenvalues are the diagonal (T); the steady sta
     assert.ok(L.triangularHolds(U));
   }
   assert.ok(L.triangularHolds([[0, 1, 0], [0, 0, 1], [0, 0, 0]]));
+  // the readout's eigenvalues come from det(A − λI) = 0, with multiplicity: they match the diagonal
+  const two = (v: number[]) => v.map((x) => (Math.round(x * 100) / 100 + 0).toFixed(2)).join(', ');
+  const diag = (U: Mat) => two([U[0][0], U[1][1], U[2][2]].sort((a, b) => b - a));
+  assert.equal(two(L.eigvalsWithMult3([[2, 5, 1], [0, 2, 3], [0, 0, 2]])), '2.00, 2.00, 2.00');
+  assert.equal(two(L.eigvalsWithMult3([[2, 3, -1], [0, 4, 0], [0, 0, 4]])), '4.00, 4.00, 2.00');
+  assert.equal(two(L.eigvalsWithMult3([[-3, -3, 1], [0, -4, 0], [0, 0, -4]])), '-3.00, -4.00, -4.00');
+  assert.equal(two(L.eigvalsWithMult3([[0, 1, 0], [0, 0, 1], [0, 0, 0]])), '0.00, 0.00, 0.00');
+  for (let i = 0; i < 5000; i++) {
+    const U: Mat = [[rint(r, -4, 4), rint(r, -4, 4), rint(r, -4, 4)], [0, rint(r, -4, 4), rint(r, -4, 4)], [0, 0, rint(r, -4, 4)]];
+    assert.equal(two(L.eigvalsWithMult3(U)), diag(U), JSON.stringify(U));
+  }
+  assert.equal(two(L.eigvalsWithMult3(DRONES)), '1.00, 0.60, 0.50', 'not only for triangular matrices');
   for (let i = 0; i < 100; i++) assert.equal(L.startMattersHolds(L.randChain(r, 3, 1), [1, 0, 0], [0, 0, 1]), false);
 });
 
@@ -129,6 +152,15 @@ test('Procedure: start, apply, rescale, repeat settles at (0.5, 0.3, 0.2); each 
   assert.equal(L.runProc(['start', 'repeat', 'apply', 'rescale']).fault, 'once', 'repeat placed before the steps it repeats');
   assert.equal(L.runProc(['start', 'apply', 'len', 'repeat']).fault, 'len');
   assert.equal(L.runProc(['start', 'solve0', 'rescale', 'repeat']).fault, 'solve0');
+  // q = 0 has nothing to rescale: every pass LANTERN shows is a number, never NaN
+  for (const ids of [['start', 'solve0', 'rescale', 'repeat'], ['start', 'solve0', 'len', 'repeat'], ['start', 'solve0', 'apply', 'rescale', 'repeat']]) {
+    const run = L.runProc(ids);
+    assert.equal(run.fault, 'solve0', ids.join());
+    assert.ok(run.trace.every((x) => x.every(Number.isFinite)), `finite trace: ${ids.join()}`);
+  }
+  // LANTERN says what it rounds: three decimals, then whole drones, then the exact answer
+  assert.equal(L.procShares(ok.result!), '(0.501, 0.299, 0.200)');
+  assert.ok(ok.message.includes('(0.501, 0.299, 0.200)') && ok.message.includes('about 150, 90 and 60') && ok.message.includes('exact steady state is (0.5, 0.3, 0.2)'), ok.message);
   assert.ok(L.PROC_KEYS.every((k) => L.PROC_REF.includes(k)));
 });
 

@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import * as L from '../../site/src/game/content/chapters/c14-determinant/logic.ts';
 import { S } from '../../site/src/game/content/chapters/c14-determinant/script.ts';
 import { checkLaw, rng } from '../../site/src/game/game/lawcheck.ts';
-import { det, identity, inverse, matMul, meq, mlerp, mscale, svd } from '../../site/src/game/math/la.ts';
+import { cross, det, identity, inverse, matMul, meq, mlerp, mscale, svd, transpose } from '../../site/src/game/math/la.ts';
 import { DET_C, C, S_COLLAPSE, T3, S_now, P, Pinv, DELTA } from '../../site/src/game/content/truth.ts';
 
 const close = (a: number, b: number, tol = 1e-9) => assert.ok(Math.abs(a - b) <= tol, `${a} ≉ ${b}`);
@@ -19,6 +19,15 @@ test('p1: a hold of area 6; the stabiliser keeps every area; the spires and the 
   assert.ok(!L.p1HoldOk([[0, 3], [2, 0]]), 'area −6: the tile is turned over');
   close(det(L.P1_STAB), 1);
   close(det(matMul(L.P1_STAB, L.P1_EXAMPLE)), 6);
+  // the stabiliser's playback keeps every area on every frame (not (1 − t)I + tY, which reads 1.25 mid-move)
+  for (let i = 0; i <= 24; i++) {
+    const W = L.stabPath(i / 24);
+    close(det(W), 1);
+    close(det(matMul(W, L.P1_EXAMPLE)), 6);
+  }
+  close(det(mlerp(identity(2), L.P1_STAB, 0.5)), 1.25, 1e-12);
+  assert.ok(meq(L.stabPath(1), L.P1_STAB, 1e-12) && meq(L.powSym2(L.P1_STAB, 1 - 1e-12), L.P1_STAB, 1e-9));
+  assert.ok(meq(L.stabPath(0), identity(2), 1e-12));
   close(L.SPIRE_VOLUME, 0.8, 1e-12);
   close(L.PULSE_VOLUME, 0.8, 1e-12);
   assert.ok(text('spireVolume').includes('volume 0.8') && text('open').includes('times 0.8'));
@@ -54,6 +63,13 @@ test('p4 [D][H]: 8 along every row; the 4 × 4 is −1 from two single entries',
   close(det(L.P4_MINOR2), -1);
   close(L.P4_DET4, -1);
   close(L.crewDet3(L.P4_M3), 8);
+  // the triple product of the columns, written out, is the expansion down column 1 (not along row 1):
+  // a2 × a3 has the column-1 cofactors as components. det3's formula is the triple product of the rows.
+  const A = [[1, 2, 0], [0, 1, 0], [0, 0, 1]];
+  const col = (M: number[][], j: number) => M.map((r) => r[j]);
+  assert.deepEqual(cross(col(A, 1), col(A, 2)).map((x) => x + 0), [0, 1, 2].map((i) => L.cofactor(A, i, 0) + 0));
+  assert.notDeepEqual([0, 1, 2].map((j) => L.cofactor(A, 0, j) + 0), [0, 1, 2].map((i) => L.cofactor(A, i, 0) + 0));
+  close(L.crewDet3(A), det(transpose(A)));
 });
 
 test('p5 [H]: one swap, triangle 1, 2, −3/2, det 3; the shield flattens at k = 4', () => {
@@ -133,10 +149,15 @@ test('Doubts and the Act IV Review: canonical constructions give the right verdi
   assert.ok(broke);
 });
 
-test('Law: "det A is zero exactly when A flattens space" survives; near-misses break', () => {
+test('Law: "det A is zero exactly when A flattens space" survives; every other filling breaks', () => {
   assert.ok(checkLaw(L.lawCore, L.lawCore.answer).survived);
-  for (const cond of ['zero-entry', 'flip', 'same-area']) assert.equal(checkLaw(L.lawCore, { value: 'zero', cond }).survived, false, cond);
-  for (const value of ['negative', 'one']) assert.equal(checkLaw(L.lawCore, { value, cond: 'flat' }).survived, false, value);
+  assert.deepEqual(L.LAW_OPTIONS, { value: ['zero', 'one'], cond: ['flat', 'zero-entry', 'flip', 'same-area'] });
+  for (const value of L.LAW_OPTIONS.value) {
+    for (const cond of L.LAW_OPTIONS.cond) {
+      const right = value === L.lawCore.answer.value && cond === L.lawCore.answer.cond;
+      assert.equal(checkLaw(L.lawCore, { value, cond }).survived, right, `${value} / ${cond}`);
+    }
+  }
 });
 
 test('Build crew: det by elimination matches the library; det3 matches on 3 × 3', () => {

@@ -74,7 +74,7 @@ export const S: Record<string, Line[]> = {
   ],
   p6Win: [
     { who: 'lantern', text: 'Area scale, the sum down the diagonal and the fourth pulse match. The entries and the landing spots do not.' },
-    { who: 'bram', text: 'Volume doesn’t care whose grid you count in. That’s why the volume forecast held.' },
+    { who: 'bram', text: 'The volume scale comes out the same in any grid. That’s why the volume forecast held.' },
   ],
   p7Intro: [
     { who: 'lantern', text: 'Optional. The bow forecast from the spire bench missed by a full step. Running it again, translated in and back.' },

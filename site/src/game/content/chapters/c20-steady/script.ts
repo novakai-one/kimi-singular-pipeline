@@ -55,7 +55,7 @@ export const S: Record<string, Line[]> = {
     { who: 'lantern', text: 'Testing two cargo bays that trade all their drones every hour.' },
   ],
   p6Win: [
-    { who: 'lantern', text: 'The swap never settles: the drones change bay every hour, forever. With ten percent staying, the bays settle at fifty and fifty.' },
+    { who: 'lantern', text: 'The swap never settles: the drones change bay every hour, forever. With some drones staying, the bays settle at fifty and fifty.' },
   ],
   p7Intro: [
     { who: 'lantern', text: 'Optional. The ark’s four reading terminals link to each other. Where does a reader who follows links settle?' },

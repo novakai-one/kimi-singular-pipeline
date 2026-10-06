@@ -32,13 +32,20 @@ export const SP_DIALS: Vec = [4, -1, 1.5, 0];
 
 // ------------------------------------------------------------------ loops
 
-const isZero = (v: Vec, tol = 1e-12) => v.every((x) => Math.abs(x) < tol);
+export const isZero = (v: Vec, tol = 1e-12): boolean => v.every((x) => Math.abs(x) < tol);
 
 /** Fuel burned by a firing: the sum of the sizes of the dials. */
 export const fuel = (d: number[]): number => d.reduce((s, x) => s + Math.abs(x), 0);
 
-/** Some dials, not all zero, bring the ship back to the start. */
-export const isLoop = (vs: Vec[], dials: number[], tol = 0.05): boolean => !isZero(dials, 1e-9) && norm(combo(dials, vs)) <= tol;
+/**
+ * Some dials, not all zero, bring the ship back to the start. The test is scale-invariant: the
+ * dials are divided by their largest size first, so tiny dials (0.01, 0, 0) are not a loop just
+ * because the ship barely moved. Tiny is not zero.
+ */
+export const isLoop = (vs: Vec[], dials: number[], tol = 0.05): boolean => {
+  const m = Math.max(0, ...dials.map(Math.abs));
+  return m > 1e-9 && norm(combo(dials, vs)) <= tol * m;
+};
 
 /** Is there a loop at all? (The arrows are dependent.) */
 export const dependent = (vs: Vec[]): boolean => spanDim(vs) < vs.length;
@@ -106,16 +113,20 @@ export const planeLoop = (vs: Vec[]): number[] | null => loopOf(vs);
 
 /** (T) "Any set with the zero arrow in it has a loop." */
 export const zeroLoopHolds = (vs: Vec[]): boolean => !vs.some((v) => isZero(v)) || dependent(vs);
-/** (F) "None of these three point the same way, so all three must be useful." */
+/** (F) "No two of these three lie on one line, so all three must be useful." */
 export const apartUsefulHolds = (vs: Vec[]): boolean => !pairwiseApart(vs) || !dependent(vs);
 /** Review (F) "Three arrows always reach more than two." */
 export const threeMoreHolds = (vs: Vec[]): boolean => spanDim(vs) > spanDim(vs.slice(0, 2));
-/** Review (F) "If you can reach a point, there is only one way to reach it": broken by two different firings to one crate. */
+/**
+ * Review (F) "If you can reach a point, there is only one way to reach it": broken by two different
+ * firings to one crate. Two landings count as two ways only when their difference is a loop, so
+ * near-identical dials (2, 3, 0) and (2.02, 3, 0) are one way, not two.
+ */
 export const oneWayHolds = (vs: Vec[], crate: Vec, firings: number[][]): boolean => {
   const landing = firings.filter((f) => norm(combo(f, vs).map((x, i) => x - crate[i])) <= 0.05);
-  return !landing.some((f, i) => landing.some((g, j) => j > i && norm(f.map((x, k) => x - g[k])) > 1e-6));
+  return !landing.some((f, i) => landing.some((g, j) => j > i && isLoop(vs, f.map((x, k) => x - g[k]))));
 };
-/** Review (T) "Two arrows in different directions reach every point of a flat deck." (deck: z = 0) */
+/** Review (T) "Two arrows that are not on one line reach every point of a flat deck." (deck: z = 0) */
 export const deckHolds = (v: Vec, w: Vec): boolean => parallel(v, w) || spanDim([v, w]) === 2;
 /** Review (F) "An arrow of length zero can belong to an independent set": broken by a shown loop. */
 export const zeroIndependentHolds = (vs: Vec[], dials: number[]): boolean => !(vs.some((v) => isZero(v)) && isLoop(vs, dials));

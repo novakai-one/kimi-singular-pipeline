@@ -13,7 +13,7 @@ export const S: Record<string, Line[]> = {
     { who: 'bram', text: 'Every pulse the stern gets smaller around him. Nav, find out what a pulse does to a volume.' },
   ],
   p1Intro: [
-    { who: 'bram', text: 'Start flat. A cargo hold on the floor plan: shape it from two columns.' },
+    { who: 'bram', text: 'Start in 2-D. A cargo hold on the floor plan: shape it from two columns.' },
   ],
   p1Win: [
     { who: 'lantern', text: 'The hold kept its area, 6, while its shape changed. Every square of the grid kept area 1.', say: 'The hold kept its area, six, while its shape changed. Every square of the grid kept area one.' },
@@ -31,7 +31,7 @@ export const S: Record<string, Line[]> = {
     { who: 'lantern', text: 'Box 12, minus 3, minus 2, minus 2. Area 5: three times two, minus one times one.', say: 'Box twelve, minus three, minus two, minus two. Area five: three times two, minus one times one.' },
   ],
   p3Win: [
-    { who: 'lantern', text: 'Times 2 then times 3 is times 6. Doubling every number of a flat move made the area 4 times larger. The swap turned the tile over: area minus 1.', say: 'Times two then times three is times six. Doubling every number of a flat move made the area four times larger. The swap turned the tile over: area minus one.' },
+    { who: 'lantern', text: 'Times 2 then times 3 is times 6. Doubling every number of a 2 × 2 move made the area 4 times larger. The swap turned the tile over: area minus 1.', say: 'Times two then times three is times six. Doubling every number of a two by two move made the area four times larger. The swap turned the tile over: area minus one.' },
   ],
   p4Intro: [
     { who: 'bram', text: 'Three by three by hand. You will do this in your sleep before we are done.' },

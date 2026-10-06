@@ -241,39 +241,75 @@ export function eigSym(m: Mat): { values: number[]; vectors: Vec[] } {
   return { values: idx.map((i) => a[i][i]), vectors: idx.map((i) => col(v, i)) };
 }
 
-/** Real roots of the characteristic polynomial of a 3×3 matrix (sorted high → low). */
+/** Real roots of the characteristic polynomial of a 3×3 matrix, each once (sorted high → low). */
 export function eigvals3(m: Mat): number[] {
+  return eigvals3Mult(m).map((r) => r.value);
+}
+
+/** Real eigenvalues of a 3×3 matrix with their algebraic multiplicities (sorted high → low). */
+export function eigvals3Mult(m: Mat): { value: number; mult: number }[] {
   // det(λI − A) = λ³ − tr λ² + c2 λ − det
   const tr = m[0][0] + m[1][1] + m[2][2];
   const c2 = m[0][0] * m[1][1] - m[0][1] * m[1][0] + m[0][0] * m[2][2] - m[0][2] * m[2][0] + m[1][1] * m[2][2] - m[1][2] * m[2][1];
-  const dt = det(m);
-  return cubicRealRoots(1, -tr, c2, -dt).sort((x, y) => y - x);
+  return cubicRealRootsMult(1, -tr, c2, -det(m));
 }
 
+/** Real roots of a x³ + b x² + c x + d, each once (sorted high → low). */
 export function cubicRealRoots(a: number, b: number, c: number, d: number): number[] {
+  return cubicRealRootsMult(a, b, c, d).map((r) => r.value);
+}
+
+/**
+ * Real roots of a x³ + b x² + c x + d with multiplicities (sorted high → low). Robust for repeated
+ * roots: one real root by bisection (a cubic always crosses zero), the rest from the deflated
+ * quadratic; roots that agree are merged and placed exactly (a double root is a root of f′, a triple
+ * root is the root of f″).
+ */
+export function cubicRealRootsMult(a: number, b: number, c: number, d: number): { value: number; mult: number }[] {
   b /= a; c /= a; d /= a;
-  const p = c - (b * b) / 3, q = (2 * b * b * b) / 27 - (b * c) / 3 + d;
-  const off = -b / 3;
-  const disc = (q * q) / 4 + (p * p * p) / 27;
-  const polish = (x: number) => {
-    for (let i = 0; i < 6; i++) {
-      const f = x * x * x + b * x * x + c * x + d, fp = 3 * x * x + 2 * b * x + c;
-      if (Math.abs(fp) < 1e-14) break;
-      x -= f / fp;
+  const f = (x: number) => ((x + b) * x + c) * x + d;
+  const f1 = (x: number) => (3 * x + 2 * b) * x + c;
+  const newton = (x: number, g: (x: number) => number, dg: (x: number) => number) => {
+    for (let i = 0; i < 40; i++) {
+      const gp = dg(x);
+      if (!Number.isFinite(gp) || Math.abs(gp) < 1e-300) break;
+      const step = g(x) / gp;
+      if (!Number.isFinite(step)) break;
+      x -= step;
+      if (Math.abs(step) <= 1e-15 * Math.max(1, Math.abs(x))) break;
     }
     return x;
   };
-  if (Math.abs(disc) < 1e-12) {
-    const u = Math.cbrt(-q / 2);
-    return [...new Set([2 * u + off, -u + off].map((x) => Math.round(polish(x) * 1e9) / 1e9))];
+  // 1. a real root by bisection inside the Cauchy bound
+  const B = 1 + Math.max(Math.abs(b), Math.abs(c), Math.abs(d));
+  let lo = -B, hi = B;
+  for (let i = 0; i < 200 && hi - lo > 0; i++) {
+    const mid = (lo + hi) / 2;
+    if (mid === lo || mid === hi) break;
+    if (f(mid) > 0) hi = mid; else lo = mid;
   }
-  if (disc > 0) {
-    const s = Math.sqrt(disc);
-    return [polish(Math.cbrt(-q / 2 + s) + Math.cbrt(-q / 2 - s) + off)];
+  const r1 = (lo + hi) / 2;
+  // 2. deflate: x³ + b x² + c x + d = (x − r1)(x² + p x + q)
+  const p = b + r1, q = c + r1 * p;
+  const disc = p * p - 4 * q;
+  const scale = Math.max(1, p * p, Math.abs(q));
+  const roots = [r1];
+  if (disc > 1e-9 * scale) { const s = Math.sqrt(disc); roots.push((-p + s) / 2, (-p - s) / 2); }
+  else if (disc > -1e-9 * scale) roots.push(-p / 2, -p / 2);
+  // 3. merge roots that agree, then place each group exactly
+  roots.sort((x, y) => y - x);
+  const groups: number[][] = [];
+  for (const x of roots) {
+    const g = groups[groups.length - 1];
+    if (g && Math.abs(g[g.length - 1] - x) <= 1e-4 * Math.max(1, Math.abs(x))) g.push(x); else groups.push([x]);
   }
-  const r = Math.sqrt(-(p * p * p) / 27), phi = Math.acos(Math.max(-1, Math.min(1, -q / (2 * r))));
-  const m2 = 2 * Math.cbrt(r);
-  return [0, 1, 2].map((k) => polish(m2 * Math.cos((phi + 2 * Math.PI * k) / 3) + off));
+  const out = groups.map((g) => {
+    const mean = g.reduce((s, x) => s + x, 0) / g.length;
+    const value = g.length >= 3 ? -b / 3 : g.length === 2 ? newton(mean, f1, (x) => 6 * x + 2 * b) : newton(mean, f, f1);
+    const v = Math.abs(value - Math.round(value)) < 1e-9 ? Math.round(value) : value;
+    return { value: v === 0 ? 0 : v, mult: g.length }; // never −0
+  });
+  return out.sort((x, y) => y.value - x.value);
 }
 
 /** Eigenvector for a known eigenvalue (a unit vector in the null space of A − λI), or null. */

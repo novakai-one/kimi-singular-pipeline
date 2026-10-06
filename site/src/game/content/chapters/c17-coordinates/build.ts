@@ -90,7 +90,7 @@ export const buildFromCoords: BuildDef = {
   tests: FROM_COORDS_TESTS,
   swarm: { gen: (r, d) => fromCoordsCase(r, d), crew: (B, c) => crew.from_coords(B as Mat, c as Vec), tol: 1e-6 },
   docPrompt: 'Why is turning a grid’s numbers back into ours one matrix–vector product?',
-  ilseNote: 'from_coords(B, c) = B c: the columns of B are the grid arrows in our numbers, and c says how much of each. This is the direction P goes. I had it backwards.',
+  ilseNote: 'from_coords(B, c) = B c: the columns of B are the grid arrows in our numbers, and c says how much of each. This is the direction P goes. I never wrote P down: I took the Anchor’s arms for ours.',
   payoff: 'The spire translator draws every Anchor reading in our grid with your `from_coords`.',
 };
 

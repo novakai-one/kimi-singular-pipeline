@@ -72,7 +72,7 @@ export const buildMatPow: BuildDef = {
   tests: MAT_POW_TESTS,
   swarm: { gen: (r, d) => powCase(r, d), crew: (A, k) => crewPow(A as Mat, k as number), tol: 1e-6 },
   docPrompt: 'Why does squaring and halving reach A to the k in so few products? Write it the way you would tell Bram.',
-  ilseNote: 'mat_pow: A^50 = A^32 A^16 A^2. Squaring gives A^2, A^4, A^8, … one product each; the bits of k say which ones to keep. About log₂ k products instead of k − 1.',
+  ilseNote: 'mat_pow: A^50 = A^32 A^16 A^2. Squaring gives A^2, A^4, A^8, … one product each; the bits of k say which ones to keep. One squaring per binary digit of k, plus one product per 1: at most about 2·log₂ k products instead of k − 1.',
   payoff: 'Vell’s fifty-pulse forecast runs on your `mat_pow`.',
 };
 

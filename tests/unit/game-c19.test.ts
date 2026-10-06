@@ -86,6 +86,15 @@ test('p6 [S]: repeated squaring reaches M⁵⁰ in 7 products (par 10); F₅₀ 
   let t = L.FIB_START; for (let i = 0; i < 50; i++) t = L.fibOp(t, 'once');
   assert.ok(L.fibWon(t) && t.products === 49);
   assert.equal(L.powProducts(50), 9);
+  // the WHY card: A^1000000 takes 27 products in mat_pow (25 at best on the bench), not "about 40"
+  assert.equal(L.powProducts(1_000_000), 27);
+  assert.equal(L.fibPlan(1_000_000).reduce((st, op) => L.fibOp(st, op), L.FIB_START).products, 25);
+  // Ilse's note: one squaring per binary digit plus one product per 1, at most 2(⌊log₂ k⌋ + 1)
+  for (let k = 1; k <= 4096; k++) assert.ok(L.powProducts(k) <= 2 * (Math.floor(Math.log2(k)) + 1), String(k));
+  // Show me replays the plan from R = I, B = M: from a state already pressed it would overshoot 50
+  let dirty = L.fibOp(L.fibOp(L.FIB_START, 'square'), 'take');
+  for (const op of L.fibPlan(50)) { const n = L.fibOp(dirty, op); if (n.r <= 50 && n.b <= 64) dirty = n; }
+  assert.ok(!L.fibWon(dirty), 'the plan needs a fresh start');
 });
 
 test('Doubts: all at the Anchor (F), diagonalisable means invertible (F), two different eigenvalues (T)', () => {
@@ -100,11 +109,18 @@ test('Doubts: all at the Anchor (F), diagonalisable means invertible (F), two di
   assert.equal(L.diagInvHolds([[1, 1], [0, 1]]), true, 'the shear: invertible and not diagonalisable');
   for (let i = 0; i < 400; i++) assert.ok(L.distinctDiagHolds([[rint(r, -4, 4), rint(r, -4, 4)], [rint(r, -4, 4), rint(r, -4, 4)]]));
   for (const M of [[[1, 1], [0, 1]], [[0, -1], [1, 0]], [[2, 1], [0, 3]], [[1, 2], [2, 4]]] as Mat[]) assert.ok(L.distinctDiagHolds(M));
+  // the quarter turn has two different eigenvalues ±i but no real grid: the claim is about real eigenvalues
+  assert.equal(L.diagonalisable2([[0, -1], [1, 0]]), false);
+  assert.ok(L.distinctDiagHolds([[0, -1], [1, 0]]), 'complex eigenvalues: the claim says nothing, so the case agrees');
 });
 
 test('Law: “(PMP⁻¹)ᵏ = PMᵏP⁻¹ for every M, because each P⁻¹P cancels” survives; every near-miss breaks', () => {
   assert.equal(checkLaw(L.LAW_CORE, L.LAW_CORE.answer).survived, true);
   for (const f of L.LAW_NEAR_MISSES) assert.equal(checkLaw(L.LAW_CORE, f).survived, false, JSON.stringify(f));
+  // the "powers of P cancel" counterexample shows the side that breaks; agreeing cases stay short
+  const pw = checkLaw(L.LAW_CORE, { scope: 'every', why: 'powers' });
+  assert.ok(pw.counterexample?.includes('but P^3 M^3 P^−3 = (−311, 507; −192, 313)'), pw.counterexample);
+  assert.ok(!L.LAW_CORE.describe({ P: [[1, 0], [0, 1]], M: [[1, 2], [3, 4]], k: 2 }).includes('but'));
 });
 
 test('Teo T3: whole rows, column by column, bottom up gives (1, 2, 3); each missing key step fails as listed', () => {

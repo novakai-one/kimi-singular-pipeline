@@ -1,7 +1,8 @@
 // Chapter 17 staging: the Anchor on the ground layer with its arms measured (cold open), shots for the
-// scenes, the core's light (Ilse is alive), the ark in the debris stream, and the one unlocked pulse
-// that swings it clear. Every move on screen is the real matrix: the copper grid shears from square to
-// the measured arms (a straight slide), the ark turns a true quarter turn about the Anchor.
+// scenes, the core's light (Ilse is alive), the ark in the debris stream, and the ark clear of it after
+// the one unlocked pulse (fired once, in the set piece). Every move on screen is the real matrix: the
+// copper grid shears from square to the measured arms (a straight slide), the ark turns a true quarter
+// turn about the Anchor.
 import { Group, Vector3, type Sprite } from 'three';
 import type { Game, V3 } from '../../../game/types';
 import { BuoyField } from '../../../gfx/buoys';
@@ -15,13 +16,12 @@ import { sfx } from '../../../audio/sfx';
 import { fadeBlack, letterbox, stamp, titleCard } from '../../../kit/cine';
 import { arcPts } from '../../../kit/geom-math';
 import { answer } from '../../../game/caseboard';
-import { isPlayerFn, pylib } from '../../../game/build';
 import { makeAnchor } from '../../common/set';
-import { ILSE_MEANT, P, P2, R } from '../../truth';
-import { identity, meq, type Mat } from '../../../math/la';
+import { P2, R } from '../../truth';
+import { identity, type Mat } from '../../../math/la';
 import { CopperGrid, VELL_GRID } from './grids';
 import { arkModel, debrisStream } from './setpiece';
-import { ARK, ARK_AFTER, B1, B2, B2_LEN, PC, STREAM_X, fmtV, turn3 } from './logic';
+import { ARK, ARK_AFTER, B1, B2, B2_LEN, PC, STREAM_X, fmtV } from './logic';
 import { S } from './script';
 
 /** Thrown when the player leaves a cinematic part-way: stop quietly. */
@@ -243,36 +243,21 @@ export async function reveal(g: Game): Promise<void> {
   } catch (e) { if (!(e instanceof Gone)) throw e; }
 }
 
-// ------------------------------------------------------------------ the one unlocked pulse
+// ------------------------------------------------------------------ after the one unlocked pulse
 
-async function translator(): Promise<'mine' | 'backup'> {
-  if (!isPlayerFn('in_grid')) return 'backup';
-  try {
-    const r = await Promise.race([pylib.call<number[][]>('in_grid', P, R), new Promise<null>((res) => setTimeout(() => res(null), 8000))]);
-    if (r && meq(r, ILSE_MEANT, 1e-6)) return 'mine';
-  } catch { /* the backup runs */ }
-  return 'backup';
-}
-
+/**
+ * The aftermath. The set piece already checked the setting (the spire translator) and fired the one
+ * unlocked pulse, so the ark is already turned: this scene starts from (−1, 3, 0) and does not fire again.
+ */
 export async function clearCine(g: Game): Promise<void> {
   try {
     await fadeBlack(g, true, 10);
     g.stage.clearWorld();
-    g.mood('tension');
-    const st = await streamStage(g);
+    const st = await streamStage(g, ARK_AFTER, true);
     st.set.check();
-    drift(g, st.set, [1.4, 1.4, 0], 9.5, 36, -128, 1.2);
+    drift(g, st.set, [0.6, 1.6, 0], 9.5, 36, -135, 1.2);
     void fadeBlack(g, false, 1200);
     await letterbox(g, true, 500);
-    const who = await translator();
-    st.set.check();
-    await g.say(who === 'mine' ? S.translatorMine : S.translatorBackup);
-    st.set.check();
-    sfx.collapse();
-    g.stage.flash(0.2, 450);
-    g.stage.nudge(0.2);
-    void g.stage.shockwave([0, 0, 0], 2200, 0.9);
-    await animate(3200, (k) => st.setTurn(turn3(k)), ease.inOut);
     st.set.check();
     const tagEl = new Label(`ark ${fmtV(ARK_AFTER)}`, [ARK_AFTER[0], ARK_AFTER[1], 0], { className: 'c17-pt w', offset: [0, 30] });
     tagEl.object.userData.dispose = () => tagEl.dispose();

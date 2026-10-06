@@ -133,6 +133,13 @@ export const p6MarksRight = (marks: Partial<Record<Measure['id'], 'same' | 'diff
 export const P6_SIM: Mat = matMul(matMul(PCinv, T), PC);
 export const P6 = { detPC: det(PC), detPCinv: det(PCinv), detT: det(T), detSim: det(P6_SIM) };
 export const P6_ORDER = ['product', 'inverse', 'cancel'];
+/**
+ * Fewest moves for p6 on each difficulty: five measurements and five marks (each a move), then the reason.
+ * Cadet: one slider change (two if dragged through ½ steps); navigator: four checked worksheet lines;
+ * commander: the tile submit and the last line. Par is the largest, so it is reachable on every difficulty.
+ */
+export const P6_MIN = { cadet: 5 + 5 + 2, navigator: 5 + 5 + 4, commander: 5 + 5 + 1 + 1 };
+export const P6_PAR = Math.max(...Object.values(P6_MIN));
 
 // ------------------------------------------------------------------ p7 [S] · Chapter 11's bow, forecast again (3-D)
 
@@ -194,10 +201,13 @@ export const similarAreaHolds = (A: Mat, G: Mat): boolean => { const B = inGrid(
 
 // ------------------------------------------------------------------ the act Review (Ilse)
 
-/** (F) "Changing the basis moves the point." The point stays; only its numbers change. */
+/**
+ * (F) "Changing the basis moves the point." The point stays; only its numbers change. The starting grid
+ * (no change yet) agrees with the claim, so the player has to drag the arrows to find a case against it.
+ */
 export const basisMovesPointHolds = (point: readonly number[], G: Mat): boolean => {
   const c = anchorOf(point, G);
-  return c === null ? true : !veq(reach(c, G), point as number[], 1e-9);
+  return c === null || meq(G, identity(2), 1e-9) || !veq(reach(c, G), point as number[], 1e-9);
 };
 /** (F) "P converts standard numbers into B-numbers." Holds only where P x happens to equal the B-numbers. */
 export const pToBHolds = (G: Mat, x: readonly number[]): boolean => { const c = anchorOf(x, G); return c === null || veq(matVec(G, x as number[]), c, 1e-9); };

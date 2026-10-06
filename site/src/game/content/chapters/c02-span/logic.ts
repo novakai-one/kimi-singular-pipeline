@@ -112,8 +112,13 @@ export const landedOn = (end: Vec, target: Vec, tol = 0.05): boolean => near(end
 export const p5Won = (beacon: Vec): boolean => distToSpan([V, BACKUP], beacon) >= 0.3;
 /** p6: looking along the plane (the plane seen edge-on). */
 export const edgeOn = (viewDir: Vec, n: Vec = PLANE_N, tol = 0.12): boolean => Math.abs(dot(viewDir, n)) / (norm(viewDir) * norm(n)) < tol;
-/** p7: the probe colour is inside the colour cube and off the plane of the two lamps. */
-export const p7OffPlane = (probe: Vec): boolean => probe.every((x) => x >= -1e-9 && x <= 1 + 1e-9) && distToSpan([LAMP_WARM, LAMP_COOL], probe) >= 0.08;
+/**
+ * p7: the probe colour is inside the colour cube and off the plane of the two lamps. The probe
+ * sliders step by 0.1, so a probe is either on the plane or at least 0.05 / |(0.5, −1, 0.5)| ≈ 0.041
+ * off it; the threshold sits below that, so every off-plane probe counts.
+ */
+export const P7_OFF = 0.02;
+export const p7OffPlane = (probe: Vec): boolean => probe.every((x) => x >= -1e-9 && x <= 1 + 1e-9) && distToSpan([LAMP_WARM, LAMP_COOL], probe) >= P7_OFF;
 
 // ------------------------------------------------------------------ doubts
 

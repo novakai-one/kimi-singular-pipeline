@@ -19,7 +19,7 @@ import { Vector3 } from 'three';
 import { COPPER, CopperGrid, SHIP_GRID, tag } from './grids';
 import { Rail, playCards, type Rider } from './rail';
 import {
-  B1, B2, BOW, BOW3, BOW3_REAL, BOW3_SPIRE, BOW_REAL, BOW_SPIRE, ILSE_MEANT2, P6, P6_ORDER, TURN_B1, TURN_B2, anchorOf, fmtV,
+  B1, B2, BOW, BOW3, BOW3_REAL, BOW3_SPIRE, BOW_REAL, BOW_SPIRE, ILSE_MEANT2, P6, P6_ORDER, P6_PAR, TURN_B1, TURN_B2, anchorOf, fmtV,
   measures, p4Won, p5Won, p6MarksRight, p7Won, settingFromLandings, shipMove, texM, texSmall, T3partial, type Card, type Measure,
 } from './logic';
 import { S } from './script';
@@ -349,7 +349,7 @@ export const p6: PuzzleDef = {
     'Area, the sum down the diagonal and the fourth pulse match. The entries and the landing of $(1, 0)$ do not.',
     `$\\det(P^{-1}AP) = \\det P^{-1}\\cdot\\det A\\cdot\\det P$, and $\\det P^{-1} = 1/\\det P$. For Vell’s grid: $\\tfrac12 \\cdot 1 \\cdot 2 = 1$.`,
   ],
-  par: 12,
+  par: P6_PAR, // fewest moves: 5 measurements + 5 marks, then cadet 2, navigator 4 checked lines, commander tiles + 1 line
   onWin: S.p6Win,
   setup(p) {
     void p.g.stage.view2D({ center: [0, 0], height: 11, ms: 0 });

@@ -14,7 +14,7 @@ import { DRONES, DRONES_STEADY } from '../../truth';
 import { ptag, fslider } from '../c18-eigen/parts';
 import { FlowBoard, Simplex, triPoint, triSplit } from './board';
 import {
-  LAW_CORE, PROC_REF, STATIONS, TOTAL, fmtN, fmtV, movingAtSteady, randChain, runProc, settlesHolds, startMattersHolds,
+  LAW_CORE, PROC_REF, STATIONS, TOTAL, fmtN, fmtV, movingAtSteady, procShares, randChain, runProc, settlesHolds, startMattersHolds,
   steadyOf, stillMovingHolds, type ChainCase,
 } from './logic';
 
@@ -251,7 +251,7 @@ export const procedure: ProcedureDef = {
       await wait(g.headless ? 1 : 260);
     }
     if (res.result) show(res.result);
-    if (res.ok) { step.set(`Settled after ${res.repeats} repeats: (0.5, 0.3, 0.2)`); sfx.success(); }
+    if (res.ok) { step.set(`Settled after ${res.repeats} repeats: ${procShares(res.result!)}, to three decimals`); sfx.success(); }
     else { step.set('LANTERN stopped. See the message.'); g.stage.nudge(0.1); }
     return { ok: res.ok, message: res.message };
   },

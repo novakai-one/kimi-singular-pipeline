@@ -71,7 +71,7 @@ export function sweepScene(p: PuzzleCtx, M0: Mat) {
 export const doubtEvery: DoubtDef = {
   id: 'c18-d-every', who: 'bram', isTrue: false,
   claim: 'Every pulse has some line it doesn’t turn. Sweep far enough and you’ll find it.',
-  reason: 'A turn keeps no real line. For the quarter turn, $\\det(A - \\lambda I) = \\lambda^2 + 1$ is never 0 for a real λ: its eigenvalues are $\\pm i$. The routine pulse is the same: a quarter turn in its own grid.',
+  reason: 'A turn by any angle except 0° or 180° keeps no real line (the half turn flips every arrow: λ = −1). For the quarter turn, $\\det(A - \\lambda I) = \\lambda^2 + 1$ is never 0 for a real λ: its eigenvalues are $\\pm i$. The routine pulse is the same: a quarter turn in its own grid.',
   goal: 'Drag the grid arrows to set a move; the sweep shows every line it keeps (violet). **Challenge it** (a move that keeps no line) or **Back it**.',
   view: '2d',
   setup(p) {
@@ -150,7 +150,7 @@ export const doubtZero: DoubtDef = {
 export const doubtTrace: DoubtDef = {
   id: 'c18-d-trace', who: 'bram', isTrue: true,
   claim: 'The eigenvalues add up to the trace. Every time.',
-  reason: '$\\det(A - \\lambda I) = \\lambda^2 - (a + d)\\lambda + (ad - bc)$, and a quadratic $(\\lambda - \\lambda_1)(\\lambda - \\lambda_2)$ has $-(\\lambda_1 + \\lambda_2)$ in that place. So $\\lambda_1 + \\lambda_2 = a + d$, the trace, for every 2 × 2. Complex pairs too: $a + bi$ and $a - bi$ add to $2a$.',
+  reason: '$\\det(A - \\lambda I) = \\lambda^2 - (a + d)\\lambda + (ad - bc)$, and a quadratic $(\\lambda - \\lambda_1)(\\lambda - \\lambda_2)$ has $-(\\lambda_1 + \\lambda_2)$ in that place. So $\\lambda_1 + \\lambda_2 = a + d$, the trace, for every 2 × 2. Complex pairs too: $p + qi$ and $p - qi$ add to $2p = a + d$.',
   goal: 'Drag the grid arrows to set a move. The readout gives its eigenvalues, their sum and the trace. **Back it** (Bram will shake it) or **Challenge it**.',
   view: '2d',
   setup(p) {
@@ -281,11 +281,11 @@ export const procedure: ProcedureDef = {
 
 export const compare: CompareDef = {
   id: 'c18',
-  page: 'An **eigenvector** of $A$ is a non-zero arrow that $A$ keeps on its own line: $A\\mathbf v = \\lambda\\mathbf v$. The number λ, its **eigenvalue**, is the stretch: bigger, smaller, or flipped when it is negative.\n\nTo find them, move $\\lambda\\mathbf v$ across: $(A - \\lambda I)\\mathbf v = \\mathbf 0$. A non-zero arrow lands on the origin only if $A - \\lambda I$ flattens space, that is when $\\det(A - \\lambda I) = 0$. That equation has λ in it and nothing else, so we can solve it. Solving $(A - \\lambda I)\\mathbf v = \\mathbf 0$ first gets us nowhere: for almost every λ the only answer is $\\mathbf v = \\mathbf 0$.\n\nFor each root λ, the eigenvectors are the non-zero arrows in the null space of $A - \\lambda I$.\n\nA turn keeps no real line, so its eigenvalues are complex: $a \\pm bi$ is a turn by the angle of $a + bi$ and a stretch by its size. The eigenvalues add up to the trace and multiply to the determinant.',
-  formula: 'A\\mathbf v = \\lambda\\mathbf v,\\ \\mathbf v \\neq \\mathbf 0 \\iff (A - \\lambda I)\\mathbf v = \\mathbf 0 \\implies \\det(A - \\lambda I) = 0',
+  page: 'An **eigenvector** of $A$ is a non-zero arrow that $A$ keeps on its own line: $A\\mathbf v = \\lambda\\mathbf v$. The number λ, its **eigenvalue**, is the stretch: bigger, smaller, or flipped when it is negative.\n\nTo find them, move $\\lambda\\mathbf v$ across: $(A - \\lambda I)\\mathbf v = \\mathbf 0$. A non-zero arrow lands on the origin only if $A - \\lambda I$ flattens space, that is when $\\det(A - \\lambda I) = 0$. That equation has λ in it and nothing else, so we can solve it. Solving $(A - \\lambda I)\\mathbf v = \\mathbf 0$ first gets us nowhere: for almost every λ the only answer is $\\mathbf v = \\mathbf 0$.\n\nFor each root λ, the eigenvectors are the non-zero arrows in the null space of $A - \\lambda I$.\n\nA turn by any angle except 0° or 180° keeps no real line, so its eigenvalues are complex: $p \\pm qi$ is a turn (in its own grid) by the angle of $p + qi$ and a stretch by its size. The eigenvalues add up to the trace and multiply to the determinant.',
+  formula: 'A\\mathbf v = \\lambda\\mathbf v,\\ \\mathbf v \\neq \\mathbf 0 \\iff (A - \\lambda I)\\mathbf v = \\mathbf 0,\\ \\mathbf v \\neq \\mathbf 0 \\iff \\det(A - \\lambda I) = 0',
   keyIdeas: [
     'Did you say an eigenvector stays on its own line and only stretches, shrinks or flips?',
     'Did you say why the determinant: a non-zero arrow sent to the origin means $A - \\lambda I$ flattens space?',
-    'Did you say what a turn does: no real line, complex eigenvalues?',
+    'Did you say what a turn does: no real line (unless it is a half turn), complex eigenvalues?',
   ],
 };

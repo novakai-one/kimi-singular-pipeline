@@ -23,6 +23,20 @@ export const P1_EXAMPLE: Mat = fromCols([[3, 0], [1, 2]]);
 export const p1HoldOk = (M: Mat, tol = 0.05): boolean => Math.abs(det2(M) - P1_AREA) <= tol;
 /** The stabiliser applied afterwards: shape changes, every area stays (its tile reads 1). */
 export const P1_STAB: Mat = [[2, 1], [1, 1]];
+/**
+ * Y^t for a symmetric 2×2 Y with positive eigenvalues: Q·diag(λ1^t, λ2^t)·Qᵀ. Its determinant is
+ * (λ1λ2)^t = (det Y)^t, so for det Y = 1 every frame keeps every area (GDD §11.3: an area-keeping move
+ * is played with areas kept, not by (1 − t)I + tY, which reads up to 1.25 on the way).
+ */
+export function powSym2(Y: Mat, t: number): Mat {
+  const [[a, b], [, d]] = Y;
+  const m = (a + d) / 2, R = Math.hypot((a - d) / 2, b);
+  const th = Math.atan2(2 * b, a - d) / 2, c = Math.cos(th), s = Math.sin(th);
+  const p = Math.pow(m + R, t), q = Math.pow(m - R, t);
+  return [[p * c * c + q * s * s, (p - q) * c * s], [(p - q) * c * s, p * s * s + q * c * c]];
+}
+/** The stabiliser's playback at time t (0..1): det 1 on every frame, P1_STAB at t = 1. */
+export const stabPath = (t: number): Mat => (t >= 1 ? P1_STAB.map((r) => r.slice()) : powSym2(P1_STAB, t));
 /** The volume factors behind the Case Board clue: the spire numbers and the measured pulse agree. */
 export const SPIRE_VOLUME = det(S_now);
 export const PULSE_VOLUME = det(T3);
@@ -171,13 +185,16 @@ const COND: Record<string, (M: Mat) => boolean> = {
   flip: (M) => det(M) < -1e-9,
   'same-area': (M) => Math.abs(Math.abs(det(M)) - 1) < 1e-9,
 };
+// No 'negative' value: "det A is negative exactly when A turns the grid over" is the same test on both
+// sides (det < 0), so it would survive every case and reach a reason step about zero and flattening.
 const VALUE: Record<string, (d: number) => boolean> = {
   zero: (d) => Math.abs(d) < 1e-9,
-  negative: (d) => d < -1e-9,
   one: (d) => Math.abs(d - 1) < 1e-9,
 };
+/** Every option the Law frame offers (briefing.ts shows these ids, with words). */
+export const LAW_OPTIONS = { value: Object.keys(VALUE), cond: Object.keys(COND) };
 
-/** The Law: "det A is [zero / negative / one] exactly when A [condition]." */
+/** The Law: "det A is [zero / one] exactly when A [condition]." */
 export const lawCore: LawCore<DetCase> & { answer: Record<string, string> } = {
   id: 'c14-law',
   answer: { value: 'zero', cond: 'flat' },

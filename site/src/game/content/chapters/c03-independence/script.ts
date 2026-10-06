@@ -30,7 +30,7 @@ export const S: Record<string, Line[]> = {
   p4Win: [{ who: 'bram', text: 'Unbolted and nothing lost. The other three still push every way there is.' }],
   p5: [{ who: 'bram', text: 'I’ll pick four arrows myself. Any four. I bet you a beer you cannot always close the loop.' }],
   p5Win: [{ who: 'bram', text: 'Fine. I owe you a beer. Four arrows in this space always come back to the start.' }],
-  p6: [{ who: 'lantern', text: 'Optional. Three arrows on the flat holotable. Try to place them so that no firing brings the ship back.' }],
+  p6: [{ who: 'lantern', text: 'Optional. Three arrows on the flat holotable. Try to place them so that only the all-zero firing brings the ship back.' }],
   p6Win: [{ who: 'lantern', text: 'Three tries, three loops. On a flat deck, two arrows that point different ways already reach every point. A third is always wasted.' }],
   lift: [
     { who: 'bram', text: 'Last job before the ark. Four thrusters on the rack and power for three.' },

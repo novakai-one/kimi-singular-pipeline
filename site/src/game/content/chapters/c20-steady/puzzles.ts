@@ -106,8 +106,14 @@ export const p1: PuzzleDef = {
         p.win();
       } else {
         sfx.miss();
-        msg.say(`The board shows ${fmtV(round(fb.x))}. The shares say ${fmtV(P1_HOUR1)}. Check which column holds each section’s shares.`, 'bad');
-        fb.set(DRONES_START); paint();
+        // the first column that is not the told shares (the Bow's alone decides the first hour from the Bow)
+        const wrongCol = DRONES[0].findIndex((_, j) => DRONES.some((row, i) => Math.abs(row[j] - M[i][j]) > 1e-9));
+        msg.say(wrongCol > 0
+          ? `The board shows ${fmtV(round(fb.x))}, as the shares say: from the Bow only the Bow column counts, and it is right. The ${STATIONS[wrongCol]} column is not. Click **From ${STATIONS[wrongCol]}** and check which column holds its shares.`
+          : `The board shows ${fmtV(round(fb.x))}. The shares say ${fmtV(P1_HOUR1)}. Check which column holds each section’s shares.`, 'bad');
+        // the told shares stay the board's: the From buttons show them, never the matrix that missed
+        fb.P = DRONES.map((r) => r.slice());
+        fb.set(DRONES_START); fb.showShares(from); paint();
       }
     };
     const fromBtns = STATIONS.map((s, j) => button(`From ${s}`, () => { from = j; fb.showShares(j); fromBtns.forEach((b, k) => b.classList.toggle('on', k === j)); }, { cls: 'small ghost' }));

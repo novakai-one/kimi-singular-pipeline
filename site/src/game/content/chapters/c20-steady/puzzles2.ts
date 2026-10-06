@@ -113,23 +113,29 @@ export const p6: PuzzleDef = {
       sg(p, 0, swapHours >= 4);
       sg(p, 1, stay > 0);
     };
+    /** The swap starts again from all in Bay 1, so it shows its 100, 0, 100, 0 swing. */
+    const restartSwap = () => { fb.set([BAYS, 0]); hist.length = 0; };
     const run = async (n: number, fast = false, untilSettled = false) => {
       if (busy || won) return;
       busy = true; p.move();
+      // an even split is the one start the swap leaves alone: start the swap from Bay 1 instead
+      if (stay === 0 && settled2(fb.P, fb.x)) { restartSwap(); paint(); }
       for (let k = 0; k < n; k++) {
+        const before = fb.x[0];
         await fb.hour(fast ? 1 : untilSettled ? 120 : 700);
         hist.push(fb.x[0]);
-        if (stay === 0) swapHours++;
+        // a swap hour counts when the drones visibly changed bay
+        if (stay === 0 && Math.abs(fb.x[0] - before) > 0.5) swapHours++;
         paint();
         if (untilSettled && stay > 0 && settled2(fb.P, fb.x)) break;
       }
       busy = false;
       const s = stay > 0 && settled2(fb.P, fb.x);
-      if (stay === 0 && swapHours >= 4) msg.say('Every hour all the drones change bay. It never settles.', 'bad');
+      if (stay === 0 && swapHours >= 4 && !settled2(fb.P, fb.x)) msg.say('Every hour all the drones change bay. It never settles.', 'bad');
       if (s) sg(p, 2);
       if (p6Won(swapHours, stay, s)) { won = true; sfx.success(); msg.say(`With ${Math.round(stay * 100)}% staying, the bays settle at ${fmtV(fb.x.map((x) => Math.round(x)))}.`, 'good'); p.win(); }
     };
-    const slider = fslider({ label: 'stay share', min: 0, max: 0.5, step: 0.05, value: 0, format: (v) => `${Math.round(v * 100)}%`, onInput: (v) => { stay = v; fb.P = bays(stay); paint(); } });
+    const slider = fslider({ label: 'stay share', min: 0, max: 0.5, step: 0.05, value: 0, format: (v) => `${Math.round(v * 100)}%`, onInput: (v) => { const was = stay; stay = v; fb.P = bays(stay); if (stay === 0 && was !== 0 && !busy) restartSwap(); paint(); } });
     slider.el.addEventListener('change', () => p.move());
     p.dock().append(slider.el, h('div', { class: 'a7-btns' }, button('Run an hour', () => void run(1), { cls: 'small' }), button('Run four hours', () => void run(4), { cls: 'small' }), button('Run until settled', () => void run(60, false, true), { cls: 'primary small' })), msg.el);
     paint();

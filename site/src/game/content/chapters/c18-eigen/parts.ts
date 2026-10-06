@@ -100,7 +100,13 @@ export class LineHunt {
       M: o.M, radius: o.radius ?? 1.6, start: o.start ?? rad(110), tol: this.tol, labels: o.labels ?? { x: '$\\mathbf x$', mx: '$A\\mathbf x$' },
       draggable: (o.mode ?? 'drag') === 'drag',
       onChange: () => o.onChange?.(),
-      onFound: (i) => { sfx.star(i % 3); if (o.autoLock) this.lock(); o.onChange?.(); },
+      // autoLock locks the line the Sweep found, not the arrow where it was found: onFound fires once, at
+      // up to tol off the line, where Ax can be turned by more than tol (twice the offset near (1, −1)).
+      onFound: (i, angle) => {
+        sfx.star(i % 3);
+        if (o.autoLock) { this.p.move(); this.lock([Math.cos(angle), Math.sin(angle)]); }
+        o.onChange?.();
+      },
     });
     this.list = h('div', { class: 'a7-locks' });
     this.msg = h('div', { class: 'a7-msg' });

@@ -136,16 +136,16 @@ export const doubtInv: DoubtDef = {
   },
 };
 
-// ------------------------------------------------------------------ (T) "Two different eigenvalues: always diagonalisable."
+// ------------------------------------------------------------------ (T) "Two different real eigenvalues: always diagonalisable."
 
 export const doubtDistinct: DoubtDef = {
   id: 'c19-d-distinct', who: 'bram', isTrue: true,
-  claim: 'A 2 × 2 with two different eigenvalues can always be written in a grid of its lines that hold.',
-  reason: 'Each eigenvalue gives a line that holds. Two different stretches cannot share a line (an arrow has one stretch), so the two lines are different and make a grid: $P$ has two independent columns, $\\det P \\neq 0$, and $A = PDP^{-1}$.',
-  goal: 'Drag the grid arrows. When the eigenvalues differ, the violet dashed grid is built from the two lines that hold. **Back it** (Bram will shake it) or **Challenge it**.',
+  claim: 'A 2 × 2 with two different real eigenvalues can always be written in a grid of its lines that hold.',
+  reason: 'Each real eigenvalue gives a line that holds. Two different stretches cannot share a line (an arrow has one stretch), so the two lines are different and make a grid: $P$ has two independent columns, $\\det P \\neq 0$, and $A = PDP^{-1}$.',
+  goal: 'Drag the grid arrows. When the eigenvalues are real and different, the violet dashed grid is built from the two lines that hold. **Back it** (Bram will shake it) or **Challenge it**.',
   view: '2d',
   setup(p) {
-    const sc = diagScene(p, [[3, 1], [0, 2]], 'Two different eigenvalues?');
+    const sc = diagScene(p, [[3, 1], [0, 2]], 'Two different real eigenvalues?');
     const edges: Mat[] = [[[1, 1], [0, 1]], [[0, -1], [1, 0]], [[2, 1], [0, 2]], [[2, 1], [2, 1]]];
     return {
       holds: () => distinctDiagHolds(sc.mv.get()),
@@ -194,7 +194,7 @@ export const law: LawDef<PowCase> = {
 
 export const compare: CompareDef = {
   id: 'c19',
-  page: 'If $A$ has enough eigenvectors to make a grid, put them in the columns of $P$ and their eigenvalues on the diagonal of $D$, **in the same order**. Then $AP = PD$, so $A = PDP^{-1}$: translate into the grid of lines that hold, stretch along each axis, translate back. That is **diagonalisation**.\n\nRepeating the move repeats only the stretching. In $A^k = PDP^{-1}\\,PDP^{-1}\\cdots PDP^{-1}$ every $P^{-1}P$ in the middle is $I$, so $A^k = PD^kP^{-1}$, and $D^k$ raises each diagonal entry to the $k$-th power.\n\nWrite the start in the same grid, $\\mathbf x_0 = c_1\\mathbf v_1 + c_2\\mathbf v_2$. Then $\\mathbf x_k = c_1\\lambda_1^k\\mathbf v_1 + c_2\\lambda_2^k\\mathbf v_2$: the largest $|\\lambda|$ decides the long run.\n\nNot every move has enough lines. The shear keeps one; a turn keeps none with real numbers. Two different eigenvalues always give two lines.',
+  page: 'If $A$ has enough eigenvectors to make a grid, put them in the columns of $P$ and their eigenvalues on the diagonal of $D$, **in the same order**. Then $AP = PD$, so $A = PDP^{-1}$: translate into the grid of lines that hold, stretch along each axis, translate back. That is **diagonalisation**.\n\nRepeating the move repeats only the stretching. In $A^k = PDP^{-1}\\,PDP^{-1}\\cdots PDP^{-1}$ every $P^{-1}P$ in the middle is $I$, so $A^k = PD^kP^{-1}$, and $D^k$ raises each diagonal entry to the $k$-th power.\n\nWrite the start in the same grid, $\\mathbf x_0 = c_1\\mathbf v_1 + c_2\\mathbf v_2$. Then $\\mathbf x_k = c_1\\lambda_1^k\\mathbf v_1 + c_2\\lambda_2^k\\mathbf v_2$: the largest $|\\lambda|$ decides the long run.\n\nNot every move has enough lines. The shear keeps one; a turn keeps none with real numbers. Two different real eigenvalues always give two lines.',
   formula: 'A = PDP^{-1} \\implies A^k = PD^kP^{-1}, \\qquad \\mathbf x_k = c_1\\lambda_1^k\\mathbf v_1 + c_2\\lambda_2^k\\mathbf v_2',
   keyIdeas: [
     'Did you say the columns of $P$ are eigenvectors and $D$ holds their eigenvalues in the same order?',

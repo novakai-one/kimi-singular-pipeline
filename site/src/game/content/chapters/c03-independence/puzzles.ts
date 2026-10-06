@@ -9,6 +9,7 @@ import { FatLine } from '../../../gfx/lines';
 import { PlanePatch } from '../../../gfx/shapes';
 import { burst } from '../../../gfx/fx';
 import { h, button } from '../../../ui/ui';
+import { ChoiceCards } from '../../../ui/widgets';
 import { C } from '../../../core/theme';
 import { nice } from '../../../math/frac';
 import { wait } from '../../../core/tween';
@@ -282,13 +283,24 @@ export const p4: PuzzleDef = {
 // ------------------------------------------------------------------ p5 [D] four arrows always loop
 
 const P5_TILES = [
-  { id: 'indep', text: 'The first three arrows point in three independent directions.' },
+  { id: 'split', text: 'If $\\mathbf a_1, \\mathbf a_2, \\mathbf a_3$ already have a loop, give $\\mathbf a_4$ dial 0: that is a loop of all four. Otherwise…' },
+  { id: 'indep', text: '…they point in three independent directions.' },
   { id: 'reach', text: 'So they reach every point in space, including the tip of $\\mathbf a_4$.' },
   { id: 'combo', text: 'So $\\mathbf a_4 = c_1\\mathbf a_1 + c_2\\mathbf a_2 + c_3\\mathbf a_3$ for some dials.' },
   { id: 'move', text: 'Move $\\mathbf a_4$ across: $c_1\\mathbf a_1 + c_2\\mathbf a_2 + c_3\\mathbf a_3 - \\mathbf a_4 = \\mathbf 0$.' },
   { id: 'loop', text: 'The dial on $\\mathbf a_4$ is $-1$, not zero: a loop.' },
 ];
 const P5_DECOY = { id: 'decoy', text: 'Among four arrows, two are always parallel.' };
+/** Navigator: the general reason, chosen before the loop is typed. */
+const P5_WHY = [
+  { id: 'reach', text: 'The first three reach every point, so $\\mathbf a_4$ is reachable from them: $\\mathbf a_4 = c_1\\mathbf a_1 + c_2\\mathbf a_2 + c_3\\mathbf a_3$.' },
+  { id: 'parallel', text: 'Two of the arrows are parallel.' },
+  { id: 'zero', text: '$\\mathbf a_4$ is the zero arrow.' },
+];
+const P5_WHY_WRONG: Record<string, string> = {
+  parallel: 'Bram’s four arrows have no parallel pair. The loop comes from reach, not from parallels.',
+  zero: 'a₄ ends away from the start, so it is not the zero arrow. The loop comes from reach.',
+};
 
 export const p5: PuzzleDef = {
   id: 'c03-p5',
@@ -336,16 +348,30 @@ export const p5: PuzzleDef = {
     rig.readout?.row('a4', '$\\mathbf a_4$', fmtV(A[3]), '#e8f1ff');
     let ws: StepWorksheet | null = null;
     let tiles: TileOrder | null = null;
+    let pickWhy: ((id: string) => void) | null = null;
     const loopSheet = (steps: ConstructorParameters<typeof StepWorksheet>[1]['steps']) => {
       ws = new StepWorksheet(p, { steps, onDone: () => tick(1) });
       p.dock().prepend(ws.el);
     };
     if (d === 'navigator') {
-      loopSheet([
-        { prompt: 'Dials that land on the tip of $\\mathbf a_4$: $(c_1, c_2, c_3) =$', answer: four.dials },
-        { prompt: 'The dial on $\\mathbf a_4$ in the loop: $c_4 =$', answer: -1, mistakes: [[1, 'The ship comes home along a₄ backwards: c₄ = −1.']] },
-        { prompt: 'The loop dials $(c_1, c_2, c_3, c_4) =$', answer: loop },
-      ]);
+      // first the general reason (a choice), then the loop for Bram's arrows (typed)
+      const box = h('div', { class: 'worksheet' }, h('div', { class: 'kicker' }, 'Why do Bram’s four arrows always have a loop?'));
+      const cards = new ChoiceCards(P5_WHY, (id) => pickWhy?.(id));
+      box.append(cards.el);
+      p.dock().prepend(box);
+      pickWhy = (id) => {
+        p.move();
+        if (id !== 'reach') { cards.mark(id, 'wrong'); p.bark('lantern', P5_WHY_WRONG[id]); return; }
+        // the dock is tall: the answered choice gives way to the worksheet, and LANTERN says it
+        box.remove();
+        pickWhy = null;
+        p.bark('lantern', 'Right. The first three reach every point, so they reach the tip of a₄. Now write the loop.');
+        loopSheet([
+          { prompt: 'Dials that land on the tip of $\\mathbf a_4$: $(c_1, c_2, c_3) =$', answer: four.dials },
+          { prompt: 'The dial on $\\mathbf a_4$ in the loop: $c_4 =$', answer: -1, mistakes: [[1, 'The ship comes home along a₄ backwards: c₄ = −1.']] },
+          { prompt: 'The loop dials $(c_1, c_2, c_3, c_4) =$', answer: loop },
+        ]);
+      };
     } else if (d === 'commander') {
       tiles = new TileOrder(p, {
         title: 'Why is there always a loop? Order the steps', tiles: P5_TILES, decoys: [P5_DECOY], submitLabel: 'Check order',
@@ -355,7 +381,7 @@ export const p5: PuzzleDef = {
             tiles!.el.remove(); tiles = null;
             loopSheet([{ prompt: 'The loop for Bram’s arrows, exactly: $(c_1, c_2, c_3, c_4) =$', answer: loop }]);
           } else if (o.includes('decoy')) p.bark('lantern', 'Bram’s four arrows have no parallel pair. The loop comes from reach, not from parallels.');
-          else p.bark('lantern', 'That order does not follow. Start from what the first three reach.');
+          else p.bark('lantern', 'That order does not follow. Start with the case where the first three already loop.');
         },
       });
       p.dock().prepend(tiles.el);
@@ -383,6 +409,7 @@ export const p5: PuzzleDef = {
       quick = fast;
       await shaken;
       if (!fast) await wait(500);
+      if (pickWhy) { pickWhy('reach'); if (!fast) await wait(600); }
       if (tiles) { tiles.set(P5_TILES.map((x) => x.id)); if (!fast) await wait(600); tiles.el.remove(); tiles = null; loopSheet([{ prompt: 'The loop for Bram’s arrows, exactly: $(c_1, c_2, c_3, c_4) =$', answer: loop }]); }
       if (fast) rig.setDials(four.dials); else await rig.moveDials(four.dials, 1100);
       await rig.fire();

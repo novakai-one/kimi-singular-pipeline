@@ -50,6 +50,34 @@ test('p5: the backup thruster is −2 times thruster two; the pair reaches one l
   close(dot(f, [-1, 2]), 0);
 });
 
+test('p1, p5: a beacon LANTERN calls "on the line" is reached exactly; the just-off ones are out of reach and do not win', () => {
+  // the navigator half-grid within ±6 (the pad snaps to 0.5)
+  const grid: number[][] = [];
+  for (let i = -12; i <= 12; i++) for (let j = -12; j <= 12; j++) grid.push([i / 2, j / 2]);
+  let near1 = 0, near5 = 0;
+  for (const q of grid) {
+    // p1: the line through v = (1, 2); LANTERN's weight t = (x + 2y) / 5
+    const d1 = L.distToSpan([L.P1_V], q);
+    if (d1 < 1e-6) assert.ok(veq(vscale(L.P1_V, (q[0] + 2 * q[1]) / 5), q), `p1 ${q}: t v rebuilds it`);
+    else {
+      assert.ok(!veq(vscale(L.P1_V, (q[0] + 2 * q[1]) / 5), q), `p1 ${q}: off the line, no t reaches it`);
+      if (d1 < 0.3) { near1++; assert.ok(!L.p1Won(4, q), `p1 ${q}: too close to win`); }
+      else assert.ok(L.p1Won(4, q));
+    }
+    // p5: the line through v = (2, 1); LANTERN's weights come from weights2
+    const d5 = L.distToSpan([L.V], q);
+    if (d5 < 1e-6) {
+      const ab = L.weights2(L.V, L.BACKUP, q, 0.5);
+      assert.ok(veq(combo(ab, [L.V, L.BACKUP]), q), `p5 ${q}: the stated dials rebuild it`);
+    } else if (d5 < 0.3) { near5++; assert.ok(!L.p5Won(q), `p5 ${q}: too close to win`); }
+    else assert.ok(L.p5Won(q));
+  }
+  assert.equal(near1, 24);
+  assert.equal(near5, 24);
+  close(L.distToSpan([L.P1_V], [0.5, 0.5]), 1 / Math.sqrt(20), 1e-12);
+  close(L.distToSpan([L.V], [0.5, 0.5]), 1 / Math.sqrt(20), 1e-12);
+});
+
 test('p6 [D]: R = P + t(Q − P) has dials (1 − t, t); the unlocked thrusters reach z = x + y; the signal is off it', () => {
   for (const t of [-1, 0, 0.5, 1, 2, 2.5]) {
     const R = combo([1 - t, t], [L.V, L.W]);
@@ -82,6 +110,31 @@ test('p7 [S]: amber is a mix of the three lamps; pure green is off the warm–co
   assert.ok(!L.p7OffPlane([1, 1, 1].map((x) => x * 0.8)));
   assert.ok(!L.p7OffPlane([1.2, 0, 0]), 'outside the colour cube');
   assert.ok(norm(cross(L.LAMP_WARM, L.LAMP_COOL)) > 0);
+});
+
+test('p7 [S]: on the 0.1 probe grid every colour is either exactly a mix (weights in 0..1) or counts as off the plane', () => {
+  const n = [0.5, -1, 0.5];
+  let off = 0, onPlane = 0, justOff = 0;
+  for (let r = 0; r <= 10; r++) for (let g = 0; g <= 10; g++) for (let b = 0; b <= 10; b++) {
+    const probe = [r / 10, g / 10, b / 10];
+    const d = L.distToSpan([L.LAMP_WARM, L.LAMP_COOL], probe);
+    if (L.p7OffPlane(probe)) {
+      off++;
+      if (d < 0.05) justOff++;
+      continue;
+    }
+    // not off: LANTERN names the weights, so they must rebuild the probe, and a lamp has no negative weight
+    assert.ok(d < 1e-6, `${probe}: distance ${d} is neither on nor off`);
+    const [wa, wb] = L.weights2(L.LAMP_WARM, L.LAMP_COOL, probe);
+    assert.ok(veq(combo([wa, wb], [L.LAMP_WARM, L.LAMP_COOL]), probe), `${probe}: the weights rebuild it`);
+    assert.ok(wa >= -1e-9 && wa <= 1 + 1e-9 && wb >= -1e-9 && wb <= 1 + 1e-9, `${probe}: weights ${wa}, ${wb} in 0..1`);
+    onPlane++;
+  }
+  assert.equal(off + onPlane, 1331);
+  assert.equal(justOff, 120, 'the 120 probes with n·p = ±0.05 count as off the plane');
+  close(Math.abs(dot(n, [0, 0, 0.1])) / norm(n), 0.05 / Math.sqrt(1.5), 1e-12);
+  assert.ok(L.p7OffPlane([0, 0, 0.1]), 'a touch of blue alone is off the plane');
+  assert.ok(L.P7_OFF < 0.05 / Math.sqrt(1.5));
 });
 
 test('doubt (F) doubling: the doubled dials always land on Bram’s place (the edge case breaks the claim)', () => {

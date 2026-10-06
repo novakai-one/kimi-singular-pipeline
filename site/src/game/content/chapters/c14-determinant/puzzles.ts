@@ -21,7 +21,7 @@ import { embed } from '../c13-inverse/honest';
 import { landingLineColour } from '../c13-inverse/puzzles';
 import { UnitTile } from './tile';
 import {
-  det2, fmtN, P1_AREA, P1_EXAMPLE, P1_STAB, p1HoldOk, P2_BOX, P2_M, P2_PIECES, P2_STEPS, p2OrderOk, pieceOut, P3_A, P3_B,
+  det2, fmtN, P1_AREA, P1_EXAMPLE, P1_STAB, p1HoldOk, stabPath, P2_BOX, P2_M, P2_PIECES, P2_STEPS, p2OrderOk, pieceOut, P3_A, P3_B,
   P3_SWAP, P3_UNIT, p3FlipOk, p3ProductOk, p3ScaleOk, scaledArea, P4_M3, P4_M4, P4_MINOR2, P4_MINOR3, cofactor,
   minorOf, P5_M, P5_DIAG, P5_DET, P5_K, p5ShieldOk, shield, P7_A, P7_B, P7_X, replaceCol, texM, tolFor,
 } from './logic';
@@ -96,7 +96,17 @@ export const p1: PuzzleDef = {
       r.row('c', 'hold columns', 'moving with the grid');
       r.row('s', 'grid square area', '1');
       void p.g.stage.view2D({ center: [2.4, 1.8], height: 14, ms: 1200 });
-      await playMove({ g: p.g, grid, flat }, P1_STAB, identity(2), 1800, [(W) => { hold.set(matMul(W, embed(M0))); square.set(W); r.row('a', 'hold area', fmtN(Math.round(det(matMul(W, embed(M0))) * 100) / 100)); }]);
+      // played as P1_STAB^k (det 1 on every frame), not through playMove's (1 − k)I + kY, whose area swells to 1.25 mid-move
+      const frame = (k: number) => {
+        const W = stabPath(k);
+        grid.set(W); flat.set(W);
+        const H = matMul(embed(W), embed(M0));
+        hold.set(H); square.set(embed(W));
+        r.row('a', 'hold area', fmtN(Math.round(det(H) * 100) / 100));
+      };
+      sfx.whoosh(1.8);
+      await animate(1800, frame, ease.inOut);
+      frame(1);
       r.row('s', 'grid square area', fmtN(det2(P1_STAB)), C.good);
       const BM = matMul(P1_STAB, M0);
       r.row('c', 'hold columns', `(${fmtN(BM[0][0])}, ${fmtN(BM[1][0])}) and (${fmtN(BM[0][1])}, ${fmtN(BM[1][1])})`);
@@ -205,12 +215,13 @@ export const p2: PuzzleDef = {
       });
     }
     // navigator: typed steps, each one takes its pieces out; commander: order the steps, then type the last line
-    const stepsFor = [
-      { prompt: 'The box: $(a + b)(c + d) = 4 \\times 3$', answer: P2_STEPS.box, kinds: [] as string[] },
-      { prompt: 'Two triangles on $(a, c)$: $2 \\times \\tfrac12 \\cdot 3 \\cdot 1$', answer: P2_STEPS.triA, kinds: ['tri-a'] },
-      { prompt: 'Two triangles on $(b, d)$: $2 \\times \\tfrac12 \\cdot 1 \\cdot 2$', answer: P2_STEPS.triB, kinds: ['tri-b'] },
-      { prompt: 'Two rectangles: $2 \\times b \\cdot c$', answer: P2_STEPS.rects, kinds: ['rect'] },
-      { prompt: 'Left: $12 - 3 - 2 - 2$', answer: P2_STEPS.left, kinds: [] as string[] },
+    // each step owns its slips: 7 on the box is 4 + 3; 7 on the last line is everything taken out
+    const stepsFor: { prompt: string; answer: number; kinds: string[]; mistakes: [number, string][] }[] = [
+      { prompt: 'The box: $(a + b)(c + d) = 4 \\times 3$', answer: P2_STEPS.box, kinds: [], mistakes: [[7, 'Multiply the sides: the box is $4 \\times 3$.']] },
+      { prompt: 'Two triangles on $(a, c)$: $2 \\times \\tfrac12 \\cdot 3 \\cdot 1$', answer: P2_STEPS.triA, kinds: ['tri-a'], mistakes: [] },
+      { prompt: 'Two triangles on $(b, d)$: $2 \\times \\tfrac12 \\cdot 1 \\cdot 2$', answer: P2_STEPS.triB, kinds: ['tri-b'], mistakes: [] },
+      { prompt: 'Two rectangles: $2 \\times b \\cdot c$', answer: P2_STEPS.rects, kinds: ['rect'], mistakes: [] },
+      { prompt: 'Left: $12 - 3 - 2 - 2$', answer: P2_STEPS.left, kinds: [], mistakes: [[7, 'That is everything taken out. Take it away from the box.']] },
     ];
     let ws: StepWorksheet | null = null;
     const watch = (el: HTMLElement, kindsAt: string[][]) => {
@@ -223,7 +234,7 @@ export const p2: PuzzleDef = {
       p.onDispose(() => obs.disconnect());
     };
     if (p.difficulty === 'navigator') {
-      ws = new StepWorksheet(p, { steps: stepsFor.map(({ prompt, answer }) => ({ prompt, answer, mistakes: [[7, 'That is everything taken out. Take it away from the box.']] as [number, string][] })), onDone: () => { typedDone = true; pieces.forEach((x) => void takeOut(x)); check(); } });
+      ws = new StepWorksheet(p, { steps: stepsFor.map(({ prompt, answer, mistakes }) => ({ prompt, answer, mistakes })), onDone: () => { typedDone = true; pieces.forEach((x) => void takeOut(x)); check(); } });
       watch(ws.el, stepsFor.map((s) => s.kinds));
     } else if (p.difficulty === 'commander') {
       const tiles = new TileOrder(p, {
@@ -370,17 +381,30 @@ export const p3: PuzzleDef = {
       p.win();
     };
     phase0();
+    /**
+     * Show me / solve from whatever the player has done: wait out a running move, then reach the scaling
+     * step (a product already played has its toScale pending; anything else is reset and replayed B, A).
+     * Returns false when the flip is already playing (the win is on its way).
+     */
+    const reachScale = async (): Promise<boolean> => {
+      for (let i = 0; i < 400 && busy && phase < 2; i++) await wait(25);
+      if (phase === 2 && busy) return false;
+      if (phase === 0 && p3ProductOk(applied)) { for (let i = 0; i < 400 && phase === 0; i++) await wait(25); }
+      else if (phase === 0) { reset0(); await playOn('B'); await playOn('A'); }
+      return true;
+    };
     return {
       async showMe() {
-        await playOn('B'); await playOn('A');
+        if (!(await reachScale())) return;
         await wait(300);
-        slider?.set(2, true); await wait(400); checkScale();
-        await wait(300);
+        if (phase === 1) { slider?.set(2, true); await wait(400); k = 2; checkScale(); await wait(300); }
+        if (handles.length === 0) toFlip();
         await Promise.all([handles[0].moveTo(col2(P3_SWAP, 0), 600), handles[1].moveTo(col2(P3_SWAP, 1), 600)]);
       },
       async solve() {
-        await playOn('B'); await playOn('A');
-        k = 2; checkScale();
+        if (!(await reachScale())) return;
+        if (phase === 1) { k = 2; checkScale(); }
+        if (handles.length === 0) toFlip();
         handles[0].set(col2(P3_SWAP, 0)); handles[1].set(col2(P3_SWAP, 1));
         M = P3_SWAP.map((x) => x.slice());
         await commitFlip();
@@ -398,12 +422,12 @@ const texRowHi = (M: Mat, row: number) => `\\begin{bmatrix}${M.map((r, i) => r.m
 export const p4: PuzzleDef = {
   id: 'c14-p4',
   title: 'How do we compute a 3 × 3 determinant by hand?',
-  goal: 'Choose a row. Type each entry\'s **cofactor**: its sign from the $+\\,-\\,+$ pattern times the determinant of what is left. Add the entries times their cofactors. Then the $4 \\times 4$.',
+  goal: 'Choose a row. For each entry, type its sign from the $+\\,-\\,+$ pattern times the determinant of what is left when you cross out its row and column. Add the entries times those numbers. Then the $4 \\times 4$.',
   subgoals: ['The 3 × 3, expanded along a row', 'The 4 × 4, using rows and columns with one non-zero entry'],
   hints: [
-    'Cross out the entry\'s row and column. The $2 \\times 2$ left over is its minor. The sign at row $i$, column $j$ is $+$ when $i + j$ is even.',
+    'Cross out the entry\'s row and column. Take the determinant of the $2 \\times 2$ left over. The sign at row $i$, column $j$ is $+$ when $i + j$ is even.',
     'Along row 1: $2 \\cdot \\det\\begin{bmatrix}3&1\\\\1&2\\end{bmatrix} - 1 \\cdot \\det\\begin{bmatrix}1&1\\\\0&2\\end{bmatrix} + 0 = 2 \\cdot 5 - 1 \\cdot 2 = 8$.',
-    'Row 1 cofactors: $5, -2, 1$; total 8. The $4 \\times 4$: $1 \\cdot 1 \\cdot (1 \\cdot 2 - 3 \\cdot 1) = -1$.',
+    'Row 1 gives $5, -2, 1$; total 8. The $4 \\times 4$: $1 \\cdot 1 \\cdot (1 \\cdot 2 - 3 \\cdot 1) = -1$.',
   ],
   view: '3d',
   par: 9,
@@ -416,9 +440,9 @@ export const p4: PuzzleDef = {
     vol.show(false);
     p.add(box, ...arrows, vol.object);
     p.onDispose(() => vol.dispose());
-    const r = p.readout('Cofactor expansion');
+    const r = p.readout('Expanding along a row');
     r.row('M', '$M$', `$${texM(P4_M3)}$`);
-    r.note('The determinant is the signed volume of the box the three columns make: the scalar triple product of the columns. Writing that product out gives the $+\\,-\\,+$ pattern.');
+    r.note('The determinant is the signed volume of the box the three columns make: the scalar triple product of the columns. Writing that product out gives the $+\\,-\\,+$ pattern, and any row or column gives the same number.');
     const flags = [false, false];
     const dock = p.dock();
     const chooser = h('div', { style: 'display:flex;gap:6px;align-items:center;flex-wrap:wrap' }, h('span', { class: 'kicker' }, 'Expand along'));
@@ -446,24 +470,24 @@ export const p4: PuzzleDef = {
         const mi = minorOf(P4_M3, i, j);
         const c = cofactor(P4_M3, i, j);
         return {
-          prompt: `$C_{${i + 1}${j + 1}} = ${SIGN(i, j)}\\det${texM(mi)}$`, answer: c,
+          prompt: `Entry $(${i + 1}, ${j + 1})$: $${SIGN(i, j)}\\det${texM(mi)}$`, answer: c,
           mistakes: Math.abs(c) > 1e-9 ? [[-c, `Check the sign: position (${i + 1}, ${j + 1}) has ${SIGN(i, j)} in the $+\\,-\\,+$ pattern.`]] as [number, string][] : [],
         };
       });
-      const sum = P4_M3[i].map((a, j) => `${fmtN(a).replace('−', '-')}\\,C_{${i + 1}${j + 1}}`).join(' + ');
-      steps.push({ prompt: `$\\det M = ${sum}$`, answer: P4_M3[i].reduce((s, a, j) => s + a * cofactor(P4_M3, i, j), 0), mistakes: [] });
+      const entries = P4_M3[i].map((a) => fmtN(a).replace('−', '-')).join(', ');
+      steps.push({ prompt: `Add each entry of row ${i + 1}, $${entries}$, times its number above: $\\det M =$`, answer: P4_M3[i].reduce((s, a, j) => s + a * cofactor(P4_M3, i, j), 0), mistakes: [] });
       ws = new StepWorksheet(p, { steps, onDone: done3, mount: host });
     };
     const start4 = () => {
       r.row('M', '$N$', `$${texRowHi(P4_M4, 1)}$`);
-      r.note('Row 2 of $N$ has one non-zero entry, so one cofactor is enough. The minor it leaves has a middle column with one non-zero entry.');
-      p.setGoal('The $4 \\times 4$ $N$. Expand along row 2 (one non-zero entry), then along the middle column of the $3 \\times 3$ minor.');
+      r.note('Row 2 of $N$ has one non-zero entry, so one term is enough. The $3 \\times 3$ left over has a middle column with one non-zero entry.');
+      p.setGoal('The $4 \\times 4$ $N$. Expand along row 2 (one non-zero entry), then along the middle column of the $3 \\times 3$ left over.');
       void animate(500, (k) => { box.group.visible = k < 0.5; arrows.forEach((a) => a.setOpacity(1 - k)); });
       vol.show(false);
       ws = new StepWorksheet(p, {
         title: p.difficulty === 'commander' ? 'By hand · only the answer is checked' : undefined,
         steps: [
-          { prompt: `Row 2 has one non-zero entry, $1$, sign $+$. Its minor is $${texM(P4_MINOR3)}$. The minor's middle column has one non-zero entry, $1$, sign $+$. What is left: $\\det${texM(P4_MINOR2)} =$`, answer: det(P4_MINOR2), mistakes: [[1, 'It is 1 · 2 − 3 · 1.']] },
+          { prompt: `Row 2 has one non-zero entry, $1$, sign $+$. What is left is $${texM(P4_MINOR3)}$. Its middle column has one non-zero entry, $1$, sign $+$. What is left of that: $\\det${texM(P4_MINOR2)} =$`, answer: det(P4_MINOR2), mistakes: [[1, 'It is 1 · 2 − 3 · 1.']] },
           { prompt: '$\\det N = 1 \\cdot 1 \\cdot (\\text{what is left}) =$', answer: det(P4_M4) },
         ],
         onDone: () => { flags[1] = true; p.subgoal(1); sfx.success(); p.win(); },

@@ -56,7 +56,7 @@ export const buildEig2: BuildDef = {
   swarm: { gen: (r, d) => eig2Case(r, d), crew: (A) => crewEig2(A as Mat), tol: 1e-6 },
   docPrompt: 'Why are the stretches the roots of λ² − (trace)λ + det? Write it the way you would tell Bram.',
   ilseNote: 'eig2(A): det(A − λI) = λ² − (a + d)λ + (ad − bc). Real roots are stretches along lines that hold. A negative discriminant means a turn: the size of p + qi is the stretch, its angle is the turn.',
-  payoff: 'LANTERN’s line finder reports every pulse’s stretches with your `eig2`.',
+  payoff: 'Chapter 19’s `diagonalise2` takes its stretches from your `eig2`.',
 };
 
 export const buildPower: BuildDef = {
@@ -69,7 +69,7 @@ export const buildPower: BuildDef = {
   uses: ['matvec'],
   tests: POWER_TESTS,
   swarm: { gen: (r, d) => powerCase(r, d), crew: (A, x, n) => crewPower(A as Mat, x as Vec, n as number), tol: 1e-6 },
-  docPrompt: 'Why does repeating and rescaling swing any arrow onto the line with the largest stretch?',
+  docPrompt: 'Why does repeating and rescaling swing almost any arrow (any with a part on that line) onto the line with the largest stretch?',
   ilseNote: 'power_iteration: each step multiplies the part on each line by its stretch. After many steps the largest stretch has outgrown the rest, and rescaling keeps the numbers from running away.',
   payoff: 'LANTERN’s line finder runs on your `power_iteration` (and later, the drone allocation).',
 };

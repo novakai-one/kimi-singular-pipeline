@@ -20,11 +20,11 @@ export const sayit: SayItDef = {
   ask: 'Why does a zero triple product mean one arrow is a combination of the other two?',
   frames: {
     see: 'The box on ___, ___ and ___ has base area ___ and height ___.',
-    means: 'Zero volume means the height is ___, so the third arrow lies in the ___ of the other two, so it is built from ___.',
+    means: 'Zero volume means the height is ___ or the base has no ___, so the three arrows lie in one ___, so one of them is built from ___.',
     called: 'Base area times height, with a sign, is called the ___.',
     cue: 'When asked whether four points lie on one plane, think ___.',
   },
-  wordBank: ['strut', 'base', 'height', 'shadow', 'flat', 'plane', 'zero', 'combination', 'scalar triple product', 'coplanar', 'edge arrows'],
+  wordBank: ['strut', 'base', 'height', 'area', 'shadow', 'flat', 'plane', 'zero', 'combination', 'scalar triple product', 'coplanar', 'edge arrows'],
 };
 
 // ------------------------------------------------------------------ (F) Lean the third strut over and you lose volume
@@ -76,7 +76,7 @@ export const doubtLean: DoubtDef = {
 export function swapDoubt(id: string, claim: string): DoubtDef {
   return {
     id, who: 'bram', isTrue: true, claim,
-    reason: 'Swapping the first two struts swaps the order in the cross product, and $\\mathbf b\\times\\mathbf a = -\\,\\mathbf a\\times\\mathbf b$. The box is the same box; only the sign, its orientation, changes. A flat box reads 0 either way.',
+    reason: '$\\mathbf b\\cdot(\\mathbf a\\times\\mathbf c)$ is a turn of $\\mathbf a\\cdot(\\mathbf c\\times\\mathbf b)$, and turning the order round keeps the number. And $\\mathbf c\\times\\mathbf b = -\\,\\mathbf b\\times\\mathbf c$, so the swapped order reads minus $\\mathbf a\\cdot(\\mathbf b\\times\\mathbf c)$. The box is the same box; only the sign, its orientation, changes. A flat box reads 0 either way.',
     goal: 'Drag the struts. Compare $\\cg{\\mathbf a}\\cdot(\\cr{\\mathbf b}\\times\\cb{\\mathbf c})$ with the swapped order $\\cr{\\mathbf b}\\cdot(\\cg{\\mathbf a}\\times\\cb{\\mathbf c})$. **Back it** (Bram will shake it) or **Challenge it**.',
     view: '3d',
     async setup(p) {

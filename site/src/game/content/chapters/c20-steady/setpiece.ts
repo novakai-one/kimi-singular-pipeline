@@ -10,7 +10,7 @@ import { C } from '../../../core/theme';
 import { animate, ease, wait } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
 import { rint, rng } from '../../../game/lawcheck';
-import { eigvals3, identity, matMul, matVec, mlerp, mpow, normalize, type Mat, type Vec } from '../../../math/la';
+import { identity, matMul, matVec, mlerp, mpow, normalize, type Mat, type Vec } from '../../../math/la';
 import { V, VELL_CUTTER, DRONES } from '../../truth';
 import { fieldSet, type Field } from '../c18-eigen/scenes';
 import { ptag, sg } from '../c18-eigen/parts';
@@ -21,7 +21,7 @@ import { diagonalisable2 } from '../c19-powers/logic';
 import { twoStarts } from './briefing';
 import {
   SP_AFTER, SP_CANDIDATES, SP_COORDS, SP_DET, SP_EXP, SP_GRID, SP_LINES, TOTAL, fmtN, fmtV, randChain, spCoordsOk, spDetOk, spForecastOk, spLineOk,
-  startMattersHolds, triangularHolds,
+  eigvalsWithMult3, startMattersHolds, triangularHolds,
 } from './logic';
 import { S } from './script';
 
@@ -54,6 +54,8 @@ export const sp: PuzzleDef = {
     p.dock().append(stage, msgEl);
     let step = 0;
     let won = false;
+    // one animated step at a time: a double click or Enter plus a click must not run a step twice
+    let busy = false;
     const next = () => { step++; render(); if (step >= 5 && !won) { won = true; sfx.success(); p.win(); } };
 
     // 1 · lines
@@ -70,7 +72,7 @@ export const sp: PuzzleDef = {
       p.add(L.object); p.onDispose(() => L.dispose()); lineObjs.push(L);
       ptag(p, `× ${fmtN(SP_LINES[i][1])}`, v3(normalize(SP_LINES[i][0]).map((x) => x * 5.2)), 'vi');
       sfx.snap();
-      if (found.size === 3) { tick(0); r.row('l', 'lines', '(1, 1, 1) ×1 · (1, −1, 0) ×0.5 · (1, 1, −2) ×0.2', C.violet); msg('Three lines: everything else is turned towards $(1, 1, 1)$.', 'good'); next(); }
+      if (found.size === 3) { tick(0); r.row('l', 'lines', '(1, 1, 1) ×1 · (1, −1, 0) ×0.5 · (1, 1, −2) ×0.2', C.violet); msg('Three lines. Any arrow with some part along $(1, 1, 1)$ is turned towards it.', 'good'); next(); }
       else render();
     };
     // 2 · coordinates
@@ -78,10 +80,11 @@ export const sp: PuzzleDef = {
     cIn.el.classList.add('a7-in');
     const path: Arrow[] = [];
     const checkC = async () => {
-      if (step !== 1) return;
+      if (step !== 1 || busy) return;
       p.move();
       const c = cIn.get();
       if (!spCoordsOk(c)) { sfx.miss(); msg(`${fmtN(c[0])}(1, 1, 1) + ${fmtN(c[1])}(1, −1, 0) + ${fmtN(c[2])}(1, 1, −2) = ${fmtV(matVec(SP_GRID, c))}, not (4, 2, 0).`, 'bad'); return; }
+      busy = true;
       let at: Vec = [0, 0, 0];
       for (const [k, [w]] of SP_LINES.entries()) {
         const to = at.map((x, i) => x + c[k] * w[i]);
@@ -93,13 +96,14 @@ export const sp: PuzzleDef = {
       tick(1); sfx.snap();
       r.row('cc', 'cutter in that grid', fmtV(SP_COORDS), C.violet);
       msg('$(4, 2, 0) = 2(1, 1, 1) + 1(1, -1, 0) + 1(1, 1, -2)$.', 'good');
+      busy = false;
       next();
     };
     // 3 · forecast
     const fIn = new VectorInput({ dim: 3, values: [0, 0, 0], label: 'V^{50}\\mathbf c =', step: 1, onSubmit: () => void checkF() });
     fIn.el.classList.add('a7-in');
     const checkF = async (fast = false) => {
-      if (step !== 2) return;
+      if (step !== 2 || busy) return;
       p.move();
       const x = fIn.get();
       if (!spForecastOk(x, p.difficulty === 'commander' ? 0.01 : 0.05)) {
@@ -107,6 +111,7 @@ export const sp: PuzzleDef = {
         msg(Math.hypot(x[0], x[1], x[2]) < 0.3 ? 'Not the origin: the part along $(1, 1, 1)$ has stretch 1, so it never shrinks.' : 'Stretch each part by its own λ fifty times: $2 \\cdot 1^{50}$, $1 \\cdot 0.5^{50}$, $1 \\cdot 0.2^{50}$.', 'bad');
         return;
       }
+      busy = true;
       path.forEach((a) => a.setOpacity(0.25));
       // fifty honest pulses: the field and the cutter, pulse after pulse
       let cur: Mat = identity(3);
@@ -124,6 +129,7 @@ export const sp: PuzzleDef = {
       tick(2); sfx.discover();
       r.row('f', 'cutter after fifty', fmtV(SP_AFTER.map((x) => Math.round(x))), C.result);
       msg('The cutter ends at $(2, 2, 2)$: on the line it gathers everything onto.', 'good');
+      busy = false;
       next();
     };
     // 4 · volume
@@ -145,7 +151,8 @@ export const sp: PuzzleDef = {
     // 5 · the drones
     let drones: Points | null = null;
     const forecastDrones = async (fast = false) => {
-      if (step !== 4) return;
+      if (step !== 4 || busy) return;
+      busy = true;
       p.move();
       const R = rng(77), n = 160, start: Vec[] = [];
       for (let i = 0; i < n; i++) start.push([VELL_CUTTER[0] + (R() - 0.5) * 3, VELL_CUTTER[1] + (R() - 0.5) * 3, VELL_CUTTER[2] + (R() - 0.5) * 2]);
@@ -160,6 +167,7 @@ export const sp: PuzzleDef = {
       put(mpow(V, 50));
       tick(4); sfx.collapse();
       msg('His drones, his crew, his cutter: all on one line, crushed by $10^{-50}$.', 'good');
+      busy = false;
       next();
     };
     const render = () => {
@@ -271,7 +279,8 @@ const vellTri: DoubtDef = {
     const scale = (M: Mat) => { const m = Math.max(1, ...M.flat().map(Math.abs)); return M.map((row) => row.map((x) => x / m)); };
     const paint = () => {
       lat.set(scale(U));
-      const ev = eigvals3(U).map((x) => Math.round(x * 1000) / 1000).sort((a, b) => b - a);
+      // from det(A − λI) = 0, with multiplicity: a repeated diagonal entry shows every copy
+      const ev = eigvalsWithMult3(U).map((x) => Math.round(x * 1000) / 1000);
       r.row('m', '$A$', `$${texSmall(U)}$`);
       r.row('d', 'its diagonal', [U[0][0], U[1][1], U[2][2]].slice().sort((a, b) => b - a).map(fmtN).join(', '), C.result);
       r.row('e', 'its eigenvalues', ev.map((x) => fmt2(x)).join(', '), C.violet);

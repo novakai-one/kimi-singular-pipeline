@@ -25,7 +25,7 @@ const det3 = (M: Mat) => M[0][0] * (M[1][1] * M[2][2] - M[1][2] * M[2][1]) - M[0
 export const p5: PuzzleDef = {
   id: 'c18-p5',
   title: 'What are the stretches of a 3 × 3, by hand?',
-  goal: 'By hand: the eigenvalues and eigenvectors of $A$, two checks, then a triangular matrix (both in the readout).',
+  goal: 'By hand: the eigenvalues of $A$, two checks and its eigenvectors, then the eigenvalues of a triangular matrix. Both matrices are in the readout.',
   subgoals: ['The characteristic equation', 'Eigenvalues and eigenvectors', 'Check: the trace and the determinant', 'A triangular matrix'],
   hints: [
     'Expand $\\det(A - \\lambda I)$ along the first row: only the $2 - \\lambda$ survives, times the 2 × 2 block $\\begin{bmatrix} 3 - \\lambda & 4 \\\\ 4 & -3 - \\lambda \\end{bmatrix}$.',
@@ -65,49 +65,76 @@ export const p5: PuzzleDef = {
     const r = p.readout('By hand');
     r.row('A', '$A$', `$${texM(P5_A)}$`);
     r.row('U', 'the triangular one', `$${texM(P5_TRI)}$`);
-    const paint = (k: number) => {
-      r.row('tr', 'trace of $A$ (sum down the diagonal)', fmtN(trace(P5_A)));
-      r.row('det', '$\\det A$', fmtN(det3(P5_A)));
-      r.row('sum', 'sum of the eigenvalues', k >= 2 ? fmtN(P5_VALUES.reduce((a, b) => a + b, 0)) : '?', C.result);
-      r.row('prod', 'product of the eigenvalues', k >= 2 ? fmtN(P5_VALUES.reduce((a, b) => a * b, 1)) : '?', C.result);
+    // Cadet: LANTERN shows the trace and det A from the start, and the sum and product once the eigenvalues
+    // are in. Navigator and Commander work the checks by hand: each pair shows only once its check is right.
+    const cadet = p.difficulty === 'cadet';
+    const shown = { tr: cadet, det: cadet, sum: false, prod: false };
+    const SUM = P5_VALUES.reduce((a, b) => a + b, 0), PROD = P5_VALUES.reduce((a, b) => a * b, 1);
+    const paint = () => {
+      r.row('tr', 'trace of $A$ (sum down the diagonal)', shown.tr ? fmtN(trace(P5_A)) : '?');
+      r.row('det', '$\\det A$', shown.det ? fmtN(det3(P5_A)) : '?');
+      r.row('sum', 'sum of the eigenvalues', shown.sum ? fmtN(SUM) : '?', C.result);
+      r.row('prod', 'product of the eigenvalues', shown.prod ? fmtN(PROD) : '?', C.result);
     };
-    paint(0);
+    const showAll = () => { shown.tr = shown.det = shown.sum = shown.prod = true; paint(); };
+    paint();
     const done = [false, false, false, false];
     const tick = (i: number) => { if (!done[i]) { done[i] = true; sg(p, i); } };
+    // Two worksheets, so Commander's one check (a worksheet's last step) falls on the 3 × 3 itself, and the
+    // triangular read-off is checked on its own. The first ends on the last eigenvector; the second opens
+    // once it is right.
+    const STEP = { c: 0, values: 1, tr: 2, det: 3, v5: 4, vm5: 5 };
     const steps = [
       { prompt: '$\\det(A - \\lambda I) = (2 - \\lambda)(\\lambda^2 + c)$: $c =$', answer: P5_BLOCK_C, mistakes: [[-9, 'Take away $4 \\cdot 4 = 16$ as well: $-9 - 16$.'], [7, 'The product of the diagonal is $(3)(-3) = -9$, then take away 16.']] as [number, string][] },
       { prompt: 'The eigenvalues, largest first', answer: P5_VALUES, mistakes: [[[5, 2, 5], '$\\lambda^2 = 25$ has two roots: 5 and −5.'], [[2, 5, -5], 'Largest first: 5, 2, −5.']] as [number[], string][] },
+      { prompt: 'Check: $\\lambda_1 + \\lambda_2 + \\lambda_3$ (the trace)', answer: SUM },
+      { prompt: 'Check: $\\lambda_1\\lambda_2\\lambda_3$ ($\\det A$)', answer: PROD, mistakes: [[50, 'One of the three is negative.']] as [number, string][] },
       { prompt: 'An eigenvector for $\\lambda = 5$ is $(0, 2, z)$: $z =$', answer: P5_VECS[0][2], mistakes: [[-4, 'That one solves for λ = −5. For λ = 5: $-2y + 4z = 0$.']] as [number, string][] },
       { prompt: 'An eigenvector for $\\lambda = -5$ is $(0, 1, z)$: $z =$', answer: P5_VECS[2][2], mistakes: [[2, '$A + 5I$ has the row $(0, 8, 4)$: $8 + 4z = 0$.']] as [number, string][] },
-      { prompt: 'Check: $\\lambda_1 + \\lambda_2 + \\lambda_3$ (the trace)', answer: P5_VALUES.reduce((a, b) => a + b, 0) },
-      { prompt: 'Check: $\\lambda_1\\lambda_2\\lambda_3$ ($\\det A$)', answer: P5_VALUES.reduce((a, b) => a * b, 1), mistakes: [[50, 'One of the three is negative.']] as [number, string][] },
-      { prompt: 'The triangular one (readout): its eigenvalues, top to bottom', answer: P5_TRI_VALUES },
     ];
-    const watch = () => {
-      const n = ws.el.querySelectorAll('.ws-row.ok').length;
-      if (n >= 1) tick(0);
-      if (n >= 2) { void reveal(1); paint(2); }
-      if (n >= 3) void reveal(0);
-      if (n >= 4) { void reveal(2); tick(1); }
-      if (n >= 6) tick(2);
+    let tri: StepWorksheet | null = null;
+    const openTri = () => {
+      if (tri) return tri;
+      tri = new StepWorksheet(p, {
+        steps: [{ prompt: 'The triangular one (readout): its eigenvalues, top to bottom', answer: P5_TRI_VALUES }],
+        onDone: () => {
+          tick(3);
+          r.note('A triangular matrix: $\\det(A - \\lambda I)$ is the product down the diagonal, so its eigenvalues are its diagonal entries.');
+          p.win();
+        },
+      });
+      return tri;
     };
     const ws = new StepWorksheet(p, {
       steps,
       onDone: () => {
         void (async () => { for (const i of [1, 0, 2]) await reveal(i); })();
-        paint(2);
-        tick(0); tick(1); tick(2); tick(3);
-        r.note('A triangular matrix: $\\det(A - \\lambda I)$ is the product down the diagonal, so its eigenvalues are its diagonal entries.');
-        p.win();
+        showAll();
+        tick(0); tick(1); tick(2);
+        openTri();
       },
     });
+    // keyed on each step's own row, not on how many rows are right (the steps can be done in any order)
+    const watch = () => {
+      const rows = ws.el.querySelectorAll('.ws-row');
+      const ok = (i: number) => !!rows[i]?.classList.contains('ok');
+      if (ok(STEP.c)) tick(0);
+      if (ok(STEP.values)) { void reveal(1); if (cadet) { shown.sum = shown.prod = true; } }
+      if (ok(STEP.tr)) shown.tr = shown.sum = true;
+      if (ok(STEP.det)) shown.det = shown.prod = true;
+      if (ok(STEP.tr) && ok(STEP.det)) tick(2);
+      if (ok(STEP.v5)) void reveal(0);
+      if (ok(STEP.vm5)) void reveal(2);
+      if (ok(STEP.v5) && ok(STEP.vm5)) tick(1);
+      paint();
+    };
     ws.el.addEventListener('change', watch);
     ws.el.addEventListener('keyup', watch);
     ws.el.addEventListener('click', () => window.setTimeout(watch, 30));
     return {
-      async showMe() { await ws.showMe(420); watch(); },
-      solve() { ws.solve(); },
-      wrong() { ws.wrong(); },
+      async showMe() { await ws.showMe(420); watch(); await openTri().showMe(420); },
+      solve() { ws.solve(); openTri().solve(); },
+      wrong() { ws.wrong(); tri?.wrong(); },
     };
   },
 };
@@ -120,7 +147,7 @@ export const p6: PuzzleDef = {
   goal: 'Test arrows through the Anchor under Vell’s pulse $V$. **Lock** every line $V$ keeps (the yellow image stays on the white arrow’s line), and give its stretch.',
   subgoals: ['Lock the line with stretch 1', 'Lock the line with stretch 0.5', 'Lock the line with stretch 0.2'],
   hints: [
-    'A line holds when $V\\mathbf x$ is a multiple of $\\mathbf x$. Divide each entry of $V\\mathbf x$ by the matching entry of $\\mathbf x$: they must agree.',
+    'A line holds when $V\\mathbf x$ is a multiple of $\\mathbf x$. Where $\\mathbf x$ has a 0, $V\\mathbf x$ must have a 0 too. Elsewhere, divide each entry of $V\\mathbf x$ by the matching entry of $\\mathbf x$: the ratios must agree, and that ratio is the stretch.',
     '$V(1, 1, 1) = (1, 1, 1)$: stretch 1. Try $(1, -1, 0)$ and $(1, 1, -2)$ as well.',
     'Lock $(1, 1, 1)$ × 1, $(1, -1, 0)$ × 0.5 and $(1, 1, -2)$ × 0.2.',
   ],
@@ -156,7 +183,7 @@ export const p6: PuzzleDef = {
     let won = false;
     const winCheck = () => {
       P6_LINES.forEach(([dir, val], i) => sg(p, i, locks.some((k) => k.ok && lineAngleDeg(k.dir, dir) < 0.5 && Math.abs(k.stretch - val) < 0.02)));
-      if (!won && p6Won(locks.filter((k) => k.ok))) { won = true; sfx.success(); msg('Three lines hold. Every other arrow is turned towards (1, 1, 1).', 'good'); p.win(); }
+      if (!won && p6Won(locks.filter((k) => k.ok))) { won = true; sfx.success(); msg('Three lines hold. Every other arrow with a part along (1, 1, 1) is turned towards that line. Arrows in the plane $x + y + z = 0$ stay in it.', 'good'); p.win(); }
     };
     const test = async (dir: Vec, fast = false) => {
       if (norm(dir) < 1e-9) { msg('The zero arrow has no line. Try an arrow that is not zero.', 'bad'); sfx.miss(); return; }

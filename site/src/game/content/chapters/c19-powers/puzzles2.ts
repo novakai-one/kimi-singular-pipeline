@@ -1,5 +1,6 @@
 // Chapter 19 puzzles 4–6: the shear has too few lines to make a grid (p4), two sites settle at the line
 // with stretch 1 while the gap shrinks by 0.7 a step (p5), and Fibonacci by repeated squaring (p6 [S]).
+import { Vector3 } from 'three';
 import type { PuzzleDef } from '../../../game/types';
 import { Arrow } from '../../../gfx/arrow';
 import { Dot } from '../../../gfx/markers';
@@ -59,8 +60,10 @@ export const p4: PuzzleDef = {
       r.row('d', '$\\det P$', fmtN(d), Math.abs(d) < 1e-9 ? C.orange : C.white);
       sg(p, 0, shearKeeps(a) && shearKeeps(b));
     };
-    const h1: VectorHandle = new VectorHandle(p, { to: [1, 1, 0], color: C.v, label: '$\\mathbf p_1$', limit: 3, onChange: () => paint() });
-    const h2: VectorHandle = new VectorHandle(p, { to: [0, 1, 0], color: C.w, label: '$\\mathbf p_2$', limit: 3, onChange: () => paint() });
+    // a tip that comes close to the kept line lands on it exactly (Commander drags with no snap)
+    const onAxis = (q: Vector3) => (Math.abs(q.y) <= 0.05 ? new Vector3(q.x, 0, q.z) : q);
+    const h1: VectorHandle = new VectorHandle(p, { to: [1, 1, 0], color: C.v, label: '$\\mathbf p_1$', limit: 3, constrain: onAxis, onChange: () => paint() });
+    const h2: VectorHandle = new VectorHandle(p, { to: [0, 1, 0], color: C.w, label: '$\\mathbf p_2$', limit: 3, constrain: onAxis, onChange: () => paint() });
     const build = () => {
       if (built) return;
       p.move();
@@ -166,20 +169,31 @@ export const p5: PuzzleDef = {
       sg(p, 2, ratioOk);
       if (!won && fOk && k >= 3 && ratioOk && p5Won(share!, k, P5_RATIO)) { won = true; sfx.success(); msg('Two thirds at A. The gap is 0.7 of itself every step: the other line’s stretch.', 'good'); p.win(); }
     };
+    // one step at a time: a press while the dot moves does nothing. Commander: forecasts are committed blind.
+    let busy = false, stepping: Promise<void> = Promise.resolve();
+    const stepBtn = button('Step', () => void stepOnce(p.g.headless ? 1 : 650), { cls: 'primary small' });
+    const gateStep = () => { stepBtn.disabled = busy || (d === 'commander' && share === null); };
     const setShare = (s: number) => {
       share = Math.max(0, Math.min(1, s));
       fc.setOpacity(1); fc.at([share, 1 - share, 0.01]);
-      paint(); check();
+      paint(); check(); gateStep();
     };
-    const stepOnce = async (ms: number) => {
-      const from = x.slice(), to = matVec(P5_M, from);
-      const g0 = gap(k);
-      p.move();
-      await animate(ms, (t) => { const q = [from[0] + (to[0] - from[0]) * t, from[1] + (to[1] - from[1]) * t]; dot.at(v3(q, 0.01)); gapA.set(v3(P5_LONG, 0.004), v3(q, 0.004)); }, ease.inOut);
-      x = to; k++;
-      ratios.push(gap(k) / g0);
-      sfx.tick(k);
-      paint(); check();
+    const stepOnce = (ms: number): Promise<void> => {
+      if (busy) return stepping;
+      busy = true; gateStep();
+      stepping = (async () => {
+        try {
+          const from = x.slice(), to = matVec(P5_M, from);
+          const g0 = gap(k);
+          p.move();
+          await animate(ms, (t) => { const q = [from[0] + (to[0] - from[0]) * t, from[1] + (to[1] - from[1]) * t]; dot.at(v3(q, 0.01)); gapA.set(v3(P5_LONG, 0.004), v3(q, 0.004)); }, ease.inOut);
+          x = to; k++;
+          ratios.push(gap(k) / g0);
+          sfx.tick(k);
+          paint(); check();
+        } finally { busy = false; gateStep(); }
+      })();
+      return stepping;
     };
     const controls = h('div', { class: 'a7-row' });
     let showShare = (_v: number) => {};
@@ -196,7 +210,7 @@ export const p5: PuzzleDef = {
       controls.append(sl.el);
       showShare = (v) => sl.set(v, false);
     }
-    const stepRow = h('div', { class: 'a7-btns' }, button('Step', () => void stepOnce(p.g.headless ? 1 : 650), { cls: 'primary small' }));
+    const stepRow = h('div', { class: 'a7-btns' }, stepBtn);
     const ratioRow = h('div', { class: 'a7-row' });
     if (d !== 'cadet') {
       ratioIn = h('input', { class: 'cell a7-num', inputmode: 'decimal', 'aria-label': 'gap ratio per step', placeholder: '?' }) as HTMLInputElement;
@@ -213,7 +227,7 @@ export const p5: PuzzleDef = {
       ratioRow.append(h('span', { class: 'k' }, 'Each step, the gap is multiplied by'), ratioIn);
     }
     p.dock().append(controls, stepRow, ratioRow, msgEl);
-    paint();
+    paint(); gateStep();
     return {
       async showMe() {
         showShare(P5_LONG[0]); setShare(P5_LONG[0]);
@@ -286,18 +300,20 @@ export const p6: PuzzleDef = {
         p.win();
       }
     };
+    const reset = () => { if (won) return; s = { ...FIB_START }; paint(); msg(''); };
     p.dock().append(
       h('div', { class: 'a7-btns' },
         button('Square B', () => act('square'), { cls: 'primary small' }),
         button('Take B into R', () => act('take'), { cls: 'small' }),
         button('R × M (one step)', () => act('once'), { cls: 'small ghost' }),
-        button('Start over', () => { if (!won) { s = { ...FIB_START }; paint(); msg(''); } }, { cls: 'small ghost' })),
+        button('Start over', reset, { cls: 'small ghost' })),
       msgEl);
     paint();
     const plan = fibPlan(50);
     return {
-      async showMe() { for (const op of plan) { act(op); await new Promise((res) => window.setTimeout(res, p.g.headless ? 1 : 450)); } },
-      solve() { for (const op of plan) act(op); },
+      // the plan is from R = I, B = M: start over first, whatever the player has pressed
+      async showMe() { reset(); for (const op of plan) { act(op); await new Promise((res) => window.setTimeout(res, p.g.headless ? 1 : 450)); } },
+      solve() { reset(); for (const op of plan) act(op); },
       wrong() { for (let i = 0; i < 6; i++) act('square'); act('take'); },
     };
   },

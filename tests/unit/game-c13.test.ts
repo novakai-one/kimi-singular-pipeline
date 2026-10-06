@@ -8,6 +8,8 @@ import { S } from '../../site/src/game/content/chapters/c13-inverse/script.ts';
 import { checkLaw, rng } from '../../site/src/game/game/lawcheck.ts';
 import { det, identity, inverse, matMul, matVec, meq, mpow } from '../../site/src/game/math/la.ts';
 import { T, T3, R2 } from '../../site/src/game/content/truth.ts';
+import { Frac } from '../../site/src/game/math/frac.ts';
+import { gaussJordanSteps, opTex, type RowOp } from '../../site/src/game/math/rref.ts';
 
 const close = (a: number, b: number, tol = 1e-9) => assert.ok(Math.abs(a - b) <= tol, `${a} ≉ ${b}`);
 const I2 = identity(2);
@@ -62,6 +64,27 @@ test('p4: [A | I] → [I | A⁻¹] with the five reference moves; the same moves
   close(det(L.P4_A), 2);
 });
 
+test('p4 Show me: finishing from the player\'s partial moves still writes A⁻¹ and solves A X = B', () => {
+  const add = (i: number, j: number, k: number): RowOp => ({ kind: 'add', i, j, k: new Frac(k) });
+  // the bug: the five reference moves on top of R3 − R1 do not reach I
+  const off = L.playOps(L.augWithI(L.P4_A), [add(2, 0, -1), ...L.P4_REF_OPS]);
+  assert.ok(!L.leftIsI(off, 3));
+  for (const start of [[add(2, 0, -1)], [add(2, 0, -1), { kind: 'swap', i: 0, j: 1 } as RowOp], [{ kind: 'scale', i: 1, k: new Frac(-3) } as RowOp]]) {
+    const mid = L.playOps(L.augWithI(L.P4_A), start);
+    const rest = gaussJordanSteps(mid, 3).ops;
+    const end = L.playOps(mid, rest);
+    assert.ok(L.leftIsI(end, 3), `left half from ${JSON.stringify(start.map(opTex))}`);
+    assert.ok(meq(L.rightOf(end, 3), L.P4_INV));
+    // the replay runs the player's moves plus the continuation on [A | B]
+    const endB = L.playOps(L.P4_A.map((r, i) => [...r, ...L.P4_B[i]]), [...start, ...rest]);
+    assert.ok(meq(L.rightOf(endB, 3), L.P4_X));
+  }
+  // nothing left to play once the left half is I
+  assert.equal(gaussJordanSteps(L.playOps(L.augWithI(L.P4_A), L.P4_REF_OPS), 3).ops.length, 0);
+  // the readout label keeps the half as a fraction: R_3 → ½ R_3, not "1/2R3"
+  assert.match(opTex(L.P4_REF_OPS[2]), /frac\{1\}\{2\}/);
+});
+
 test('p5: turned then sheared is undone shear first: (SR)⁻¹ = R⁻¹S⁻¹', () => {
   assert.ok(meq(L.P5_FRAME, matMul(L.SHEAR, L.TURN)));
   assert.ok(L.p5Won(L.P5_REF));
@@ -85,6 +108,15 @@ test('p6: (2, 0) and (0, 1) both land on (2, 4); no undo unflattens it', () => {
 
 test('p7 [S]: L U = A with the multipliers 2, 4, 3', () => {
   assert.ok(meq(matMul(L.P7_L, L.P7_U), L.P7_A));
+  const won = S.p7Win.map((l) => (Array.isArray(l) ? l[1] : l.text)).join(' ');
+  assert.ok(!/joint/.test(won), 'P7_A is not a joint\'s matrix');
+  assert.match(won, /new right-hand side/, 'answers Bram: L and U are reused for each new right-hand side');
+});
+
+test('story: the bow damage is the last pulse, not years of build-up (T⁴ = I on the ground layer)', () => {
+  assert.ok(meq(mpow(T, 4), I2));
+  const open = S.open.map((l) => (Array.isArray(l) ? l[1] : l.text)).join(' ');
+  assert.ok(!/years/i.test(open), 'the ground layer comes home every fourth pulse');
 });
 
 test('honest playback: no frame flattens or flips unless the move itself does', () => {
