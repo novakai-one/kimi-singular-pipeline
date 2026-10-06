@@ -13,6 +13,6 @@ lines = [l for l in json.load(open(src)) if l.get('chapter') in chs]
 json.dump(lines, open(dst, 'w'))
 print(f'{len(lines)} lines in {", ".join(chs)}')
 PYEOF
-nice -n 10 "$PY" tools/game/voices.py "$TMP/sel.json" --model "$MODEL"
+nice -n 15 "$PY" tools/game/voices.py "$TMP/sel.json" --model "$MODEL"
 "$PY" tools/game/pack_voices.py "$TMP/sel.json"
 rm -rf "$TMP"
