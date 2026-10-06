@@ -62,6 +62,8 @@ export const P3_S1: Vec = proj(P3_B, P3_U1);                   // (2, 2, 0)
 export const P3_S2: Vec = proj(P3_B, P3_U2);                   // (0, 0, 2)
 export const P3_P: Vec = vadd(P3_S1, P3_S2);                   // (2, 2, 2)
 export const P3_LEFT: Vec = vsub(P3_B, P3_P);                  // (1, −1, 0)
+/** The weights c₁, c₂ in p = c₁u₁ + c₂u₂: the leftover reads 0 against each arrow, and u₂·u₁ = 0 drops the cross term. */
+export const P3_C: Vec = [dot(P3_B, P3_U1) / dot(P3_U1, P3_U1), dot(P3_B, P3_U2) / dot(P3_U2, P3_U2)]; // (2, 2)
 export const p3Won = (q: readonly number[], tol = 0.05) => near(q, P3_P, tol);
 
 // ------------------------------------------------------------------ p4 The trap: a skewed basis

@@ -47,6 +47,8 @@ export const P2_C32 = dot(P2_X[2], P2_V2) / dot(P2_V2, P2_V2);                  
 export const P2_V3: Vec = vsub(vsub(P2_X[2], vscale(P2_V1, P2_C31)), vscale(P2_V2, P2_C32)); // (−2/3, 2/3, 2/3)
 export const P2_LEN2: Vec = [P2_V1, P2_V2, P2_V3].map((v) => dot(v, v));          // (2, 3/2, 4/3)
 export const P2_Q: Vec[] = gramSchmidt(P2_X);                                      // (1,1,0)/√2, (1,−1,2)/√6, (−1,1,1)/√3
+/** The q's are typed to two decimals (the worksheet's last, and on Commander only checked, step). */
+export const P2_Q_TOL = 0.006;
 /** The largest dot product between two different finished arrows. */
 export const maxOffDot = (qs: Vec[]): number => { let m = 0; for (let i = 0; i < qs.length; i++) for (let j = i + 1; j < qs.length; j++) m = Math.max(m, Math.abs(dot(qs[i], qs[j]))); return m; };
 
@@ -237,6 +239,33 @@ export function runProcedure(ids: readonly string[], xs: Vec[] = PROC_X): ProcRu
   return { out, steps, fault, maxDot, lengths };
 }
 
+/** What LANTERN says after running the tiles: built from the run, so it says what actually happened. */
+export function procMessage(ids: readonly string[]): { ok: boolean; message: string } {
+  const res = runProcedure(ids);
+  const third = res.out[2], second = res.out[1];
+  const lean = Math.abs(dot(normalize(third), normalize(second)));
+  const lens = res.lengths.map((l) => fmtN(l)).join(', ');
+  switch (res.fault) {
+    case 'ok': return { ok: true, message: `LANTERN squared up ${PROC_X.map((x) => fmtV(x)).join(', ')} into ${res.out.map((x) => fmtV(x)).join(', ')}. Every pair reads 0; every arrow is one unit long.` };
+    case 'noloop': return { ok: false, message: 'You never said to go through the arrows. LANTERN finished the first arrow and stopped. The other two still lean.' };
+    case 'first': return { ok: false, message: `You told me to subtract the shadow on the first arrow. You did not say what to do about the second. The third arrow leans: it reads ${fmtN(lean)} against the second.` };
+    case 'orig': return { ok: false, message: `You told me to subtract shadows on the original arrows, not the finished ones. The third arrow still leans: it reads ${fmtN(lean)} against the second.` };
+    case 'nosub': {
+      // 'sub' inside the loop always squares the arrows, so here it can only sit before FOR EACH
+      const why = ids.includes('sub')
+        ? 'You said to subtract shadows, but before ‘For each arrow’. LANTERN ran it once on the first arrow, when nothing was finished yet, so nothing came off. Put it inside the loop.'
+        : 'You never said to remove shadows.';
+      const unit = res.lengths.every((l) => Math.abs(l - 1) < 1e-9);
+      const first2 = fmtN(Math.abs(dot(normalize(res.out[0]), normalize(res.out[1]))));
+      return { ok: false, message: `${why} ${unit ? 'Every arrow is one unit long, but they still lean on each other' : `The arrows are ${lens} long, and they still lean on each other`}: the first two read ${first2}.` };
+    }
+    default: {
+      const order = ids.includes('scale');
+      return { ok: false, message: order ? `Every pair reads 0: the grid is square. But you scaled before the shadows came off, so the arrows ended ${lens} long. Scale last.` : `Every pair reads 0: the grid is square. But the arrows are ${lens} long: square, but stretched. Say to scale to length 1.` };
+    }
+  }
+}
+
 // ------------------------------------------------------------------ Teach Teo (T4): aim the suit antenna
 
 /** Teo's suit dial: three heading arrows. The Lantern lies along s (and its signal is 5 strong). */
@@ -280,6 +309,29 @@ export function runTeo(ids: readonly string[]): TeoRun {
     else fault = 'scaled';
   }
   return { headings: H, readings: R, pair, aim, off, fault, readScaled };
+}
+
+/** A number as fmtV writes it: up to two decimals, no trailing zeros. */
+const fmtS = (x: number): string => fmtV([x]).slice(1, -1);
+
+/** What LANTERN reports after playing the tiles as Teo would: built from the run. */
+export function teoReply(ids: readonly string[]): { ok: boolean; message: string } {
+  const res = runTeo(ids);
+  const off = fmtN(res.off, 1);
+  switch (res.fault) {
+    case 'ok': return { ok: true, message: `Played as Teo would follow it: headings (1, 0) and (0, 1), readings 3 and 4, antenna along (3, 4). It points straight at the *Lantern*.` };
+    case 'scaled': return { ok: false, message: `He reads along his dial’s arrows as they are: (2, 0) is two units long, so its reading doubles to 6. He aims along 6 × (2, 0) + 4 × (0, 1), ${off}° off. Tell him to make each heading one unit long first.` };
+    case 'readfirst': return { ok: false, message: `He took the readings before he shortened the headings, so the first one reads 6, not 3. His antenna ends ${off}° off. Make the headings one unit long before reading.` };
+    case 'nocheck': {
+      const [i, j] = res.pair, hi = res.headings[i], hj = res.headings[j];
+      const read = res.readings ? `, reading ${fmtS(res.readings[i])} and ${fmtS(res.readings[j])}` : '';
+      return { ok: false, message: `He uses headings ${fmtV(hi)} and ${fmtV(hj)}, ${fmtN(angleDeg(hi, hj), 0)}° apart${read}. They are not at a right angle, so the two readings overlap. His antenna ends ${off}° off. Tell him to pick two headings that read 0 against each other${res.readScaled ? ', and to make each one unit long before reading' : ''}.` };
+    }
+    case 'noread': return { ok: false, message: 'He has nothing to aim with: your message never has him take a reading before he aims.' };
+    case 'max': return { ok: false, message: `He points along the loudest heading, (1, 1). One reading cannot say where between his headings the *Lantern* is: ${off}° off.` };
+    case 'half': return { ok: false, message: `He aims halfway between two headings, whatever they read: ${off}° off. The readings have to set the mix.` };
+    default: return { ok: false, message: 'He works out a direction and keeps the antenna where it is. Your message never says to turn it.' };
+  }
 }
 
 // ------------------------------------------------------------------ crew versions and swarms

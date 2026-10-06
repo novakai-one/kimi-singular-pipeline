@@ -91,7 +91,7 @@ export const doubtUp: DoubtDef = {
 export const doubtShadows: DoubtDef = {
   id: 'c21-d-shadows', who: 'bram', isTrue: false,
   claim: 'Adding the two shadows gives the nearest point. Works for any two arrows that span the floor.',
-  reason: 'Only when the two arrows are at a right angle. With $(1, 0, 0)$ and $(1, 1, 0)$, the shadows of $(2, 3, 4)$ add to $(4.5, 2.5, 0)$; the nearest point is $(2, 3, 0)$. Both shadows push along the first arrow, so that part is counted twice.',
+  reason: 'Only when the two arrows are at a right angle. With $(1, 0, 0)$ and $(1, 1, 0)$, the shadows of $(2, 3, 4)$ add to $(4.5, 2.5, 0)$; the nearest point is $(2, 3, 0)$. Both shadows push along the first arrow, 2 and 2.5 more, so they overlap and do not add up to the nearest point. With arrows at a right angle the overlap is 0.',
   goal: 'Drag the two floor arrows. The yellow point is the sum of the shadows of $\\mathbf b$; the white ring is the true nearest point. **Challenge it** (they differ) or **Back it**.',
   view: '3d',
   async setup(p) {

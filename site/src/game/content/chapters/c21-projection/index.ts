@@ -3,13 +3,12 @@
 // from day one: two thrusters reach the plane z = x + y, and the nearest point of it is 1.155 from the
 // stern hatch, inside the 1.2 tether.
 import type { Beat, ChapterDef } from '../../../game/types';
-import { bridgeShot } from '../../common/shots';
 import { p1, p2, p3, p4 } from './puzzles';
 import { p5, p6, p7, p8 } from './puzzles2';
 import { compare, doubtShadows, doubtTwice, doubtUp, law, sayit } from './briefing';
 import { buildProject } from './build';
 import { close } from './scenes';
-import { hatchShot } from './stage';
+import { hatchShot, holotableShot } from './stage';
 import { S } from './script';
 
 const IN_SHORT_ANSWER = 'The point where the leftover arrow is at a right angle to everything we can reach.';
@@ -32,7 +31,7 @@ const NAME_BASIS: Beat = {
   kind: 'name', id: 'name-orthogonal-basis', entry: {
     id: 'orthogonal-basis', term: 'orthogonal basis', question: 'When do the shadows add up to the nearest point?', nodes: ['N23'],
     saw: 'With $\\mathbf u_1 = (1, 1, 0)$ and $\\mathbf u_2 = (0, 0, 1)$, at a right angle, the shadows of $(3, 1, 2)$ were $(2, 2, 0)$ and $(0, 0, 2)$. They added to the nearest point $(2, 2, 2)$; the leftover $(1, -1, 0)$ read 0 against both.',
-    means: 'When the arrows that span the plane are at right angles to each other, each shadow takes care of its own direction and nothing is counted twice. The nearest point is the sum of the shadows.',
+    means: 'When the arrows that span the plane are at right angles to each other, each shadow takes care of its own direction and the shadows do not overlap. The nearest point is the sum of the shadows.',
     name: 'A set of vectors that are perpendicular in pairs is an **orthogonal set**. An orthogonal set that is a basis of $W$ is an **orthogonal basis**.',
     formula: '\\mathbf p = \\frac{\\mathbf b\\cdot\\cg{\\mathbf u_1}}{\\cg{\\mathbf u_1}\\cdot\\cg{\\mathbf u_1}}\\cg{\\mathbf u_1} + \\frac{\\mathbf b\\cdot\\cr{\\mathbf u_2}}{\\cr{\\mathbf u_2}\\cdot\\cr{\\mathbf u_2}}\\cr{\\mathbf u_2} = \\frac42\\cg{\\begin{bmatrix}1\\\\1\\\\0\\end{bmatrix}} + \\frac21\\cr{\\begin{bmatrix}0\\\\0\\\\1\\end{bmatrix}} = \\cy{\\begin{bmatrix}2\\\\2\\\\2\\end{bmatrix}}',
     why: 'Write $\\mathbf p = c_1\\mathbf u_1 + c_2\\mathbf u_2$ and ask the leftover to read 0 against $\\mathbf u_1$. The term $c_2\\,\\mathbf u_2\\cdot\\mathbf u_1$ is 0, so $c_1 = \\frac{\\mathbf b\\cdot\\mathbf u_1}{\\mathbf u_1\\cdot\\mathbf u_1}$. With a skewed basis that term stays, and the shadows overlap.',
@@ -59,11 +58,11 @@ const NAME_MATRIX: Beat = {
     id: 'orthogonal-projection-matrix', term: 'orthogonal projection matrix', question: 'What does dropping twice do?', nodes: ['N23'],
     saw: '$P = \\frac15\\begin{bmatrix} 1 & 2 \\\\ 2 & 4 \\end{bmatrix}$ dropped every buoy onto the line through $(1, 2)$. Applied again, nothing moved. Every arrow along $(2, -1)$ landed on the origin.',
     means: 'A point that is already on the line is its own nearest point, so a second drop changes nothing. The perpendicular direction is flattened, so $P$ has no inverse.',
-    name: 'The **orthogonal projection matrix** onto the column space of $A$ is $P = A(A^{\\mathsf T}A)^{-1}A^{\\mathsf T}$. It satisfies $P^2 = P$ and $P^{\\mathsf T} = P$. Its null space is the orthogonal complement.',
+    name: 'When the columns of $A$ are independent (a basis of $W$), the **orthogonal projection matrix** onto $W$ is $P = A(A^{\\mathsf T}A)^{-1}A^{\\mathsf T}$. It satisfies $P^2 = P$ and $P^{\\mathsf T} = P$. Its null space is the orthogonal complement. With a wasted column, $A^{\\mathsf T}A$ has no inverse: drop that column first; $P$ is the same.',
     formula: 'P = A(A^{\\mathsf T}A)^{-1}A^{\\mathsf T}, \\qquad P^2 = P, \\qquad P^{\\mathsf T} = P, \\qquad \\det P = 0 \\ \\text{(unless } W \\text{ is everything)}',
-    why: '$P\\mathbf b = A\\hat{\\mathbf x}$ with $\\hat{\\mathbf x} = (A^{\\mathsf T}A)^{-1}A^{\\mathsf T}\\mathbf b$. Then $P^2 = A(A^{\\mathsf T}A)^{-1}(A^{\\mathsf T}A)(A^{\\mathsf T}A)^{-1}A^{\\mathsf T} = P$.',
+    why: 'With independent columns, $A^{\\mathsf T}A$ is invertible and $P\\mathbf b = A\\hat{\\mathbf x}$ with $\\hat{\\mathbf x} = (A^{\\mathsf T}A)^{-1}A^{\\mathsf T}\\mathbf b$. Then $P^2 = A(A^{\\mathsf T}A)^{-1}(A^{\\mathsf T}A)(A^{\\mathsf T}A)^{-1}A^{\\mathsf T} = P$.',
     cue: 'When a matrix satisfies **$P^2 = P$ and $P^{\\mathsf T} = P$**, think **it drops points perpendicularly onto its column space**.',
-    use: 'A shadow-mapping renderer drops every vertex onto a plane with one 4 × 4 matrix of this kind.',
+    use: 'In statistics, a linear regression’s fitted values are $P\\mathbf y$ with $P = X(X^{\\mathsf T}X)^{-1}X^{\\mathsf T}$, the “hat matrix”: a matrix of exactly this kind.',
   },
 };
 
@@ -85,27 +84,27 @@ const ch: ChapterDef = {
   beats: [
     { kind: 'scene', id: 'open', lines: S.open, setup: hatchShot },
     { kind: 'card', id: 'inshort', card: { kind: 'inshort', title: 'What is the closest point we can reach?', body: IN_SHORT_ANSWER } },
-    { kind: 'scene', id: 'p1-intro', lines: S.p1Intro, setup: bridgeShot },
+    { kind: 'scene', id: 'p1-intro', lines: S.p1Intro, setup: holotableShot },
     { kind: 'puzzle', id: 'p1', puzzle: p1 },
     { kind: 'scene', id: 'p2-intro', lines: S.p2Intro, setup: hatchShot },
     { kind: 'puzzle', id: 'p2', puzzle: p2 },
     NAME_PROJECTION,
-    { kind: 'scene', id: 'p3-intro', lines: S.p3Intro, setup: bridgeShot },
+    { kind: 'scene', id: 'p3-intro', lines: S.p3Intro, setup: holotableShot },
     { kind: 'puzzle', id: 'p3', puzzle: p3 },
     NAME_BASIS,
-    { kind: 'scene', id: 'p4-intro', lines: S.p4Intro, setup: bridgeShot },
+    { kind: 'scene', id: 'p4-intro', lines: S.p4Intro, setup: holotableShot },
     { kind: 'puzzle', id: 'p4', puzzle: p4 },
-    { kind: 'scene', id: 'p5-intro', lines: S.p5Intro, setup: bridgeShot },
+    { kind: 'scene', id: 'p5-intro', lines: S.p5Intro, setup: holotableShot },
     { kind: 'puzzle', id: 'p5', puzzle: p5 },
     NAME_COMPLEMENT,
     { kind: 'scene', id: 'p6-intro', lines: S.p6Intro, setup: hatchShot },
     { kind: 'puzzle', id: 'p6', puzzle: p6 },
-    { kind: 'scene', id: 'p7-intro', lines: S.p7Intro, setup: bridgeShot },
+    { kind: 'scene', id: 'p7-intro', lines: S.p7Intro, setup: holotableShot },
     { kind: 'puzzle', id: 'p7', puzzle: p7 },
     NAME_MATRIX,
-    { kind: 'scene', id: 'p8-intro', lines: S.p8Intro, setup: bridgeShot },
+    { kind: 'scene', id: 'p8-intro', lines: S.p8Intro, setup: holotableShot },
     { kind: 'puzzle', id: 'p8', puzzle: p8 },
-    { kind: 'scene', id: 'brief-intro', lines: S.briefing, setup: bridgeShot },
+    { kind: 'scene', id: 'brief-intro', lines: S.briefing, setup: holotableShot },
     { kind: 'sayit', id: 'sayit', sayit },
     { kind: 'doubt', id: 'd-up', doubt: doubtUp },
     { kind: 'doubt', id: 'd-twice', doubt: doubtTwice },

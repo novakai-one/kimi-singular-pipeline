@@ -8,6 +8,7 @@ import type { Game, V3 } from '../../../game/types';
 import { loadModel, type Ship } from '../../../gfx/models';
 import { glowSprite } from '../../../gfx/markers';
 import { makeAnchor, makeLantern } from '../../common/set';
+import { bridgeShot } from '../../common/shots';
 import { C as COLLAPSE } from '../../truth';
 import './c21.css';
 
@@ -46,8 +47,9 @@ export interface Set8Opts {
   drones?: number;
 }
 
-/** The Act VIII exterior. */
+/** The Act VIII exterior. Clears the world first, so a scene, card or name beat never stacks two sets. */
 export async function set8(g: Game, o: Set8Opts = {}): Promise<Set8> {
+  g.stage.clearWorld();
   const root = new Group();
   root.name = 'act8-set';
   g.stage.world.add(root);
@@ -57,7 +59,8 @@ export async function set8(g: Game, o: Set8Opts = {}): Promise<Set8> {
   const set: Set8 = {
     root, ark: null, lantern: null, anchor: null, hatch: new Vector3(-21, -9, 0), hatchLight: null, drones: [], alive,
     check: () => { if (!alive()) throw new Gone(); },
-    tick: (fn) => { offs.push(g.stage.tick(fn)); },
+    // a tick asked for after the set was cleared (the beat ended during loading) would never be removed
+    tick: (fn) => { if (alive()) offs.push(g.stage.tick(fn)); },
   };
   const sd = new Vector3(...STAR).normalize();
   const star = new DirectionalLight('#ffd6a8', 2.8);
@@ -72,6 +75,8 @@ export async function set8(g: Game, o: Set8Opts = {}): Promise<Set8> {
     ark.position.set(...a.at);
     root.add(ark);
     const model = await loadModel('meridian');
+    // the beat ended while the model loaded: the set is already cleared, add nothing more
+    if (!alive()) return set;
     let stern: Object3D | null = null;
     if (model) {
       model.rotation.x = Math.PI / 2;
@@ -125,6 +130,7 @@ export async function set8(g: Game, o: Set8Opts = {}): Promise<Set8> {
   if (o.anchor !== null) {
     const an = o.anchor ?? { at: [-170, 120, -20] };
     const anchor = await makeAnchor(g.stage, an.scale ?? 7, root);
+    if (!alive()) return set;
     anchor.position.set(...an.at);
     set.anchor = anchor;
   }
@@ -164,6 +170,7 @@ export function drift(g: Game, set: Set8, o: { look: V3; r: number; h: number; a
 /** Scene staging: the Lantern holding beside the stern hatch, camera drifting. */
 export async function hatchShot(g: Game): Promise<void> {
   const set = await set8(g, { lantern: { at: [-30, -27, 2], face: [0.4, 1, 0.05], scale: 1.4 }, hatch: true });
+  if (!set.alive()) return;
   const h = set.hatch;
   drift(g, set, { look: [(h.x - 30) / 2, (h.y - 27) / 2, 0], r: 62, h: 14, a0: -2.2 });
 }
@@ -171,5 +178,13 @@ export async function hatchShot(g: Game): Promise<void> {
 /** Scene staging: the stern sheet from further out, drones logging around it. */
 export async function dronesShot(g: Game): Promise<void> {
   const set = await set8(g, { lantern: { at: [-34, -30, 3], face: [0.5, 1, 0], scale: 1.4 }, hatch: true, drones: 24 });
+  if (!set.alive()) return;
   drift(g, set, { look: [-20, -6, 0], r: 62, h: 14, a0: -2.0, speed: 0.012 });
+}
+
+/** Scene staging: the bridge holotable (the common bridgeShot) on a cleared world, so the Act VIII set of an
+ *  earlier scene, card or name beat does not keep running under it. */
+export async function holotableShot(g: Game): Promise<void> {
+  g.stage.clearWorld();
+  await bridgeShot(g);
 }

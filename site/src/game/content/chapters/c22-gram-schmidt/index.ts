@@ -30,7 +30,7 @@ const NAME_GS: Beat = {
 const NAME_ORTHOGONAL: Beat = {
   kind: 'name', id: 'name-orthogonal-matrix', entry: {
     id: 'orthogonal-matrix', term: 'orthogonal matrix', question: 'Which moves keep every length and angle?', nodes: ['N24'],
-    saw: 'Under the turn, the flip and the swap the circle stayed a circle and the square stayed a square. Their columns were one unit long and at a right angle. $\\begin{bmatrix} 2 & 0 \\\\ 0 & 0.5 \\end{bmatrix}$ kept area but not lengths; $\\begin{bmatrix} 1 & 1 \\\\ -1 & 1 \\end{bmatrix}$ had square columns 1.41 long.',
+    saw: 'Under the turn, the flip and the swap the circle landed on itself and the square kept side 1. Their columns were one unit long and at a right angle. $\\begin{bmatrix} 2 & 0 \\\\ 0 & 0.5 \\end{bmatrix}$ kept area but not lengths; $\\begin{bmatrix} 1 & 1 \\\\ -1 & 1 \\end{bmatrix}$ kept the shape but made both 1.41 times bigger: its columns were at a right angle, but 1.41 long.',
     means: 'A move keeps every length and angle exactly when its columns, where the grid arrows land, are an orthonormal set. Undoing it is reading coordinates in its grid: one dot product each.',
     name: 'A square matrix $Q$ with orthonormal columns is an **orthogonal matrix**. It satisfies $Q^{\\mathsf T}Q = I$, so $Q^{-1} = Q^{\\mathsf T}$, and $\\det Q = \\pm 1$.',
     formula: 'Q^{\\mathsf T}Q = I, \\qquad Q^{-1} = Q^{\\mathsf T}, \\qquad Q\\mathbf x\\cdot Q\\mathbf y = \\mathbf x^{\\mathsf T}Q^{\\mathsf T}Q\\mathbf y = \\mathbf x\\cdot\\mathbf y',
@@ -49,11 +49,11 @@ const NAME_QR: Beat = {
     formula: 'A = QR, \\qquad R = Q^{\\mathsf T}A = \\begin{bmatrix} \\mathbf q_1\\cdot\\mathbf a_1 & \\mathbf q_1\\cdot\\mathbf a_2 \\\\ 0 & \\mathbf q_2\\cdot\\mathbf a_2 \\end{bmatrix}',
     why: 'Multiply $A = QR$ on the left by $Q^{\\mathsf T}$: $Q^{\\mathsf T}Q = I$ leaves $R$. Below the diagonal, $\\mathbf q_i\\cdot\\mathbf a_j = 0$ for $i > j$, because $\\mathbf a_j$ lies in the span of $\\mathbf q_1, \\dots, \\mathbf q_j$.',
     cue: 'When you need to solve with a tall, skewed matrix accurately, think **QR**.',
-    use: 'Least-squares solvers in statistics packages factor the data matrix as $QR$ instead of forming $A^{\\mathsf T}A$.',
+    use: 'Solvers for tall systems (more equations than unknowns) find the closest point of the column space by factoring the matrix as $QR$, instead of forming $A^{\\mathsf T}A$.',
   },
 };
 
-const WHY = 'Every game, drone and robot keeps its orientation as a rotation matrix and updates it by multiplying in small turns. Each multiplication rounds a little, and after thousands of frames the matrix is no longer a rotation: objects shear and stretch. The fix runs every few frames: **Gram–Schmidt on the columns**. That is the Drift you fixed in *Can we stand the horizon back up?*\n\nThe same squaring builds a camera’s right, up and forward arrows, and sits inside every accurate least-squares solver as **QR**. The Drift fix you install next runs on your own `gram_schmidt`.';
+const WHY = 'Every game, drone and robot keeps its orientation as a rotation matrix and updates it by multiplying in small turns. Each multiplication rounds a little, and after thousands of frames the matrix is no longer a rotation: objects shear and stretch. The fix runs every few frames: **Gram–Schmidt on the columns**. That is the Drift you fixed in *Can we stand the horizon back up?*\n\nThe same squaring builds a camera’s right, up and forward arrows, and sits inside accurate solvers for tall systems as **QR**. The Drift fix you install next runs on your own `gram_schmidt`.';
 
 const ch: ChapterDef = {
   id: 'c22',

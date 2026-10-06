@@ -42,6 +42,16 @@ test('p2 [H]: amounts 1/2, 1/2, 1/3; v₂ = (1/2, −1/2, 1), v₃ = (−2/3, 2/
   assert.ok(Math.abs(dot(wrong, L.P2_V2)) > 0.1);
 });
 
+test('p2 [H] last step: the q’s typed to two decimals pass; the v’s and a sign slip in v₂ or v₃ fail', () => {
+  const within = (got: number[][], tol = L.P2_Q_TOL) => got.every((row, i) => row.every((x, j) => Math.abs(x - L.P2_Q[i][j]) <= tol));
+  assert.ok(within(L.P2_Q.map((q) => q.map((x) => Math.round(x * 100) / 100))), 'two decimals');
+  assert.ok(within(L.P2_Q.map((q) => q.map((x) => Math.round(x * 1000) / 1000))), 'three decimals');
+  assert.ok(!within([L.P2_V1, L.P2_V2, L.P2_V3]), 'the v’s are not the q’s');
+  const unit = (v: number[]) => v.map((x) => x / norm(v));
+  assert.ok(!within([L.P2_Q[0], L.P2_Q[1], unit([2 / 3, -2 / 3, 2 / 3])]), 'sign slip in v₃');
+  assert.ok(!within([L.P2_Q[0], unit([1 / 2, 1 / 2, 1]), L.P2_Q[2]]), 'sign slip in v₂');
+});
+
 test('p3 [D]: (5, 5) is (7, −1) in Ilse’s grid; QᵀQ = I; Q⁻¹ = Qᵀ', () => {
   assert.ok(veq(L.P3_C, [7, -1]));
   assert.ok(meq(matMul(transpose(L.P3_Q), L.P3_Q), identity(2)));
@@ -58,6 +68,18 @@ test('p4: the safe moves are the turn, the flip and the swap; squash keeps area;
   close(norm([1, -1]), Math.SQRT2);
   assert.ok(L.p4Won(['turn', 'flip', 'swap']) && L.p4Won(['swap', 'turn', 'flip']));
   assert.ok(!L.p4Won(['turn', 'flip', 'swap', 'squash']) && !L.p4Won(['turn', 'flip']) && !L.p4Won(['turn', 'squash', 'swap']));
+});
+
+test('p4: the goal’s rule (circle lands on itself, square keeps side 1) picks out exactly the safe moves; grow keeps the shape only', () => {
+  const circleOnItself = (M: Mat) => Array.from({ length: 72 }, (_, i) => (i / 72) * 2 * Math.PI).every((a) => Math.abs(norm([M[0][0] * Math.cos(a) + M[0][1] * Math.sin(a), M[1][0] * Math.cos(a) + M[1][1] * Math.sin(a)]) - 1) < 1e-9);
+  const sq = [[0, 0], [1, 0], [1, 1], [0, 1]].map(([x, y]) => [x, y]);
+  const sidesOne = (M: Mat) => sq.every((a, i) => { const b = sq[(i + 1) % 4]; const d = [b[0] - a[0], b[1] - a[1]]; return Math.abs(norm([M[0][0] * d[0] + M[0][1] * d[1], M[1][0] * d[0] + M[1][1] * d[1]]) - 1) < 1e-9; });
+  assert.deepEqual(L.MOVES.filter((m) => circleOnItself(m.M) && sidesOne(m.M)).map((m) => m.id), L.SAFE);
+  // grow: still a circle (radius 1.41) and still a square (side 1.41), but bigger, so it is not safe
+  const grow = L.MOVES.find((m) => m.id === 'grow')!.M;
+  assert.ok(meq(matMul(transpose(grow), grow), [[2, 0], [0, 2]]));
+  assert.ok(!circleOnItself(grow) && !sidesOne(grow));
+  assert.ok(!L.p4Won([...L.SAFE, 'grow']));
 });
 
 test('p5: the Drift frame (1.03, 0.98, 1.01; up and forward 88.6° apart) squares up, in order, to a level frame', () => {
@@ -106,6 +128,19 @@ test('Doubt (F) perpendicular columns: stretched square columns break it; every 
   for (const M of [[[2, 0], [0, 2]], [[1, -1], [1, 1]], [[2, 0], [0, 1]], [[1, 2], [2, -1]], [[0, -2], [1, 0]], [[3, 0], [0, 0.5]], [[1, 1], [-1, 1]], [[2, -1], [1, 2]]]) {
     assert.ok(!L.perpHolds(M), JSON.stringify(M));
   }
+});
+
+test('Doubt (F) perpendicular columns: on the drag snap (0.5), every square-but-stretched pair is a counterexample', () => {
+  const g = Array.from({ length: 13 }, (_, i) => -3 + i * 0.5);
+  let found = 0;
+  for (const a0 of g) for (const a1 of g) for (const b0 of g) for (const b1 of g) {
+    const M = [[a0, b0], [a1, b1]];
+    if (a0 * b0 + a1 * b1 !== 0 || norm([a0, a1]) < 1e-9 || norm([b0, b1]) < 1e-9) continue;
+    const unit = Math.abs(norm([a0, a1]) - 1) < 1e-9 && Math.abs(norm([b0, b1]) - 1) < 1e-9;
+    assert.equal(L.perpHolds(M), unit, JSON.stringify(M));
+    if (!unit) found++;
+  }
+  assert.ok(found > 100);
 });
 
 test('Doubt (T) Gram–Schmidt keeps the plane: holds for 300 random pairs and the edge cases', () => {
@@ -177,6 +212,41 @@ test('Teach Teo T4: the reference aims at the Lantern; missing K1, K2 or K3 (or 
   close(dot(L.TEO_SIGNAL, L.TEO_HEADINGS[0]), 3 * 2);
 });
 
+test('Procedure messages say what happened: a misplaced subtract, no subtract, and lengths from the run', () => {
+  // 'sub' before FOR EACH runs once on the first arrow with nothing finished: the tile was misplaced, not missing
+  const early = L.procMessage(['sub', 'each', 'scale']);
+  assert.equal(early.ok, false);
+  assert.match(early.message, /You said to subtract shadows, but before ‘For each arrow’/);
+  assert.match(early.message, /Put it inside the loop/);
+  assert.doesNotMatch(early.message, /never said/);
+  assert.match(early.message, /Every arrow is one unit long, but they still lean on each other: the first two read 0\.45/);
+  // no subtract and no scale: the lengths come from the run, not a fixed "one unit long"
+  const none = L.procMessage(['each']);
+  assert.match(none.message, /^You never said to remove shadows\. The arrows are 2\.00, 2\.24, 2\.45 long/);
+  assert.doesNotMatch(none.message, /one unit long/);
+  const late = L.procMessage(['sub', 'scale', 'each']);
+  assert.match(late.message, /before ‘For each arrow’/);
+  assert.match(late.message, /The arrows are 1\.00, 2\.24, 2\.45 long/);
+  assert.match(L.procMessage(['each', 'scale']).message, /^You never said to remove shadows\. Every arrow is one unit long/);
+  assert.equal(L.procMessage(L.PROC_REF).ok, true);
+});
+
+test('Teo T4 nocheck message names the headings and readings he really used', () => {
+  // no 'unit': his headings are still (2, 0) and (1, 1), reading 6 and 7
+  const raw = L.teoReply(['read', 'aim']);
+  assert.equal(raw.ok, false);
+  assert.equal(L.runTeo(['read', 'aim']).fault, 'nocheck');
+  assert.match(raw.message, /headings \(2, 0\) and \(1, 1\), 45° apart, reading 6 and 7\./);
+  assert.match(raw.message, /32\.9° off/);
+  assert.match(raw.message, /make each one unit long before reading/);
+  assert.doesNotMatch(raw.message, /\(1, 0\)|1\.41/);
+  // with 'unit': (1, 0) and (0.71, 0.71), reading 3 and 4.95
+  const unit = L.teoReply(['unit', 'read', 'aim']);
+  assert.match(unit.message, /headings \(1, 0\) and \(0\.71, 0\.71\), 45° apart, reading 3 and 4\.95\./);
+  assert.doesNotMatch(unit.message, /unit long before reading/);
+  assert.equal(L.teoReply(L.TEO_REF).ok, true);
+});
+
 test('the Anchor’s arms (TT1) square up to our own grid', () => {
   assert.ok(veq(L.ANCHOR_SQUARED[0], [1, 0, 0]) && veq(L.ANCHOR_SQUARED[1], [0, 1, 0]) && veq(L.ANCHOR_SQUARED[2], [0, 0, 1]));
 });
@@ -233,6 +303,11 @@ test('build: gram_schmidt passes its tests and a swarm (with a wasted arrow); ea
   assert.ok(runPy('gram_schmidt', GRAM_SCHMIDT, cases).every(Boolean), 'swarm');
   for (const t of GS_TESTS) { const got = buildGramSchmidt.swarm!.crew(...t.args) as number[][]; assert.ok(got.length === (t.expect as number[][]).length && got.every((q, i) => veq(q, (t.expect as number[][])[i])), `crew agrees: ${t.name}`); }
   decoysFail(buildGramSchmidt, GS_TESTS, LIB);
+});
+
+test('build: qr’s note on digits: QR loses about half as many digits as the normal equations, not "twice the digits"', () => {
+  assert.match(buildQr.ilseNote!, /loses about half as many digits/);
+  assert.doesNotMatch(buildQr.ilseNote!, /twice the digits/);
 });
 
 test('build: qr passes its tests and a swarm (positive diagonal, so one right answer); each decoy fails', () => {

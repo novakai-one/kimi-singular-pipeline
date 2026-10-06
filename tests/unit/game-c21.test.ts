@@ -8,7 +8,7 @@ import { execFileSync } from 'node:child_process';
 import * as L from '../../site/src/game/content/chapters/c21-projection/logic.ts';
 import { PROJECT, PROJECT_TESTS, buildProject } from '../../site/src/game/content/chapters/c21-projection/build.ts';
 import { checkLaw, rng, rint } from '../../site/src/game/game/lawcheck.ts';
-import { det, dot, fromCols, matMul, matVec, meq, norm, transpose, veq, vsub } from '../../site/src/game/math/la.ts';
+import { det, dot, fromCols, inverse, matMul, matVec, meq, norm, transpose, vadd, veq, vscale, vsub } from '../../site/src/game/math/la.ts';
 import { HATCH, HATCH_FOOT, TETHER } from '../../site/src/game/content/truth.ts';
 
 const close = (a: number, b: number, tol = 1e-9) => assert.ok(Math.abs(a - b) <= tol, `${a} ≉ ${b}`);
@@ -69,6 +69,20 @@ test('p3 [D]: perpendicular basis: shadows (2, 2, 0) + (0, 0, 2) = (2, 2, 2), le
   assert.ok(L.p3Won([2, 2, 2]) && !L.p3Won([3, 1, 0]) && !L.p3Won([2, 2, 0]));
 });
 
+test('p3 [D] Navigator rows: u₂·u₁ = 0 drops the cross term; c₁ = c₂ = 2 from the two zero-leftover equations; p = c₁u₁ + c₂u₂', () => {
+  const { P3_U1: u1, P3_U2: u2, P3_B: b } = L;
+  assert.equal(dot(b, u1), 4); assert.equal(dot(u1, u1), 2); assert.equal(dot(b, u2), 2); assert.equal(dot(u2, u2), 1);
+  assert.equal(dot(u2, u1), 0);
+  // the rows' equations b·u₁ − c₁ u₁·u₁ − c₂ u₂·u₁ = 0 and b·u₂ − c₁ u₁·u₂ − c₂ u₂·u₂ = 0, solved together
+  const G = [[dot(u1, u1), dot(u2, u1)], [dot(u1, u2), dot(u2, u2)]];
+  const c = matVec(inverse(G)!, [dot(b, u1), dot(b, u2)]);
+  assert.ok(veq(c, L.P3_C) && veq(L.P3_C, [2, 2]));
+  close(dot(b, u1) - L.P3_C[0] * dot(u1, u1) - L.P3_C[1] * dot(u2, u1), 0);
+  close(dot(b, u2) - L.P3_C[0] * dot(u1, u2) - L.P3_C[1] * dot(u2, u2), 0);
+  assert.ok(veq(vadd(vscale(u1, L.P3_C[0]), vscale(u2, L.P3_C[1])), L.P3_P));
+  assert.notEqual(L.P3_C[0], dot(b, u1), 'the c₁ misconception (forgetting to divide by u₁·u₁) is a different number');
+});
+
 test('p4: skewed basis: the shadows add to (4.5, 2.5, 0); the true nearest point is (2, 3, 0); the overlap is (2.5, 0, 0)', () => {
   assert.ok(dot(L.P4_K1, L.P4_K2) !== 0);
   assert.ok(veq(L.P4_S1, [2, 0, 0]) && veq(L.P4_S2, [2.5, 2.5, 0]));
@@ -81,6 +95,10 @@ test('p4: skewed basis: the shadows add to (4.5, 2.5, 0); the true nearest point
   assert.ok(L.p4OverlapOk([2.5, 0, 0]) && !L.p4OverlapOk([2, 0, 0]));
   // the snap grids reach both answers: weights (−1, 3) on k1, k2; t = 2.5 on k1
   assert.ok(veq(matVec(fromCols([L.P4_K1, L.P4_K2]), [-1, 3]), [2, 3, 0]));
+  // the overlap is not the whole error: taking it off still misses, and the true weights are not the shadows' 2 and 2.5
+  assert.ok(veq(vsub(L.P4_WRONG, L.P4_OVERLAP), [2, 2.5, 0]));
+  assert.ok(!L.p4FootOk(vsub(L.P4_WRONG, L.P4_OVERLAP)));
+  assert.ok(!veq([-1, 3], [2, 2.5]));
 });
 
 test('p5 [H]: AᵀA = [[2, 1], [1, 2]], Aᵀb = (3, 5), x̂ = (1/3, 7/3), p = (1/3, 8/3, 7/3), leftover (2/3, −2/3, 2/3)', () => {
@@ -125,6 +143,18 @@ test('p8 [S]: P = A(AᵀA)⁻¹Aᵀ = (1/3)[[2, 1, −1], [1, 2, 1], [−1, 1, 2
   assert.ok(meq(transpose(L.P8), L.P8));
   assert.ok(veq(matVec(L.P8, L.P5_B), L.P5_P));
   assert.ok(veq(matVec(L.P8, [1, -1, 1]), [0, 0, 0]), 'the orthogonal complement goes to the origin');
+});
+
+test('projection matrix: with a wasted column AᵀA has no inverse; dropping that column gives the same P', () => {
+  const A = fromCols([L.P5_A1, L.P5_A2, vscale(L.P5_A1, 2)]);
+  const AtA = matMul(transpose(A), A);
+  close(det(AtA), 0);
+  assert.equal(inverse(AtA), null);
+  const r = rng(62);
+  for (let i = 0; i < 20; i++) {
+    const b = [rint(r, -4, 4), rint(r, -4, 4), rint(r, -4, 4)];
+    assert.ok(veq(L.project(A, b), matVec(L.P8, b)), 'P of the independent columns');
+  }
 });
 
 test('Doubt (F) straight up: the nearest point beats straight up; the Shake’s cases break the claim', () => {

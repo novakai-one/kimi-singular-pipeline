@@ -17,7 +17,7 @@ import { animate, ease, wait } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
 import { det, dot, identity, matVec, mlerp, norm, transpose, vscale, vsub, type Mat, type Vec } from '../../../math/la';
 import {
-  MOVES, P1_B1, P1_B2, P1_C, P1_Q1, P1_Q2, P2_C21, P2_C31, P2_C32, P2_LEN2, P2_Q, P2_V2, P2_V3, P2_X, P3_C, P3_Q, P3_Q1,
+  MOVES, P1_B1, P1_B2, P1_C, P1_Q1, P1_Q2, P2_C21, P2_C31, P2_C32, P2_LEN2, P2_Q, P2_Q_TOL, P2_V1, P2_V2, P2_V3, P2_X, P3_C, P3_Q, P3_Q1,
   P3_Q2, P3_X, SAFE, angleDeg, fmtN, fmtV, maxOffDot, near, p1Q1Ok, p1Q2Ok, p3Won, p4Won, tolFor,
 } from './logic';
 import { S } from './script';
@@ -193,7 +193,7 @@ export const p2: PuzzleDef = {
   hints: [
     '$\\mathbf v_1 = \\mathbf x_1$. The shadow amount of $\\mathbf x_2$ on it is $\\frac{\\mathbf x_2\\cdot\\mathbf v_1}{\\mathbf v_1\\cdot\\mathbf v_1} = \\frac12$.',
     '$\\mathbf v_2 = (1/2, -1/2, 1)$. For $\\mathbf x_3$ subtract $\\frac12\\mathbf v_1$ and $\\frac{\\mathbf x_3\\cdot\\mathbf v_2}{\\mathbf v_2\\cdot\\mathbf v_2}\\mathbf v_2 = \\frac13\\mathbf v_2$.',
-    '$\\mathbf v_3 = (-2/3, 2/3, 2/3)$. The lengths squared are $2$, $3/2$ and $4/3$.',
+    '$\\mathbf v_3 = (-2/3, 2/3, 2/3)$. The lengths squared are $2$, $3/2$ and $4/3$. Divide each $\\mathbf v_i$ by the square root of its length squared: that is $\\mathbf q_i$.',
   ],
   par: 7,
   view: '3d',
@@ -230,6 +230,7 @@ export const p2: PuzzleDef = {
         { prompt: '$\\frac{\\mathbf x_3\\cdot\\mathbf v_2}{\\mathbf v_2\\cdot\\mathbf v_2}$', answer: P2_C32, mistakes: [[1 / 2, 'That is the shadow on the original $\\mathbf x_2$. Use the finished $\\mathbf v_2$.'], [2 / 3, 'Divide by $\\mathbf v_2\\cdot\\mathbf v_2 = 3/2$.']] },
         { prompt: '$\\mathbf v_3 = \\mathbf x_3 - \\tfrac12\\mathbf v_1 - \\tfrac13\\mathbf v_2$', answer: [P2_V3], mistakes: [[[-1 / 2, 1 / 2, 1], 'Only the shadow on $\\mathbf v_1$ is gone. Subtract the one on $\\mathbf v_2$ too.']] },
         { prompt: 'lengths squared $\\|\\mathbf v_1\\|^2, \\|\\mathbf v_2\\|^2, \\|\\mathbf v_3\\|^2$', answer: [P2_LEN2] },
+        { prompt: '$\\mathbf q_1, \\mathbf q_2, \\mathbf q_3$ as rows, each $\\mathbf v_i/\\|\\mathbf v_i\\|$ (two decimals)', answer: P2_Q, tol: P2_Q_TOL, mistakes: [[[P2_V1, P2_V2, P2_V3], 'Those are the $\\mathbf v_i$. Divide each by its length: $\\sqrt2$, $\\sqrt{3/2}$, $\\sqrt{4/3}$.']] },
       ],
       onDone: () => { void finish(); },
     });
@@ -246,11 +247,11 @@ export const p2: PuzzleDef = {
 export const p3: PuzzleDef = {
   id: 'c22-p3',
   title: 'How do you read a point in a square grid?',
-  goal: 'Ilse’s record uses the square grid $\\cg{\\mathbf q_1} = (3/5, 4/5)$, $\\cr{\\mathbf q_2} = (-4/5, 3/5)$. Find the numbers of the point $\\mathbf x = (5, 5)$ in her grid, and why one dot product each is enough.',
+  goal: 'Ilse’s record uses the square grid $\\cg{\\mathbf q_1} = (3/5, 4/5)$, $\\cr{\\mathbf q_2} = (-4/5, 3/5)$. Find the numbers of the point $\\mathbf x = (5, 5)$ in her grid, and why one dot product each is enough. Write $Q$ for the matrix with columns $\\mathbf q_1$ and $\\mathbf q_2$.',
   hints: [
     'Each number is the shadow length of $\\mathbf x$ on that arrow: $\\mathbf x\\cdot\\mathbf q_1$ and $\\mathbf x\\cdot\\mathbf q_2$.',
     '$\\mathbf x\\cdot\\mathbf q_1 = 3 + 4 = 7$ and $\\mathbf x\\cdot\\mathbf q_2 = -4 + 3 = -1$.',
-    'Dotting $\\mathbf x = c_1\\mathbf q_1 + c_2\\mathbf q_2$ with $\\mathbf q_1$ leaves $c_1$ alone, because $\\mathbf q_1\\cdot\\mathbf q_1 = 1$ and $\\mathbf q_2\\cdot\\mathbf q_1 = 0$. So $Q^{\\mathsf T}Q = I$.',
+    'Dotting $\\mathbf x = c_1\\mathbf q_1 + c_2\\mathbf q_2$ with $\\mathbf q_1$ leaves $c_1$ alone, because $\\mathbf q_1\\cdot\\mathbf q_1 = 1$ and $\\mathbf q_2\\cdot\\mathbf q_1 = 0$. The same holds for $c_2$. With $Q = [\\,\\mathbf q_1\\ \\mathbf q_2\\,]$, that is $Q^{\\mathsf T}Q = I$.',
   ],
   par: 4,
   onWin: S.p3Win,
@@ -302,11 +303,11 @@ export const p3: PuzzleDef = {
     if (d !== 'cadet') { sh1.setOpacity(0); sh2.setOpacity(0); }
     const reveal = async () => { await animate(500, (k) => { sh1.setOpacity(k); sh2.setOpacity(k); }, ease.out); };
     const steps = [
-      { prompt: '$\\mathbf x\\cdot\\mathbf q_1$', answer: 7, mistakes: [[5, 'That is a coordinate in our grid. Dot with $\\mathbf q_1$.']] as [number, string][] },
-      { prompt: '$\\mathbf x\\cdot\\mathbf q_2$', answer: -1 },
-      { prompt: '$\\mathbf q_1\\cdot\\mathbf q_1$', answer: 1 },
-      { prompt: '$\\mathbf q_1\\cdot\\mathbf q_2$', answer: 0 },
-      { prompt: '$Q^{\\mathsf T}Q$', answer: identity(2) },
+      { prompt: 'the first number $c_1 = \\mathbf x\\cdot\\mathbf q_1$', answer: 7, mistakes: [[5, 'That is a coordinate in our grid. Dot with $\\mathbf q_1$.']] as [number, string][] },
+      { prompt: 'the second number $c_2 = \\mathbf x\\cdot\\mathbf q_2$', answer: -1 },
+      { prompt: 'Why: dot $\\mathbf x = c_1\\mathbf q_1 + c_2\\mathbf q_2$ with $\\mathbf q_1$, giving $\\mathbf x\\cdot\\mathbf q_1 = c_1\\,\\mathbf q_1\\cdot\\mathbf q_1 + c_2\\,\\mathbf q_2\\cdot\\mathbf q_1$. So $\\mathbf q_1\\cdot\\mathbf q_1 =$', answer: 1 },
+      { prompt: '$\\mathbf q_2\\cdot\\mathbf q_1 =$ (so only $c_1$ is left)', answer: 0 },
+      { prompt: 'the same for $c_2$ needs every $\\mathbf q_i\\cdot\\mathbf q_j$. With $Q = [\\,\\mathbf q_1\\ \\mathbf q_2\\,]$, $Q^{\\mathsf T}Q =$', answer: identity(2) },
     ];
     if (d === 'cadet') {
       r.row('d1', '$\\mathbf x\\cdot\\mathbf q_1$', '7', C.v);
@@ -354,7 +355,7 @@ const SQUARE: [number, number][] = [[0, 0], [1, 0], [1, 1], [0, 1]];
 export const p4: PuzzleDef = {
   id: 'c22-p4',
   title: 'Which moves keep every length and angle?',
-  goal: 'Apply each move to the unit circle and the square (click its card). **Pin** every move under which the circle stays a circle and the square stays a square.',
+  goal: 'Apply each move to the unit circle and the square (click its card). **Pin** every move under which the unit circle lands back on the dashed unit circle and the square keeps sides of length 1.',
   predict: {
     prompt: '$\\begin{bmatrix} 2 & 0 \\\\ 0 & 0.5 \\end{bmatrix}$ keeps every area. Does it keep the circle a circle?',
     choices: [{ id: 'yes', text: 'Yes' }, { id: 'no', text: 'No' }],
@@ -422,6 +423,7 @@ export const p4: PuzzleDef = {
       e.pin.classList.toggle('on', pinned.has(id));
       e.pin.textContent = pinned.has(id) ? 'pinned safe' : 'pin';
       sfx.click();
+      if (id === 'grow' && pinned.has(id)) p.bark('lantern', 'Still a circle, but a bigger one: the lengths changed.');
       check();
     };
     for (const m of MOVES) {

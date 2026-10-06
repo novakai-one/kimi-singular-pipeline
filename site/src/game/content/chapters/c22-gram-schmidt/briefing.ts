@@ -16,7 +16,7 @@ import { rint } from '../../../game/lawcheck';
 import { col, cross, det, dot, fromCols, gramSchmidt, matVec, norm, normalize, vscale, type Mat, type Vec } from '../../../math/la';
 import {
   PROC_REF, PROC_X, TEO_HEADINGS, TEO_REF, TEO_SIGNAL, angleDeg, det1Holds, fmtN, fmtV, gsPlaneHolds, lawCore, perpHolds,
-  runProcedure, runTeo, texM, type QCase,
+  procMessage, runProcedure, runTeo, teoReply, texM, type QCase,
 } from './logic';
 
 const v3 = (v: readonly number[], z = 0): V3 => [v[0], v[1], v[2] ?? z];
@@ -55,8 +55,8 @@ function moveScene(p: PuzzleCtx, o: { start: Mat; holds: (M: Mat) => boolean; ca
     r.row('l', 'column lengths', `${fmtN(norm(a))}, ${fmtN(norm(b))}`, Math.abs(norm(a) - 1) < 1e-9 && Math.abs(norm(b) - 1) < 1e-9 ? C.good : C.orange);
     r.row('a', 'angle between columns', norm(a) * norm(b) > 1e-9 ? `${fmtN(angleDeg(a, b), 1)}°` : '—', Math.abs(dot(a, b)) < 1e-9 ? C.good : C.orange);
   };
-  const h1 = new VectorHandle(p, { to: v3(col(M, 0)), color: C.v, label: '$A\\mathbf e_1$', countMoves: false, limit: 3, onChange: () => sync() });
-  const h2 = new VectorHandle(p, { to: v3(col(M, 1)), color: C.w, label: '$A\\mathbf e_2$', countMoves: false, limit: 3, onChange: () => sync() });
+  const h1 = new VectorHandle(p, { to: v3(col(M, 0)), color: C.v, label: '$A\\mathbf e_1$', snap: p.snap() ?? 0.5, countMoves: false, limit: 3, onChange: () => sync() });
+  const h2 = new VectorHandle(p, { to: v3(col(M, 1)), color: C.w, label: '$A\\mathbf e_2$', snap: p.snap() ?? 0.5, countMoves: false, limit: 3, onChange: () => sync() });
   const setM = (A: Mat) => { h1.set(v3(col(A, 0)), [0, 0, 0]); h2.set(v3(col(A, 1)), [0, 0, 0]); sync(); };
   sync();
   return {
@@ -198,24 +198,6 @@ const PROC_DECOYS = [
   { id: 'suborig', text: 'Subtract its shadow on each earlier original arrow.', py: '    for y in arrows[:i]: x = sub(x, shadow(x, y))' },
 ];
 
-export function procMessage(ids: readonly string[]): { ok: boolean; message: string } {
-  const res = runProcedure(ids);
-  const third = res.out[2], second = res.out[1];
-  const lean = Math.abs(dot(normalize(third), normalize(second)));
-  const lens = res.lengths.map((l) => fmtN(l)).join(', ');
-  switch (res.fault) {
-    case 'ok': return { ok: true, message: `LANTERN squared up ${PROC_X.map((x) => fmtV(x)).join(', ')} into ${res.out.map((x) => fmtV(x)).join(', ')}. Every pair reads 0; every arrow is one unit long.` };
-    case 'noloop': return { ok: false, message: 'You never said to go through the arrows. LANTERN finished the first arrow and stopped. The other two still lean.' };
-    case 'first': return { ok: false, message: `You told me to subtract the shadow on the first arrow. You did not say what to do about the second. The third arrow leans: it reads ${fmtN(lean)} against the second.` };
-    case 'orig': return { ok: false, message: `You told me to subtract shadows on the original arrows, not the finished ones. The third arrow still leans: it reads ${fmtN(lean)} against the second.` };
-    case 'nosub': return { ok: false, message: `You never said to remove shadows. Every arrow is one unit long, but they still lean on each other: the first two read ${fmtN(Math.abs(dot(normalize(res.out[0]), normalize(res.out[1]))))}.` };
-    default: {
-      const order = ids.includes('scale');
-      return { ok: false, message: order ? `Every pair reads 0: the grid is square. But you scaled before the shadows came off, so the arrows ended ${lens} long. Scale last.` : `Every pair reads 0: the grid is square. But the arrows are ${lens} long: square, but stretched. Say to scale to length 1.` };
-    }
-  }
-}
-
 export const procedure: ProcedureDef = {
   id: 'c22-proc',
   title: 'Square up three arrows',
@@ -285,21 +267,6 @@ const TEO_DECOYS = [
   { id: 'max', text: 'Aim along the heading with the biggest reading.' },
   { id: 'half', text: 'Aim halfway between your two headings.' },
 ];
-
-export function teoReply(ids: readonly string[]): { ok: boolean; message: string } {
-  const res = runTeo(ids);
-  const off = fmtN(res.off, 1);
-  switch (res.fault) {
-    case 'ok': return { ok: true, message: `Played as Teo would follow it: headings (1, 0) and (0, 1), readings 3 and 4, antenna along (3, 4). It points straight at the *Lantern*.` };
-    case 'scaled': return { ok: false, message: `He reads along his dial’s arrows as they are: (2, 0) is two units long, so its reading doubles to 6. He aims along 6 × (2, 0) + 4 × (0, 1), ${off}° off. Tell him to make each heading one unit long first.` };
-    case 'readfirst': return { ok: false, message: `He took the readings before he shortened the headings, so the first one reads 6, not 3. His antenna ends ${off}° off. Make the headings one unit long before reading.` };
-    case 'nocheck': return { ok: false, message: `He uses his first two headings, (1, 0) and (1, 1)/1.41. They are 45° apart, so the two readings overlap. His antenna ends ${off}° off. Tell him to pick two headings that read 0 against each other.` };
-    case 'noread': return { ok: false, message: 'He has nothing to aim with: your message never has him take a reading before he aims.' };
-    case 'max': return { ok: false, message: `He points along the loudest heading, (1, 1). One reading cannot say where between his headings the *Lantern* is: ${off}° off.` };
-    case 'half': return { ok: false, message: `He aims halfway between two headings, whatever they read: ${off}° off. The readings have to set the mix.` };
-    default: return { ok: false, message: 'He works out a direction and keeps the antenna where it is. Your message never says to turn it.' };
-  }
-}
 
 export const teo: TeoDef = {
   id: 'c22-teo',

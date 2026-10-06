@@ -32,7 +32,8 @@ export const S: Record<string, Line[]> = {
     { who: 'bram', text: 'There it is. The quick way failed. Show me why.' },
   ],
   p4Win: [
-    { who: 'lantern', text: 'True closest point (2, 3, 0). Both shadows push along the first arrow. Added, that part is counted twice.', say: 'True closest point two, three, zero. Both shadows push along the first arrow. Added, that part is counted twice.' },
+    { who: 'lantern', text: 'True closest point (2, 3, 0). Both shadows push along the first arrow, 2 and 2.5 more, so they overlap and do not add up to the nearest point. With arrows at a right angle the overlap is 0.', say: 'True closest point two, three, zero. Both shadows push along the first arrow, two and two point five more, so they overlap and do not add up to the nearest point. With arrows at a right angle the overlap is zero.' },
+    { who: 'lantern', text: 'Taking the overlap off still misses: (2, 2.5, 0).', say: 'Taking the overlap off still misses: two, two point five, zero.' },
     { who: 'bram', text: 'So the quick way needs arrows at right angles. Good. Now I know when not to use it.' },
   ],
   p5Intro: [

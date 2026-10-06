@@ -81,7 +81,7 @@ export const p6: PuzzleDef = {
   title: 'How do we take the hum out of Teo’s channel?',
   goal: 'The channel reads $\\cg{\\mathbf s} = (4, 3)$. The Anchor’s hum always points along $\\cr{\\mathbf d} = (0.6, 0.8)$. Drop $\\mathbf s$ onto the hum’s line, then **Remove the hum**: keep only the part at a right angle to it.',
   predict: {
-    prompt: 'The hum’s line is one unit long per step. How far along it does the shadow of $\\mathbf s$ reach?',
+    prompt: 'The arrow $\\mathbf d$ is one unit long. How far along the hum’s line does the shadow of $\\mathbf s$ reach?',
     choices: [{ id: 'five', text: '5, the length of $\\mathbf s$' }, { id: 'four8', text: '4.8' }, { id: 'three', text: '3' }],
     answer: 'four8',
     reveal: '$\\mathbf s\\cdot\\mathbf d = 4(0.6) + 3(0.8) = 4.8$. $\\mathbf d$ is one unit long, so the reading is the shadow length.',
@@ -282,7 +282,6 @@ export const p8: PuzzleDef = {
       steps: [
         { prompt: '$(A^{\\mathsf T}A)^{-1}$', answer: P8_INV },
         { prompt: '$P = A(A^{\\mathsf T}A)^{-1}A^{\\mathsf T}$', answer: P8, mistakes: [[identity(3), 'The identity keeps every point where it is. This matrix drops points onto a plane.']] },
-        { prompt: '$P\\mathbf b$ for $\\mathbf b = (1, 2, 3)$', answer: [P5_P] },
       ],
       onDone: () => { built = true; r.eq(`P = \\tfrac13${texM(P8.map((row) => row.map((x) => x * 3)))}`); sfx.success(); },
     });

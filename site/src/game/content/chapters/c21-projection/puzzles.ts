@@ -14,7 +14,7 @@ import { sfx } from '../../../audio/sfx';
 import { dot, norm, vsub } from '../../../math/la';
 import { DropLine, DropPlane } from './drop';
 import {
-  HATCH, HATCH_DIST, HATCH_FOOT, P1_A, P1_B, P1_DIST, P1_FOOT, P1_LEFT, P3_B, P3_LEFT, P3_P, P3_S1, P3_S2, P3_U1, P3_U2,
+  HATCH, HATCH_DIST, HATCH_FOOT, P1_A, P1_B, P1_DIST, P1_FOOT, P1_LEFT, P3_B, P3_C, P3_LEFT, P3_P, P3_S1, P3_S2, P3_U1, P3_U2,
   P4_B, P4_K1, P4_K2, P4_OVERLAP, P4_S1, P4_S2, P4_WRONG, TETHER, THR1, THR2, fmtN, fmtV, near, p1Won, p2Won,
   p3Won, p4FootOk, p4OverlapOk, tolFor,
 } from './logic';
@@ -217,12 +217,18 @@ export const p3: PuzzleDef = {
     dp.leftover.object.visible = false;
     let ws: StepWorksheet | null = null;
     let tiles: TileOrder | null = null;
+    // the nearest point, written with the weights only: the player works the numbers out (Navigator in the rows
+    // above it, Commander in their own working after ordering the tiles)
+    const pStep = { prompt: 'nearest point $\\mathbf p = c_1\\mathbf u_1 + c_2\\mathbf u_2$', answer: [P3_P], mistakes: [[[3, 1, 0], 'That deletes the height. The plane is not the floor.']] as [number[], string][] };
     const steps = [
       { prompt: '$\\mathbf b\\cdot\\mathbf u_1$', answer: 4, mistakes: [[3, 'Multiply matching parts: $3 \\cdot 1 + 1 \\cdot 1 + 2 \\cdot 0$.']] as [number, string][] },
       { prompt: '$\\mathbf u_1\\cdot\\mathbf u_1$', answer: 2, mistakes: [[Math.SQRT2, 'Not the length: the dot product of $\\mathbf u_1$ with itself.']] as [number, string][] },
       { prompt: '$\\mathbf b\\cdot\\mathbf u_2$', answer: 2 },
       { prompt: '$\\mathbf u_2\\cdot\\mathbf u_2$', answer: 1 },
-      { prompt: 'nearest point $\\mathbf p = \\frac42\\mathbf u_1 + \\frac21\\mathbf u_2$', answer: [P3_P], mistakes: [[[3, 1, 0], 'That deletes the height. The plane is not the floor.']] as [number[], string][] },
+      { prompt: '$\\mathbf u_2\\cdot\\mathbf u_1$', answer: 0, mistakes: [[1, 'Multiply matching parts: $0 \\cdot 1 + 0 \\cdot 1 + 1 \\cdot 0$. This 0 is what removes the cross term $c_2\\,\\mathbf u_2\\cdot\\mathbf u_1$.']] as [number, string][] },
+      { prompt: '$c_1$ from $\\mathbf b\\cdot\\mathbf u_1 - c_1\\,\\mathbf u_1\\cdot\\mathbf u_1 - c_2\\,\\mathbf u_2\\cdot\\mathbf u_1 = 0$', answer: P3_C[0], mistakes: [[4, 'That is $\\mathbf b\\cdot\\mathbf u_1$ itself. Divide by $\\mathbf u_1\\cdot\\mathbf u_1$.']] as [number, string][] },
+      { prompt: '$c_2$ from $\\mathbf b\\cdot\\mathbf u_2 - c_1\\,\\mathbf u_1\\cdot\\mathbf u_2 - c_2\\,\\mathbf u_2\\cdot\\mathbf u_2 = 0$', answer: P3_C[1] },
+      pStep,
       { prompt: 'leftover $\\mathbf b - \\mathbf p$', answer: [P3_LEFT] },
     ];
     if (d === 'cadet') {
@@ -247,7 +253,7 @@ export const p3: PuzzleDef = {
           p.move();
           if (o.join() === REF.join()) {
             tiles!.el.remove();
-            ws = new StepWorksheet(p, { title: 'The last line', steps: [steps[4]], onDone: () => { void showShadows(300).then(finish); } });
+            ws = new StepWorksheet(p, { title: 'The last line', steps: [pStep], onDone: () => { void showShadows(300).then(finish); } });
           } else { sfx.miss(); p.bark('lantern', 'That order does not reach the formula. Start by writing what you are looking for.'); }
         },
       });
@@ -255,14 +261,14 @@ export const p3: PuzzleDef = {
     return {
       async showMe() {
         if (d === 'cadet') { await dp.moveTo([2, 2], 900); await finish(); return; }
-        if (tiles) { tiles.set(['write', 'perp', 'expand', 'cross', 'solve']); tiles.el.remove(); ws = new StepWorksheet(p, { title: 'The last line', steps: [steps[4]], onDone: () => { void showShadows(300).then(finish); } }); }
+        if (tiles) { tiles.set(['write', 'perp', 'expand', 'cross', 'solve']); tiles.el.remove(); ws = new StepWorksheet(p, { title: 'The last line', steps: [pStep], onDone: () => { void showShadows(300).then(finish); } }); }
         await ws!.showMe(250);
         await wait(700);
         await finish();
       },
       async solve() {
         if (d === 'cadet') { dp.set([2, 2]); await finish(); return; }
-        if (tiles) { tiles.el.remove(); ws = new StepWorksheet(p, { title: 'The last line', steps: [steps[4]], onDone: () => {} }); }
+        if (tiles) { tiles.el.remove(); ws = new StepWorksheet(p, { title: 'The last line', steps: [pStep], onDone: () => {} }); }
         ws!.solve();
         await finish();
       },
@@ -282,7 +288,7 @@ export const p4: PuzzleDef = {
     prompt: 'The sum of the shadows lands at $(4.5, 2.5, 0)$. Is that the nearest point of the floor to $(2, 3, 4)$?',
     choices: [{ id: 'yes', text: 'Yes, the shadows always add up' }, { id: 'no', text: 'No' }],
     answer: 'no',
-    reveal: 'No. The floor point nearest $(2, 3, 4)$ is straight below it, $(2, 3, 0)$, 4 away. The sum is 4.74 away. Both shadows push along $\\mathbf k_1$, so that part is counted twice.',
+    reveal: 'No. The floor point nearest $(2, 3, 4)$ is straight below it, $(2, 3, 0)$, 4 away. The sum is 4.74 away. Both shadows push along $\\mathbf k_1$, 2 and 2.5 more, so they overlap and do not add up to the nearest point. With arrows at a right angle the overlap is 0.',
   },
   hints: [
     'This plane is the floor. The point of the floor nearest $(2, 3, 4)$ is straight below it.',

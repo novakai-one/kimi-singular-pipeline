@@ -70,6 +70,6 @@ export const buildQr: BuildDef = {
   tests: QR_TESTS,
   swarm: { gen: (r, d) => qrCase(r, d), crew: (A) => crew.qr(A as Mat), tol: 1e-6 },
   docPrompt: 'Why is R = Qᵀ A, and why is it upper triangular?',
-  ilseNote: 'qr(A): Q holds the squared-up columns, R = QᵀA holds the amounts. Row i of R is zero before column i, because the j-th column only ever needed the first j square arrows. Solving with QR never forms AᵀA, so it keeps twice the digits.',
+  ilseNote: 'qr(A): Q holds the squared-up columns, R = QᵀA holds the amounts. Row i of R is zero before column i, because the j-th column only ever needed the first j square arrows. Solving with QR never forms AᵀA, so it loses about half as many digits.',
   payoff: 'LANTERN can now square any frame and say how to rebuild the old one: your `qr`.',
 };
