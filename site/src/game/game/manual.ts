@@ -83,6 +83,11 @@ export function manualView(onDownload: (name: string, text: string, type: string
         h('h3', { html: inline(p.ch.title) }),
         p.sayit && page ? h('div', { class: 'fm-ask', html: inline(`**${castMember(p.sayit.who).name}:** ${p.sayit.ask}`) }) : '',
         page ? h('dl', { class: 'fm-slots' }, ...SLOTS.filter(([k]) => page[k]?.trim()).flatMap(([k, label]) => [h('dt', null, label), h('dd', null, page[k])])) : '',
+        // then and now: the first draft, when the page was revised after comparing
+        page?.first && SLOTS.some(([k]) => (page.first![k] ?? '') !== page[k])
+          ? h('details', { class: 'fm-then' }, h('summary', null, 'Then and now: your first draft'),
+            h('dl', { class: 'fm-slots' }, ...SLOTS.filter(([k]) => page.first![k]?.trim()).flatMap(([k, label]) => [h('dt', null, label), h('dd', null, page.first![k])])))
+          : '',
         ...p.laws.filter((L) => s.laws[L.id]).map((L) => h('div', { class: 'fm-law', html: md(`**Law${s.laws[L.id].proven ? ', proved' : ''}.** ${lawText(L, s.laws[L.id].filled)}`) })),
         ...p.doubts.filter((d) => s.doubts[d.id]).map((d) => h('div', { class: 'fm-doubt', html: inline(`“${d.claim}” · **${d.isTrue ? 'true' : 'false'}**`) })));
     })
