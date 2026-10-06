@@ -107,7 +107,7 @@ export const doubtSquare: DoubtDef = {
       a1.setTo(v3(d.us[0].map((x) => x * d.S[0]))); a2.setTo(v3(d.us[1].map((x) => x * d.S[1])));
       r.row('m', '$A$', `$${texSmall(A)}$ (${A.length} × ${A[0].length})`);
       r.row('s', 'singular values', `${fmtD(d.S[0])} and ${fmtD(d.S[1])}`, C.result);
-      r.row('u', 'shapes', `$U$: ${A.length} × 2, $\\Sigma$: 2 × 2, $V$: 2 × 2`);
+      r.row('u', '$U$, $\\Sigma$, $V$', `${A.length}×2, 2×2, 2×2`);
     };
     const chips = h('div', { class: 'a9-chips' });
     const pick = (i: number) => { A = shapes[i].A; chips.querySelectorAll('button').forEach((b, k) => b.classList.toggle('on', k === i)); paint(); };
@@ -159,7 +159,7 @@ export const law: LawDef<LayerCase> = {
   frame: ['The best rank-$k$ picture of $A$ keeps the $k$ layers with ', { slot: 'which' }, '. What it leaves out stretches by at most ', { slot: 'err' }, '.'],
   slots: {
     which: { options: [{ id: 'largest', text: 'the largest singular values' }, { id: 'first', text: 'the first-listed singular values' }, { id: 'smallest', text: 'the smallest singular values' }] },
-    err: { options: [{ id: 'next', text: '$\\sigma_{k+1}$, the largest one left out' }, { id: 'zero', text: 'nothing: the picture is exact' }, { id: 'sum', text: 'the sum of the singular values left out' }] },
+    err: { options: [{ id: 'next', text: 'σₖ₊₁, the largest one left out' }, { id: 'zero', text: 'nothing: the picture is exact' }, { id: 'sum', text: 'the sum of the singular values left out' }] },
   },
   answer: LAW_ANSWER,
   cadetSlots: ['which'],

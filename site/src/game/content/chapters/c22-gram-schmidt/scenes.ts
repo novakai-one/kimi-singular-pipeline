@@ -45,7 +45,7 @@ export function frameHolo(g: Game, frame: Vec[]): { set(f: Vec[]): void; alive()
     const fw = normalize(f[1]);
     horizon.setPoints([v3(fw.map((x) => -3 * x)), v3(fw.map((x) => 4 * x))]);
     const up = f[0], fwd = f[1];
-    star.setPoints(Array.from({ length: 97 }, (_, i) => { const a = (i / 96) * Math.PI * 2; return [2.2 + 0.55 * (Math.cos(a) * fwd[0] + Math.sin(a) * up[0]), 0.01, 1.5 + 0.55 * (Math.cos(a) * fwd[2] + Math.sin(a) * up[2])] as V3; }));
+    star.setPoints(Array.from({ length: 97 }, (_, i) => { const a = (i / 96) * Math.PI * 2; return [1.9 + 0.5 * (Math.cos(a) * fwd[0] + Math.sin(a) * up[0]), 0.01, 1.55 + 0.5 * (Math.cos(a) * fwd[2] + Math.sin(a) * up[2])] as V3; }));
     lab.set(`horizon lean ${fmtN(horizonLean(f[1]), 2)}°`);
   };
   set(frame);
@@ -55,16 +55,16 @@ export function frameHolo(g: Game, frame: Vec[]): { set(f: Vec[]): void; alive()
 /** Scene staging for the cold open: the bridge, then the frame hologram over the holotable. */
 export async function driftShot(g: Game): Promise<void> {
   g.stage.clearWorld();
-  await g.stage.view3D({ target: [0.6, 0, 0.6], distance: 6.4, azimuth: -100, elevation: 14, ms: 0, orbit: false });
+  await g.stage.view3D({ target: [1.0, 0, 0.75], distance: 8.6, azimuth: -112, elevation: 16, ms: 0, orbit: false });
   frameHolo(g, DRIFT);
   let t = 0;
   const off = g.stage.tick((dt) => {
     t += dt;
     if (g.stage.controls) return;
-    const a = (-100 + Math.sin(t * 0.12) * 14) * (Math.PI / 180);
-    g.stage.camera.position.set(0.6 + 6.4 * Math.cos(0.24) * Math.cos(a), 6.4 * Math.cos(0.24) * Math.sin(a), 0.6 + 6.4 * Math.sin(0.24));
+    const a = (-112 + Math.sin(t * 0.12) * 12) * (Math.PI / 180);
+    g.stage.camera.position.set(1.0 + 8.6 * Math.cos(0.28) * Math.cos(a), 8.6 * Math.cos(0.28) * Math.sin(a), 0.75 + 8.6 * Math.sin(0.28));
     g.stage.camera.up.set(0, 0, 1);
-    g.stage.camera.lookAt(0.6, 0, 0.6);
+    g.stage.camera.lookAt(1.0, 0, 0.75);
   });
   const holder = new Group();
   holder.userData.dispose = () => off();
@@ -76,7 +76,7 @@ export async function install(g: Game): Promise<void> {
   try {
     g.stage.clearWorld();
     g.mood('explore');
-    await g.stage.view3D({ target: [0.6, 0, 0.6], distance: 6.4, azimuth: -100, elevation: 14, ms: 0, orbit: false });
+    await g.stage.view3D({ target: [1.0, 0, 0.75], distance: 8.6, azimuth: -112, elevation: 16, ms: 0, orbit: false });
     const holo = frameHolo(g, DRIFT);
     const check = () => { if (!holo.alive()) throw new Gone(); };
     await letterbox(g, true, 400);

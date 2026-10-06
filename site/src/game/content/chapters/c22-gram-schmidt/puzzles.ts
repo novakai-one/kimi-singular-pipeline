@@ -3,6 +3,7 @@ import { Vector3 } from 'three';
 import type { PuzzleCtx, PuzzleDef, V3 } from '../../../game/types';
 import { Arrow } from '../../../gfx/arrow';
 import { Dot } from '../../../gfx/markers';
+import { Label } from '../../../gfx/label';
 import { FatLine } from '../../../gfx/lines';
 import { Grid2D } from '../../../gfx/grid';
 import { Outline2D } from '../../../gfx/shapes';
@@ -64,7 +65,7 @@ export const p1: PuzzleDef = {
   id: 'c22-p1',
   title: 'Can two skewed arrows become a square pair?',
   goal: 'From $\\cg{\\mathbf b_1} = (3, 4)$ and $\\cr{\\mathbf b_2} = (2, 1)$, build $\\mathbf q_1$ and $\\mathbf q_2$: one unit long and at a right angle.',
-  subgoals: ['Scale $\\mathbf b_1$ to length 1: that is $\\mathbf q_1$', 'Subtract the shadow of $\\mathbf b_2$ on $\\mathbf q_1$', 'Scale what is left to length 1: that is $\\mathbf q_2$'],
+  subgoals: ['Scale b₁ to length 1: that is q₁', 'Subtract the shadow of b₂ on q₁', 'Scale what is left to length 1: that is q₂'],
   hints: [
     '$\\mathbf b_1$ is 5 long. One fifth of it is one unit long: drag its tip onto the dashed unit circle.',
     'The shadow of $\\mathbf b_2$ on $\\mathbf q_1$ is $(\\mathbf b_2\\cdot\\mathbf q_1)\\,\\mathbf q_1$, and $\\mathbf b_2\\cdot\\mathbf q_1 = 1.2 + 0.8 = 2$.',
@@ -198,7 +199,7 @@ export const p2: PuzzleDef = {
   view: '3d',
   onWin: S.p2Win,
   async setup(p) {
-    await p.g.stage.view3D({ target: [0.2, 0.4, 0.5], distance: 6.2, azimuth: -48, elevation: 22, ms: 0 });
+    await p.g.stage.view3D({ target: [0.25, 0.3, 0.45], distance: 6.4, azimuth: 58, elevation: 38, ms: 0 });
     p.grid({ base: 0.1, main: 0.2, axis: 0.45 });
     const cols = [C.v, C.w, C.u];
     const arrows = P2_X.map((x, i) => new Arrow([0, 0, 0], v3(x), { color: cols[i], label: `$\\mathbf x_${i + 1}$` }));
@@ -214,7 +215,9 @@ export const p2: PuzzleDef = {
       await Promise.all(P2_Q.map((q, i) => arrows[i].moveTo(v3(q), 700, [0, 0, 0])));
       arrows.forEach((a, i) => a.setLabel(`$\\mathbf q_${i + 1}$`));
       [[0, 1], [0, 2], [1, 2]].forEach(([i, j], k) => { marks[k].set([0, 0, 0], v3(P2_Q[i]), v3(P2_Q[j])); marks[k].show(true); });
-      r.eq('\\mathbf q_1 = \\tfrac{1}{\\sqrt 2}\\begin{bmatrix}1\\\\1\\\\0\\end{bmatrix},\\ \\mathbf q_2 = \\tfrac{1}{\\sqrt 6}\\begin{bmatrix}1\\\\-1\\\\2\\end{bmatrix},\\ \\mathbf q_3 = \\tfrac{1}{\\sqrt 3}\\begin{bmatrix}-1\\\\1\\\\1\\end{bmatrix}');
+      r.row('q1', '$\\mathbf q_1$', '$\\tfrac{1}{\\sqrt2}(1, 1, 0)$', C.v);
+      r.row('q2', '$\\mathbf q_2$', '$\\tfrac{1}{\\sqrt6}(1, -1, 2)$', C.w);
+      r.row('q3', '$\\mathbf q_3$', '$\\tfrac{1}{\\sqrt3}(-1, 1, 1)$', C.u);
       r.row('dot', 'largest dot product between two', maxOffDot(P2_Q).toExponential(0).replace('-', '−'), C.good);
       r.row('len', 'lengths', P2_Q.map((q) => fmtN(norm(q), 3)).join(', '), C.good);
       p.win();
@@ -253,7 +256,7 @@ export const p3: PuzzleDef = {
   onWin: S.p3Win,
   setup(p) {
     p.grid({ base: 0.15, main: 0.32, axis: 0.5 });
-    void p.g.stage.view2D({ center: [1.2, 2.6], height: 9.5, ms: 0 });
+    void p.g.stage.view2D({ center: [1.6, 2.3], height: 10.5, ms: 0 });
     const d = p.difficulty;
     const qg = new Grid2D(p.g.stage, { base: 0, main: 0.5, axis: 0.85, color: '#d08a5a', width: 1.2 });
     qg.set(P3_Q);
@@ -262,6 +265,7 @@ export const p3: PuzzleDef = {
     const q2 = new Arrow([0, 0, 0.02], v3(P3_Q2, 0.02), { color: C.w, label: '$\\mathbf q_2$' });
     const xd = new Dot(v3(P3_X, 0.03), { color: C.white, size: 0.11 });
     p.add(q1, q2, xd);
+    p.add(new Label('$\\mathbf x = (5, 5)$', v3(P3_X), { className: 'a8-pt', offset: [0, -24] }));
     const r = p.readout('Ilse’s grid');
     let done = false;
     const finish = () => {
@@ -377,6 +381,7 @@ export const p4: PuzzleDef = {
     const e2 = new Arrow([0, 0, 0.02], [0, 1, 0.02], { color: C.w, label: '$A\\mathbf e_2$' });
     p.add(ghost, ring, e1, e2);
     const r = p.readout('The move');
+    r.row('n', 'move', 'click a card');
     let M: Mat = identity(2);
     const pinned = new Set<string>();
     const seen = new Set<string>();

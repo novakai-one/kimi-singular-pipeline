@@ -172,7 +172,7 @@ export const law: LawDef<CloudCase> = {
   ...LAW_CORE,
   frame: ['The first principal component is the eigenvector of ', { slot: 'matrix' }, ' with ', { slot: 'which' }, ' eigenvalue.'],
   slots: {
-    matrix: { options: [{ id: 'cov', text: 'the covariance matrix' }, { id: 'raw', text: '$X^{\\mathsf T}X/(n - 1)$, the mean not taken away' }] },
+    matrix: { options: [{ id: 'cov', text: 'the covariance matrix' }, { id: 'raw', text: 'XᵀX/(n − 1), with the mean not taken away' }] },
     which: { options: [{ id: 'largest', text: 'the largest' }, { id: 'smallest', text: 'the smallest' }] },
   },
   answer: LAW_ANSWER,

@@ -44,7 +44,7 @@ export const p5: PuzzleDef = {
   view: '3d',
   onWin: S.p5Win,
   async setup(p) {
-    await p.g.stage.view3D({ target: [0.6, 0, 0.6], distance: 6.4, azimuth: -100, elevation: 14, ms: 0 });
+    await p.g.stage.view3D({ target: [1.0, 0, 0.75], distance: 8.6, azimuth: -112, elevation: 16, ms: 0 });
     const d = p.difficulty;
     const names = DRIFT_NAMES;
     const cols = [C.v, C.w, C.u];
@@ -54,10 +54,10 @@ export const p5: PuzzleDef = {
     const level = new FatLine(p.g.stage, [[-3, 0, 0], [4, 0, 0]], { color: C.white, width: 1.1, opacity: 0.3, dashed: true, dashSize: 0.14, gapSize: 0.1 });
     const horizon = new FatLine(p.g.stage, [[0, 0, 0], [1, 0, 0]], { color: C.accent, width: 2.6, intensity: 1.3 });
     const star = new FatLine(p.g.stage, [[0, 0, 0], [1, 0, 0]], { color: C.result, width: 2.4, intensity: 1.4 });
-    const starGhost = new FatLine(p.g.stage, starPts([0, 0, 1], [1, 0, 0], [2.2, 0.01, 1.5], 0.55), { color: C.white, width: 1, opacity: 0.25, dashed: true, dashSize: 0.06, gapSize: 0.05 });
+    const starGhost = new FatLine(p.g.stage, starPts([0, 0, 1], [1, 0, 0], [1.9, 0.01, 1.55], 0.5), { color: C.white, width: 1, opacity: 0.25, dashed: true, dashSize: 0.06, gapSize: 0.05 });
     p.add(level, horizon, star, starGhost);
     const lh = new Label('horizon', [3.2, 0, 0], { className: 'a8-cap', offset: [0, -16] });
-    const ls = new Label('star', [2.2, 0, 2.15], { className: 'a8-cap' });
+    const ls = new Label('star', [1.9, 0, 2.25], { className: 'a8-cap' });
     p.add(lh, ls);
     const arrows = frame.map((v, i) => new Arrow([0, 0, 0], v3(v), { color: cols[i], label: names[i] }));
     p.add(...arrows);
@@ -70,7 +70,7 @@ export const p5: PuzzleDef = {
       const fwd = frame[1], up = frame[0];
       const f = normalize(fwd);
       horizon.setPoints([v3(vscale(f, -3)), v3(vscale(f, 4))]);
-      star.setPoints(starPts(up, fwd, [2.2, 0.01, 1.5], 0.55));
+      star.setPoints(starPts(up, fwd, [1.9, 0.01, 1.55], 0.5));
       [[0, 1], [0, 2], [1, 2]].forEach(([i, j], k) => { const sq = Math.abs(dot(frame[i], frame[j])) < 1e-9; marks[k].show(sq && finished.includes(i) && finished.includes(j)); marks[k].set([0, 0, 0], v3(frame[i]), v3(frame[j])); });
       const lean = horizonLean(fwd), ratio = starRatio(up, fwd);
       if (!blind || done) {
