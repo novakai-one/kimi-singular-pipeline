@@ -151,6 +151,7 @@ export class Runner {
     this.hud.setChapter(chapterKicker(ch), ch.title);
     this.hud.hideObjective();
     if (ch.palette) void this.g.bg.setPalette(ch.palette as never, 1800);
+    music.setAct(ch.act);
     this.g.mood(ch.music ?? 'explore');
     try {
       if (start === 0) await this.catchUp(ch);
