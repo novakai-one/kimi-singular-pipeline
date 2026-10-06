@@ -16,7 +16,7 @@ import { fmat } from '../../../math/frac';
 import { gaussJordanSteps, isRREF } from '../../../math/rref';
 import { matVec, transpose, type Mat, type Vec } from '../../../math/la';
 import { DRONES, DRONES_START, DRONES_STEADY } from '../../truth';
-import { ptag } from '../c18-eigen/parts';
+import { Bars, ptag } from '../c18-eigen/parts';
 import { fmt2 } from '../c18-eigen/logic';
 import { FlowBoard, Simplex, boardView, triPoint } from './board';
 import {
@@ -36,9 +36,11 @@ export function board(p: PuzzleCtx, P: Mat, x0: Vec, title: string) {
   void boardView(p);
   const fb = new FlowBoard(p, { P, x0, names: STATIONS });
   const r = p.readout(title);
-  const paint = () => { fb.x.forEach((x, i) => r.row(`s${i}`, STATIONS[i], fmtN(Math.round(x * 10) / 10), C.result)); };
+  const bars = new Bars(STATIONS.map((s, i) => ({ id: s, name: s, color: [C.accent, '#c9b49a', C.result][i] })), TOTAL);
+  r.el.append(bars.el);
+  const paint = () => { fb.x.forEach((x, i) => bars.set(STATIONS[i], x)); };
   paint();
-  return { fb, r, paint };
+  return { fb, r, paint, bars };
 }
 
 // ------------------------------------------------------------------ p1 · one hour
@@ -140,7 +142,9 @@ export const p2: PuzzleDef = {
     void boardView(p, -2.85);
     const fb = new FlowBoard(p, { P: DRONES, x0: DRONES_START, names: STATIONS });
     const r = p.readout('The drones');
-    const paint = () => fb.x.forEach((x, i) => r.row(`s${i}`, STATIONS[i], fmtN(Math.round(x * 10) / 10), C.result));
+    const bars = new Bars(STATIONS.map((s, i) => ({ id: s, name: s, color: [C.accent, '#c9b49a', C.result][i] })), TOTAL);
+    r.el.append(bars.el);
+    const paint = () => fb.x.forEach((x, i) => bars.set(STATIONS[i], x));
     paint();
     const msg = msgBox();
     const rob = new RowOpsBoard(p, { aug: P2_AUG, n: 3, varNames: ['q_1', 'q_2', 'q_3'], title: 'The row board: 10(P − I) q = 0' });
