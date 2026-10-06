@@ -49,7 +49,7 @@ def build():
     C.finish(parent=root, sharp=30, weighted=False)
     T = Part('light_tip')
     T.sphere(0.04, M((0, 0, 1.37)), Pal.e_white(2.0), ico=1)
-    T.finish(parent=root, sharp=30, weighted=False)
+    T.finish(parent=root, sharp=30, weighted=False, loc=(0, 0, 1.37))
     return root
 
 

@@ -15,6 +15,7 @@ import { celebrate } from '../gfx/fx';
 import { runBuild } from './build';
 import { clearCine } from '../kit/cine';
 import { shipExterior } from '../content/common/shots';
+import { runCard, runSayIt, runDoubt, runLaw, runCompare, runProcedure, type BriefingHost } from './briefing';
 import { Grid2D, type GridOpts } from '../gfx/grid';
 
 export interface PuzzleState {
@@ -48,6 +49,24 @@ export class Runner {
     this.g.ui.panel.replaceChildren();
     this.g.ui.clearScene();
     this.hud.clearControls();
+  }
+
+  /** What the Briefing engines borrow from the runner. */
+  private host(ch: ChapterDef): BriefingHost {
+    return {
+      g: this.g, hud: this.hud, chapterId: ch.id,
+      guard: (p) => this.guard(p),
+      mount: async (view) => {
+        this.teardownPuzzle();
+        this.g.stage.clearWorld();
+        this.g.ui.clearScene();
+        clearCine();
+        if (view === '2d') await this.g.stage.view2D({ height: 10, ms: 600 });
+        else await this.g.stage.view3D({ ms: 800 });
+        const ctx = new PuzzleCtxImpl(this.g, this.hud, () => {});
+        return { p: ctx, done: () => { ctx.disposeAll(); this.g.drag.clear(); this.g.stage.clearWorld(); } };
+      },
+    };
   }
 
   /** If nothing is on stage (e.g. right after a puzzle), show the ship drifting in space. */
@@ -120,6 +139,16 @@ export class Runner {
         await this.guard(runBuild(this.g, beat.build as BuildDef, this.hud));
         return;
       }
+      case 'card': await this.backdrop(); return runCard(this.host(ch), beat.card);
+      case 'sayit': this.g.stage.clearWorld(); await this.backdrop(); return runSayIt(this.host(ch), beat.sayit);
+      case 'doubt': {
+        // the speaker voices the claim, then the holotable opens
+        await this.guard(this.g.say([[beat.doubt.who, beat.doubt.claim]]));
+        return runDoubt(this.host(ch), beat.doubt);
+      }
+      case 'law': return runLaw(this.host(ch), beat.law);
+      case 'compare': this.g.stage.clearWorld(); await this.backdrop(); return runCompare(this.host(ch), beat.compare);
+      case 'procedure': return runProcedure(this.host(ch), beat.procedure);
     }
   }
 

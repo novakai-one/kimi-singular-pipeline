@@ -77,7 +77,7 @@ export class App implements Game {
     audio.setVolume('sfx', s.sfx);
     audio.setVolume('voice', s.voice);
     setVoiceEnabled(s.voiceOn && !this.headless);
-    dialogueSettings.autoAdvance = s.autoAdvance;
+    dialogueSettings.autoAdvance = s.autoAdvance || this.headless || navigator.webdriver;
     dialogueSettings.textSpeed = s.textSpeed;
     if (!this.headless) setAnimSpeed(s.reduceMotion ? 4 : 1);
   }
@@ -200,7 +200,9 @@ export class App implements Game {
                 h('span', { class: 'map-stars' }, puzzles ? `★ ${stars}/${puzzles * 3}` : '')),
               h('details', { class: 'map-beats' }, h('summary', null, 'Jump to a part'),
                 h('div', { class: 'map-beat-list' }, ...c.beats.map((b, i) => {
-                  const label = b.kind === 'puzzle' ? b.puzzle.title : b.kind === 'name' ? `Named: ${b.entry.term}` : b.kind === 'explain' ? 'Explain it' : b.kind === 'build' ? `Build: ${b.build.fn}()` : b.kind === 'scene' ? 'Scene' : 'Cinematic';
+                  const label = b.kind === 'puzzle' ? b.puzzle.title : b.kind === 'name' ? `Named: ${b.entry.term}` : b.kind === 'explain' ? 'Explain it' : b.kind === 'build' ? `Build: ${b.build.fn}()`
+                    : b.kind === 'card' ? b.card.title : b.kind === 'sayit' ? 'Say it' : b.kind === 'doubt' ? `Doubt: ${b.doubt.claim}` : b.kind === 'law' ? 'Engrave the Law' : b.kind === 'compare' ? 'Compare with Ilse’s page'
+                    : b.kind === 'procedure' ? `Procedure: ${b.procedure.title}` : b.kind === 'scene' ? 'Scene' : 'Cinematic';
                   const bb = h('button', { class: `map-beat ${cs.done.includes(b.id) ? 'done' : ''}`, type: 'button', html: `<span class="bk">${b.kind}</span> ${inline(label)}${b.kind === 'puzzle' && cs.stars[b.puzzle.id] ? ` <span class="c-yellow">${'★'.repeat(cs.stars[b.puzzle.id])}</span>` : ''}` });
                   bb.addEventListener('click', () => { picked = { ch: c, beat: i }; sfx.click(); close(); });
                   return bb;

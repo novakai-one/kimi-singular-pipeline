@@ -200,3 +200,41 @@
 .tile.used { opacity: 0.35; }
 .tile.in-plan { list-style: decimal; display: list-item; }
 .tile-py { font-size: 12px; color: var(--ink-2); background: none; padding: 0; }
+
+/* ---------- the Briefing ---------- */
+.brief { position: absolute; padding: 20px 22px; animation: fade-in 0.4s; }
+.brief h2 { font-family: var(--display); font-size: 28px; margin: 6px 0 10px; font-weight: 600; }
+.brief .card-body p, .brief .card-body li { font-size: 16.5px; line-height: 1.6; color: var(--ink-2); }
+.brief.card-inshort, .brief.card-why, .brief.card-numpy, .brief.card-catchup { left: 50%; top: 50%; transform: translate(-50%, -55%); width: min(640px, calc(100vw - 40px)); max-height: calc(100vh - 140px); overflow-y: auto; }
+.brief.card-inshort { border-color: rgba(89, 225, 255, 0.35); }
+.brief.sayit { right: 24px; top: 24px; bottom: 96px; width: min(560px, calc(100vw - 48px)); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.sayit-ask { font-size: 17px; line-height: 1.5; font-weight: 500; }
+.slot { display: flex; flex-direction: column; gap: 4px; }
+.slot-label { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.slot .own-words { min-height: 54px; }
+.word-bank { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line-2); background: rgba(89, 225, 255, 0.06); color: var(--ink); font-size: 13px; cursor: pointer; }
+.chip:hover { border-color: var(--accent); }
+.brief.doubt, .brief.law { left: 456px; right: 456px; top: 18px; max-width: 700px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; max-height: calc(100vh - 120px); overflow-y: auto; }
+.doubt-claim { font-size: 19px; line-height: 1.5; font-style: italic; }
+.doubt-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.doubt-verdict { font-size: 15px; line-height: 1.55; color: var(--ink-2); }
+.doubt-verdict p { margin: 6px 0; }
+.law-sentence { font-size: 19px; line-height: 2.1; }
+.law-slot { font: inherit; font-size: 16px; color: var(--accent); background: rgba(89, 225, 255, 0.08); border: 1px solid rgba(89, 225, 255, 0.4); border-radius: 8px; padding: 2px 8px; margin: 0 4px; }
+.law-fixed { color: var(--accent); }
+.law-status { font-size: 15px; line-height: 1.5; color: var(--ink-2); }
+.law-status p { margin: 4px 0; }
+.law-reason { display: flex; flex-direction: column; gap: 8px; }
+.law-reason .choice-cards { grid-template-columns: 1fr; }
+.brief.compare { left: 50%; top: 24px; bottom: 96px; transform: translateX(-50%); width: min(1100px, calc(100vw - 48px)); overflow-y: auto; }
+.cmp-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.cmp-mine, .cmp-ilse { display: flex; flex-direction: column; gap: 10px; }
+.cmp-page p, .cmp-page li { font-size: 15.5px; line-height: 1.6; color: var(--ink-2); }
+.cmp-ilse { border-left: 1px solid var(--line); padding-left: 22px; }
+.brief.procedure { left: 50%; bottom: 84px; transform: translateX(-50%); width: min(820px, calc(100vw - 40px)); display: flex; flex-direction: column; gap: 10px; }
+@media (max-width: 1180px) {
+  .brief.doubt, .brief.law { left: 20px; right: 20px; top: auto; bottom: 74px; max-height: 50vh; }
+  .cmp-cols { grid-template-columns: 1fr; }
+  .cmp-ilse { border-left: 0; padding-left: 0; }
+}

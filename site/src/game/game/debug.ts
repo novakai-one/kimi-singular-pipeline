@@ -5,6 +5,8 @@ import { CHAPTERS, DEV_CHAPTERS, chapter } from './registry';
 import { S } from '../core/save';
 import { normLine, spoken, voiceId, type Line } from '../content/lines';
 import { castMember } from '../content/cast';
+import { briefingTest } from './briefing';
+import { setAnimSpeed } from '../core/tween';
 
 export function installDebug(app: App): void {
   const api = {
@@ -28,6 +30,11 @@ export function installDebug(app: App): void {
     }),
     /** Solve the current puzzle with its solver. Resolves to true if its win condition fired. */
     solve: () => app.runner.solveCurrent(),
+    /** Resolve the current Briefing step (card, say it, doubt, law, compare, procedure) the right way. */
+    briefing: () => (briefingTest.solve ? briefingTest.kind : null),
+    solveBriefing: async () => (briefingTest.solve ? { kind: briefingTest.kind, ok: await briefingTest.solve() } : null),
+    /** Animation speed multiplier (tests). */
+    setAnimSpeed: (x: number) => setAnimSpeed(x),
     /** Mount a single puzzle by chapter id + beat index and return once it is set up. */
     mountPuzzle: async (id: string, beat: number) => {
       const ch = chapter(id);
@@ -67,6 +74,17 @@ export function installDebug(app: App): void {
             e.steps.forEach((s, i) => { add(`${w} step ${i}`, s.ask); s.options.forEach((o) => { add(`${w} step ${i} option`, o.text); add(`${w} step ${i} why`, o.why); }); });
           }
           if (b.kind === 'build') { add(`${w} title`, b.build.title); add(`${w} brief`, b.build.brief); add(`${w} payoff`, b.build.payoff); }
+          if (b.kind === 'card') { add(`${w} card title`, b.card.title); add(`${w} card body`, b.card.body); add(`${w} card cue`, b.card.cue); }
+          if (b.kind === 'sayit') add(`${w} ask`, b.sayit.ask);
+          if (b.kind === 'doubt') { add(`${w} claim`, b.doubt.claim); add(`${w} reason`, b.doubt.reason); add(`${w} goal`, b.doubt.goal); }
+          if (b.kind === 'law') {
+            b.law.frame.forEach((x) => { if (typeof x === 'string') add(`${w} frame`, x); });
+            Object.values(b.law.slots).forEach((sl) => sl.options.forEach((o) => add(`${w} slot`, o.text)));
+            add(`${w} reason ask`, b.law.reason.ask);
+            b.law.reason.options.forEach((o) => { add(`${w} reason option`, o.text); add(`${w} reason why`, o.why); });
+          }
+          if (b.kind === 'compare') { add(`${w} page`, b.compare.page); b.compare.keyIdeas.forEach((k) => add(`${w} key idea`, k)); }
+          if (b.kind === 'procedure') { add(`${w} title`, b.procedure.title); add(`${w} brief`, b.procedure.brief); b.procedure.tiles.forEach((t) => add(`${w} tile`, t.text)); }
         }
         for (const [k, ls] of Object.entries(c.script ?? {})) ls.map(normLine).forEach((l, i) => add(`${c.id} script.${k} ${i}`, l.text));
       }
@@ -80,6 +98,8 @@ export function installDebug(app: App): void {
         for (const b of c.beats) {
           if (b.kind === 'scene') push(b.lines);
           if (b.kind === 'explain') push([[b.explain.who, b.explain.intro]]);
+          if (b.kind === 'sayit') push([[b.sayit.who, b.sayit.ask]]);
+          if (b.kind === 'doubt') push([[b.doubt.who, b.doubt.claim]]);
           if (b.kind === 'puzzle' && b.puzzle.onWin) push(b.puzzle.onWin);
         }
         for (const ls of Object.values(c.script ?? {})) push(ls);

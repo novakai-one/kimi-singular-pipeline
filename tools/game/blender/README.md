@@ -50,8 +50,8 @@ real lights, bloom and tone mapping.
 
 | Model | Size | Nodes |
 |---|---|---|
-| `lantern` | about 6.4 long | `hull`, `projector` (+ `projector_focus` at the emitter), `pod_fl`, `pod_fr`, `pod_rl`, `pod_rr`, each with `nozzle_fl` / `nozzle_fr` / `nozzle_rl` / `nozzle_rr` at the nozzle exit (exhaust along -X), `light_beacon` |
-| `meridian` | about 62 long | `bow`, `hangar_door_s` (-Y), `hangar_door_p` (+Y), `truss_fore` / `truss_aft` (origin at the section centre; children `frame_f1..f6` / `frame_a1..a6`, one rectangular frame each in the YZ plane, plus `truss_*_braces`), `hub`, `ring_1..3` (spin about local X), `aft` (`tank_1..6`, `radiator_l/r`, `engine_1..3`), `nozzle_1..3` |
+| `lantern` | about 6 long (x -2.6 to 3.3) | `hull`, `projector` (+ `projector_focus` at the emitter), `pod_fl`, `pod_fr`, `pod_rl`, `pod_rr`, each with `nozzle_fl` / `nozzle_fr` / `nozzle_rl` / `nozzle_rr` at the nozzle exit (exhaust along -X), `light_beacon` |
+| `meridian` | about 63 long | `bow`, `hangar_door_s` (-Y), `hangar_door_p` (+Y), `truss_fore` / `truss_aft` (origin at the section centre; children `frame_f1..f6` / `frame_a1..a6`, one rectangular frame each in the YZ plane, plus `truss_*_braces`), `hub`, `ring_1..3` (spin about local X), `aft` (`tank_1..6`, `radiator_l/r`, `engine_1..3`), `nozzle_1..3` |
 | `anchor` | spire tips about 2.3 from the core | `core`, `spire_1..3` (origin at the core centre, local +X along the spire; directions (1, 0.2, 0.1), (0.3, 1, 0), (0, 0.2, 1) normalised), `spire_1_tip..spire_3_tip` |
 | `buoy` | about 1.9 tall | `body`, `core` (the glow, can be pulsed), `light_tip` |
 | `debris_0..5` | 1-2 across | `chunk_N` (0-2 rocks, 3 hull plate, 4 truss fragment, 5 torn tank shell) |

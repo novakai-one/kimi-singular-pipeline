@@ -90,9 +90,24 @@ export class Ship {
       body.scale.setScalar(o.scale ?? 1);
       this.group.add(body);
       this.model = body;
-      for (const e of o.engines ?? [[-1.8, 0, 0]]) {
-        const ex = new Exhaust(stage, { size: 0.18 * (o.scale ?? 1) });
-        ex.group.position.set(e[0] * (o.scale ?? 1), e[1] * (o.scale ?? 1), e[2] * (o.scale ?? 1));
+      // engines: explicit positions, or the model's own nozzle_* nodes (placed where the exhaust leaves)
+      let engines: V3[] = (o.engines ?? []).map((e) => [e[0] * (o.scale ?? 1), e[1] * (o.scale ?? 1), e[2] * (o.scale ?? 1)] as V3);
+      if (!o.engines && m) {
+        this.group.updateMatrixWorld(true);
+        const found: V3[] = [];
+        body.traverse((n) => {
+          if (/^nozzle/.test(n.name)) {
+            const w = n.getWorldPosition(new Vector3());
+            const l = this.group.worldToLocal(w);
+            found.push([l.x, l.y, l.z]);
+          }
+        });
+        engines = found;
+      }
+      if (!m && !o.engines) engines = [[-1.4 * (o.scale ?? 1), 0, 0]];
+      for (const e of engines) {
+        const ex = new Exhaust(stage, { size: 0.16 * (o.scale ?? 1) });
+        ex.group.position.set(e[0], e[1], e[2]);
         ex.group.rotation.z = Math.PI / 2; // cone points along -X (behind the ship)
         this.group.add(ex.group);
         this.exhausts.push(ex);

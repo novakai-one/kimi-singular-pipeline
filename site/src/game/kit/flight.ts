@@ -80,7 +80,7 @@ export class BurnChain {
       p.add(this.resultArrow);
     }
     if (o.ship !== false) {
-      this.ship = new Ship(p.g.stage, { model: 'lantern', scale: 0.16, engines: [[-1.5, 0, 0]] });
+      this.ship = new Ship(p.g.stage, { model: 'lantern', scale: 0.16 });
       this.ship.group.position.set(...this.shipHome());
       this.ship.group.position.z = 0.15;
       p.add(this.ship);

@@ -55,7 +55,7 @@ export async function bridgeShot(g: Game): Promise<void> {
     holo.object.rotation.z += dt * 0.3;
     if (g.stage.controls) return;
     const a = -2.2 + Math.sin(t0 * 0.05) * 0.5;
-    g.stage.camera.position.set(4.2 * Math.cos(a), 4.2 * Math.sin(a), 2.3);
+    g.stage.camera.position.set(3.3 * Math.cos(a), 3.3 * Math.sin(a), 2.3); // stays inside the 12 × 8 room
     g.stage.camera.up.set(0, 0, 1);
     g.stage.camera.lookAt(0, 0, 1.3);
   });

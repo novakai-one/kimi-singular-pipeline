@@ -221,6 +221,8 @@ export interface DoubtScene {
   holds(): boolean;
   /** The current case in literal words, for messages: "v = (2, 1), w = (−4, −2)". */
   describe(): string;
+  /** Optional: animate the consequence of the current construction (fly both orders, apply the move) before each verdict. */
+  play?(): Promise<void>;
   /** The Shake: set the free quantities to a random case (edge >= 0: the edge-th curated edge case). May animate. */
   randomize(rng: () => number, edge?: number): void | Promise<void>;
   /** How many curated edge cases randomize() knows (navigator uses 1, commander all). */

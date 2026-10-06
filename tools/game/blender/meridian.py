@@ -1,4 +1,4 @@
-"""Meridian: a colony ark (~62 units long, nose along +X, Z up; the game scales it).
+"""Meridian: a colony ark (~63 units long, nose along +X, Z up; the game scales it).
 
 Bow command section with a dust shield, bridge band, window rows and two hangar doors; two exposed
 box-frame truss sections (clear repeated rectangular frames); a habitat spine with three rotating

@@ -41,7 +41,7 @@ export async function makeAnchor(stage: Stage, scale = 1, parent: Object3D = sta
 
 /** The survey tug Lantern. Nose along +X. */
 export function makeLantern(stage: Stage, scale = 0.16): Ship {
-  return new Ship(stage, { model: 'lantern', scale, engines: [[-3.1, 0.9, 0], [-3.1, -0.9, 0]] });
+  return new Ship(stage, { model: 'lantern', scale });
 }
 
 export function place(o: Object3D, p: V3): void { o.position.set(p[0], p[1], p[2]); }

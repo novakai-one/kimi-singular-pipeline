@@ -4,12 +4,12 @@ import type { Line } from '../../lines';
 export const S: Record<string, Line[]> = {
   open: [
     { who: 'lantern', text: 'Lattice re-seeded. The new buoys sit on a square grid again. One grid step is one hundred metres.' },
-    { who: 'wren', text: 'Beacon buoy, ahead and a little to port. LANTERN, where exactly?' },
-    { who: 'lantern', text: 'From the ship: three steps across, two steps up.' },
     { who: 'bram', text: 'With two thrusters gone the autopilot will not plan for us. Nav, you plot each burn. Wren flies it.' },
-    { who: 'wren', text: 'Drag the arrow to where you want us. I fly the arrow, nothing else.' },
+    { who: 'wren', text: 'Two working pushers for now, A and B. They fire in whole pulses. Next beacon is out at seven across, eight up.' },
   ],
-  straightWin: [{ who: 'wren', text: 'On the beacon. One burn. I like you already.' }],
+  p1Win: [{ who: 'wren', text: 'Two of one, three of the other, and we are on the beacon. Nice.' }],
+  p4Win: [{ who: 'lantern', text: 'Docked at Q. Halfway and quarter-way markers placed.' }],
+  p6Win: [{ who: 'bram', text: 'Seven. Floor first, then up. Same trick twice.' }],
   debris: [
     { who: 'lantern', text: 'Debris drifting across the route. To avoid it, the autopilot fired one burn on its own: four across, one down.' },
     { who: 'wren', text: 'So we are here now, not home. Same beacon, Nav. Plot the second burn from where we are.' },
@@ -31,14 +31,6 @@ export const S: Record<string, Line[]> = {
     { who: 'wren', text: 'And now home is somewhere behind us. Nav: one burn, straight home. Then tell me how far it was.' },
   ],
   homeWin: [{ who: 'wren', text: 'Home in one. And five steps out, so five hundred metres. Good.' }],
-  doubt: [
-    { who: 'bram', text: 'Before any of this goes into the autopilot, I have a doubt.' },
-    { who: 'bram', text: 'East then north has to land somewhere different from north then east. Different route, different place. Show me I am wrong.' },
-  ],
-  doubtWin: [
-    { who: 'bram', text: 'Huh. Shake it as much as I like and the two routes still meet.' },
-    { who: 'bram', text: 'Fine. Either way round, you trace two sides of the same shape. I will bolt it on.' },
-  ],
   close: [
     { who: 'lantern', text: 'Ship at the beacon. Position known. Every burn so far was an arrow, and every arrow had two numbers.' },
     { who: 'bram', text: 'Thruster two is back. Patched, but it fires.' },

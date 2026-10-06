@@ -85,7 +85,7 @@ const twoLines = rowPuzzle({
     prompt: 'You replace the red row by (red row − 2 × green row). What happens to the point where the two lines meet?',
     choices: [{ id: 'stay', text: 'It stays where it is' }, { id: 'move', text: 'It moves along the green line' }, { id: 'gone', text: 'The lines stop meeting' }],
     answer: 'stay',
-    reveal: 'It stays at $(1, 2)$. The point $(1, 2)$ satisfies both old equations, so it also satisfies any combination of them. The red line turns about that point.',
+    reveal: 'It stays at $(1, 2)$. The point $(1, 2)$ satisfies both old equations, so it also satisfies any combination of them. Whichever line a row operation changes turns about that point.',
   },
 });
 

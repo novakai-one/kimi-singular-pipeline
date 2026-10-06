@@ -274,7 +274,7 @@ def antenna(P, m, root):
     P.cyl(0.007, 0.7, M(wb + V((0, 0, 0.37))), m.steel, segs=6)
     beacon = Part('light_beacon')
     beacon.sphere(0.026, M(wb + V((0, 0, 0.74))), Pal.e_white(), u=10, v=6)
-    beacon.finish(parent=root)
+    beacon.finish(parent=root, loc=wb + V((0, 0, 0.74)))
 
 
 def projector(root, m):

@@ -1,7 +1,7 @@
 // Chapter 1: "Where is the beacon from here?" → vector, adding vectors, scalar multiple, length.
 // Every move the ship makes is an arrow the player draws; Fire flies it.
 import { Vector3 } from 'three';
-import type { ChapterDef, PuzzleDef, V3 } from '../../../game/types';
+import type { Beat, ChapterDef, PuzzleDef, V3 } from '../../../game/types';
 import { BurnChain } from '../../../kit/flight';
 import { near } from '../../../kit/handle';
 import { Pad, Dot } from '../../../gfx/markers';
@@ -13,9 +13,11 @@ import { Slider, parseNum } from '../../../ui/widgets';
 import { h } from '../../../ui/ui';
 import { C } from '../../../core/theme';
 import { nice } from '../../../math/frac';
-import { animate, ease, wait } from '../../../core/tween';
+import { animate, ease } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
 import { S } from './script';
+import { p1, p4, p6 } from './puzzles2';
+import { sayit, doubtOrder, doubtFlip, law, compare } from './briefing';
 
 const fmt = (v: V3) => `(${nice(v[0])}, ${nice(v[1])})`;
 
@@ -40,34 +42,10 @@ function partGuides(p: Parameters<PuzzleDef['setup']>[0], from: V3) {
   };
 }
 
-// ------------------------------------------------------------------ 1. straight there
-
-const straight: PuzzleDef = {
-  id: 'c01-straight',
-  title: 'Where is the beacon from here?',
-  goal: 'Drag the tip of the **green** arrow to the beacon, then press **Fire**.',
-  hints: ['The beacon is 3 steps across and 2 steps up from the ship.', 'Put the arrow tip on the beacon ring, then Fire.'],
-  par: 1,
-  onWin: S.straightWin,
-  setup(p) {
-    p.grid();
-    const pad = new Pad(p.g.stage, [3, 2, 0], { label: 'beacon' });
-    p.add(pad);
-    const r = p.readout('Burn');
-    const guides = partGuides(p, [0, 0, 0]);
-    const chain = new BurnChain(p, {
-      free: [[1, 0, 0]], labels: ['$\\mathbf v$'],
-      onChange: (end) => { r.row('v', 'burn', fmt(end), C.v); guides([0, 0, 0], end); },
-      onArrive: (end) => { if (near(end, [3, 2, 0])) { void pad.hit(); p.win(); return 'win'; } return 'miss'; },
-    });
-    return { async showMe() { await chain.moveBurn(0, [3, 2, 0]); await chain.fire(); } };
-  },
-};
-
 // ------------------------------------------------------------------ 2. around the debris
 
 const debris: PuzzleDef = {
-  id: 'c01-debris',
+  id: 'c01-p2',
   title: 'Can two burns get around the debris?',
   goal: 'The grey burn already happened. Drag the **green** burn so the ship ends on the beacon, then **Fire**.',
   predict: {
@@ -129,7 +107,7 @@ const debris: PuzzleDef = {
 // ------------------------------------------------------------------ 3. one thruster, any amount
 
 const scale: PuzzleDef = {
-  id: 'c01-scale',
+  id: 'c01-p3',
   title: 'How far can one thruster take you?',
   goal: 'Thruster three only pushes along **(2, 1)**. Set the amount, then **Fire**. Reach each marker buoy from the start.',
   subgoals: ['Reach the buoy at (6, 3)', 'Reach the buoy at (−4, −2)'],
@@ -199,7 +177,7 @@ const scale: PuzzleDef = {
 // ------------------------------------------------------------------ 4. three knocks: how far is home?
 
 const home: PuzzleDef = {
-  id: 'c01-home',
+  id: 'c01-p5',
   title: 'How far is home?',
   goal: 'Three pulses knocked the ship off course (grey). Plot **one** burn straight home and **Fire**. Then type how far home was.',
   subgoals: ['Fly home in one burn', 'Type the distance home'],
@@ -248,93 +226,10 @@ const home: PuzzleDef = {
   },
 };
 
-// ------------------------------------------------------------------ Bram's doubt
-
-const doubt: PuzzleDef = {
-  id: 'c01-doubt',
-  title: 'Does the order of two burns matter?',
-  style: 'doubt',
-  claim: { who: 'bram', text: 'East then north has to land somewhere different from north then east.' },
-  goal: 'Set any two burns, then press **Fly both orders**. Then let Bram shake them.',
-  hints: ['Any two burns will do. Make them point different ways so the routes look different.'],
-  onWin: S.doubtWin,
-  setup(p) {
-    p.grid();
-    p.g.stage.view2D({ center: [1.5, 1.5], height: 9, ms: 0 });
-    const a = new Arrow([0, 0, 0], [3, 0, 0], { color: C.v, handle: true, label: '$\\mathbf a$' });
-    const b = new Arrow([0, 0, 0], [0, 2, 0], { color: C.w, handle: true, label: '$\\mathbf b$' });
-    const a2 = new Arrow([0, 0, 0], [0, 0, 0], { color: C.v, opacity: 0.55, width: 0.035 });
-    const b2 = new Arrow([0, 0, 0], [0, 0, 0], { color: C.w, opacity: 0.55, width: 0.035 });
-    const par = new Parallelogram(p.g.stage, [3, 0, 0], [0, 2, 0], { color: C.result, opacity: 0 });
-    par.setOpacity(0, 0);
-    const meet = new Dot([3, 2, 0], { color: C.result, size: 0.12 });
-    meet.setOpacity(0);
-    p.add(par, a2, b2, a, b, meet);
-    const vec = (x: Arrow): V3 => [x.to.x - x.from.x, x.to.y - x.from.y, 0];
-    const layout = () => { const av = vec(a), bv = vec(b); a.set([0, 0, 0], av); b.set([0, 0, 0], bv); };
-    for (const x of [a, b]) {
-      p.g.drag.add({ target: x.grab, getPos: () => x.to.clone(), snap: () => p.snap(), onMove: (q) => { x.setTo([q.x, q.y, 0]); }, onEnd: () => p.move() });
-    }
-    let flying = false;
-    const flyBoth = async (av: V3, bv: V3, ms: number) => {
-      // route 1: a then b (solid), route 2: b then a (faint), meeting at a + b
-      a.set([0, 0, 0], av); b.set([0, 0, 0], bv);
-      b2.set(av, av); a2.set(bv, bv);
-      meet.setOpacity(0);
-      par.set(av, bv);
-      par.setOpacity(0, 0);
-      await Promise.all([b2.moveTo([av[0] + bv[0], av[1] + bv[1], 0], ms, av), a2.moveTo([av[0] + bv[0], av[1] + bv[1], 0], ms, bv)]);
-      meet.at([av[0] + bv[0], av[1] + bv[1], 0.05]);
-      meet.setOpacity(1);
-      sfx.snap();
-      await animate(ms * 0.6, (k) => par.setOpacity(0.15 * k, 0.7 * k), ease.out);
-    };
-    const shake = async () => {
-      p.bark('bram', 'Let me shake it.');
-      for (let i = 0; i < 4; i++) {
-        const rv = (): V3 => [Math.round((Math.random() * 8 - 4) * 2) / 2, Math.round((Math.random() * 8 - 4) * 2) / 2, 0];
-        let av = rv(), bv = rv();
-        while (Math.abs(av[0] * bv[1] - av[1] * bv[0]) < 2) { av = rv(); bv = rv(); }
-        await flyBoth(av, bv, 520);
-        await wait(250);
-      }
-    };
-    const go = async () => {
-      if (flying || p.won) return;
-      const av = vec(a), bv = vec(b);
-      if (Math.hypot(av[0], av[1]) < 0.5 || Math.hypot(bv[0], bv[1]) < 0.5) { p.bark('bram', 'Two real burns, please. Not zero.'); return; }
-      flying = true;
-      p.move();
-      await flyBoth(av, bv, 900);
-      await wait(400);
-      await shake();
-      flying = false;
-      p.win();
-    };
-    p.dock().appendChild(h('div', null, h('button', { class: 'btn primary', type: 'button', onclick: () => void go() }, 'Fly both orders')));
-    layout();
-    return { async showMe() { a.setTo([3, 1, 0]); b.setTo([-1, 2, 0]); await go(); } };
-  },
-};
-
 // ------------------------------------------------------------------ the chapter
 
-const ch: ChapterDef = {
-  id: 'c01',
-  act: 1,
-  num: 1,
-  title: 'Where is the beacon from here?',
-  subtitle: 'Vectors',
-  nodes: ['N01', 'N02'],
-  palette: 'default',
-  music: 'explore',
-  script: S,
-  beats: [
-    { kind: 'scene', id: 'open', lines: S.open, view: '2d' },
-    { kind: 'puzzle', id: 'straight', puzzle: straight },
-    { kind: 'scene', id: 'debris', lines: S.debris },
-    { kind: 'puzzle', id: 'debris-p', puzzle: debris },
-    {
+
+const NAME_VECTOR: Beat = {
       kind: 'name', id: 'name-vector', entry: {
         id: 'vector', term: 'vector', question: 'Where is it, and how do I get there?', nodes: ['N01', 'N02'],
         saw: 'Every burn was an arrow: **so far across, so far up**. The ship ended where the last arrow ended, tip to tail. Both orders of the two burns ended on the same beacon.',
@@ -345,10 +240,9 @@ const ch: ChapterDef = {
         cue: 'When you see **“how far in each direction”**, think **vector**.',
         use: 'Every data point a model reads is a vector: a list of numbers that places it in space. A 28×28 image is a vector with 784 numbers.',
       },
-    },
-    { kind: 'scene', id: 'thruster', lines: S.thruster },
-    { kind: 'puzzle', id: 'scale-p', puzzle: scale },
-    {
+    };
+
+const NAME_SCALAR: Beat = {
       kind: 'name', id: 'name-scalar', entry: {
         id: 'scalar-multiple', term: 'scalar multiple', question: 'What happens when I use more or less of one arrow?', nodes: ['N02'],
         saw: 'With one thruster, every burn lay on one line through the start. Bigger amounts went further along it. Negative amounts went the other way.',
@@ -359,10 +253,9 @@ const ch: ChapterDef = {
         cue: 'When you see **“the same direction, more or less of it”**, think **scalar multiple**.',
         use: 'Turning up an image\'s brightness multiplies its pixel vector by a scalar.',
       },
-    },
-    { kind: 'scene', id: 'knocks', lines: S.knocks },
-    { kind: 'puzzle', id: 'home-p', puzzle: home },
-    {
+    };
+
+const NAME_LENGTH: Beat = {
       kind: 'name', id: 'name-length', entry: {
         id: 'length', term: 'length', question: 'How far is it?', nodes: ['N01'],
         saw: 'The burn home was 3 back and 4 down. Its two parts are the two short sides of a right-angled triangle, and the arrow is the long side.',
@@ -373,44 +266,9 @@ const ch: ChapterDef = {
         cue: 'When you see **“how far”** or **“distance”**, think **length**.',
         use: 'Nearest-neighbour search finds similar items by the length of the difference between two vectors.',
       },
-    },
-    { kind: 'scene', id: 'doubt-intro', lines: S.doubt },
-    { kind: 'puzzle', id: 'doubt-p', puzzle: doubt },
-    {
-      kind: 'explain', id: 'explain', explain: {
-        id: 'c01-explain', who: 'bram',
-        intro: 'Before I bolt this into the autopilot, explain it to me. Three questions.',
-        steps: [
-          {
-            ask: 'The burns $(4, -1)$ and $(-1, 3)$ end at the same place in either order. **Why?**',
-            options: [
-              { id: 'a', text: 'Across, the numbers add to the same total either way: $4 + (-1) = (-1) + 4$. The same goes for up.', right: true, why: 'Yes. Each part of a vector adds on its own, and adding numbers does not care about order.' },
-              { id: 'b', text: 'Because the ship always flies in straight lines.', right: false, why: 'The two routes are different paths. They end together because the totals match, not because of the shape of the path.' },
-              { id: 'c', text: 'Because both burns are short.', right: false, why: 'Bram shook the burns to every size. The two routes always met. Size has nothing to do with it.' },
-            ],
-          },
-          {
-            ask: 'What does multiplying a burn by $-2$ do to its arrow?',
-            options: [
-              { id: 'a', text: 'It turns the arrow a little.', right: false, why: 'Multiplying every part by the same number keeps the ratio of the parts, so the arrow stays on its own line. It cannot turn.' },
-              { id: 'b', text: 'It flips the arrow to point the other way and makes it twice as long.', right: true, why: 'Yes. The minus sign flips it. The 2 doubles it. It stays on the same line.' },
-              { id: 'c', text: 'It makes the arrow shorter.', right: false, why: 'Its length doubles. Only a number between −1 and 1 makes an arrow shorter.' },
-            ],
-          },
-          {
-            ask: 'How far does a burn of $(6, 8)$ take the ship?',
-            options: [
-              { id: 'a', text: '14, because $6 + 8 = 14$.', right: false, why: '14 is the zig-zag route: across, then up. The arrow cuts the corner, so it is shorter.' },
-              { id: 'b', text: '48, because $6 \\times 8 = 48$.', right: false, why: '48 is the area of a 6 by 8 rectangle, not a distance.' },
-              { id: 'c', text: '10, because $\\sqrt{6^2 + 8^2} = \\sqrt{100}$.', right: true, why: 'Yes. The parts are the short sides of a right-angled triangle. The arrow is the long side.' },
-            ],
-          },
-        ],
-        summary: 'A **vector** is a move: so far along each axis. **Adding vectors** adds their parts, so the order does not matter. **A scalar multiple** stretches or flips an arrow along its own line. **The length** is Pythagoras on the parts.',
-        ownWords: 'Explain to someone who missed the lecture why east-then-north and north-then-east end in the same place.',
-      },
-    },
-    {
+    };
+
+const BUILD_ADD: Beat = {
       kind: 'build', id: 'build-add', build: {
         id: 'c01-add', fn: 'add', title: 'Add two moves',
         brief: 'Write `add(v, w)`. It returns the vector you get by doing move `v`, then move `w`.\n\n`v` and `w` are lists of numbers of the same length, such as `[4, -1]` and `[-1, 3]`. Add matching parts.',
@@ -424,8 +282,27 @@ const ch: ChapterDef = {
         ],
         payoff: 'LANTERN adds burns with your `add` from now on.',
       },
-    },
-    {
+    };
+
+const BUILD_SCALE: Beat = {
+  kind: 'build', id: 'build-scale', build: {
+    id: 'c01-scale', fn: 'scale', title: 'More or less of one move',
+    brief: 'Write `scale(c, v)`. It returns the vector `v` stretched by the number `c`: multiply every part by `c`. A negative `c` flips it.',
+    starter: 'def scale(c, v):\n    """Return the vector v stretched by the number c."""\n    # multiply every part of v by c\n    return []\n',
+    fill: 'def scale(c, v):\n    """Return the vector v stretched by the number c."""\n    return [___ for x in v]\n',
+    solution: 'def scale(c, v):\n    """Return the vector v stretched by the number c."""\n    return [c * x for x in v]\n',
+    assemble: { lines: ['def scale(c, v):', '    """Return the vector v stretched by the number c."""', '    return [c * x for x in v]'], decoys: ['    return [c + x for x in v]'] },
+    tests: [
+      { name: '`scale(3, [2, 1])` is `[6, 3]`', args: [3, [2, 1]], expect: [6, 3] },
+      { name: 'a negative amount flips: `scale(-2, [2, 1])`', args: [-2, [2, 1]], expect: [-4, -2] },
+      { name: 'zero gives the zero vector', args: [0, [5, -7]], expect: [0, 0] },
+      { name: 'three parts: `scale(0.5, [2, 4, 6])`', args: [0.5, [2, 4, 6]], expect: [1, 2, 3] },
+    ],
+    payoff: 'The dials on the burn planner use your `scale` from now on.',
+  },
+};
+
+const BUILD_LENGTH: Beat = {
       kind: 'build', id: 'build-length', build: {
         id: 'c01-length', fn: 'length', title: 'How far is a move?',
         brief: 'Write `length(v)`. It returns the length of vector `v`: square each part, add them, take the square root. `math.sqrt` is available.',
@@ -439,7 +316,43 @@ const ch: ChapterDef = {
         ],
         payoff: 'The distance readouts use your `length` from now on.',
       },
-    },
+    };
+
+const ch: ChapterDef = {
+  id: 'c01',
+  act: 1,
+  num: 1,
+  title: 'Where is the beacon from here?',
+  subtitle: 'Vectors',
+  nodes: ['N01', 'N02'],
+  palette: 'default',
+  music: 'explore',
+  script: S,
+  inShort: 'How do I tell the ship where to go? Give it an arrow: so far across, so far up. Doing one arrow after another lands where the tip-to-tail chain ends, in either order.',
+  beats: [
+    { kind: 'scene', id: 'open', lines: S.open },
+    { kind: 'card', id: 'inshort', card: { kind: 'inshort', title: 'Where is the beacon from here?', body: 'How do I tell the ship where to go?\n\nGive it an arrow: **so far across, so far up**. Doing one arrow after another lands where the tip-to-tail chain ends, in either order.' } },
+    { kind: 'puzzle', id: 'p1', puzzle: p1 },
+    { kind: 'scene', id: 'debris', lines: S.debris },
+    { kind: 'puzzle', id: 'p2', puzzle: debris },
+    NAME_VECTOR,
+    { kind: 'scene', id: 'thruster', lines: S.thruster },
+    { kind: 'puzzle', id: 'p3', puzzle: scale },
+    NAME_SCALAR,
+    { kind: 'puzzle', id: 'p4', puzzle: p4 },
+    { kind: 'scene', id: 'knocks', lines: S.knocks },
+    { kind: 'puzzle', id: 'p5', puzzle: home },
+    NAME_LENGTH,
+    { kind: 'puzzle', id: 'p6', puzzle: p6 },
+    { kind: 'sayit', id: 'sayit', sayit },
+    { kind: 'doubt', id: 'd-flip', doubt: doubtFlip },
+    { kind: 'doubt', id: 'd-order', doubt: doubtOrder },
+    { kind: 'law', id: 'law', law },
+    { kind: 'compare', id: 'compare', compare },
+    { kind: 'card', id: 'why', card: { kind: 'why', title: 'Why it matters', body: 'Every game engine moves things with one line: `position += velocity * dt`. It adds a small arrow to a position, many times a second. The burn planner you just used does exactly that.\n\nData is arrows too: a 28 × 28 image is **one arrow with 784 parts**.', cue: 'When you see **“from here to there”**, think **end minus start**.' } },
+    BUILD_ADD,
+    BUILD_SCALE,
+    BUILD_LENGTH,
     { kind: 'scene', id: 'close', lines: S.close },
   ],
 };
