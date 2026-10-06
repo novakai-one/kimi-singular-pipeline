@@ -164,3 +164,18 @@ export async function until(f: () => boolean, ms = 90000): Promise<void> {
   const t0 = performance.now();
   while (!f() && performance.now() - t0 < ms) await new Promise((r) => setTimeout(r, 30));
 }
+
+/**
+ * A camera target that puts `target` beside the Law/Doubt panel instead of behind it: in the free right
+ * column on a wide screen (the panel sits in the centre), or in the top half on a narrow one (the panel
+ * moves to the bottom). The stage's FOV is 32° vertical.
+ */
+export function besidePanel(g: Game, target: readonly number[], distance: number, azimuth: number): V3 {
+  const w = g.stage.size.x, h = Math.max(1, g.stage.size.y);
+  const hh = distance * Math.tan((16 * Math.PI) / 180), hw = hh * (w / h);
+  if (w > 1180) {
+    const az = (azimuth * Math.PI) / 180, k = 0.64 * hw;
+    return [target[0] + k * Math.sin(az), target[1] - k * Math.cos(az), target[2]];
+  }
+  return [target[0], target[1], target[2] - 0.4 * hh];
+}

@@ -11,6 +11,7 @@ import { Slider } from '../../../ui/widgets';
 import { rint } from '../../../game/lawcheck';
 import { dot, norm, vadd, vscale, vsub } from '../../../math/la';
 import { PathLine, v3 } from './parts';
+import { besidePanel } from '../c06-volume/stage';
 import { closestTs, coeffsOut, fmt, footOnPlane, inPlaneDirs, lawCore, mustCross, num, planeEq, skewDist, along, type PlaneCase } from './logic';
 
 export const sayit: SayItDef = {
@@ -160,9 +161,9 @@ export const law: LawDef<PlaneCase> = {
   },
   cadetSlots: ['rel'],
   draw(g: Game, c: PlaneCase) {
-    void g.stage.view3D({ target: v3(c.x), distance: 16, azimuth: -55, elevation: 24, ms: 0, orbit: false });
+    void g.stage.view3D({ target: besidePanel(g, c.x, 22, -55), distance: 22, azimuth: -55, elevation: 24, ms: 0, orbit: false });
     const [a, b] = inPlaneDirs(c.n);
-    const pp = new PlanePatch(g.stage, v3(c.x), [0, 0, 1], { color: '#8fd3ff', size: 8, opacity: 0.12 });
+    const pp = new PlanePatch(g.stage, v3(c.x), [0, 0, 1], { color: '#8fd3ff', size: 5, opacity: 0.12 });
     pp.setSpan(v3(c.x), v3(a), v3(b));
     const u = vscale(c.n, 2 / norm(c.n));
     const lab = new Label(`${planeEq(c.n, c.k)}: the arrow reads ${num(dot(c.n, vsub(c.y, c.x)))}`, v3(vadd(c.x, [0, 0, -2.2])), { color: C.white, size: 16 });

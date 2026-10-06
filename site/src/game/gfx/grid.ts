@@ -98,10 +98,12 @@ export class Grid2D {
     this.collapseLine.object.visible = false;
     this.mesh.add(this.collapseLine.object);
     this.mesh.position.z = -0.002;
-    stage.tick(() => {
+    this.offTick = stage.tick(() => {
       const t = stage.target;
       mat.uniforms.uCenter.value.set(t.x, t.y);
     });
+    // removed with the world (clearWorld) or by dispose(): either way the per-frame callback goes too
+    this.mesh.userData.dispose = () => this.offTick();
     this.set(this.M);
   }
 
@@ -164,7 +166,10 @@ export class Grid2D {
     });
   }
 
+  private readonly offTick: () => void;
+
   dispose(): void {
+    this.offTick();
     this.collapseLine.dispose();
     this.mesh.geometry.dispose();
     this.mesh.material.dispose();

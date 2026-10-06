@@ -309,7 +309,7 @@
 .cmp-mine, .cmp-ilse { display: flex; flex-direction: column; gap: 10px; }
 .cmp-page p, .cmp-page li { font-size: 15.5px; line-height: 1.6; color: var(--ink-2); }
 .cmp-ilse { border-left: 1px solid var(--line); padding-left: 22px; }
-.brief.procedure { left: 50%; bottom: 84px; transform: translateX(-50%); width: min(820px, calc(100vw - 40px)); display: flex; flex-direction: column; gap: 10px; }
+.brief.procedure { left: 20px; bottom: 84px; width: min(600px, calc(100vw - 40px)); max-height: calc(100vh - 300px); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
 @media (max-width: 1180px) {
   .brief.doubt, .brief.law { left: 20px; right: 20px; top: auto; bottom: 74px; max-height: 50vh; }
   .cmp-cols { grid-template-columns: 1fr; }

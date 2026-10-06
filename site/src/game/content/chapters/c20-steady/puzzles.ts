@@ -165,7 +165,8 @@ export const p2: PuzzleDef = {
     const steps = d === 'commander'
       ? [{ prompt: '$\\mathbf q$ scaled so the three add to 300', answer: DRONES_STEADY }]
       : [
-        { prompt: '$\\mathbf q$ with $q_3 = 1$', answer: P2_Q1, mistakes: [[[1, 1, 1], 'Read the reduced rows: $q_1 - 2.5q_3 = 0$.']] as [number[], string][] },
+        { prompt: 'With $q_3 = 1$: $q_1 =$', answer: P2_Q1[0], mistakes: [[1, 'Read the first reduced row: $q_1 - 2.5q_3 = 0$.']] as [number, string][] },
+        { prompt: 'and $q_2 =$', answer: P2_Q1[1] },
         { prompt: '$\\mathbf q$ scaled so the three add to 300', answer: DRONES_STEADY, mistakes: [[[0.5, 0.3, 0.2], 'Those are the shares. Scale to 300 drones.'], [[250, 150, 100], 'They add to 500. Scale so they add to 300.']] as [number[], string][] },
       ];
     const ws = new StepWorksheet(p, { steps, mount: p.dock(), onDone: () => { typed = true; sg(p, 1); check(); } });

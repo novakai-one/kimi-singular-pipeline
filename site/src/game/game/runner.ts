@@ -49,6 +49,8 @@ export class Runner {
     this.abortFns.clear();
     this.g.dialogue.abort();
     this.teardownPuzzle();
+    // an interrupted cinematic's objects (and the per-frame callbacks they own) go with it
+    this.g.stage.clearWorld();
     this.g.ui.panel.replaceChildren();
     this.g.ui.clearScene();
     this.hud.clearControls();

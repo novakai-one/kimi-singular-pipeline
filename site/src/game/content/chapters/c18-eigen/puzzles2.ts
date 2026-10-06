@@ -25,7 +25,7 @@ const det3 = (M: Mat) => M[0][0] * (M[1][1] * M[2][2] - M[1][2] * M[2][1]) - M[0
 export const p5: PuzzleDef = {
   id: 'c18-p5',
   title: 'What are the stretches of a 3 × 3, by hand?',
-  goal: `By hand: the characteristic equation of $A = ${texM(P5_A)}$, its eigenvalues and eigenvectors, the two checks, and a triangular one read off its diagonal.`,
+  goal: 'By hand: the characteristic equation of $A$ (in the readout), its eigenvalues and eigenvectors, the two checks, and a triangular matrix read off its diagonal.',
   subgoals: ['The characteristic equation', 'Eigenvalues and eigenvectors', 'Check: the trace and the determinant', 'A triangular matrix'],
   hints: [
     'Expand $\\det(A - \\lambda I)$ along the first row: only the $2 - \\lambda$ survives, times the 2 × 2 block $\\begin{bmatrix} 3 - \\lambda & 4 \\\\ 4 & -3 - \\lambda \\end{bmatrix}$.',
@@ -37,7 +37,7 @@ export const p5: PuzzleDef = {
   onWin: S.p5Win,
   setup(p) {
     void p.g.stage.view3D({ target: [0, 0, 0], distance: 15, azimuth: -52, elevation: 24 });
-    const lat = new Lattice3D(p.g.stage, { extent: 3, opacity: 0.12 });
+    const lat = new Lattice3D(p.g.stage, { extent: 2, opacity: 0.1 });
     p.add(lat);
     // the three lines that hold, each with a unit arrow v and its image Av (revealed as the steps are solved)
     const parts = P5_VECS.map((v, i) => {
@@ -61,7 +61,9 @@ export const p5: PuzzleDef = {
       await animate(p.g.headless ? 1 : 700, (k) => q.img.setTo(v3(tip.map((x) => x * (1 + (P5_VALUES[i] - 1) * k)))), ease.out);
       sfx.snap();
     };
-    const r = p.readout('Checks');
+    const r = p.readout('By hand');
+    r.row('A', '$A$', `$${texM(P5_A)}$`);
+    r.row('U', 'the triangular one', `$${texM(P5_TRI)}$`);
     const paint = (k: number) => {
       r.row('tr', 'trace of $A$ (sum down the diagonal)', fmtN(trace(P5_A)));
       r.row('det', '$\\det A$', fmtN(det3(P5_A)));
@@ -78,7 +80,7 @@ export const p5: PuzzleDef = {
       { prompt: 'An eigenvector for $\\lambda = -5$ is $(0, 1, z)$: $z =$', answer: P5_VECS[2][2], mistakes: [[2, '$A + 5I$ has the row $(0, 8, 4)$: $8 + 4z = 0$.']] as [number, string][] },
       { prompt: 'Check: $\\lambda_1 + \\lambda_2 + \\lambda_3$ (the trace)', answer: P5_VALUES.reduce((a, b) => a + b, 0) },
       { prompt: 'Check: $\\lambda_1\\lambda_2\\lambda_3$ ($\\det A$)', answer: P5_VALUES.reduce((a, b) => a * b, 1), mistakes: [[50, 'One of the three is negative.']] as [number, string][] },
-      { prompt: `Triangular: the eigenvalues of $${texM(P5_TRI)}$, top to bottom`, answer: P5_TRI_VALUES },
+      { prompt: 'The triangular one (readout): its eigenvalues, top to bottom', answer: P5_TRI_VALUES },
     ];
     const watch = () => {
       const n = ws.el.querySelectorAll('.ws-row.ok').length;

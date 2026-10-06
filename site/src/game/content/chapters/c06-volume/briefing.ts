@@ -9,6 +9,7 @@ import { animate, ease } from '../../../core/tween';
 import { VectorHandle } from '../../../kit/handle';
 import { rint } from '../../../game/lawcheck';
 import { StrutBox } from './crystal';
+import { besidePanel } from './stage';
 import { P1_U0, P1_V, P1_W0, boxVol, fmt, lawCore, leanLoses, num, swapFlips, triple, type CopCase } from './logic';
 
 const v3 = (v: readonly number[]): V3 => [v[0], v[1], v[2] ?? 0];
@@ -135,7 +136,7 @@ export const law: LawDef<CopCase> = {
   cadetSlots: ['cond'],
   draw(g: Game, c: CopCase) {
     const L = Math.max(2, ...[c.u, c.v, c.w].map((x) => Math.hypot(x[0], x[1], x[2])));
-    void g.stage.view3D({ target: [0, 0, 0.8], distance: 4.2 * L, azimuth: -58, elevation: 24, ms: 0, orbit: false });
+    void g.stage.view3D({ target: besidePanel(g, [0, 0, 0.8], 6 * L, -58), distance: 6 * L, azimuth: -58, elevation: 24, ms: 0, orbit: false });
     const t = triple(c.u, c.v, c.w);
     const box = new Parallelepiped(g.stage, v3(c.v), v3(c.w), v3(c.u), { color: t < -1e-9 ? C.orange : C.result, opacity: 0.16 });
     const lab = new Label(`$\\mathbf u\\cdot(\\mathbf v\\times\\mathbf w) = ${num(t).replace('−', '-')}$`, [0, 0, -0.6 * L], { color: C.white, size: 18 });

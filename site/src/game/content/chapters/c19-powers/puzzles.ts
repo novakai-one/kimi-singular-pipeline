@@ -319,7 +319,8 @@ export const p2: PuzzleDef = {
       submitTiles = submit;
       tiles = new TileOrder(p, { tiles: P2_TILES, decoys: P2_DECOYS, mount: box, title: 'Why A^k = P D^k P⁻¹: put the reason in order', submitLabel: 'Check the order', onSubmit: submit });
     }
-    p.dock().append(h('div', { class: 'a7-kick' }, 'Fifty pulses on the rail'), strip.el, h('div', { class: 'a7-btns' }, button('Cancel the middle pairs', () => void cancel(p.g.headless ? 1 : 520), { cls: 'primary small' })), box, msgEl);
+    r.el.append(h('div', { class: 'a7-kick' }, 'Fifty pulses on the rail'), strip.el, h('div', { class: 'a7-btns' }, button('Cancel the middle pairs', () => void cancel(p.g.headless ? 1 : 520), { cls: 'primary small' })));
+    p.dock().append(box, msgEl);
     msg(d === 'cadet' ? 'Press **Cancel the middle pairs** and watch what is left.' : 'Cancel the middle, and show where the formula comes from.');
     const derive = async (fast: boolean) => {
       if (ws) { if (fast) ws.solve(); else await ws.showMe(380); }
