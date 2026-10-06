@@ -19,7 +19,7 @@ import { LineHunt } from '../c18-eigen/parts';
 import { Surface, ptag, tag, v3 } from './act9';
 import {
   P1_DECOYS, P1_NONSYM, P1_NONSYM_LINES, P1_ORDER, P1_S, P1_TILES, P2_S, P3_BOWL, P3_SADDLE, P4_S,
-  RIM, SHAPE_WORD, fmt2, fmtN, fmtV, formIn, lineDeg, lines2, p2Won, p3EscapeWon, p3SettleWon, rad, randSym2,
+  RIM, SHAPE_WORD, fmt2, fmtN, fmtV, formIn, lineDeg, lines2, p2Zero, p3EscapeWon, p3SettleWon, rad, randSym2,
   shapeOf, symEig, texM, type Shape,
 } from './logic';
 import { S } from './script';
@@ -206,7 +206,7 @@ export const p2: PuzzleDef = {
   subgoals: ['Turn the grid until the mixed term is 0', 'The matrix of the energy, and its eigenvalues'],
   hints: [
     'The readout writes $E$ in the turned grid. Watch the middle number, the $uv$ term, as you turn.',
-    'The surface is longest along a diagonal. Line $\\mathbf u$ up with it.',
+    'The surface climbs steepest along one diagonal and most gently along the other. Turn the grid until its axes lie along them.',
     'Turn to 45°: $E = 3u^2 + v^2$. The matrix of $E$ is $\\begin{bmatrix} 2 & 1 \\\\ 1 & 2 \\end{bmatrix}$ (the $2xy$ split in half), with eigenvalues 3 and 1.',
   ],
   par: 3,
@@ -218,7 +218,6 @@ export const p2: PuzzleDef = {
     const surf = new Surface(p, { S: P2_S, theta: rad(10), gridAxes: true });
     surf.showAxes(d === 'cadet');
     let theta = 10;
-    const tol = d === 'cadet' ? 2.5 : d === 'navigator' ? 1 : 0.5;
     const step = d === 'cadet' ? 5 : d === 'navigator' ? 1 : 0.5;
     const ua = new Arrow([0, 0, 0.01], [1, 0, 0.01], { color: C.accent, width: 0.045, label: '$\\mathbf u$' });
     const va = new Arrow([0, 0, 0.01], [0, 1, 0.01], { color: C.accent, width: 0.045, label: '$\\mathbf v$', opacity: 0.8 });
@@ -228,7 +227,7 @@ export const p2: PuzzleDef = {
     const done = [false, d === 'cadet'];
     let won = false;
     const check = () => {
-      if (p2Won(theta, tol)) { if (!done[0]) { done[0] = true; p.subgoal(0); sfx.snap(); msg.say(`No mixed term: $E = ${fmtN(formIn(P2_S, rad(theta)).a)}u^2 + ${fmtN(formIn(P2_S, rad(theta)).c)}v^2$.`, 'good'); } }
+      if (p2Zero(theta)) { if (!done[0]) { done[0] = true; p.subgoal(0); sfx.snap(); msg.say(`No mixed term: $E = ${fmtN(formIn(P2_S, rad(theta)).a)}u^2 + ${fmtN(formIn(P2_S, rad(theta)).c)}v^2$.`, 'good'); } }
       if (done[1]) p.subgoal(1);
       if (done[0] && done[1] && !won) { won = true; sfx.success(); p.win(); }
     };
@@ -238,7 +237,7 @@ export const p2: PuzzleDef = {
       ua.setTo([1.5 * Math.cos(t), 1.5 * Math.sin(t), 0.01]);
       va.setTo([-1.5 * Math.sin(t), 1.5 * Math.cos(t), 0.01]);
       const f = formIn(P2_S, t);
-      const zero = Math.abs(f.b) < 0.02;
+      const zero = p2Zero(theta);
       r.row('t', 'grid turned by', `${fmtN(Math.round(theta * 10) / 10)}°`, C.accent);
       r.row('e', '$E$', `$${fmt2(f.a)}u^2 ${f.b < 0 ? '-' : '+'} {\\color{${zero ? C.good : C.orange}}${fmt2(Math.abs(f.b))}}\\,uv + ${fmt2(f.c)}v^2$`);
       r.row('b', 'mixed term', fmt2(f.b), zero ? C.good : C.orange);
@@ -249,7 +248,7 @@ export const p2: PuzzleDef = {
     let ws: StepWorksheet | null = null;
     if (d !== 'cadet') {
       ws = new StepWorksheet(p, {
-        title: d === 'navigator' ? 'The form as a matrix · each step is checked' : 'The form as a matrix · only the answer is checked',
+        title: d === 'navigator' ? 'The energy as a matrix · each step is checked' : 'The energy as a matrix · only the answer is checked',
         steps: [
           { prompt: 'The symmetric matrix of $2x^2 + 2xy + 2y^2$', answer: P2_S, mistakes: [[[[2, 2], [0, 2]], 'Split the $2xy$ in half: 1 above the diagonal and 1 below.'], [[[2, 2], [2, 2]], 'Split the $2xy$ in half: each off-diagonal entry is 1.']] },
           { prompt: 'Its eigenvalues, larger first', answer: [3, 1] },
@@ -308,10 +307,12 @@ export const p3: PuzzleDef = {
     const paint = () => {
       const M = stage === 'saddle' ? P3_SADDLE : P3_BOWL;
       const e = symEig(M);
-      r.row('m', '$S$', `$${texM(M)}$`);
-      if (classified && (d !== 'navigator' || stage === 'saddle' || bowlTyped)) r.row('l', 'eigenvalues', e.values.map(fmtN).join(' and '), C.result);
+      // panel four's matrix, eigenvalues and shape are what its worksheet asks for: hidden until it is done
+      const hideBowl = stage === 'bowl' && !bowlTyped;
+      r.row('m', '$S$', hideBowl ? '?' : `$${texM(M)}$`);
+      if (classified && !hideBowl) r.row('l', 'eigenvalues', e.values.map(fmtN).join(' and '), C.result);
       else r.row('l', 'eigenvalues', '?');
-      r.row('s', 'shape', classified ? SHAPE_WORD[shapeOf(M)] : '?');
+      r.row('s', 'shape', classified && !hideBowl ? SHAPE_WORD[shapeOf(M)] : '?');
     };
     // the probe's start: a knob on the floor
     const knob = new Knob(p, [0.9, 1.0, 0.02], { color: C.result, size: 0.08, planar: true, constrain: (q) => { const l = Math.hypot(q.x, q.y); const s = l > RIM * 0.85 ? (RIM * 0.85) / l : 1; q.set(q.x * s, q.y * s, 0.02); return q; }, onMove: (x) => surf.place(x), countMoves: true });

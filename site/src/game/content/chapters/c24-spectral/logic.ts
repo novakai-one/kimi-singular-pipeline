@@ -132,6 +132,8 @@ export const p2Won = (thetaDeg: number, tolDeg: number): boolean => {
   const m = ((thetaDeg % 90) + 90) % 90;
   return Math.abs(m - 45) <= tolDeg;
 };
+/** The readout's zero and the win: the uv term of E in a grid turned by θ is 0 to two places (only 45°, 135°, … on the slider). */
+export const p2Zero = (thetaDeg: number): boolean => Math.abs(formIn(P2_S, rad(thetaDeg)).b) < 0.02;
 
 // ------------------------------------------------------------------ p3 · bowl or saddle
 
@@ -207,7 +209,8 @@ export const AXES: { dir: Vec; I: number; name: string }[] = (() => {
 })();
 export const SPIN_RATE = 0.05;      // rad/s
 export const SPIN_MINUTES = 10;
-export const HOLD_DEG = 10;
+/** Held: ω stays within this of the chosen axis. An exact largest or smallest axis drifts under 1°; an axis about 1° off one drifts 2.5° or more. */
+export const HOLD_DEG = 2.5;
 export const KICK = 0.01;           // a debris strike: 1% of the spin rate, across the axis
 
 type Q4 = [number, number, number, number];

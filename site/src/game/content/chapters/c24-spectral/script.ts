@@ -59,7 +59,7 @@ export const S: Record<string, Line[]> = {
     { who: 'bram', text: 'Symmetric. So she has three axes at right angles. Pick one to spin about, Nav, and hold it ten minutes.' },
   ],
   p6Win: [
-    { who: 'lantern', text: 'Ten minutes. The spin axis stayed within one degree.' },
+    { who: 'lantern', text: 'Ten minutes. The spin axis held.' },
     { who: 'wren', text: 'Steady. I can dock drones on that.' },
   ],
   p6Flip: [

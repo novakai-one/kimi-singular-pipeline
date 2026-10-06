@@ -160,7 +160,7 @@ export const doubtCircle: DoubtDef = {
 export const doubtReal: DoubtDef = {
   id: 'c24-d-real', who: 'bram', isTrue: false,
   claim: 'Every matrix of real numbers has real eigenvalues. Symmetric or not, makes no difference.',
-  reason: 'A turn keeps no real line, so it has no real eigenvalue: $\\begin{bmatrix} 0 & -1 \\\\ 1 & 0 \\end{bmatrix}$ gives $\\lambda^2 + 1 = 0$, so $\\lambda = \\pm i$. Symmetric matrices always have real eigenvalues; other matrices need not.',
+  reason: 'A quarter turn keeps no real line, so it has no real eigenvalue: $\\begin{bmatrix} 0 & -1 \\\\ 1 & 0 \\end{bmatrix}$ gives $\\lambda^2 + 1 = 0$, so $\\lambda = \\pm i$. Symmetric matrices always have real eigenvalues; other matrices need not.',
   goal: 'Drag the grid arrows to set a matrix. The sweep lights every line it keeps. **Challenge it** (a real matrix with no real eigenvalue) or **Back it**.',
   view: '2d',
   setup(p) {

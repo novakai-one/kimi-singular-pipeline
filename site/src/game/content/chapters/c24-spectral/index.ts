@@ -67,7 +67,7 @@ const NAME_SPECDEC: Beat = {
   },
 };
 
-const WHY = 'Near a minimum, the loss of a neural network is close to a quadratic form, and its matrix of second derivatives is symmetric. **Positive definite** means a true minimum: a bowl. **Indefinite** means a saddle, where training crawls, because the downhill direction is shallow.\n\nThe spread of a cloud of data is described by a symmetric matrix too (Chapter 26), so its main directions are always at right angles.\n\nThe brace planner, next, splits the stern’s stress matrix into its three brace lines with your `sym_eigen`.';
+const WHY = 'Where the slope is zero, the loss of a neural network is close to a quadratic form, and its matrix of second derivatives is symmetric. **Positive definite** means a minimum: a bowl. **Indefinite** means a saddle, where training crawls, because the downhill direction is shallow.\n\nThe spread of a cloud of data is described by a symmetric matrix too (Chapter 26), so its main directions are always at right angles.\n\nThe brace planner, next, splits the stern’s stress matrix into its three brace lines with your `sym_eigen`.';
 
 const ch: ChapterDef = {
   id: 'c24',

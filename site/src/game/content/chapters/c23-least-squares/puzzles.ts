@@ -7,7 +7,7 @@ import { Label } from '../../../gfx/label';
 import { Arrow } from '../../../gfx/arrow';
 import { FitLine } from '../../../kit/data';
 import { Knob } from '../../../kit/geom';
-import { StepWorksheet, TileOrder } from '../../../kit/steps';
+import { StepWorksheet, TileOrder, type Step } from '../../../kit/steps';
 import { h, button } from '../../../ui/ui';
 import { C } from '../../../core/theme';
 import { sfx } from '../../../audio/sfx';
@@ -150,7 +150,7 @@ export const p2: PuzzleDef = {
     let ws: StepWorksheet | null = null;
     let tiles: TileOrder | null = null;
     // Navigator: the player builds the normal equations from the right angle, one column at a time
-    const STEPS = [
+    const STEPS: Step[] = [
       { prompt: 'The leftover $\\mathbf b - A\\mathbf x$, with $\\mathbf x = (c_0, c_1)$, reads 0 against $(1, 1, 1)$: $\\_\\,c_0 + \\_\\,c_1 = \\_$', answer: [[...P2_ATA[0], P2_ATB[0]]],
         mistakes: [[[[3, 3, 0]], 'The 0 is the whole leftover read against $(1, 1, 1)$. Move the $\\mathbf b$ part to the right: $1 + 2 + 4$.'], [[[-3, -3, -7]], 'Right equation, times $-1$. Write it with positive numbers.']] },
       { prompt: 'It reads 0 against $(0, 1, 2)$: $\\_\\,c_0 + \\_\\,c_1 = \\_$', answer: [[...P2_ATA[1], P2_ATB[1]]],

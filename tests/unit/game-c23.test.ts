@@ -36,6 +36,27 @@ test('p2 [D]: b = (1, 2, 4); AᵀA = [[3, 3], [3, 5]], Aᵀb = (7, 10), x̂ = (5
   assert.ok(L.p2Won([5 / 6, 3 / 2]) && !L.p2Won([1, 1.5]) && !L.p2Won([2, 0]));
   // the drag snaps weights to sixths: 5/6 and 9/6
   close(Math.round((5 / 6) * 6) / 6, 5 / 6); close(Math.round(1.5 * 6) / 6, 1.5);
+  // Navigator's worksheet: the leftover read against each column gives one row of AᵀA x = Aᵀb
+  const rowOf = (w: number[]) => [dot(w, L.P2_ONES), dot(w, L.P2_T), dot(L.P2_B, w)];
+  assert.deepEqual(rowOf(L.P2_ONES), [...L.P2_ATA[0], L.P2_ATB[0]]);
+  assert.deepEqual([...L.P2_ATA[0], L.P2_ATB[0]], [3, 3, 7]);
+  assert.deepEqual(rowOf(L.P2_T), [...L.P2_ATA[1], L.P2_ATB[1]]);
+  assert.deepEqual([...L.P2_ATA[1], L.P2_ATB[1]], [3, 5, 10]);
+  // for every x, the leftover read against a column is (that row's right side) − (that row) · x
+  for (const x of [[0, 0], [1, 2], [-0.5, 3]]) {
+    const left = matVec(L.P2_A, x).map((v, i) => L.P2_B[i] - v);
+    close(dot(left, L.P2_ONES), 7 - 3 * x[0] - 3 * x[1]);
+    close(dot(left, L.P2_T), 10 - 3 * x[0] - 5 * x[1]);
+  }
+});
+
+test('p1 hint: at the best line the signed leftovers balance; the squares above and below do not', () => {
+  const r = L.P1_PTS.map(([t, y]) => y - L.P1_FIT[0] - L.P1_FIT[1] * t);
+  const above = r.filter((x) => x > 0), below = r.filter((x) => x < 0);
+  close(above.reduce((s, x) => s + x, 0), -below.reduce((s, x) => s + x, 0));
+  close(above.reduce((s, x) => s + x * x, 0), 0.21); close(below.reduce((s, x) => s + x * x, 0), 0.49);
+  // every line through the average reading (1.5, 2.25) balances the signed leftovers
+  for (const c1 of [-1, 0, 0.5, 2]) { const c0 = 2.25 - 1.5 * c1; close(L.P1_PTS.reduce((s, [t, y]) => s + y - c0 - c1 * t, 0), 0); }
 });
 
 test('p3 [H]: AᵀA = [[5, 10], [10, 30]], Aᵀb = (15, 38), y = 1.4 + 0.8t, area 3.6', () => {
@@ -55,6 +76,39 @@ test('p4: best line 411.98 − 1.006t reaches 380 at hour 31.8; the degree-5 cur
   assert.ok(!L.p4Won(L.P4_FIT[0], L.P4_FIT[1], 10, 0.5), 'the wrong hour');
   assert.ok(!L.p4Won(412, -0.5, 64, 0.5), 'a line that is not the best fit');
   close(L.hourAt(L.P4_FIT[0], L.P4_FIT[1]), L.P4_HOUR);
+  close(L.P4_BEST, 0.0728, 1e-4);
+  // the forecast is judged on the player's own line: a near-best line crossing 380 at hour 31.93 wins at 31.9
+  const y24 = L.P4_FIT[0] + 24 * L.P4_FIT[1] + 0.1, c1 = (y24 - L.P4_FIT[0]) / 24;
+  const own = L.hourAt(L.P4_FIT[0], c1);
+  assert.ok(Math.abs(own - 31.93) < 0.01, `${own}`);
+  assert.ok(L.p4Won(L.P4_FIT[0], c1, 31.9, 0.1) && !L.p4Won(L.P4_FIT[0], c1, 31.7, 0.1));
+  // a line far from the best fit loses even with the marker on its own crossing
+  assert.ok(!L.p4Won(412, -0.5, 64, 0.5) && !L.p4Won(410, -1, 30, 0.1));
+});
+
+test('p4: the line snaps onto the best fit within 0.2 m at both handles (hours 0 and 24)', () => {
+  assert.deepEqual(L.P4_HANDLE_T, [0, 24]);
+  const at = (d0: number, d24: number): [number, number] => { const c0 = L.P4_FIT[0] + d0; return [c0, (L.P4_FIT[0] + 24 * L.P4_FIT[1] + d24 - c0) / 24]; };
+  assert.ok(L.p4Near(...at(0, 0), 0.2) && L.p4Near(...at(0.19, -0.19), 0.2) && L.p4Near(...at(-0.15, 0.15), 0.2));
+  assert.ok(!L.p4Near(...at(0.25, 0), 0.2) && !L.p4Near(...at(0, -0.25), 0.2));
+  assert.ok(!L.p4Near(412, -0.5, 0.2), 'the starting slope');
+  // the 1% window lies inside the snap box: every line within 1% of the smallest area snaps
+  let inside = 0;
+  for (let i = 0; i < 400; i++) {
+    const a = (i / 400) * 2 * Math.PI;
+    for (const s of [0.002, 0.005, 0.01, 0.014, 0.02]) {
+      const [c0, c1] = at(s * Math.cos(a), 10 * s * Math.sin(a));
+      if (L.area(L.P4_PTS, c0, c1) <= L.P4_BEST * 1.01) { inside++; assert.ok(L.p4Near(c0, c1, 0.2)); }
+    }
+  }
+  assert.ok(inside > 400 && inside < 2000, `${inside}`);
+});
+
+test('lineTex: the sign comes from the rounded slope', () => {
+  assert.equal(L.lineTex(4, -1.5), '$y = 4.00 - 1.50t$');
+  assert.equal(L.lineTex(0.9, 0.9), '$y = 0.90 + 0.90t$');
+  assert.equal(L.lineTex(2.5, -1e-17), '$y = 2.50 + 0t$');
+  assert.equal(L.lineTex(411.98, -1.0057, 3), '$y = 411.98 - 1.006t$');
 });
 
 test('TT17 / p5 [SP]: the least-squares fit of the twenty pairs returns C exactly; third column (1, 1, 2.004)', () => {
@@ -114,6 +168,9 @@ test('Doubt (F) through as many points: collinear readings agree; the Shake’s 
 test('Doubt (F) perpendicular distances: the two lines differ for the edges and most Shake cases', () => {
   assert.ok(L.perpHolds([[0, 1], [1, 2], [2, 3], [3, 4]]));
   assert.ok(!L.perpHolds(L.P1_PTS) && !L.perpHolds([[0, 0], [1, 3], [2, 1], [3, 4]]));
+  // the two lines also agree for readings off any one line, when the best line is level and they spread wider across
+  const LEVEL = [[0, 2], [1, 3], [2, 3], [3, 2]];
+  assert.ok(veq(L.fitLine(LEVEL), [2.5, 0]) && L.throughCount(LEVEL, 2.5, 0) === 0 && L.perpHolds(LEVEL));
   const r = rng(29);
   let broke = 0;
   for (let i = 0; i < 20; i++) if (!L.perpHolds(L.randPts(r, 4, 2))) broke++;

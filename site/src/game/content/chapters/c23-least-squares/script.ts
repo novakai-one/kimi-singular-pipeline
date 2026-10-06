@@ -26,8 +26,8 @@ export const S: Record<string, Line[]> = {
   ],
   p3Win: [{ who: 'lantern', text: 'Line $y = 1.4 + 0.8t$. Total square area 3.6.', say: 'Line y equals one point four plus zero point eight t. Total square area three point six.' }],
   p4Intro: [
-    { who: 'lantern', text: 'The stern sheet is drifting away from its anchor point. Six hourly readings: 412.0 down to 406.9 metres.', say: 'The stern sheet is drifting away from its anchor point. Six hourly readings: four hundred and twelve down to four hundred and six point nine metres.' },
-    { who: 'wren', text: 'When does it pass 380? That’s where the tether rig stops reaching.' },
+    { who: 'lantern', text: 'The stern sheet is drifting back toward its anchor point. Six hourly readings of its distance: 412.0 down to 406.9 metres.', say: 'The stern sheet is drifting back toward its anchor point. Six hourly readings of its distance: four hundred and twelve down to four hundred and six point nine metres.' },
+    { who: 'wren', text: 'When does it get inside 380? That’s where the tether rig can reach it.' },
   ],
   p4Win: [
     { who: 'lantern', text: 'Forecast with the best line: hour 31.8.', say: 'Forecast with the best line: hour thirty one point eight.' },

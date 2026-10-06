@@ -32,6 +32,6 @@ export const buildLeastSquares: BuildDef = {
   tests: LS_TESTS,
   swarm: { gen: (r, d) => lsCase(r, d), crew: (A, b) => crew.least_squares(A as Mat, b as Vec), tol: 1e-6 },
   docPrompt: 'Why does solving Aᵀ A x = Aᵀ b give the weights that are wrong by the least? Write it the way you would tell Bram.',
-  ilseNote: 'least_squares(A, b): the nearest point of the column space to b is A x̂, and its leftover is perpendicular to every column, so Aᵀ(b − A x̂) = 0. I wrote it that way for years. For readings that nearly repeat each other, QR keeps twice the digits.',
+  ilseNote: 'least_squares(A, b): the nearest point of the column space to b is A x̂, and its leftover is perpendicular to every column, so Aᵀ(b − A x̂) = 0. I wrote it that way for years. When the columns point almost the same way, QR loses only about half as many digits.',
   payoff: 'The Collapse fit, and the plot of what it leaves over, run on your `least_squares`.',
 };

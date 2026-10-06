@@ -77,7 +77,7 @@ export const p5: PuzzleDef = {
     const fitRow = async (i: number) => {
       if (!setA || !setB) { sfx.miss(); msg.textContent = 'Set up A and b first.'; return; }
       p.move();
-      if (d === 'commander' && method !== 'qr') { sfx.miss(); msg.className = 'a8-msg bad'; msg.textContent = 'Commander: solve through QR. Forming AᵀA squares how much errors in b can grow.'; return; }
+      if (d === 'commander' && method !== 'qr') { sfx.miss(); msg.className = 'a8-msg bad'; msg.textContent = 'Commander: solve through QR. Forming AᵀA squares how much the columns can magnify rounding.'; return; }
       const b = col(Y, i);
       F[i] = method === 'qr' ? qrSolve(X, b) : leastSquares(X, b)!;
       sfx.snap();
@@ -195,17 +195,21 @@ export const p6: PuzzleDef = {
     // play the leftover as sound: a playhead runs across; every tall bar taps
     const head = new FatLine(p.g.stage, [[sx(0), -0.4, 0.02], [sx(0), 2.6, 0.02]], { color: C.white, width: 1.5, opacity: 0 });
     p.add(head);
-    let playing = false;
+    let playing = false, gone = false;
+    p.onDispose(() => { gone = true; });
     const play = async () => {
-      if (playing) return;
+      if (playing || gone) return;
       playing = true;
       p.move();
       head.setOpacity(0.7);
       for (let i = 0; i < 60; i++) {
+        // the player may move on mid-playback: stop drawing on (and tapping from) a torn-down puzzle
+        if (gone) break;
         head.setPoints([[sampleX(i), -0.4, 0.02], [sampleX(i), 2.6, 0.02]]);
         if (Math.abs(LEFTOVER[i]) > 0.006) sfx.tick(KNOCK[i - KNOCK_START] === 'L' ? 1 : 4);
         await wait(p.g.headless ? 1 : 110);
       }
+      if (gone) return;
       head.setOpacity(0);
       playing = false;
     };
@@ -264,7 +268,7 @@ export const p7: PuzzleDef = {
     const pick = (which: 'ne' | 'qr') => {
       p.move();
       if (!flags[1] || !flags[2]) { msg.textContent = 'Solve both ways first.'; sfx.miss(); return; }
-      if (which === 'qr') { msg.className = 'a8-msg good'; msg.textContent = 'QR. It never forms AᵀA, so it keeps about twice the digits.'; tick(3); }
+      if (which === 'qr') { msg.className = 'a8-msg good'; msg.textContent = 'QR. It never forms AᵀA, so it loses only about half as many digits.'; tick(3); }
       else { msg.className = 'a8-msg bad'; msg.textContent = 'The normal equations are off in the sixth digit: forming AᵀA squared how much the near-parallel columns magnify rounding.'; sfx.miss(); }
     };
     r.row('ex', 'hour-300 exact $c_0$', P7_EXACT[0].toFixed(6).replace('-', '−'));

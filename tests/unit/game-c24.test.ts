@@ -38,6 +38,9 @@ test('p2: the mixed term of 2x² + 2xy + 2y² vanishes at 45° (3u² + v²), not
   assert.ok(Math.abs(L.formIn(L.P2_S, L.rad(30)).b) > 0.9);
   assert.ok(L.p2Won(45, 0.5) && L.p2Won(135, 0.5) && L.p2Won(45.4, 0.5));
   assert.ok(!L.p2Won(30, 2.5) && !L.p2Won(47, 1));
+  // the win and the readout's green 0 are one test: on 1° and 0.5° slider steps only 45° (or 135°) wins
+  assert.ok(L.p2Zero(45) && L.p2Zero(135));
+  for (const t of [44, 46, 44.5, 45.5, 40, 50]) assert.ok(!L.p2Zero(t), `no win at ${t}°`);
   // the form's matrix splits the cross term in half
   assert.ok(meq(L.P2_S, [[2, 1], [1, 2]]));
 });
@@ -87,6 +90,10 @@ test('p6: the Lantern holds about the largest and smallest axes; the middle one 
   assert.ok(!mid.held && mid.flipAt !== null && mid.flipAt > 30 && mid.flipAt < 400, `the Flip at ${mid.flipAt}`);
   assert.ok(mid.maxDrift > 170, 'end over end');
   assert.ok(!L.flipWon([1, 0, 0]), 'not a principal axis');
+  // only (close to) the largest or smallest axis holds: off-axis inputs that drift 5–9° do not count as held
+  for (const a of [[1, 1, 0.1], [1.1, 1, 0], [1, 0.9, 0], [0.05, 0, 1]]) assert.ok(!L.flipWon(a), `${a} is not a principal axis`);
+  for (const a of [[0, 0, 1], [1, 1, 0]]) assert.ok(L.spin(a, { every: 60 }).maxDrift < 1, `${a} drifts under 1°`);
+  assert.ok(!said(S.p6Win).includes('one degree'), 'the win line claims no drift the simulation does not guarantee');
   assert.ok(!L.flipWon([0, 0, 0]));
 });
 
