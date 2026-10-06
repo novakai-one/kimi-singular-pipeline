@@ -115,11 +115,11 @@ const homeAfter4 = (M: Mat): boolean => meq(mpow(M, 4), identity(M.length), 1e-9
 /** The five measurements of R (in the Anchor's grid) and T = P R P⁻¹ (in the ship's grid). */
 export function measures(A: Mat = R2, B: Mat = T): Measure[] {
   return [
-    { id: 'det', label: 'Area scale (determinant)', a: fmtN(det(A)), b: fmtN(det(B)), same: Math.abs(det(A) - det(B)) < 1e-9 },
-    { id: 'diag', label: 'Sum down the diagonal', a: fmtN(diagSum(A)), b: fmtN(diagSum(B)), same: Math.abs(diagSum(A) - diagSum(B)) < 1e-9 },
-    { id: 'four', label: 'Four pulses bring every point home', a: homeAfter4(A) ? 'yes' : 'no', b: homeAfter4(B) ? 'yes' : 'no', same: homeAfter4(A) === homeAfter4(B) },
-    { id: 'entries', label: 'The four entries', a: `$${texSmall(A)}$`, b: `$${texSmall(B)}$`, same: meq(A, B, 1e-9) },
-    { id: 'land', label: 'Where $(1, 0)$ lands', a: fmtV(matVec(A, [1, 0])), b: fmtV(matVec(B, [1, 0])), same: veq(matVec(A, [1, 0]), matVec(B, [1, 0]), 1e-9) },
+    { id: 'det', label: 'Area scale', a: fmtN(det(A)), b: fmtN(det(B)), same: Math.abs(det(A) - det(B)) < 1e-9 },
+    { id: 'diag', label: 'Diagonal sum', a: fmtN(diagSum(A)), b: fmtN(diagSum(B)), same: Math.abs(diagSum(A) - diagSum(B)) < 1e-9 },
+    { id: 'four', label: 'Home after four', a: homeAfter4(A) ? 'yes' : 'no', b: homeAfter4(B) ? 'yes' : 'no', same: homeAfter4(A) === homeAfter4(B) },
+    { id: 'entries', label: 'The entries', a: `$${texSmall(A)}$`, b: `$${texSmall(B)}$`, same: meq(A, B, 1e-9) },
+    { id: 'land', label: '$(1, 0)$ lands at', a: fmtV(matVec(A, [1, 0])), b: fmtV(matVec(B, [1, 0])), same: veq(matVec(A, [1, 0]), matVec(B, [1, 0]), 1e-9) },
   ];
 }
 /** The player's marks win when every measurement is marked and each mark matches. */

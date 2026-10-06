@@ -368,13 +368,10 @@ export class PlaneSet {
       const d = [-h.n[1], h.n[0]];
       const nn = h.n[1] >= 0 ? h.n : scale(h.n, -1);
       if (this.o.box) {
-        // inside a box: a fixed fraction of the way along the visible piece of the line
-        const seg = clipBox(p0, d, this.o.box);
-        if (seg) {
-          const f = [0.78, 0.8, 0.5][i % 3];
-          const w = add(add(seg[0], scale(sub(seg[1], seg[0]), f)), scale(nn, 0.42));
-          return [w[0], w[1], 0.05];
-        }
+        // inside a box: a fraction of the way along the visible piece of the line, clear of the
+        // labels of the rows before it (two lines leaving the box together must not stack labels)
+        const at = this.boxLabels(i);
+        if (at) return [at[0], at[1], 0.05];
       }
       const t = this.labelT.get(i) ?? [2.6, -2.6, 3.4][i % 3];
       const w = add(add(p0, scale(d, t)), scale(nn, 0.4));
@@ -384,6 +381,23 @@ export class PlaneSet {
     const [u, v] = planeFrame(h.n);
     const [a, b] = this.labelAB.get(i) ?? ([[0.72, 0.85], [-0.72, 0.85], [0.72, -0.85]][i % 3] as [number, number]);
     return this.v3(add(c, add(scale(u, a * this.half), scale(v, b * this.half))));
+  }
+
+  /** 2-D box mode: label spots for rows 0 … i, each the first candidate clear of the earlier ones. */
+  private boxLabels(i: number): number[] | null {
+    const box = this.o.box!;
+    const spots: (number[] | null)[] = [];
+    for (let j = 0; j <= i && j < this.rowsG.length; j++) {
+      const h = this.rowsG[j].shown;
+      const seg = h ? clipBox(projectTo(h, this.focus), [-h.n[1], h.n[0]], box) : null;
+      if (!h || !seg) { spots.push(null); continue; }
+      const nn = h.n[1] >= 0 ? h.n : scale(h.n, -1);
+      const cands = [[0.78, 0.8, 0.5][j % 3], 0.22, 0.62, 0.38, 0.9, 0.1];
+      const pos = (f: number) => add(add(seg[0], scale(sub(seg[1], seg[0]), f)), scale(nn, 0.42));
+      const clear = (w: number[]) => spots.every((q) => !q || Math.abs(q[0] - w[0]) > 1.7 || Math.abs(q[1] - w[1]) > 0.6);
+      spots.push(cands.map(pos).find(clear) ?? pos(cands[0]));
+    }
+    return spots[i] ?? null;
   }
 
   private uiBlocks(): DOMRect[] {

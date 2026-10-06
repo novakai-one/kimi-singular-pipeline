@@ -239,11 +239,11 @@ export class DialRig {
     this.arrows.forEach((a, i) => {
       const b = new Arrow(this.start, add3(this.start, a), { color: colors[i], width: 0.035, opacity: 0.85, label: `$${syms[i]}$` });
       this.base.push(b);
-      const c = new Arrow(this.start, this.start, { color: colors[i], width: 0.05, label: '', labelAt: 'mid' });
+      const c = new Arrow(this.start, this.start, { color: colors[i], width: 0.05, label: ' ', labelAt: 'mid' });
       this.chain.push(c);
       p.add(b, c);
     });
-    this.result = new Arrow(this.start, this.start, { color: C.result, width: 0.04, opacity: 0.95 });
+    this.result = new Arrow(this.start, this.start, { color: C.result, width: 0.032, opacity: 0.9, glow: 0.45 });
     this.tipDot = new Dot(this.start, { color: C.result, size: o.dims === 3 ? 0.13 : 0.12, glow: 2 });
     p.add(this.result, this.tipDot);
     this.gap = new Gap(p);
@@ -433,7 +433,7 @@ export class DialRig {
       this.chain[i].set(at, next);
       const vis = this.previewOn && on && Math.abs(k) > 1e-6 && Math.hypot(...a) > 1e-6;
       this.chain[i].setOpacity(vis ? 1 : 0);
-      this.chain[i].setLabel(vis ? `$${texScaled(k, syms[i])}$` : '');
+      this.chain[i].setLabel(vis ? `$${texScaled(k, syms[i])}$` : ' ');
       this.base[i].setOpacity(on && this.o.baseArrows !== false ? (this.previewOn ? 0.4 : 0.9) : 0);
       at = next;
     });

@@ -41,7 +41,8 @@
 .c17-order { font-size: 12px; color: var(--muted); }
 
 /* the measurement table (p6) */
-.c17-meas { display: grid; grid-template-columns: 1fr auto auto auto; gap: 6px 10px; align-items: center; font-size: 13.5px; }
+.c17-meas { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 6px 10px; align-items: center; font-size: 13.5px; }
+.c17-meas > .btn { justify-content: flex-start; text-align: left; padding: 4px 10px; font-size: 13px; }
 .c17-meas .h { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .c17-meas .v { font-family: var(--mono); font-size: 13px; text-align: center; min-width: 54px; }
 .c17-meas .v.cu { color: #ef9a5c; }

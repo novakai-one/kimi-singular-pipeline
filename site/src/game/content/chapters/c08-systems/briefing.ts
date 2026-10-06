@@ -39,7 +39,7 @@ export const doubtUnknowns: DoubtDef = {
   setup(p) {
     let rows: Aug = D1_START.map((r) => r.slice());
     const planes = new PlaneSet(p, { n: 3, rows, size: 7, focus: [0, 0, 0] });
-    void planes.frame({ distance: 22, azimuth: -60, elevation: 22 });
+    void planes.frame({ distance: 22, azimuth: -20, elevation: 20 }); // both starting planes slanted, and x + y + z = c planes too
     const r = p.readout('Two planes, three unknowns');
     const paint = () => r.row('m', 'Where they meet', meetWords(rows), C.result);
     const input = new MatrixInput({ rows: 2, cols: 4, values: rows, onChange: (m) => { rows = m; void planes.setRows(rows, 300); paint(); } });

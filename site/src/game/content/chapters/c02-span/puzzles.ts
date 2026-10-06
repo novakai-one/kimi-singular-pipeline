@@ -79,11 +79,11 @@ export const p1: PuzzleDef = {
     const gainFor = (kk: number) => {
       const d = Math.abs(P1_V[0] * kk - P1_V[1] * 2);
       const L = 2 * R * (Math.hypot(1, 2) + Math.hypot(2, kk)) * 0.6;
-      return 0.2 * Math.max(0.1, Math.min(1.1, Math.sqrt(Math.max(d * (2 * R) ** 2, L * 0.6) / (3 * (2 * R) ** 2))));
+      return 0.24 * Math.max(0.1, Math.min(0.55, Math.sqrt(Math.max(d * (2 * R) ** 2, L * 0.6) / (3 * (2 * R) ** 2))));
     };
     const place = (kk: number) => { glow.setArrows([to3(P1_V), to3(p1W(kk))]); glow.setGain(gainFor(kk)); };
     place(k);
-    glow.fill([[-R, R], [-R, R]], { step: [0.15, 0.15], spread: 1.6 });
+    glow.fill([[-R, R], [-R, R]], { step: [0.19, 0.19], spread: 1.6 });
     const v = new Arrow([0, 0, 0], to3(P1_V), { color: C.v, label: '$\\mathbf v$' });
     p.add(v);
     const r = p.readout('Two arrows');

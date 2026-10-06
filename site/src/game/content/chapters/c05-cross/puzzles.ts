@@ -291,7 +291,8 @@ export const p3: PuzzleDef = {
     const nA = new Arrow([0, 0, 0], v3(p3Answer(0.4)), { color: C.result, label: '$\\mathbf n$' });
     p.add(nA);
     const r = p.readout('Two equations');
-    r.eq('\\begin{aligned} \\mathbf n\\cdot\\cg{\\mathbf a} &= n_1 + 2n_2 = 0 \\\\ \\mathbf n\\cdot\\cr{\\mathbf b} &= n_2 + 3n_3 = 0 \\end{aligned}');
+    r.row('e1', '$\\mathbf n\\cdot\\mathbf a = 0$', '$n_1 + 2n_2 = 0$');
+    r.row('e2', '$\\mathbf n\\cdot\\mathbf b = 0$', '$n_2 + 3n_3 = 0$');
     const ga = new Gauge('reading against $\\mathbf a$', { max: 10 });
     const gb = new Gauge('reading against $\\mathbf b$', { max: 10 });
     addGauges(r, ga, gb);
