@@ -96,13 +96,14 @@ export async function install(g: Game): Promise<void> {
     const { mine, kept } = await job;
     sc.set.check();
     runOn.innerHTML = inline(mine ? 'Running on: **your** `rank`' : 'Running on: LANTERN backup');
-    void g.say(mine ? S.installMine : S.installBackup);
+    const said = g.say(mine ? S.installMine : S.installBackup);
     await wait(600);
     await fireScan(sc, 2200);
     sc.set.check();
     for (let j = 0; j < 3; j++) { counter.set(['kept', 'kept', 'flat'].slice(0, j + 1).concat(new Array(2 - j).fill(null)) as ('kept' | 'flat' | null)[]); sfx.tick(j); await wait(350); }
     counter.setNote(`Rank ${kept}, nullity ${3 - kept}: ${kept} + ${3 - kept} = 3.`);
     sfx.success();
+    await said; // the install line finishes before the next one opens
     await g.say(S.install);
     sc.set.check();
     panel.remove();

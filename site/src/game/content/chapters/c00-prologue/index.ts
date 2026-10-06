@@ -74,8 +74,8 @@ function ensureSet(g: Game, pulsed: boolean): Set0 {
   ship.object.position.set(...(pulsed ? apply(T, SHIP0) : SHIP0));
   ship.object.position.z = 0.3;
   ship.face([1, 0.75, 0]);
-  // after the pulse, thrusters two and four stay dark (a fresh ship starts at full power)
-  if (pulsed) void ship.ready.then(() => ship.exhausts.forEach((e, i) => { e.power = i % 2 ? 0 : 0.15; }));
+  // after the pulse, thrusters three and four stay dark (a fresh ship starts at full power)
+  if (pulsed) void ship.ready.then(() => ship.exhausts.forEach((e, i) => { e.power = i >= 2 ? 0 : 0.15; }));
   void makeAnchor(g.stage, 0.45);
   // Ilse's lamp: a faint warm light at the one point no pulse can move
   const lamp = glowSprite('#ffe9c4', 0.9, 0.35);
@@ -445,8 +445,8 @@ async function pulse(g: Game): Promise<void> {
   }, ease.inOut);
   if (!live(g, s)) return;
   sfx.alarm();
-  // thrusters two and four go dark
-  s.ship.exhausts.forEach((e, i) => { e.power = i % 2 ? 0 : 0.15; });
+  // thrusters three and four go dark
+  s.ship.exhausts.forEach((e, i) => { e.power = i >= 2 ? 0 : 0.15; });
   await wait(900);
   if (!live(g, s)) return;
   g.mood('tension');

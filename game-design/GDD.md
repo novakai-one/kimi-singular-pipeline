@@ -520,7 +520,7 @@ Installs run the player's function **at event time** (a commit, a pulse, a story
 - **0:00–1:00 Cold open** (cinematic, full quality, 3D). Ilse's recording from three years ago: the *Meridian* in nebula light; a pulse front sweeps across it; every box frame of the hull leans the same way. The motion is the routine pulse T₃ applied to the real hull vertices, animated as P R(θ) P⁻¹ for θ from 0 to 90° so area is constant at every frame (§11.3). Ilse reads the nine numbers (TT2). Title card: **SINGULAR**.
 - **1:00–2:30 Arrival.** The *Lantern* drops out of transit 40 km from the Anchor. Wren, Bram, LANTERN (≤ 8 lines). The player presses Space to **seed the lattice**: 4,000 light buoys bloom outward into a square grid with a rising shimmer. Reference buoys: three in a white line at (−1, 1), (0, 2), (1, 3); four cyan at (2, 0), (3, 0), (4, 0), (5, 0).
 - **c00-p1 First burn** (wordless). The nearest beacon is 3 across and 2 up. Drag one green arrow from the ship. **Win:** Space commits; the ship stops within 0.05 of (3, 2); thrust, camera follow, settle, the beacon ignites.
-- **The pulse.** LANTERN: *"Pulse detected. Brace."* The shockwave front passes; every buoy slides (T, animated honestly); the *Lantern* is knocked; thrusters two and four go dark.
+- **The pulse.** LANTERN: *"Pulse detected. Brace."* The shockwave front passes; every buoy slides (T, animated honestly); the *Lantern* is knocked; thrusters three and four go dark.
 - **c00-p2 Call it, then check.** Before the next scan, optional: drop ghosts where you think the white buoys went. **Win (construction):** lay the line tool through the three landed white buoys, now at (−3, −2), (−4, −2), (−5, −2) (within 0.05 of all three); then lay the cyan step arrow tip to tail along the four cyan buoys, now at (2, 2), (3, 3), (4, 4), (5, 5): one step (1, 1) fits every gap.
 - **c00-p3 What did not move?** Toggle the before and after lattices. **Win:** place the marker on the one point that is where it was. A faint light is on there. LANTERN: *"One point did not move: the point under the Anchor. There is a light there. Setting the origin of our grid at that point."*
 - **Close.** The Case Board pins three questions (§2.3). Wren: *"Two thrusters gone, an ark we cannot see, and a rule we do not know. Nav, get us to the next beacon."*
@@ -610,14 +610,14 @@ Visual: the debris field in nebula light, the flat lattice, top-down orthographi
 2. `c03-p2` *Why can't we reach it?* With (1, 0, 1), (0, 1, 1) and the spare mounted along (1, 2, 3), the signal (1, 1, 0) is still out of reach. **Win:** build the spare's arrow from the first two: 1 and 2.
 3. `c03-p3` *Pick a mount.* Bolt points (2, −1, 1), (1, 1, 1), (0, 0, 2). **Win:** reach (1, 1, 0) with total fuel ≤ 3: mount (0, 0, 2), dials 1, 1, −1. ((1, 1, 1) needs −1, −1, 2, fuel 4. (2, −1, 1) lies in the old plane and reaches nothing new.)
 4. `c03-p4` *Prune.* Arrows (1, 0, 0), (0, 1, 0), (1, 1, 0), (0, 0, 1). **Win:** unbolt one while the glow stays all of space (any of the first three; (0, 0, 1) cannot go).
-5. `c03-p5` [D] *Why four arrows in 3D always loop.* Bram picks four random arrows (Shake). **Win:** reach the fourth arrow's tip with the first three (LANTERN guides the dials on Cadet); the game closes the loop. Three arrows that point in three independent directions reach every point, so the fourth is always reachable.
+5. `c03-p5` [D] *Why four arrows in 3D always loop.* Bram picks four random arrows (Shake). **Win:** reach the fourth arrow's tip with the first three (LANTERN guides the dials on Cadet); the game closes the loop. If the first three point in three independent directions they reach every point, so the fourth is reachable; if they do not, they already have a loop, and dial 0 on the fourth makes it a loop of all four.
 6. `c03-p6` [S] Try to place three arrows in the plane with no loop; the game finds a loop every time.
 
 **Aha.** An arrow is wasted when the others already reach its tip. That is the same as a loop with dials not all zero.
 
 **Name it.** After p1: **linearly dependent**, **linearly independent** — "A set of arrows is independent when none of them can be built from the rest"; **trivial combination**. Formula: c₁v₁ + … + cₖvₖ = 0 only when every c is 0.
 
-**Briefing.** Check question: *Why must four vectors in 3D be dependent?* Doubts: (F) "None of these three point the same way, so all three must be useful." (T) "Any set with the zero arrow in it has a loop." Law frame: `Arrows are DEPENDENT EXACTLY WHEN [some dials, NOT ALL ZERO, / two of them are PARALLEL] bring the ship back to the start`.
+**Briefing.** Check question: *Why must four vectors in 3D be dependent?* Doubts: (F) "No two of these three lie on one line, so all three must be useful." (T) "Any set with the zero arrow in it has a loop." Law frame: `Arrows are DEPENDENT EXACTLY WHEN [some dials, NOT ALL ZERO, / two of them are PARALLEL] bring the ship back to the start`.
 
 **So what.** The thruster audit (install) is the redundant-feature check every regression needs: dependent columns make the weights non-unique.
 
@@ -625,7 +625,7 @@ Visual: the debris field in nebula light, the flat lattice, top-down orthographi
 
 **[SP] Act I set piece · Lift.** Mounts v = (1, 0, 1), w = (0, 1, 1), u = (0, 0, 2) and a fourth spare (2, −1, 1). **Win:** reach the ark's approach point (4, −1, 6) with fuel ≤ 6.5 (4, −1, 1.5), declining the spare, which adds no direction. The *Lantern* lifts out of the plane and the *Meridian* comes into view: 1.2 km, every box frame along its hull leaning the same way.
 
-**Act I Review (Bram).** "Three arrows always reach more than two." (F) · "If you can reach a point, there is only one way to reach it." (F: show two firings to one crate when an arrow is wasted) · "Two arrows in different directions reach every point of a flat deck." (T) · "An arrow of length zero can belong to an independent set." (F).
+**Act I Review (Bram).** "Three arrows always reach more than two." (F) · "If you can reach a point, there is only one way to reach it." (F: show two firings to one crate when an arrow is wasted) · "Two arrows that are not on one line reach every point of a flat deck." (T) · "An arrow of length zero can belong to an independent set." (F).
 
 **NumPy card I.** `np.linalg.matrix_rank` and `np.linalg.solve` for the reach question.
 

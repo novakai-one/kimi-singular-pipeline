@@ -151,7 +151,7 @@ export async function install(g: Game): Promise<void> {
     const { mine, ranked } = await job;
     check(set);
     runOn.innerHTML = inline(mine ? 'Running on: **your** `dot`' : 'Running on: LANTERN backup');
-    void g.say(mine ? S.installMine : S.installBackup);
+    const said = g.say(mine ? S.installMine : S.installBackup);
     // score the sky: each signature dims to its cosine; the list fills from the top
     const rank = new Map(ranked.map((x, k) => [x.i, k]));
     const rows = ranked.slice(0, 5);
@@ -186,6 +186,7 @@ export async function install(g: Game): Promise<void> {
     void burst(g.stage, top.pos, '#59e1ff', 90, 6, false);
     for (let i = 0; i < pings.length; i++) if (i !== ranked[0].i) pings[i].setLevel(0.03);
     void cam.to([-22, -30, 9], [beaconPos.x - 4, beaconPos.y, beaconPos.z - 2], 16000, ease.linear);
+    await said; // the install line finishes before the next one opens
     await g.say(S.lock);
     check(set);
     panel.remove();

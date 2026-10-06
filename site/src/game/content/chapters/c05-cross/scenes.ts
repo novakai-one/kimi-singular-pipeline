@@ -240,7 +240,7 @@ export async function install(g: Game): Promise<void> {
     check(set);
     const mine = who === 'yours';
     runOn.innerHTML = inline(mine ? 'Lit by **your** `normal`, checked against LANTERN on every triangle' : `Lit by LANTERN's backup \`normal\`${note ? `. ${note}` : ''}`);
-    void g.say(mine ? S.installMine : S.installBackup);
+    const said = g.say(mine ? S.installMine : S.installBackup);
     // the sweep, bow to stern
     const ring = scanRing(set);
     const x0 = 34, x1 = -32;
@@ -262,6 +262,7 @@ export async function install(g: Game): Promise<void> {
     void animate(4000, (k) => { dps = TUMBLE_DPS * (1 - k); }, ease.inOut);
     void cam.to([-20, -30, 8], [4, 2, 1], 22000, ease.linear);
     await wait(600);
+    await said; // the install line finishes before the next one opens
     await g.say(S.lit);
     check(set);
     panel.remove();

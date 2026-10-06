@@ -127,7 +127,7 @@ export async function install(g: Game): Promise<void> {
     const { mine, vols } = await job;
     check(set);
     runOn.innerHTML = inline(mine ? 'Running on: **your** `triple`' : 'Running on: LANTERN backup');
-    void g.say(mine ? S.installMine : S.installBackup);
+    const said = g.say(mine ? S.installMine : S.installBackup);
     const v = scanVerdict(vols);
     // the scan sweeps from the bow to the stern
     const order = nodes.map((n, i) => [n.pos[0], i] as [number, number]).sort((a, b) => b[0] - a[0]).map((x) => x[1]);
@@ -155,6 +155,7 @@ export async function install(g: Game): Promise<void> {
     g.stage.flash(0.1, 400);
     void burst(g.stage, [mid.x, mid.y, mid.z], C.orange, 90, 6, false);
     void cam.to([-20, -24, 7], [mid.x, mid.y, mid.z], 14000, ease.inOut);
+    await said; // the install line finishes before the next one opens
     await g.say(S.scan);
     check(set);
     panel.remove();

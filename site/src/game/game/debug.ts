@@ -90,7 +90,7 @@ export function installDebug(app: App): void {
             add(`${w} intro`, e.intro); add(`${w} summary`, e.summary); add(`${w} ownWords`, e.ownWords);
             e.steps.forEach((s, i) => { add(`${w} step ${i}`, s.ask); s.options.forEach((o) => { add(`${w} step ${i} option`, o.text); add(`${w} step ${i} why`, o.why); }); });
           }
-          if (b.kind === 'build') { add(`${w} title`, b.build.title); add(`${w} brief`, b.build.brief); add(`${w} payoff`, b.build.payoff); }
+          if (b.kind === 'build') { add(`${w} title`, b.build.title); add(`${w} brief`, b.build.brief); add(`${w} payoff`, b.build.payoff); add(`${w} ilseNote`, b.build.ilseNote); add(`${w} docPrompt`, b.build.docPrompt); }
           if (b.kind === 'card') { add(`${w} card title`, b.card.title); add(`${w} card body`, b.card.body); add(`${w} card cue`, b.card.cue); }
           if (b.kind === 'sayit') add(`${w} ask`, b.sayit.ask);
           if (b.kind === 'doubt') { add(`${w} claim`, b.doubt.claim); add(`${w} reason`, b.doubt.reason); add(`${w} goal`, b.doubt.goal); }

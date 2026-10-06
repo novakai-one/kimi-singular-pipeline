@@ -19,7 +19,7 @@ export const S: Record<string, Line[]> = {
     { who: 'lantern', text: 'Same end point. The two routes trace two sides each of one parallelogram.' },
   ],
   thruster: [
-    { who: 'bram', text: 'Bad news. Thruster one has failed too. Only thruster three works, and it pushes one way: two across for every one up.' },
+    { who: 'bram', text: 'Bad news. Thruster one has failed too. Only thruster two works, and it pushes one way: two across for every one up.' },
     { who: 'wren', text: 'Forward or backward, as much as we like. That is all we have.' },
     { who: 'lantern', text: 'Two marker buoys to check. Reach each one with a single burn from the start.' },
   ],
@@ -33,7 +33,7 @@ export const S: Record<string, Line[]> = {
   homeWin: [{ who: 'wren', text: 'Home in one. And five steps out, so five hundred metres. Good.' }],
   close: [
     { who: 'lantern', text: 'Ship at the beacon. Position known. Every burn so far was an arrow, and every arrow had two numbers.' },
-    { who: 'bram', text: 'Thruster two is back. Patched, but it fires.' },
+    { who: 'bram', text: 'Thruster three is back. Patched, but it fires.' },
     { who: 'lantern', text: 'Signal detected. It matches the *Meridian*. Bearing from here: one across, one up. Close.' },
     { who: 'wren', text: 'Two working thrusters and a signal. Nav, next question: what can two thrusters reach?' },
   ],

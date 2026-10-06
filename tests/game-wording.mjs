@@ -13,7 +13,7 @@ const RULES = [
   ['analogy: shopping/cooking', /\b(shopping|recipes?|cooking|chef|kitchen|ingredients?|bake|baking)\b/gi],
   ['analogy: factory/machine', /\b(factory|factories|eats?|eating|spits?( out)?|digests?|machine that)\b/gi],
   ['analogy: sport', /\b(sports?|football|soccer|basketball|tennis|cricket|goalkeeper)\b/gi],
-  ['personification of maths', /\b(matrix|matrices|vectors?|eigenvectors?|transformation|determinant|grid|arrows?|components?|directions?|projections?|law|formula|equation)\s+(?:(?:does|do)(?: not|n’t|n't)\s+)?(wants?|likes?|loves?|hates?|feels?|thinks?|knows?|know|cares?|care|prefers?|tries|is happy|decides?|remembers?)\b/gi],
+  ['personification of maths', /\b(matrix|matrices|vectors?|eigenvectors?|transformation|determinant|grid|arrows?|components?|directions?|projections?|law|formula|equation|area|volume)\s+(?:(?:does|do)(?: not|n’t|n't)\s+)?(wants?|likes?|loves?|hates?|feels?|thinks?|knows?|know|cares?|care|prefers?|tries|is happy|decides?|remembers?)\b/gi],
   ['favourite direction', /\bfavou?rite (direction|vector|axis|axes)\b/gi],
   ['matrix as machine', /\bmatri(x|ces) (is|as|are) an? (machine|device|engine|function box)\b/gi],
   ['synonym drift', /\b(kernel|linear map|linear operator)\b/gi],

@@ -29,7 +29,7 @@ export const S: Record<string, Line[]> = {
   ],
   after: [
     { who: 'wren', text: 'Everyone in one piece? Nav?' },
-    { who: 'lantern', text: 'Thrusters two and four are dark. The buoys have moved.' },
+    { who: 'lantern', text: 'Thrusters three and four are dark. The buoys have moved.' },
     { who: 'bram', text: 'All of them, all at once. Nav, check the reference buoys before we touch anything. I want to know what that pulse did.' },
   ],
   lineWin: [

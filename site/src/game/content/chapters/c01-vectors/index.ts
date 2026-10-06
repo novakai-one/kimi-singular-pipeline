@@ -117,7 +117,7 @@ const debris: PuzzleDef = {
 const scale: PuzzleDef = {
   id: 'c01-p3',
   title: 'How far can one thruster take you?',
-  goal: 'Thruster three only pushes along **(2, 1)**. Set the amount, then **Fire**. Reach each marker buoy from the start. Then sweep the amount from −4 to 4 to see every point it reaches, and drag beacon C onto the **out of reach** pad.',
+  goal: 'Thruster two only pushes along **(2, 1)**. Set the amount, then **Fire**. Reach each marker buoy from the start. Then sweep the amount from −4 to 4 to see every point it reaches, and drag beacon C onto the **out of reach** pad.',
   subgoals: ['Reach the buoy at (6, 3)', 'Reach the buoy at (−4, −2)', 'Mark the beacon at (3, 2) out of reach'],
   predict: {
     prompt: 'The thruster pushes along (2, 1). Can one burn reach the buoy at (−4, −2)?',
@@ -149,7 +149,7 @@ const scale: PuzzleDef = {
     p.add(padC, padOut, marker);
     const done = [false, false, false];
     const step = p.difficulty === 'cadet' ? 1 : p.difficulty === 'navigator' ? 0.5 : 0.25;
-    const r = p.readout('Thruster three');
+    const r = p.readout('Thruster two');
     let k = 1;
     // the part of the thruster's line the amount has swept so far: it grows as the amount changes
     let kmin = 0, kmax = 0;
@@ -166,7 +166,7 @@ const scale: PuzzleDef = {
       const was = p3SweptFull(kmin, kmax);
       kmin = Math.min(kmin, kk); kmax = Math.max(kmax, kk);
       reach.setPoints([[d[0] * kmin, d[1] * kmin, 0.01], [d[0] * kmax, d[1] * kmax, 0.01]]);
-      if (!was && p3SweptFull(kmin, kmax) && !done[2]) p.bark('lantern', 'That is the whole line thruster three can reach.');
+      if (!was && p3SweptFull(kmin, kmax) && !done[2]) p.bark('lantern', 'That is the whole line thruster two can reach.');
     };
     const check = () => { if (done.every(Boolean)) p.win(); };
     const chain = new BurnChain(p, {

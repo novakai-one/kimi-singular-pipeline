@@ -588,6 +588,7 @@ class PuzzleCtxImpl implements PuzzleCtx {
   tick(fn: (dt: number, t: number) => void): void { this.disposers.push(this.g.stage.tick(fn)); }
 
   bark(who: string, text: string): void {
+    if (this.disposed) return; // a late timer from a puzzle the player has left
     const c = cast(who);
     const el = h('div', { class: 'bark glass', html: `<span class="kicker" style="color:${c.color}">${c.name}</span> ${inline(text)}` });
     this.g.ui.scene.appendChild(el);

@@ -178,7 +178,7 @@ export async function install(g: Game): Promise<void> {
     const { mine } = await job;
     check(set);
     holo.title.set(mine ? 'Undo planner · running your inverse' : 'Undo planner · running LANTERN backup');
-    void g.say(mine ? S.installMine : S.installCrew);
+    const said = g.say(mine ? S.installMine : S.installCrew);
     await wait(g.headless ? 10 : 900);
     // the jacks push every joint along the undo: P R(θ) P⁻¹ from θ = π/2 back to 0
     sfx.whoosh(2.2);
@@ -187,6 +187,7 @@ export async function install(g: Game): Promise<void> {
     sfx.success();
     check(set);
     void cam.to([44, -30, 14], [20, 0, 3], 16000, ease.linear);
+    await said; // the install line finishes before the next one opens
     await g.say(S.close);
     check(set);
     await letterbox(g, false, 500);
