@@ -210,8 +210,10 @@ def spine(P, m):
             zt, ws = spine_top(x)
             P.box((0.09, 0.012, 0.085), M((x, s * (ws - 0.004), zt - 0.1), rot=(s * 0.12, 0, 0)), m.dark)
     # a thin pale stripe along the spine top (the Authority line) and a small blade antenna
-    P.box((2.4, 0.034, 0.008), M((-1.7, 0, 0.588), rot=(0, math.atan2(0.03, 2.4), 0)), m.livery)
-    P.prism([(0, 0), (-0.38, 0), (-0.47, 0.2), (-0.4, 0.2)], 0.016, M((-0.55, 0, 0.59), z=(0, 1, 0), up=(0, 0, 1)), m.gun)
+    for (x0, _, z0), (x1, _, z1) in zip(SPINE[1:4], SPINE[2:5]):
+        P.beam((x0, 0, z0 + 0.003), (x1, 0, z1 + 0.003), 0.034, m.livery, h=0.008)
+    # local x of this frame is world -x: the blade sweeps back
+    P.prism([(0, 0), (0.45, 0), (0.55, 0.17), (0.44, 0.17)], 0.016, M((-0.5, 0, 0.59), z=(0, 1, 0), up=(0, 0, 1)), m.gun)
 
 
 def blister_plan(z):
