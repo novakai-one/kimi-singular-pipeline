@@ -120,8 +120,11 @@ export async function spireVolume(g: Game): Promise<void> {
 
 export async function strikeShot(g: Game): Promise<void> {
   const root = new Group();
+  const offs: (() => void)[] = [];
+  root.userData.dispose = () => { offs.splice(0).forEach((f) => f()); };
   g.stage.world.add(root);
   const anchor = await makeAnchor(g.stage, 0.55, root);
+  if (!root.parent) return; // the beat already moved on
   anchor.position.z = -0.15;
   const tips = [C.v, C.w, C.u].map((c, j) => new Arrow([0, 0, 0], [SPIRES[0][j], SPIRES[1][j], SPIRES[2][j]], { color: c, width: j === 2 ? 0.03 : 0.045 }));
   const box = new Parallelepiped(g.stage, [SPIRES[0][0], SPIRES[1][0], SPIRES[2][0]], [SPIRES[0][1], SPIRES[1][1], SPIRES[2][1]], [SPIRES[0][2], SPIRES[1][2], SPIRES[2][2]], { color: C.orange, opacity: 0.25 });
@@ -131,18 +134,18 @@ export async function strikeShot(g: Game): Promise<void> {
   root.add(flash);
   g.stage.disposeControls();
   await g.stage.view3D({ target: [0.3, 0.5, 1], distance: 8.5, azimuth: -50, elevation: 18, ms: 0, orbit: false });
+  if (!root.parent) return;
   sfx.collapse();
   g.stage.flash(0.3, 600);
   g.stage.nudge(0.3);
   void animate(900, (k) => { flash.material.opacity = 0.9 * (1 - k); }, ease.out);
   let az = -50;
-  const off = g.stage.tick((dt) => {
+  offs.push(g.stage.tick((dt) => {
     az += dt * 3;
     const a = (az * Math.PI) / 180, e = (18 * Math.PI) / 180, d = 8.5;
     g.stage.camera.position.set(0.3 + d * Math.cos(e) * Math.cos(a), 0.5 + d * Math.cos(e) * Math.sin(a), 1 + d * Math.sin(e));
     g.stage.camera.lookAt(0.3, 0.5, 1);
-  });
-  root.userData.dispose = () => off();
+  }));
 }
 
 // ------------------------------------------------------------------ the Collapse
@@ -203,6 +206,7 @@ export async function collapse(g: Game): Promise<void> {
 
 export async function sternShot(g: Game): Promise<void> {
   const set = await meridianSet(g, { lantern: { at: [-30, -26, 6], face: [0.6, 0.8, 0], scale: 1.5 } });
+  if (!set.alive()) return; // the beat already moved on
   const cam = new CamRig(g, set, [-46, -52, 16], [-12, 0, 2]);
   cam.drift(0.4);
   void cam.to([-40, -48, 14], [-10, 0, 2], 20000, ease.linear);

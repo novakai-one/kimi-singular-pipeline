@@ -26,7 +26,8 @@ export async function meridianSet(g: Game, o: { lantern?: { at: V3; face: V3; sc
   g.stage.world.add(root);
   const offs: (() => void)[] = [];
   root.userData.dispose = () => { offs.splice(0).forEach((f) => f()); };
-  const tick = (fn: (dt: number, t: number) => void) => { offs.push(g.stage.tick(fn)); };
+  // nothing starts once the set has been cleared (a beat that ended while a model was loading)
+  const tick = (fn: (dt: number, t: number) => void) => { if (root.parent) offs.push(g.stage.tick(fn)); };
   const alive = () => !!root.parent;
   // a violet key light from the Fold, a warm fill from the hangar
   const key = new DirectionalLight('#d9c8ff', 1.6);

@@ -284,7 +284,7 @@ const ilseMoves: DoubtDef = {
   goal: 'Drag the grid arrows: a new basis. Watch the yellow point. **Challenge it** (the point stays put) or **Back it**.',
   view: '2d',
   setup(p) {
-    void p.g.stage.view2D({ center: [1.4, 1.0], height: 8.5, ms: 0 });
+    void p.g.stage.view2D({ center: [1.4, 1.8], height: 8.5, ms: 0 });
     const pt = new Dot(v3(P1_SHIP, 0.05), { color: C.result, size: 0.12 });
     const ptag = tag('', v3(P1_SHIP), 'y', [0, -26]);
     p.add(pt, ptag.object); p.onDispose(() => ptag.dispose());
@@ -317,7 +317,7 @@ const ilseP: DoubtDef = {
   goal: 'Drag the basis arrows and the point $\\mathbf x$. The orange dot is $P\\mathbf x$; the readout gives the B-numbers of $\\mathbf x$. **Challenge it** or **Back it**.',
   view: '2d',
   setup(p) {
-    void p.g.stage.view2D({ center: [1.8, 1.2], height: 9, ms: 0 });
+    void p.g.stage.view2D({ center: [1.8, 1.9], height: 9, ms: 0 });
     let x: number[] = P1_SHIP.slice();
     const px = new Dot([0, 0, 0.05], { color: C.orange, size: 0.1 });
     const pxt = tag('', [0, 0, 0], 'dim', [0, 24]);

@@ -86,7 +86,7 @@ export const doubtRight: DoubtDef = {
   goal: 'Drag the grid arrows. The yellow point is named by the amounts of each arrow that reach it. **Challenge it** (a slanted grid that still names it) or **Back it**.',
   view: '2d',
   setup(p) {
-    void p.g.stage.view2D({ center: [1.4, 1.0], height: 8.5, ms: 0 });
+    void p.g.stage.view2D({ center: [1.4, 1.8], height: 8.5, ms: 0 });
     const pt = new Dot(v3(P1_SHIP, 0.05), { color: C.result, size: 0.12 });
     p.add(pt);
     const path = new AnchorPath(p, [[1, 0], [0, 1]], { showTag: false });

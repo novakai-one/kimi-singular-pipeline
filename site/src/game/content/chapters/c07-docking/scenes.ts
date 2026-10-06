@@ -1,7 +1,7 @@
 // Chapter 7 staging: the cold open (debris streams crossing the approach to the hangar door), the
 // install (door picking: the player's line of sight meets the door's plane through ray_plane), and
 // the act close (docked, the ark dark, Ilse's oldest log).
-import { Group, Raycaster, Vector2 } from 'three';
+import { Group, Raycaster, Vector2, type Object3D } from 'three';
 import type { Game, PuzzleCtx, V3 } from '../../../game/types';
 import { animate, ease, wait } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
@@ -9,6 +9,7 @@ import { fadeBlack, letterbox, stamp, titleCard } from '../../../kit/cine';
 import { h, inline } from '../../../ui/ui';
 import { Dot, glowSprite } from '../../../gfx/markers';
 import { FatLine } from '../../../gfx/lines';
+import { loadModel } from '../../../gfx/models';
 import { Label } from '../../../gfx/label';
 import { burst } from '../../../gfx/fx';
 import { isPlayerFn, pylib } from '../../../game/build';
@@ -44,23 +45,28 @@ export async function coldOpen(g: Game): Promise<void> {
       { p: [14, -12, -3], d: [-0.4, 0.2, 0.3], n: 6 },
       { p: [24, -20, 1], d: [-0.6, -0.15, 0.05], n: 6 },
     ];
-    const pieces: { dot: Dot; s: number; k: number }[] = [];
+    const pieces: { obj: Object3D; s: number; k: number; spin: number }[] = [];
     for (const [si, st] of streams.entries()) {
-      const trail = new FatLine(g.stage, [[st.p[0] - st.d[0] * 30, st.p[1] - st.d[1] * 30, st.p[2] - st.d[2] * 30], [st.p[0] + st.d[0] * 30, st.p[1] + st.d[1] * 30, st.p[2] + st.d[2] * 30]], { color: '#c9b08f', width: 1.2, opacity: 0.18, dashed: true, dashSize: 0.8, gapSize: 0.6 });
+      const trail = new FatLine(g.stage, [[st.p[0] - st.d[0] * 30, st.p[1] - st.d[1] * 30, st.p[2] - st.d[2] * 30], [st.p[0] + st.d[0] * 30, st.p[1] + st.d[1] * 30, st.p[2] + st.d[2] * 30]], { color: '#c9b08f', width: 1.2, opacity: 0.16, dashed: true, dashSize: 0.8, gapSize: 0.6 });
       set.root.add(trail.object);
       for (let i = 0; i < st.n; i++) {
-        const d = new Dot([0, 0, 0], { color: '#c9b08f', size: 0.25 + 0.1 * ((i + si) % 3), glow: 0.35 });
-        set.root.add(d.object);
-        pieces.push({ dot: d, s: si, k: i / st.n });
+        const m = await loadModel(`debris_${(i + si) % 6}`);
+        if (!m || !set.alive()) break;
+        m.scale.setScalar(0.35 + 0.2 * ((i + si) % 3));
+        m.rotation.set(i, si * 2, i * 0.7);
+        set.root.add(m);
+        pieces.push({ obj: m, s: si, k: i / st.n, spin: 0.2 + 0.1 * (i % 3) });
       }
     }
+    check(set);
     let clock = 0;
     set.tick((dt) => {
       clock += dt;
       for (const pc of pieces) {
         const st = streams[pc.s];
         const t = (((clock * 0.025 + pc.k) % 1) - 0.5) * 50;
-        pc.dot.at([st.p[0] + st.d[0] * t, st.p[1] + st.d[1] * t, st.p[2] + st.d[2] * t]);
+        pc.obj.position.set(st.p[0] + st.d[0] * t, st.p[1] + st.d[1] * t, st.p[2] + st.d[2] * t);
+        pc.obj.rotation.x += pc.spin * dt; pc.obj.rotation.y += pc.spin * 0.7 * dt;
       }
     });
     const cam = new CamRig(g, set, [-4, -48, 10], [14, -6, 0]);
@@ -162,7 +168,9 @@ export async function install(g: Game): Promise<void> {
   const ring = new FlatRing(p, at, v3(DOOR_N), { r: 0.2, color: '#3ddc84' });
   const mark = new Dot(at, { color: '#3ddc84', size: 0.08 });
   const tag = new Label('docking marker', [at[0] + 0.3, at[1] + 0.3, at[2] + 0.35], { className: 'small', color: '#3ddc84' });
-  root.add(mark.object, tag.object);
+  root.add(mark.object);
+  g.stage.world.add(tag.object);
+  p.onDispose(() => tag.dispose());
   sfx.success();
   void ring.pulse();
   void burst(g.stage, at, '#3ddc84', 50, 1.6, false);

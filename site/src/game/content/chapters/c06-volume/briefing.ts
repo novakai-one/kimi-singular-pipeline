@@ -139,8 +139,10 @@ export const law: LawDef<CopCase> = {
     const t = triple(c.u, c.v, c.w);
     const box = new Parallelepiped(g.stage, v3(c.v), v3(c.w), v3(c.u), { color: t < -1e-9 ? C.orange : C.result, opacity: 0.16 });
     const lab = new Label(`$\\mathbf u\\cdot(\\mathbf v\\times\\mathbf w) = ${num(t).replace('−', '-')}$`, [0, 0, -0.6 * L], { color: C.white, size: 18 });
-    g.stage.world.add(box.object, new Arrow([0, 0, 0], v3(c.v), { color: C.v, label: '$\\mathbf v$' }).object,
-      new Arrow([0, 0, 0], v3(c.w), { color: C.w, label: '$\\mathbf w$' }).object, new Arrow([0, 0, 0], v3(c.u), { color: BLUE, label: '$\\mathbf u$' }).object, lab.object);
+    // labels go in at the top level: a label nested in an arrow would outlive the arrow when the world is cleared
+    const tag = (s: string, at: readonly number[], color: string) => new Label(s, [at[0] * 1.12, at[1] * 1.12, at[2] * 1.12 + 0.2], { color, size: 17 }).object;
+    g.stage.world.add(box.object, new Arrow([0, 0, 0], v3(c.v), { color: C.v }).object, new Arrow([0, 0, 0], v3(c.w), { color: C.w }).object,
+      new Arrow([0, 0, 0], v3(c.u), { color: BLUE }).object, lab.object, tag('v', c.v, C.v), tag('w', c.w, C.w), tag('u', c.u, BLUE));
   },
   reason: {
     ask: 'Your Law survived. **Why** does a zero scalar triple product mean the three arrows lie in one plane?',

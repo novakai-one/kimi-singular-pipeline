@@ -199,6 +199,7 @@ export async function install(g: Game): Promise<void> {
 export function bowShot(M: Mat) {
   return async (g: Game): Promise<void> => {
     const set = await meridianSet(g, { lantern: { at: [38, 12, 3], face: [-1, -0.25, 0.05], scale: 1.5 } });
+    if (!set.alive()) return; // the beat already moved on
     const cam = new CamRig(g, set, [52, -42, 18], [22, 0, 6]);
     cam.drift(0.4);
     const holo = new PlanHologram(g, set.root, [22, 2, 12], 1.7, 1.15);

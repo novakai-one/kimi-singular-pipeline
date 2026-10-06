@@ -210,7 +210,7 @@ export const law: LawDef<LawCase> = {
 export const compare: CompareDef = {
   id: 'c12',
   page: 'Doing one move after another is **composition**. Its matrix is the **matrix product**: in $AB$, $B$ acts first, because $AB\\mathbf x = A(B\\mathbf x)$.\n\nColumn $j$ of $AB$ is where $\\mathbf e_j$ ends up. $B$ sends it to $\\mathbf b_j$, and $A$ sends that to $A\\mathbf b_j$. Read one entry at a time, $(AB)_{ij}$ is row $i$ of $A$ dotted with column $j$ of $B$.\n\n**Order matters**: $AB$ and $BA$ usually differ. **Grouping does not**: $(CB)A = C(BA)$. The **transpose** $A^T$ writes rows as columns. It moves $A$ across a dot product, so $(AB)^T = B^TA^T$.',
-  formula: '(AB)\\mathbf x = A(B\\mathbf x) \\qquad \\text{column } j \\text{ of } AB = A\\mathbf b_j \\qquad (A\\mathbf x)\\cdot\\mathbf y = \\mathbf x\\cdot(A^T\\mathbf y)',
+  formula: '\\begin{gathered}(AB)\\mathbf x = A(B\\mathbf x) \\qquad \\text{column } j \\text{ of } AB = A\\mathbf b_j \\\\[6pt] (A\\mathbf x)\\cdot\\mathbf y = \\mathbf x\\cdot(A^T\\mathbf y)\\end{gathered}',
   keyIdeas: [
     'Did you say the right-hand matrix acts first?',
     'Did you say column $j$ of $AB$ is where $\\mathbf e_j$ ends up: $A$ applied to column $j$ of $B$?',

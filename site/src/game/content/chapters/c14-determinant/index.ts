@@ -3,7 +3,7 @@
 // stretch puzzle). The unit tile rides the grid; the Act IV Review; then the Collapse: your forecast,
 // no undo, braces that all lose the same fraction, the sealed mid-section, and the stern folds flat.
 import type { Beat, ChapterDef } from '../../../game/types';
-import { bridgeShot } from '../../common/shots';
+import { bridgeShot } from '../c13-inverse/bridge';
 import { p1, p2, p3, p4, p5, p7 } from './puzzles';
 import { p6 } from './collapse';
 import { sayit, doubtDouble, doubtSum, doubtNoInverse, law, compare, review } from './briefing';

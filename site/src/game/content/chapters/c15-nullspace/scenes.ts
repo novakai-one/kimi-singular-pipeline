@@ -2,7 +2,7 @@
 // pulse C (applied to the stern's own vertices), the Anchor, the Lantern, Vell's cutter, the debris
 // pile at the origin, and LANTERN's scan room. Chapter 15's cinematics are at the bottom.
 import {
-  BoxGeometry, ConeGeometry, DirectionalLight, Group, Matrix4, Mesh, MeshStandardMaterial, Vector3, type Object3D, type Sprite,
+  BoxGeometry, ConeGeometry, DirectionalLight, DoubleSide, Group, Matrix4, Mesh, MeshStandardMaterial, Vector3, type Object3D, type Sprite,
 } from 'three';
 import type { Game, V3 } from '../../../game/types';
 import { loadModel, type Ship } from '../../../gfx/models';
@@ -99,13 +99,17 @@ export async function actSet(g: Game, o: ActSetOpts = {}): Promise<ActSet> {
       if (a.flat !== false) {
         // the real Collapse pulse C on the stern's own vertices, about the stern's centre
         const M = about(COLLAPSE, [-21, 0, 0]);
+        // the folded stern is 1/750 thick: one double-sided hull material, so its near-coplanar faces read as one sheet
+        const sheet = new MeshStandardMaterial({ color: '#59606d', metalness: 0.7, roughness: 0.38, side: DoubleSide, emissive: '#1a1d24', emissiveIntensity: 0.6 });
         model.traverse((n) => {
           if (n.name !== 'aft' && n.name !== 'truss_aft') return;
           n.updateMatrix();
           n.matrixAutoUpdate = false;
           n.matrix.premultiply(M);
           n.matrixWorldNeedsUpdate = true;
+          n.traverse((m) => { if ((m as Mesh).isMesh) (m as Mesh).material = sheet; });
         });
+        ark.userData.dispose = () => sheet.dispose();
       }
       ark.add(model);
     }
@@ -249,7 +253,7 @@ export async function pileShot(g: Game): Promise<void> {
 export async function sternShot(g: Game): Promise<void> {
   const set = await actSet(g, { ark: { at: [0, 0, 0] }, anchor: { at: [-150, 95, -18], scale: 7 }, lantern: { at: [-30, -24, 5], face: [0.3, 1, 0], scale: 1.4 } });
   let t = 0;
-  set.tick((dt) => { t += dt; const a = -2.2 + t * 0.02; g.stage.camera.position.set(-22 + 34 * Math.cos(a), 34 * Math.sin(a), 9 + Math.sin(t * 0.1) * 1.5); g.stage.camera.up.set(0, 0, 1); g.stage.camera.lookAt(-22, 0, 0); });
+  set.tick((dt) => { t += dt; const a = -1.95 + t * 0.015; g.stage.camera.position.set(-14 + 70 * Math.cos(a), 70 * Math.sin(a), 16 + Math.sin(t * 0.1) * 1.5); g.stage.camera.up.set(0, 0, 1); g.stage.camera.lookAt(-14, 0, 0); });
   g.stage.disposeControls();
   g.stage.mode = '3d';
 }

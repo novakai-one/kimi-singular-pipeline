@@ -34,7 +34,8 @@ export function orbit(host: Host, target: V3, dist: number, elevDeg: number, az0
     st.camera.lookAt(target[0], target[1], target[2]);
   };
   place();
-  host.tick((dt) => { az += dt * degPerSec; place(); });
+  // drift until another view takes the camera (a puzzle or a Briefing step turns orbit controls on)
+  host.tick((dt) => { if (st.controls) return; az += dt * degPerSec; place(); });
 }
 
 /** The scan lattice: a faint cyan cube of lines around a centre. */

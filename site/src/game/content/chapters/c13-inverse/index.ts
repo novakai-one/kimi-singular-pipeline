@@ -2,7 +2,7 @@
 // singular, non-singular (LU in the stretch puzzle). The undo bench squares the Meridian's bow frames;
 // [A | I] writes the inverse down; one move flattens space, and the title card returns.
 import type { Beat, ChapterDef } from '../../../game/types';
-import { bridgeShot } from '../../common/shots';
+import { bridgeShot } from './bridge';
 import { T } from '../../truth';
 import { p1, p2, p3, p4, p5, p6, p7 } from './puzzles';
 import { sayit, doubtNonzero, doubtFlip, doubtOrder, law, procedure, compare } from './briefing';

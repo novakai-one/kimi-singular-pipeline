@@ -163,7 +163,8 @@ export const law: LawDef<PlaneCase> = {
     pp.setSpan(v3(c.x), v3(a), v3(b));
     const u = vscale(c.n, 2 / norm(c.n));
     const lab = new Label(`${planeEq(c.n, c.k)}: the arrow reads ${num(dot(c.n, vsub(c.y, c.x)))}`, v3(vadd(c.x, [0, 0, -2.2])), { color: C.white, size: 16 });
-    g.stage.world.add(pp.object, new Arrow(v3(c.x), v3(vadd(c.x, u)), { color: '#fff1c2', label: '$(a, b, c)$' }).object,
+    const tip = v3(vadd(c.x, vscale(u, 1.2)));
+    g.stage.world.add(pp.object, new Arrow(v3(c.x), v3(vadd(c.x, u)), { color: '#fff1c2' }).object, new Label('(a, b, c)', tip, { color: '#fff1c2', size: 16 }).object,
       new Arrow(v3(c.x), v3(c.y), { color: C.result }).object, new Dot(v3(c.x), { color: C.white, size: 0.08 }).object, lab.object);
   },
   reason: {

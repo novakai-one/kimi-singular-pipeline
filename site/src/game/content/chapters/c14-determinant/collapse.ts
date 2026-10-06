@@ -51,7 +51,7 @@ export const p6: PuzzleDef = {
   par: 12,
   onWin: S.sealed,
   setup(p) {
-    void p.g.stage.view3D({ target: [0.4, 0.6, 1.2], distance: 9.5, azimuth: -58, elevation: 20, ms: 0 });
+    void p.g.stage.view3D({ target: [0.5, 1, 2.1], distance: 13, azimuth: -58, elevation: 20, ms: 0 });
     const lattice = new Lattice3D(p.g.stage, { extent: 2, opacity: 0.45 });
     const box = new Parallelepiped(p.g.stage, col3(SPIRES, 0), col3(SPIRES, 1), col3(SPIRES, 2), { color: C.orange, opacity: 0.22 });
     const spires = [C.v, C.w, C.u].map((c, j) => new Arrow([0, 0, 0], col3(SPIRES, j), { color: c, width: j === 2 ? 0.03 : 0.045, label: `spire ${j + 1}` }));
@@ -80,7 +80,8 @@ export const p6: PuzzleDef = {
       step = 1;
       tick(0);
       const f = await forecastDet(p.g.headless);
-      r.row('f', f.mine ? 'forecast (your det)' : 'forecast (LANTERN backup det)', `${f.value.toFixed(4)} → ${twoDp(f.value)}`, C.orange);
+      r.row('f', f.mine ? 'forecast (your det)' : 'forecast (LANTERN backup det)', f.value.toFixed(4), C.orange);
+      r.row('f2', 'to two decimals', twoDp(f.value), C.orange);
       p.bark('lantern', `${f.mine ? 'Forecast from your det.' : 'Forecast from my backup det.'} ${line(S.forecast[0])}`);
       await wait(p.g.headless ? 5 : 600);
       toUndo();
@@ -137,7 +138,7 @@ export const p6: PuzzleDef = {
       board = null;
       lattice.setOpacity(0.5);
       [box.group, ...spires.map((s) => s.group)].forEach((o) => { o.visible = false; });
-      void p.g.stage.view3D({ target: [0.3, 0.3, 0.6], distance: 9, azimuth: -52, elevation: 26, ms: 600 });
+      void p.g.stage.view3D({ target: [0.3, 0.3, 0.9], distance: 11, azimuth: -52, elevation: 26, ms: 600 });
       p.setGoal('**Brace the stern.** Teo is at the node. Drag the three braces (Shift-drag for height) into any box. The amber sheet is the box after the forecast pulse. Try **three** arrangements.');
       r.row('S', 'forecast pulse', `$\\det = ${FORECAST.toFixed(4)}$`);
       r.note('Every box the braces make is multiplied by the same factor.');
