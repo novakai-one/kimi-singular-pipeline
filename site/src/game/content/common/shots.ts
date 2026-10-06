@@ -8,6 +8,7 @@ import { makeAnchor, makeLantern } from './set';
 
 /** The Lantern drifting in space, the Anchor far behind it, camera slowly orbiting. */
 export async function shipExterior(g: Game, o: { anchor?: boolean; ark?: boolean } = {}): Promise<void> {
+  g.stage.clearWorld(); // a whole location: the previous set (and its camera ticks) goes
   const ship = makeLantern(g.stage, 0.55);
   g.stage.world.add(ship.object);
   ship.object.position.set(0, 0, 0);
@@ -40,6 +41,7 @@ export async function shipExterior(g: Game, o: { anchor?: boolean; ark?: boolean
 
 /** The bridge: the holotable with a small lattice hologram, camera drifting around it. */
 export async function bridgeShot(g: Game): Promise<void> {
+  g.stage.clearWorld(); // a whole location: the previous set (and its camera ticks) goes
   const root = new Group();
   g.stage.world.add(root);
   const holo = new Lattice3D(g.stage, { extent: 1, color: '#59e1ff', opacity: 0.9 });
