@@ -283,7 +283,7 @@ export const teo: TeoDef = {
   id: 'c17-teo',
   ask: 'Dr Varga says the Anchor counts on its own grid. Send me my position in it.',
   title: 'Teach Teo: where am I in the Anchor’s grid?',
-  brief: `Order the steps of a short message. Teo follows them exactly as written. His suit shows his position in our grid, ${fmtV(TEO_POS)}, and the arrow to him from the stern hatch at ${fmtV(TEO_HATCH)}.`,
+  brief: `Teo follows your steps exactly. His suit shows ${fmtV(TEO_POS)} in our grid, and his arrow from the stern hatch.`,
   tiles: TEO_TILES,
   decoys: TEO_DECOYS,
   reference: TEO_REF,
@@ -291,7 +291,8 @@ export const teo: TeoDef = {
     const res = runTeo(ids);
     const reply = teoReply(ids);
     g.stage.clearWorld();
-    await g.stage.view2D({ center: [2.6, 1.6], height: 8, ms: 500 });
+    // drawn small on the right, beside the message panel
+    await g.stage.view2D({ center: [-7.4, 1.4], height: 15.5, ms: 500 });
     const W = g.stage.world;
     const grid = new Grid2D(g.stage, SHIP_GRID);
     grid.mesh.userData.dispose = () => grid.dispose();
