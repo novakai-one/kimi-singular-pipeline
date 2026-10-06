@@ -250,5 +250,15 @@ export async function twinView(p: PuzzleCtx | Game, o: { distance?: number; elev
   await st.view3D({ target: o.target ?? [0, 0, 0.9], distance: o.distance ?? 15.5, azimuth: o.azimuth ?? -90, elevation: o.elevation ?? 20, ms: o.ms ?? 0 });
 }
 
+/**
+ * Add a kit object straight to the world so that clearing the world disposes it fully (nested CSS2D
+ * labels included: three only removes a label's element when the label itself is removed).
+ */
+export function inWorld<T extends { object: Object3D; dispose(): void }>(g: Game, x: T): T {
+  x.object.userData.dispose = () => x.dispose();
+  g.stage.world.add(x.object);
+  return x;
+}
+
 /** A small TeX vector for readouts: (a, b, c) with true minus signs. */
 export const vecTex = (v: readonly number[], f: (x: number) => string): string => `(${v.map(f).join(',\\ ')})`;

@@ -25,6 +25,8 @@ export class Rail {
   cards: (Card | null)[];
   private selected = -1;
   private playing = -1;
+  /** While the rail is playing, cards cannot be moved. */
+  locked = false;
 
   constructor(private readonly o: RailOpts) {
     this.cards = o.slots.map((s) => s.fixed ?? null);
@@ -44,10 +46,10 @@ export class Rail {
       h('span', { class: 'n' }, c.name),
       h('span', { class: 'm', html: tex(texM(c.M)) }));
     if (where === 'palette') {
-      el.addEventListener('click', () => { if (!used) this.put(c); });
+      el.addEventListener('click', () => { if (!used && !this.locked) this.put(c); });
       el.addEventListener('dragstart', (e) => (e as DragEvent).dataTransfer?.setData('text/plain', c.id));
     } else if (!fixed) {
-      el.addEventListener('click', () => { this.cards[i] = null; this.selected = -1; sfx.back(); this.render(); this.o.onChange?.(this.cards.slice()); });
+      el.addEventListener('click', () => { if (this.locked) return; this.cards[i] = null; this.selected = -1; sfx.back(); this.render(); this.o.onChange?.(this.cards.slice()); });
     }
     return el;
   }
@@ -89,13 +91,13 @@ export class Rail {
       const hole = c ? this.cardEl(c, 'slot', k, !!s.fixed) : h('div', { class: 'hole' }, k === this.selected ? 'next card here' : 'empty');
       const slot = h('div', { class: `c17-slot ${s.copper ? 'cu' : ''} ${k === this.playing ? 'playing' : ''}`, 'data-slot': s.id },
         h('div', { class: 'lab' }, s.label), hole);
-      slot.addEventListener('click', (e) => { if (!c && !s.fixed) { e.stopPropagation(); this.selected = k; this.render(); } });
+      slot.addEventListener('click', (e) => { if (!c && !s.fixed && !this.locked) { e.stopPropagation(); this.selected = k; this.render(); } });
       slot.addEventListener('dragover', (e) => e.preventDefault());
       slot.addEventListener('drop', (e) => {
         e.preventDefault();
         const id = (e as DragEvent).dataTransfer?.getData('text/plain');
         const card = this.o.palette?.find((x) => x.id === id);
-        if (card && !s.fixed) { this.selected = k; if (this.cards[k]) this.cards[k] = null; this.put(card); }
+        if (card && !s.fixed && !this.locked) { this.selected = k; if (this.cards[k]) this.cards[k] = null; this.put(card); }
       });
       items.push(slot);
     }
@@ -121,7 +123,9 @@ export type Rider = (W: Mat) => void;
  * Play cards in acting order: the picture W goes I → M₁ → M₂M₁ → …, each stage drawn through `riders`.
  * `onStage(i)` fires as stage i starts (for captions). Resolves on the product.
  */
-export async function playCards(cards: Card[], riders: Rider[], o: { ms?: number; rail?: Rail | null; onStage?: (i: number) => void; pause?: number } = {}): Promise<Mat> {
+export async function playCards(list: Card[], riders: Rider[], o: { ms?: number; rail?: Rail | null; onStage?: (i: number) => void; pause?: number } = {}): Promise<Mat> {
+  const cards = list.slice();
+  if (o.rail) o.rail.locked = true;
   let cur = identity(cards[0]?.M.length ?? 2);
   riders.forEach((f) => f(cur));
   for (let i = 0; i < cards.length; i++) {
@@ -136,5 +140,6 @@ export async function playCards(cards: Card[], riders: Rider[], o: { ms?: number
     if (o.pause) await animate(o.pause, () => {}, ease.linear);
   }
   o.rail?.highlight(-1);
+  if (o.rail) o.rail.locked = false;
   return cur;
 }

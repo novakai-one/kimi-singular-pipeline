@@ -18,7 +18,7 @@ import {
   NULL_DIR, TEO_DECOYS, TEO_ENDS, TEO_NODE, TEO_REF, TEO_TILES, anywhereHolds, fmtN, fmtV, land, lawCore, len, offPlane,
   planeIsSubspace, runTeo, sameLandingHolds, type P3, type SolveCase,
 } from './logic';
-import { GlowLine, Probe, Room, Sheet, VIOLET, tv, twinView } from './space';
+import { GlowLine, Probe, Room, Sheet, VIOLET, inWorld, tv, twinView } from './space';
 
 export const sayit: SayItDef = {
   id: 'c15', who: 'bram',
@@ -95,9 +95,9 @@ export const doubtPlane: DoubtDef = {
     void p.g.stage.view3D({ target: [0.3, 0.3, 1.4], distance: 12.5, azimuth: -58, elevation: 20, ms: 0 });
     const st = p.g.stage;
     const patch = room.own(new PlanePatch(st, [0, 0, 0], [0, 0, 1], { color: '#9fd8ff', size: 6.5, opacity: 0.14 }));
-    const o = new Dot(room.w([0, 0, 0]), { color: C.white, size: 0.09, label: 'origin', labelOffset: [0, 22] });
+    const o = new Dot(room.w([0, 0, 0]), { color: C.white, size: 0.09, label: 'origin', labelOffset: [-34, 18] });
     const miss = new FatLine(st, [[0, 0, 0], [0, 0, 0]], { color: C.white, width: 1.8, opacity: 0.85, dashed: true, dashSize: 0.1, gapSize: 0.07 });
-    const tag = new Label('', [0, 0, 0], { className: 'act5-pt', offset: [0, -24] });
+    const tag = new Label('', [0, 0, 0], { className: 'act5-pt', offset: [86, -30] });
     p.add(o, miss, tag);
     const r = p.readout('Plane');
     let n: P3 = [1, 1, -1];
@@ -216,7 +216,7 @@ const drawCase = (g: Game, c: SolveCase) => {
   const L = Math.max(2, ...cols.map((v) => len(v)), len(c.b));
   if (m === 3) void g.stage.view3D({ target: [0, 0, 0.5], distance: 3.4 * L + 4, azimuth: -60, elevation: 22, ms: 0, orbit: false });
   else void g.stage.view2D({ center: [0, 0], height: 2.6 * L + 2, ms: 0 });
-  const add = (o: { object: import('three').Object3D }) => g.stage.world.add(o.object);
+  const add = (o: { object: import('three').Object3D; dispose(): void }) => inWorld(g, o);
   const rk = rank(c.A);
   if (m === 3 && rk === 2) {
     const js = [0, 1, 2].filter((j) => j < cols.length);
@@ -275,25 +275,21 @@ export const teo: TeoDef = {
     g.stage.clearWorld();
     void g.stage.view3D({ target: [2.3, 1.9, 1.1], distance: 9.5, azimuth: -55, elevation: 20, ms: 500, orbit: true });
     const res = runTeo(ids);
-    const W = g.stage.world;
-    const node = new Dot(TEO_NODE, { color: C.white, size: 0.11, label: 'Teo’s node', labelOffset: [0, 24] });
-    W.add(node.object);
-    const ends = TEO_ENDS.map((e) => { const dd = new Dot(e, { color: '#c8d0e0', size: 0.07 }); W.add(dd.object); return dd; });
-    void ends;
+    inWorld(g, new Dot(TEO_NODE, { color: C.white, size: 0.11, label: 'Teo’s node', labelOffset: [0, 24] }));
+    for (const e of TEO_ENDS) inWorld(g, new Dot(e, { color: '#c8d0e0', size: 0.07 }));
     // the struts themselves (grey rods)
-    for (const e of TEO_ENDS) W.add(new FatLine(g.stage, [TEO_NODE, e], { color: '#8f9bb3', width: 5, opacity: 0.55 }).object);
+    for (const e of TEO_ENDS) inWorld(g, new FatLine(g.stage, [TEO_NODE, e], { color: '#8f9bb3', width: 5, opacity: 0.55 }));
     await wait(500);
     const tail: V3 = res.usedPositions ? [0, 0, 0] : TEO_NODE;
     const vs = TEO_ENDS.map((e) => (res.usedPositions ? e : (vsub(e, TEO_NODE) as V3)));
     const arrows = vs.map((v, i) => new Arrow(tail, [tail[0] + v[0], tail[1] + v[1], tail[2] + v[2]], { color: [C.v, C.w, C.u][i], width: 0.045 }));
-    for (const a of arrows) { W.add(a.object); await a.grow(350); }
+    for (const a of arrows) { inWorld(g, a); await a.grow(350); }
     if (res.vol !== null && !ids.includes('x2')) {
       const box = new Parallelepiped(g.stage, [0, 0, 0], [0, 0, 0], [0, 0, 0], { color: res.flat ? VIOLET : C.result, opacity: 0.16 });
       box.group.position.set(...tail);
-      W.add(box.object);
+      inWorld(g, box);
       await animate(900, (k) => box.set(vs[0].map((x) => x * k) as V3, vs[1].map((x) => x * k) as V3, vs[2].map((x) => x * k) as V3), ease.out);
-      const lab = new Label(`volume ${fmtN(res.vol)}`, [tail[0] + 1.6, tail[1] + 2.2, tail[2] + 2.0], { className: `act5-pt ${res.flat ? 'v' : 'y'}` });
-      W.add(lab.object);
+      inWorld(g, new Label(`volume ${fmtN(res.vol)}`, [tail[0] + 1.6, tail[1] + 2.2, tail[2] + 2.0], { className: `act5-pt ${res.flat ? 'v' : 'y'}` }));
     }
     sfx[res.ok ? 'success' : 'miss']();
     const lead = '**Followed word for word:**';

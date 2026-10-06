@@ -47,13 +47,13 @@ export const buildDet: BuildDef = {
 export const buildDet3: BuildDef = {
   id: 'c14-det3', fn: 'det3', title: 'A 3 × 3 determinant by the formula',
   brief: 'Write `det3(M)` for a 3 × 3 matrix by cofactor expansion along the first row: $a_{11}C_{11} + a_{12}C_{12} + a_{13}C_{13}$, with the signs $+\\,-\\,+$. Use it to check your `det`.',
-  starter: 'def det3(M):\n    """Return the determinant of the 3 by 3 matrix M by expansion along row 1."""\n    (a, b, c), (d, e, f), (g, h, i) = M\n    return 0\n',
-  fill: 'def det3(M):\n    """Return the determinant of the 3 by 3 matrix M by expansion along row 1."""\n    (a, b, c), (d, e, f), (g, h, i) = M\n    return a * (e * i - f * h) - b * (___) + c * (___)\n',
-  solution: 'def det3(M):\n    """Return the determinant of the 3 by 3 matrix M by expansion along row 1."""\n    (a, b, c), (d, e, f), (g, h, i) = M\n    return a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g)\n',
+  starter: 'def det3(M):\n    """Return det M for a 3 by 3 M, expanding along row 1."""\n    (a, b, c), (d, e, f), (g, h, i) = M\n    return 0\n',
+  fill: 'def det3(M):\n    """Return det M for a 3 by 3 M, expanding along row 1."""\n    (a, b, c), (d, e, f), (g, h, i) = M\n    return a * (e * i - f * h) - b * (___) + c * (___)\n',
+  solution: 'def det3(M):\n    """Return det M for a 3 by 3 M, expanding along row 1."""\n    (a, b, c), (d, e, f), (g, h, i) = M\n    return a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g)\n',
   assemble: {
     lines: [
       'def det3(M):',
-      '    """Return the determinant of the 3 by 3 matrix M by expansion along row 1."""',
+      '    """Return det M for a 3 by 3 M, expanding along row 1."""',
       '    (a, b, c), (d, e, f), (g, h, i) = M',
       '    return a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g)',
     ],

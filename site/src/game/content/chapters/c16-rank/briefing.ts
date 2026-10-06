@@ -7,7 +7,7 @@ import { C } from '../../../core/theme';
 import { wait } from '../../../core/tween';
 import { rint } from '../../../game/lawcheck';
 import { col, cross, rank, rrefNum, type Mat } from '../../../math/la';
-import { Probe, Room, Sheet, VIOLET } from '../c15-nullspace/space';
+import { Probe, Room, Sheet, VIOLET, inWorld } from '../c15-nullspace/space';
 import { COL_COLORS } from './puzzles';
 import {
   fmtV, lawCore, len, nullity, oneBasisHolds, planeBasis, randRankMat, reducedColsHold, spanRank, twoArrowsHolds, type P3, type ShapeCase,
@@ -173,8 +173,7 @@ const drawCase = (g: Game, c: ShapeCase) => {
     m.position.set(j + 0.5, 0, kept ? 0.4 : 0.04);
     W.add(m);
   }
-  const lab = new Label(`${c.A.length} × ${n}: rank ${r} + nullity ${f} = ${n}`, [n / 2, 0, 1.5], { className: 'act5-pt' });
-  W.add(lab.object);
+  inWorld(g, new Label(`${c.A.length} × ${n}: rank ${r} + nullity ${f} = ${n}`, [n / 2, 0, 1.5], { className: 'act5-pt' }));
 };
 
 export const law: LawDef<ShapeCase> = {
