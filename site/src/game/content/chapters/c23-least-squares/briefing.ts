@@ -39,7 +39,7 @@ export function readingsScene(p: PuzzleCtx, o: {
 }): DoubtScene & { pts(): number[][] } {
   p.grid();
   const n = o.start.length;
-  void p.g.stage.view2D({ center: [(n - 1) / 2, 2.2], height: 6.4, ms: 0 });
+  void p.g.stage.view2D({ center: [(n - 1) / 2, 3.4], height: 9, ms: 0 });
   let pts = o.start.map((q) => q.slice());
   const line = new FatLine(p.g.stage, [[0, 0, 0], [1, 0, 0]], { color: C.result, width: 2.6, intensity: 1.3 });
   const up = new FatSegments(p.g.stage, [[[0, 0, 0], [0, 0, 0]]], { color: C.v, width: 2, opacity: 0.85 });

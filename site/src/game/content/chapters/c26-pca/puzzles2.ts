@@ -111,7 +111,7 @@ export const p6: PuzzleDef = {
     const path = new PointCloud(p, { points: rec.path.map(() => [0, 0, 0]), color: C.result, size: 0.05, glow: 0.5, core: 1.6 });
     const pathLine = new FatSegments(p.g.stage, [[[0, 0, 0], [0, 0, 0]]], { color: C.result, width: 1.6, opacity: 0.6 });
     p.add(pathLine.object); p.onDispose(() => pathLine.dispose());
-    const ax = [tag('', [3.6, -0.35, 0], 'dim'), tag('', [0.3, 3.6, 0], 'dim')];
+    const ax = [tag('', [3.75, -0.35, 0], 'dim'), tag('', [0, 3.4, 0], 'dim')];
     ax.forEach((t) => { p.add(t.object); p.onDispose(() => t.dispose()); });
     let chosen: number[] = [];
     const r = p.readout('The layout');
@@ -135,7 +135,7 @@ export const p6: PuzzleDef = {
       }
       ax[0].set(chosen[0] !== undefined ? `component ${chosen[0] + 1} →` : '');
       ax[1].set(chosen[1] !== undefined ? `component ${chosen[1] + 1} ↑` : '');
-      r.row('c', 'channels', chosen.length ? chosen.map((c) => `component ${c + 1}`).join(' and ') : 'empty', C.result);
+      r.row('c', 'components in the channels', chosen.length ? chosen.map((c) => `${c + 1}`).join(' and ') : 'none', C.result);
       r.row('s', 'share of the record kept', chosen.length === 2 ? `${fmtD(100 * pairShare(chosen), 1)}%` : '—', chosen.length === 2 && pairShare(chosen) > 0.95 ? C.good : C.white);
     };
     const chips = h('div', { class: 'a9-chips' });
@@ -188,9 +188,9 @@ export const p7: PuzzleDef = {
     const cb = new PointCloud(p, { points: P7_B, color: C.orange, size: 0.05, glow: 0.3, core: 1.3 });
     void ca; void cb;
     const first = new InfLine(p.g.stage, [0, 0, 0], v3(P7_EIG.vectors[0]), { color: C.white, width: 1.4, opacity: 0.45, dashed: true, length: 20 });
-    const line = new InfLine(p.g.stage, [0, 0, 0.01], [1, 0, 0], { color: C.result, width: 2.2, opacity: 0.85, length: 20 });
+    const line = new InfLine(p.g.stage, [0, 0, 0.01], [1, 0, 0], { color: C.result, width: 1.4, opacity: 0.6, length: 20 });
     p.add(first.object, line.object); p.onDispose(() => { first.dispose(); line.dispose(); });
-    ptag(p, 'first direction', [0.35, 4.2, 0], 'dim');
+    ptag(p, 'first direction', [0.75, -3.9, 0], 'dim');
     const sa = new PointCloud(p, { points: P7_A.map(() => [0, 0, 0]), color: '#c9d4e6', size: 0.035, opacity: 0.7 });
     const sb = new PointCloud(p, { points: P7_B.map(() => [0, 0, 0]), color: C.orange, size: 0.035, opacity: 0.7 });
     const R = 3.6;
@@ -213,13 +213,13 @@ export const p7: PuzzleDef = {
       onEnd: () => check(),
     });
     const check = () => { if (won) return; if (p7Won([Math.cos(rad(theta)), Math.sin(rad(theta))])) { won = true; p.subgoal(0); msg.say('Separated, along the second direction. The first direction has the most spread, and it does not care which kind is which.', 'good'); p.win(); } };
-    p.dock().append(msg.el);
+    p.dock().append(h('div', { class: 'a9-note' }, 'Drag the yellow handle to turn the line. The small dots are the shadows of each kind on it.'), msg.el);
     paint();
     void normalize;
     return {
       async showMe() { const a0 = theta; await animate(1300, (k) => { theta = a0 + (0 - a0) * k; knob.at([R * Math.cos(rad(theta)), R * Math.sin(rad(theta)), 0.03]); paint(); }, ease.inOut); check(); },
-      solve() { theta = 0; paint(); check(); },
-      wrong() { theta = 90; paint(); check(); },
+      solve() { theta = 0; knob.at([R, 0, 0.03]); paint(); check(); },
+      wrong() { theta = 90; knob.at([0, R, 0.03]); paint(); check(); },
     };
   },
 };

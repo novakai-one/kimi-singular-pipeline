@@ -128,7 +128,7 @@ export const p5: PuzzleDef = {
 
 // ------------------------------------------------------------------ p6 What's left over
 
-const SP = 0.18, AMP = 180;
+const SP = 0.18, AMP = 140;
 const sx = (b: number) => (b - 30) * SP;           // a sample boundary (0..60) on the axis
 const sampleX = (i: number) => sx(i + 0.5);
 
@@ -151,7 +151,7 @@ export const p6: PuzzleDef = {
   onWin: S.p6Win,
   setup(p) {
     p.grid({ base: 0.06, main: 0.12, axis: 0.3 });
-    void p.g.stage.view2D({ center: [0, 1.0], height: 7.2, ms: 0 });
+    void p.g.stage.view2D({ center: [0, 1.6], height: 7.2, ms: 0 });
     const d = p.difficulty;
     const tol = d === 'commander' ? 0 : 1;
     const bars = new FatSegments(p.g.stage, LEFTOVER.map((e, i) => [[sampleX(i), 0, 0.01], [sampleX(i), e * AMP, 0.01]] as [V3, V3]), { color: C.accent, width: 13, intensity: 1.1 });
@@ -160,7 +160,7 @@ export const p6: PuzzleDef = {
     tag(p, 'sample 0', [sx(0), -0.35, 0], 'dim', [20, 8]);
     tag(p, 'sample 59', [sx(60), -0.35, 0], 'dim', [-24, 8]);
     tag(p, 'noise size 0.002', [sx(5), 0.002 * AMP + 0.2, 0], 'dim', [30, -6]);
-    const shade = new Parallelogram(p.g.stage, [1, 0, 0], [0, 3.6, 0], { color: C.result, opacity: 0.08, origin: [sx(10), -0.5, -0.01] });
+    const shade = new Parallelogram(p.g.stage, [1, 0, 0], [0, 3.0, 0], { color: C.result, opacity: 0.08, origin: [sx(10), -0.5, -0.01] });
     p.add(shade);
     let a = 10, b = 50;
     const r = p.readout('Your marks');
@@ -172,7 +172,7 @@ export const p6: PuzzleDef = {
     });
     let done = false;
     const draw = () => {
-      shade.set([sx(b) - sx(a), 0, 0], [0, 3.6, 0], [sx(a), -0.5, -0.01]);
+      shade.set([sx(b) - sx(a), 0, 0], [0, 3.0, 0], [sx(a), -0.5, -0.01]);
       r.row('s', 'from sample', String(a), C.result);
       r.row('e', 'to sample', String(b - 1), C.result);
     };
@@ -187,7 +187,7 @@ export const p6: PuzzleDef = {
     const kA = mk(true), kB = mk(false);
     draw();
     // play the leftover as sound: a playhead runs across; every tall bar taps
-    const head = new FatLine(p.g.stage, [[sx(0), -0.4, 0.02], [sx(0), 3.0, 0.02]], { color: C.white, width: 1.5, opacity: 0 });
+    const head = new FatLine(p.g.stage, [[sx(0), -0.4, 0.02], [sx(0), 2.6, 0.02]], { color: C.white, width: 1.5, opacity: 0 });
     p.add(head);
     let playing = false;
     const play = async () => {
@@ -196,7 +196,7 @@ export const p6: PuzzleDef = {
       p.move();
       head.setOpacity(0.7);
       for (let i = 0; i < 60; i++) {
-        head.setPoints([[sampleX(i), -0.4, 0.02], [sampleX(i), 3.0, 0.02]]);
+        head.setPoints([[sampleX(i), -0.4, 0.02], [sampleX(i), 2.6, 0.02]]);
         if (Math.abs(LEFTOVER[i]) > 0.006) sfx.tick(KNOCK[i - KNOCK_START] === 'L' ? 1 : 4);
         await wait(p.g.headless ? 1 : 110);
       }
@@ -231,7 +231,7 @@ export const p7: PuzzleDef = {
   onWin: S.p7Win,
   setup(p) {
     p.grid();
-    void p.g.stage.view2D({ center: [2.2, 2.8], height: 6.6, ms: 0 });
+    void p.g.stage.view2D({ center: [1.1, 2.75], height: 8.2, ms: 0 });
     new PointCloud(p, { points: P3_PTS, color: C.white, size: 0.08 });
     const curve = new FatLine(p.g.stage, [[0, 0, 0], [1, 0, 0]], { color: C.result, width: 2.4 });
     curve.object.visible = false;
@@ -248,16 +248,20 @@ export const p7: PuzzleDef = {
       r.row('p', 'parabola', `$${fmtN(P7_FIT0[0], 3)} + ${fmtN(P7_FIT0[1], 3)}t ${fmtN(P7_FIT0[2], 3).startsWith('−') ? '-' : '+'} ${fmtN(Math.abs(P7_FIT0[2]), 3)}t^2$`, C.result);
       tick(0);
     };
-    const show = (k: string, label: string, x: number[]) => r.row(k, label, `$c_0 = ${x[0].toFixed(6)}$, error ${errOf(x).toExponential(0).replace('-', '−')}`, errOf(x) < 1e-9 ? C.good : C.orange);
-    const ne = () => { p.move(); show('ne', 'normal equations', P7_NE); tick(1); };
-    const qr = () => { p.move(); show('qr', 'QR', P7_QR); tick(2); };
+    const show = (k: string, label: string, x: number[]) => {
+      const c = errOf(x) < 1e-9 ? C.good : C.orange;
+      r.row(k, label, x[0].toFixed(6).replace('-', '−'), c);
+      r.row(`${k}-e`, 'its error', errOf(x).toExponential(0).replace('-', '−'), c);
+    };
+    const ne = () => { p.move(); show('ne', '$c_0$ by normal equations', P7_NE); tick(1); };
+    const qr = () => { p.move(); show('qr', '$c_0$ by QR', P7_QR); tick(2); };
     const pick = (which: 'ne' | 'qr') => {
       p.move();
       if (!flags[1] || !flags[2]) { msg.textContent = 'Solve both ways first.'; sfx.miss(); return; }
       if (which === 'qr') { msg.className = 'a8-msg good'; msg.textContent = 'QR. It never forms AᵀA, so it keeps about twice the digits.'; tick(3); }
       else { msg.className = 'a8-msg bad'; msg.textContent = 'The normal equations are off in the sixth digit: forming AᵀA squared how much the near-parallel columns magnify rounding.'; sfx.miss(); }
     };
-    r.row('ex', 'exact $c_0$ at hours 300–304', P7_EXACT[0].toFixed(6));
+    r.row('ex', 'hour-300 exact $c_0$', P7_EXACT[0].toFixed(6).replace('-', '−'));
     p.dock().append(
       h('div', { class: 'a8-btns' }, button('Fit the parabola', fit, { cls: 'small' }), button('Hours 300–304: normal equations', ne, { cls: 'small' }), button('Hours 300–304: QR', qr, { cls: 'small' })),
       h('div', { class: 'a8-row' }, h('span', { class: 'k' }, 'More accurate:'), button('normal equations', () => pick('ne'), { cls: 'small ghost' }), button('QR', () => pick('qr'), { cls: 'small ghost' })),

@@ -145,14 +145,14 @@ let REC: RecordData | null = null;
 export function record(): RecordData { return (REC ??= buildRecord()); }
 function buildRecord(): RecordData {
   const r = rng(1018);
-  const ang: number[] = [], rad: number[] = [];
+  const ang: number[] = [], rad: number[] = [], along: number[] = [];
   const raw1: number[] = [], raw2: number[] = [], raw3: number[] = [];
   for (let i = 0; i < REC_N; i++) {
     const arm = i % 2;
     const t = Math.sqrt(r()) * 3 * Math.PI;
     const rho = 0.18 + t / (3 * Math.PI) + 0.035 * gauss(r);
     const th = t + arm * Math.PI + 0.06 * gauss(r);
-    ang.push(th); rad.push(rho);
+    ang.push(th); rad.push(rho); along.push(t);
     raw1.push(rho * Math.cos(th)); raw2.push(rho * Math.sin(th));
     raw3.push(Math.cos(3 * th) * rho + 0.05 * gauss(r));
   }
@@ -162,8 +162,8 @@ function buildRecord(): RecordData {
   const V = randOrtho(r, REC_D);                           // columns: the record's own axes
   const mean = Array.from({ length: REC_D }, () => Math.round((r() * 8 - 4) * 100) / 100);
   const X: number[][] = Array.from({ length: REC_N }, (_, i) => mean.map((m, j) => m + RECORD_SV.reduce((s, sg, k) => s + sg * U[k][i] * V[j][k], 0)));
-  // one path through the stars: the entries along the first arm, in order of distance out
-  const arm0 = [...Array(REC_N).keys()].filter((i) => i % 2 === 0).sort((a, b) => rad[a] - rad[b]);
+  // one path through the stars: the entries along the first arm, in order along it
+  const arm0 = [...Array(REC_N).keys()].filter((i) => i % 2 === 0).sort((a, b) => along[a] - along[b]);
   const path = arm0.filter((_, k) => k % 110 === 0).slice(0, 42);
   return { X, U, V, mean, path };
 }

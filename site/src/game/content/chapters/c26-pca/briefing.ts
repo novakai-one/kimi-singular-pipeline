@@ -47,10 +47,10 @@ function shapedCloud(p: PuzzleCtx, o: { angle: number; s1: number; mean?: Vec; o
   const make = () => cloudWith(90, mean, (() => { const a = rad(angle), c = Math.cos(a), s = Math.sin(a); return [[c * c * s1 + s * s * s2, c * s * (s1 - s2)], [c * s * (s1 - s2), s * s * s1 + c * c * s2]]; })(), 4242);
   let X = make();
   const cloud = new PointCloud(p, { points: X, color: C.accent, size: 0.05, glow: 0.3, core: 1.3, opacity: 0.85 });
-  const R = () => 1.2 + Math.sqrt(s1) * 1.6;
+  const R = () => 0.8 + Math.sqrt(s1) * 1.1;
   const knob = new Knob(p, [mean[0] + R() * Math.cos(rad(angle)), mean[1] + R() * Math.sin(rad(angle)), 0.03], {
-    color: C.white, size: 0.07, countMoves: false,
-    onMove: (q) => { const dx = q[0] - mean[0], dy = q[1] - mean[1]; angle = deg(Math.atan2(dy, dx)); const l = Math.hypot(dx, dy); s1 = Math.max(0.4, Math.min(4, ((l - 1.2) / 1.6) ** 2)); update(); },
+    color: C.v, size: 0.07, countMoves: false,
+    onMove: (q) => { const dx = q[0] - mean[0], dy = q[1] - mean[1]; angle = deg(Math.atan2(dy, dx)); const l = Math.hypot(dx, dy); s1 = Math.max(0.4, Math.min(4, ((l - 0.8) / 1.1) ** 2)); update(); },
   });
   const update = () => { X = make(); cloud.set(X); o.onChange?.(X); };
   return {
@@ -66,10 +66,10 @@ export const doubtCols: DoubtDef = {
   id: 'c26-d-cols', who: 'bram', isTrue: false,
   claim: 'Why build new numbers? Keep the columns of the record with the most spread. Same thing.',
   reason: 'Only when the cloud lies along the axes. Tilt it, and its spread is shared between the columns: the best single column keeps less than the first principal component, which is a combination of every column.',
-  goal: 'Shape the cloud with the white handle. The readout compares the best single column with the first principal component (one number kept). **Challenge it** or **Back it**.',
+  goal: 'Shape the cloud with the green handle. The readout compares the best single column with the first principal component (one number kept). **Challenge it** or **Back it**.',
   view: '2d',
   setup(p) {
-    void p.g.stage.view2D({ center: [0, 0], height: 9, ms: 0 });
+    void p.g.stage.view2D({ center: [0, 1.3], height: 9, ms: 0 });   // the cloud sits below the claim panel
     p.grid({ main: 0.14, base: 0, axis: 0.42 });
     const r = p.readout('One number per reading');
     const paint = (X: number[][]) => {
@@ -96,10 +96,10 @@ export const doubtLsq: DoubtDef = {
   id: 'c26-d-lsq', who: 'bram', isTrue: false,
   claim: 'The first principal component is the line of best fit from Chapter 23. Same line, new name.',
   reason: 'Least squares makes the **vertical** distances small, to predict y from x. The first principal component makes the **perpendicular** distances small and treats both numbers alike. For a tilted, spread-out cloud the two lines differ.',
-  goal: 'Shape the cloud. Yellow: the first principal component. Orange: the least-squares line. **Challenge it** (the two lines differ) or **Back it**.',
+  goal: 'Shape the cloud with the green handle. Yellow: the first principal component. Orange: the least-squares line. **Challenge it** (the two lines differ) or **Back it**.',
   view: '2d',
   setup(p) {
-    void p.g.stage.view2D({ center: [0, 0], height: 9, ms: 0 });
+    void p.g.stage.view2D({ center: [0, 1.3], height: 9, ms: 0 });   // the cloud sits below the claim panel
     p.grid({ main: 0.14, base: 0, axis: 0.42 });
     const pc = new InfLine(p.g.stage, [0, 0, 0.01], [1, 0, 0], { color: C.result, width: 2.4, opacity: 0.9, length: 20 });
     const ls = new InfLine(p.g.stage, [0, 0, 0.012], [1, 0, 0], { color: C.orange, width: 2, opacity: 0.9, length: 20, dashed: true });
@@ -131,10 +131,10 @@ export const doubtSwing: DoubtDef = {
   id: 'c26-d-swing', who: 'bram', isTrue: true,
   claim: 'Skip the centring and the first direction swings toward the mean.',
   reason: 'About the origin, the moments are $C + \\tfrac{n}{n - 1}\\mathbf m\\mathbf m^{\\mathsf T}$: the covariance plus a stretch along the mean $\\mathbf m$. Adding it pulls the top eigenvector toward the line of $\\mathbf m$, and never away. Far from the origin, it points almost straight at the cloud.',
-  goal: 'Drag the cloud’s middle (white) and shape it (handle). Orange: the first direction without centring, through the origin. Yellow: with centring. **Back it** (Bram will shake it) or **Challenge it**.',
+  goal: 'Drag the cloud’s middle (white) and shape it (green handle). Orange: the first direction without centring, through the origin. Yellow: with centring. **Back it** (Bram will shake it) or **Challenge it**.',
   view: '2d',
   setup(p) {
-    void p.g.stage.view2D({ center: [1.5, 1], height: 10, ms: 0 });
+    void p.g.stage.view2D({ center: [1.5, 2.2], height: 10, ms: 0 });
     p.grid({ main: 0.14, base: 0, axis: 0.42 });
     const raw = new InfLine(p.g.stage, [0, 0, 0.012], [1, 0, 0], { color: C.orange, width: 2, opacity: 0.9, length: 26, dashed: true });
     const cen = new InfLine(p.g.stage, [0, 0, 0.01], [1, 0, 0], { color: C.result, width: 2.2, opacity: 0.9, length: 26 });
@@ -146,8 +146,8 @@ export const doubtSwing: DoubtDef = {
       const a = symEig(momentsAbout(X, [0, 0])).vectors[0], b = symEig(covariance(X)).vectors[0];
       raw.set([0, 0, 0.012], v3(a)); cen.set(v3(m, 0.01), v3(b));
       const ang = (u: Vec) => { const t = Math.acos(Math.min(1, Math.abs(u[0] * m[0] + u[1] * m[1]) / (norm(u) * norm(m) || 1))); return deg(t); };
-      r.row('r', 'without centring: off the mean’s line by', `${fmtD(ang(a), 1)}°`, C.orange);
-      r.row('c', 'centred: off the mean’s line by', `${fmtD(ang(b), 1)}°`, C.result);
+      r.row('r', 'not centred: angle to the mean', `${fmtD(ang(a), 1)}°`, C.orange);
+      r.row('c', 'centred: angle to the mean', `${fmtD(ang(b), 1)}°`, C.result);
     };
     const sc = shapedCloud(p, { angle: 70, s1: 1.5, mean, onChange: paint });
     const mk = new Knob(p, v3(mean, 0.04), { color: C.white, size: 0.08, countMoves: false, onMove: (q) => { mean = [q[0], q[1]]; sc.setMean(mean); } });
