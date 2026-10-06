@@ -340,8 +340,8 @@ export const p4: PuzzleDef = {
 
     // ---- stage B: D = turn 45° then stretch 1.41; check the sum and product of its λ
     const sq = new Parallelogram(p.g.stage, [1, 0, 0], [0, 1, 0], { color: C.result, opacity: 0.16 });
-    const e1 = new Arrow([0, 0, 0.01], [1, 0, 0.01], { color: C.v, width: 0.045, label: '$D\\hat\\imath$' });
-    const e2 = new Arrow([0, 0, 0.01], [0, 1, 0.01], { color: C.w, width: 0.045, label: '$D\\hat\\jmath$' });
+    const e1 = new Arrow([0, 0, 0.01], [1, 0, 0.01], { color: C.v, width: 0.045, label: '$D\\mathbf e_1$' });
+    const e2 = new Arrow([0, 0, 0.01], [0, 1, 0.01], { color: C.w, width: 0.045, label: '$D\\mathbf e_2$' });
     const plate = new Outline2D(p.g.stage, PLATE, { color: C.white, opacity: 0.12 });
     const home = new Outline2D(p.g.stage, PLATE, { color: '#7d8aa5', opacity: 0.05 });
     p.add(home, plate, sq, e1, e2);

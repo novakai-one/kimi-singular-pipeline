@@ -1,6 +1,6 @@
 // Chapter 18: every voiced line. Plain data; story numbers are formatted from logic.ts / truth.ts, never typed.
 import type { Line } from '../../lines';
-import { CUTTER, P1_A, P2_A, P4_SUM, P5_VALUES, P6_LINES, P7_VALUES, P3_LINES, P1_LINES, fmtN, fmtV, sayV, spell } from './logic.ts';
+import { CUTTER, P1_A, P2_A, P5_VALUES, P6_LINES, P7_VALUES, P3_LINES, P1_LINES, fmtN, fmtV, sayV, spell } from './logic.ts';
 
 const col = (M: number[][], j: number) => M.map((r) => r[j]);
 const vals = (xs: number[]) => xs.map(fmtN).join(', ');
@@ -92,5 +92,3 @@ export const S: Record<string, Line[]> = {
   ],
 };
 
-/** Spoken checks for the unit test: the trace sum used in p4. */
-export const P4_SUM_SAID = P4_SUM;
