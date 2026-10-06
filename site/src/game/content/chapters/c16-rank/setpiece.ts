@@ -31,7 +31,7 @@ const PALE = '#9fd8ff';
 
 export const sp1: PuzzleDef = {
   id: 'c16-sp1',
-  title: 'Where does every part of the scanner matrix live?',
+  title: 'Where does every part of the debris scanner’s matrix live?',
   goal: 'Vell’s debris scanner $M$. **Inputs** (left): place the plane through its **rows**, and its **null space**. **Outputs** (right): place the **column space**, and the line at right angles to every column.',
   subgoals: ['Inputs: the plane through the rows', 'Inputs: the null space', 'Outputs: the column space', 'Outputs: the line at right angles to every column'],
   hints: [
@@ -332,15 +332,20 @@ const vellGone: DoubtDef = {
     void twinView(p, { distance: 15.5 });
     new GlowLine(left, NULL_DIR, { opacity: 0.5 });
     const sheet = new Sheet(right, [1, 1, -1], { color: C.result, size: 6, opacity: 0.1 }); sheet.setOpacity(0.4);
-    let a: P3 = [2, 0, 1], b: P3 = [3, 1, 0];
+    // b = a + t(1, 1, −1) for a whole step t ≠ 0: b follows a when a is dragged, and never lands on it
+    let a: P3 = [2, 0, 1], b: P3 = [3, 1, 0], t = 1;
+    const along = (s: number): P3 => [a[0] + s, a[1] + s, a[2] - s];
     const la = new Dot([0, 0, 0], { color: C.result, size: 0.11 });
     const tag = new Label('', [0, 0, 0], { className: 'act5-pt y', offset: [0, -24] });
     p.add(la, tag);
-    const pa = new Probe(p, left, a, { color: C.v, label: 'a', countMoves: false, snap: null, fit: (x) => x });
-    const pb = new Probe(p, left, b, { color: C.w, label: 'b', countMoves: false, snap: null, fit: (x) => { const t = Math.round((x[0] - a[0] + x[1] - a[1] - (x[2] - a[2])) / 3); return [a[0] + t, a[1] + t, a[2] - t]; }, onMove: (x) => { b = x; draw(); } });
+    const pa = new Probe(p, left, a, {
+      color: C.v, label: 'a', countMoves: false, snap: 1, fit: (x) => x,
+      onMove: (x) => { a = x; if (along(t).some((c) => Math.abs(c) > 3) && along(-t).every((c) => Math.abs(c) <= 3)) t = -t; b = along(t); pb.set(b); draw(); },
+    });
+    const pb = new Probe(p, left, b, { color: C.w, label: 'b', countMoves: false, snap: null, fit: (x) => { t = Math.round((x[0] - a[0] + x[1] - a[1] - (x[2] - a[2])) / 3) || t; return along(t); }, onMove: (x) => { b = x; draw(); } });
     const draw = () => { la.at(right.w(land(a))); tag.at(right.w(land(a))); tag.set(`${fmtV(land(a))} · from both`); };
     draw();
-    const set = (x: P3, y: P3) => { a = x; b = y; pa.set(x); pb.set(y); draw(); };
+    const set = (x: P3, y: P3) => { a = x; b = y; t = y[0] - x[0] || 1; pa.set(x); pb.set(y); draw(); };
     return {
       holds: () => goneHolds(a, b),
       describe: () => `starts ${fmtV(a)} and ${fmtV(b)} both land on ${fmtV(land(a))}: the landing is the same point, whichever start it came from`,
@@ -398,7 +403,7 @@ const vellRank2: DoubtDef = {
 const vellRowCol: DoubtDef = {
   id: 'c16-r-rowcol', who: 'vell', isTrue: false,
   claim: 'The row space and the column space are always the same plane.',
-  reason: 'They always hold the same **number** of directions, but they can be different planes. For the scanner matrix $M$ the row space has normal $(1, -2, 1)$ and the column space has normal $(2, -1, 0)$.',
+  reason: 'They always hold the same **number** of directions, but they can be different planes. For the debris scanner’s matrix $M$ the row space has normal $(1, -2, 1)$ and the column space has normal $(2, -1, 0)$.',
   goal: 'Set a 3 × 3 matrix of rank 2: its row space is drawn pale, its column space yellow. **Challenge it** with two different planes, or **Back it**.',
   view: '3d',
   setup(p) {

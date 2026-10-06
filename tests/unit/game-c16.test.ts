@@ -58,6 +58,7 @@ test('p5: the rate-of-bend matrix, its action, its null space, and a basis with 
   vclose(L.P5_RATE, [-3, 4, 0]);
   vclose(matVec(L.D, L.P5_NULL), [0, 0, 0]);
   close(L.P5_DET, 2);
+  assert.notDeepEqual(transpose(L.D), L.D, 'the transposed-D mistake is a different matrix');
   // the rule is the slope: (p(t + h) − p(t)) / h → b + 2ct
   const p = L.P5_PROFILE, h = 1e-6;
   for (const t of [-1, 0, 0.5, 2]) close((L.profileAt(p, t + h) - L.profileAt(p, t)) / h, L.profileAt(L.P5_RATE, t), 1e-4);
@@ -76,6 +77,31 @@ test('p6: tags are right exactly at the pivot columns; the Shake matrices obey k
   }
   assert.ok(L.p6OrderOk(['t1', 't2', 't3', 't4']) && L.p6OrderOk(['t1', 't3', 't2', 't4']));
   assert.ok(!L.p6OrderOk(['t1', 'x1', 't3', 't4']) && !L.p6OrderOk(['t4', 't2', 't3', 't1']));
+});
+
+test('p6: Navigator\'s typed argument (rank, one free arrow, nullity, sum) and Commander\'s last line', () => {
+  const g = L.p6Argument(L.P2_A);
+  assert.deepEqual([g.rank, g.freeCol, g.nullity, g.n], [2, 3, 2, 4]);
+  vclose(g.arrow, [-1, 0, -2, 1]);
+  const r = rng(1606);
+  for (let i = 0; i < 200; i++) {
+    const A = L.p6Matrix(i % 6, r);
+    if (L.pivotCols(A).length === A[0].length) { assert.throws(() => L.p6Argument(A)); continue; }
+    const a = L.p6Argument(A);
+    assert.equal(a.rank, rank(A));
+    assert.equal(a.nullity, L.nullity(A));
+    assert.equal(a.rank + a.nullity, a.n);
+    assert.ok(!L.pivotCols(A).includes(a.freeCol));
+    close(a.arrow[a.freeCol], 1);
+    vclose(matVec(A, a.arrow), A.map(() => 0));
+    // every other free variable is 0
+    for (let j = 0; j < a.n; j++) if (j !== a.freeCol && !L.pivotCols(A).includes(j)) close(a.arrow[j], 0);
+  }
+  const { m, n, rank: rk, nullity: nl } = L.P6_LAST;
+  assert.equal(rk + nl, n);
+  assert.equal(L.nullity(L.randRankMat(rng(3), m, n, rk)), nl);
+  assert.notEqual(nl, m - rk, 'counting zero rows gives a different number');
+  assert.notEqual(nl, n - m, 'columns minus rows gives a different number');
 });
 
 test('p7: a third arrow off the plane completes a basis of 3-D; one on the plane does not', () => {

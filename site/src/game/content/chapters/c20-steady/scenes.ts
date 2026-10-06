@@ -53,6 +53,7 @@ export async function coldOpen(g: Game): Promise<void> {
 /** Scene staging: the ark with its drones. */
 export async function dronesShot(g: Game): Promise<void> {
   const { set } = await exteriorSet(g, { drones: TOTAL });
+  if (!set.alive()) return;
   orbitShot(g, set, [-6, 2, 2], 66, 20, -1.9, 0.012);
 }
 

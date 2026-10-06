@@ -36,6 +36,8 @@ const check = (set: { alive(): boolean }) => { if (!set.alive()) throw new Gone(
 export async function exteriorSet(g: Game, o: { drones?: number } = {}): Promise<{ set: ActSet; cutter: Group; drones: Points | null }> {
   const set = await actSet(g, { ark: { at: [0, 0, 0] }, anchor: { at: [-120, 80, -14], scale: 6.5 }, lantern: { at: [26, -34, 8], face: [-0.6, 1, 0], scale: 1.4 } });
   const cutter = makeCutter(1.2);
+  // the beat moved on while the models loaded: register nothing on a set that is already gone
+  if (!set.alive()) return { set, cutter, drones: null };
   cutter.position.set(-70, 46, 4);
   aimAt(cutter, [-120, 80, -14]);
   set.root.add(cutter);
@@ -65,6 +67,7 @@ export async function exteriorSet(g: Game, o: { drones?: number } = {}): Promise
 /** Scene staging: the ark and the cutter, the camera on a slow orbit. */
 export async function exteriorShot(g: Game): Promise<void> {
   const { set } = await exteriorSet(g);
+  if (!set.alive()) return; // skipped before the models loaded: leave the camera to the next beat
   let t = 0;
   set.tick((dt) => { t += dt; if (g.stage.controls) return; const a = -1.9 + t * 0.012; g.stage.camera.position.set(-40 + 95 * Math.cos(a), 20 + 95 * Math.sin(a), 22 + Math.sin(t * 0.1) * 2); g.stage.camera.up.set(0, 0, 1); g.stage.camera.lookAt(-40, 20, 0); });
   g.stage.disposeControls();
@@ -182,6 +185,7 @@ export function orbit(g: Game, f: { tick(fn: (dt: number) => void): void }, targ
 /** Scene staging: the holotable field, Vell's lines lit, the camera drifting. */
 export async function fieldShot(g: Game): Promise<void> {
   const f = await fieldSet(g, { lines: true });
+  if (!f.alive()) return;
   orbit(g, f, [0, 0, 0], 17, 26, -60, 2.2);
 }
 

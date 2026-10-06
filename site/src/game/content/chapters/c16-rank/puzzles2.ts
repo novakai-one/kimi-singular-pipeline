@@ -16,8 +16,8 @@ import { GlowLine, Room, Sheet, tv } from '../c15-nullspace/space';
 import { Counter } from './counter';
 import { COL_COLORS } from './puzzles';
 import {
-  D, P5_DET, P5_LANDS, P5_NULL, P5_PROFILE, P5_RATE, P5_SET, P6_DECOYS, P6_TILES, P7_GIVEN, fmtN, fmtV, freeArrows, len,
-  p6Matrix, p6OrderOk, p7Won, pivotCols, profileAt, tagsOk, type Diff, type Tag,
+  D, P2_A, P5_DET, P5_LANDS, P5_NULL, P5_PROFILE, P5_RATE, P5_SET, P6_DECOYS, P6_LAST, P6_TILES, P7_GIVEN, fmtN, fmtV, freeArrows, len,
+  p6Argument, p6Matrix, p6OrderOk, p7Won, pivotCols, profileAt, tagsOk, type Diff, type Tag,
 } from './logic';
 import { S } from './script';
 
@@ -157,15 +157,25 @@ export const p6: PuzzleDef = {
   onWin: S.p6Win,
   setup(p) {
     const R = rng(1606);
-    const needTiles = d(p) === 'commander';
-    const flags = [false, !needTiles];
+    const diff = d(p);
+    // Cadet watches the argument; Navigator types it for one of its six matrices; Commander puts it in
+    // order and types the last line for a matrix of a new shape.
+    const flags = [false, false];
+    const tick = (i: number) => {
+      if (!flags[i]) { flags[i] = true; p.subgoal(i); }
+      if (flags.every(Boolean) && !p.won) p.win();
+    };
     let round = 0;
     let A: Mat = p6Matrix(0, R);
+    // the reduced form's pivots are coloured on Cadet; otherwise only once the tags are checked right
+    let reveal = false;
+    // the latest matrix tagged right that has a free column (Navigator's argument is about it)
+    let lastFree: Mat | null = null;
     const room = new Room(p, { origin: [2.2, 0, 0], extent: 3, scale: 0.55, title: 'the columns' });
     void p.g.stage.view3D({ target: [1.2, 0.3, 1.1], distance: 12.5, azimuth: -74, elevation: 18, ms: 0 });
     const arrows = [0, 1, 2, 3, 4].map((j) => room.arrow([0, 0, 0], { color: COL_COLORS[j], label: `$\\mathbf a_${j + 1}$` }));
     const r = p.readout('Matrix and its reduced form');
-    const counter = new Counter({ n: A[0].length, rows: A.length, clickable: d(p) !== 'cadet', title: 'Tag each column' });
+    const counter = new Counter({ n: A[0].length, rows: A.length, clickable: diff !== 'cadet', title: 'Tag each column' });
     const roundEl = h('div', { class: 'kicker' });
     const msg = h('div', { class: 'act5-msg' });
     const eq = h('div', { class: 'eq' });
@@ -173,7 +183,7 @@ export const p6: PuzzleDef = {
     let mi: MatrixInput;
     const show = () => {
       const { R: RR, pivots } = rrefNum(A);
-      eq.innerHTML = tex(`A = ${matTex(A, null)} \\;\\to\\; ${matTex(RR, pivots)}`, false);
+      eq.innerHTML = tex(`A = ${matTex(A, null)} \;\\to\; ${matTex(RR, diff === 'cadet' || reveal ? pivots : null)}`, false);
       roundEl.textContent = `Matrix ${Math.min(round + 1, 6)} of 6 · ${A.length} × ${A[0].length}`;
       arrows.forEach((a, j) => {
         const on = A.length === 3 && j < A[0].length;
@@ -183,8 +193,9 @@ export const p6: PuzzleDef = {
     };
     const load = (M: Mat) => {
       A = M.map((x) => x.slice());
+      reveal = false;
       counter.reshape(A[0].length, A.length);
-      mi = new MatrixInput({ rows: A.length, cols: A[0].length, values: A, label: 'A =', step: 1, onChange: (m) => { A = m; counter.set(new Array(A[0].length).fill(null)); show(); } });
+      mi = new MatrixInput({ rows: A.length, cols: A[0].length, values: A, label: 'A =', step: 1, onChange: (m) => { A = m; reveal = false; counter.set(new Array(A[0].length).fill(null)); show(); } });
       matBox.replaceChildren(mi.el);
       show();
     };
@@ -203,37 +214,81 @@ export const p6: PuzzleDef = {
         return;
       }
       const k = counter.kept, f = counter.flat;
-      const arrowsTo0 = freeArrows(A);
-      msg.className = 'act5-msg good';
-      msg.innerHTML = inline(`${k} kept + ${f} flattened = ${A[0].length} columns. ${f ? `Arrows to the origin: ${arrowsTo0.map((v) => fmtV(v)).join(', ')}.` : 'Nothing flattened.'}`);
-      sfx.success();
+      reveal = true;
+      show();
+      if (f) lastFree = A.map((x) => x.slice());
       round++;
-      if (round >= 6) { if (!flags[0]) { flags[0] = true; p.subgoal(0); } done(); return; }
+      // the sixth matrix's arrows are left for Navigator's typed argument to find
+      const list = f && !(round >= 6 && diff === 'navigator');
+      msg.className = 'act5-msg good';
+      msg.innerHTML = inline(`${k} kept + ${f} flattened = ${A[0].length} columns. ${list ? `Arrows to the origin: ${freeArrows(A).map((v) => fmtV(v)).join(', ')}.` : f ? '' : 'Nothing flattened.'}`);
+      sfx.success();
+      if (round >= 6) { tick(0); done(); return; }
       if (!driving) { const at = round; window.setTimeout(() => { if (round === at && round < 6) load(p6Matrix(round, R)); }, p.g.headless ? 0 : 900); }
     };
     const reduceBtn = button('Tag from the reduced form', () => { const piv = pivotCols(A); counter.set(A[0].map((_, j) => (piv.includes(j) ? 'kept' : 'flat') as Tag)); }, { cls: 'small' });
-    reduceBtn.hidden = d(p) !== 'cadet';
+    reduceBtn.hidden = diff !== 'cadet';
     const btns = h('div', { class: 'act5-btns' }, reduceBtn, button('Check tags', check, { cls: 'primary small' }), button('Shake: deal a new matrix', () => { p.move(); load(p6Matrix(round + 2 + Math.floor(R() * 6), R)); }, { cls: 'small ghost' }));
     p.dock().append(matBox, btns, msg);
     load(A);
     let tiles: TileOrder | null = null;
+    let ws: StepWorksheet | null = null;
+    let ordered = false, typed = false;
+    const both = () => { if (ordered && typed) { sfx.success(); tick(1); } };
     const done = () => {
-      if (!flags[1] && needTiles && !tiles) {
-        const tm = h('div', {});
-        p.dock().replaceChildren(tm);
-        tiles = new TileOrder(p, {
-          mount: tm, tiles: P6_TILES, decoys: P6_DECOYS, title: 'Now the argument, in order', submitLabel: 'Check',
-          onSubmit: (o) => {
-            p.move();
-            if (p6OrderOk(o)) { flags[1] = true; p.subgoal(1); sfx.success(); finish(); }
-            else { sfx.miss(); p.bark('lantern', 'Reduce first. Count pivots, count free columns, then add.'); }
+      if (diff === 'cadet') { tick(1); return; }
+      if (diff === 'navigator') {
+        // the argument, typed for the last matrix with a free column (the scanner matrix if none had one)
+        A = (lastFree ?? P2_A).map((x) => x.slice());
+        const piv = pivotCols(A);
+        counter.reshape(A[0].length, A.length);
+        counter.set(A[0].map((_, j) => (piv.includes(j) ? 'kept' : 'flat') as Tag));
+        show();
+        roundEl.textContent = `Why it adds up · this ${A.length} × ${A[0].length}`;
+        msg.className = 'act5-msg good';
+        msg.innerHTML = inline('Six matrices tagged right. Now the reason, step by step, for the matrix shown with its reduced form.');
+        const g = p6Argument(A);
+        const flipped = g.arrow.map((x, i) => (piv.includes(i) && Math.abs(x) > 1e-12 ? -x : x));
+        const steps: Step[] = [
+          { prompt: 'Columns of the reduced form that hold a pivot, so the rank:', answer: g.rank, mistakes: A.length !== g.rank ? [[A.length, 'That counts rows. Count the columns that hold a pivot.']] : [] },
+          {
+            prompt: `Column ${g.freeCol + 1} is free. Set $x_{${g.freeCol + 1}} = 1$${g.nullity > 1 ? ' and the other free variables to 0' : ''}. The arrow $A$ sends to the origin:`,
+            answer: g.arrow, tol: 0.01,
+            mistakes: flipped.some((x, i) => x !== g.arrow[i]) ? [[flipped, `Each pivot variable is **minus** its row’s entry in column ${g.freeCol + 1} of the reduced form.`]] : [],
           },
-        });
+          { prompt: 'Free columns, one arrow to the origin each, so the nullity:', answer: g.nullity },
+          { prompt: 'Every column is one or the other, never both. Rank + nullity:', answer: g.n, mistakes: A.length !== g.n ? [[A.length, 'That is the number of rows. Count the columns.']] : [] },
+        ];
+        const box = h('div', {});
+        ws = new StepWorksheet(p, { steps, mount: box, title: 'Why it adds up, for this matrix · each step is checked', onDone: () => { sfx.success(); tick(1); } });
+        p.dock().replaceChildren(msg, box);
         return;
       }
-      finish();
+      const tm = h('div', {});
+      const tmsg = h('div', { class: 'act5-msg' });
+      tiles = new TileOrder(p, {
+        mount: tm, tiles: P6_TILES, decoys: P6_DECOYS, title: 'Now the argument, in order', submitLabel: 'Check order',
+        onSubmit: (o) => {
+          p.move();
+          if (p6OrderOk(o)) { ordered = true; tmsg.className = 'act5-msg good'; tmsg.textContent = 'That is the argument.'; sfx.snap(); both(); }
+          else {
+            sfx.miss();
+            tmsg.className = 'act5-msg bad';
+            tmsg.textContent = o.includes('x1') ? 'Zero rows are not free variables: the scanner matrix had one zero row and two free columns.' : '';
+            if (!o.includes('x1')) p.bark('lantern', 'Reduce first. Count pivots, count free columns, then add.');
+          }
+        },
+      });
+      ws = new StepWorksheet(p, {
+        mount: h('div'), title: 'The last line',
+        steps: [{
+          prompt: `A ${P6_LAST.m} × ${P6_LAST.n} matrix has rank ${P6_LAST.rank}. Its nullity:`, answer: P6_LAST.nullity,
+          mistakes: [[P6_LAST.m - P6_LAST.rank, 'That counts zero rows. The free variables are the columns without a pivot.'], [P6_LAST.n - P6_LAST.m, 'That is columns minus rows. The pivots, not the rows, decide which columns are free.']],
+        }],
+        onDone: () => { typed = true; both(); },
+      });
+      p.dock().replaceChildren(tm, tmsg, ws.el);
     };
-    const finish = () => { if (flags.every(Boolean) && !p.won) { if (!needTiles) p.subgoal(1); p.win(); } };
     const autoRound = async (ms: number) => {
       driving = true;
       const piv = pivotCols(A);
@@ -243,9 +298,13 @@ export const p6: PuzzleDef = {
       if (round < 6) load(p6Matrix(round, R));
       driving = false;
     };
+    const argue = async (ms: number) => {
+      if (tiles && !ordered) { tiles.set(P6_TILES.map((x) => x.id)); (tiles.el.querySelector('.btn.primary') as HTMLButtonElement).click(); }
+      if (ws && !ws.done) { if (ms) await ws.showMe(ms); else ws.solve(); }
+    };
     return {
-      async showMe() { while (round < 6) await autoRound(450); if (tiles && !flags[1]) { tiles.set(['t1', 't2', 't3', 't4']); (tiles.el.querySelector('.btn.primary') as HTMLButtonElement).click(); } },
-      async solve() { while (round < 6) await autoRound(0); if (tiles && !flags[1]) { tiles.set(['t1', 't2', 't3', 't4']); (tiles.el.querySelector('.btn.primary') as HTMLButtonElement).click(); } },
+      async showMe() { while (round < 6) await autoRound(450); await argue(380); },
+      async solve() { while (round < 6) await autoRound(0); await argue(0); },
       wrong() { counter.set(A[0].map(() => 'kept' as Tag)); check(); },
     };
   },

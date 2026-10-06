@@ -24,13 +24,14 @@ export const q1: DoubtDef = {
   id: 'c27-q1', who: 'ilse', isTrue: false,
   claim: 'A move that squashes area to zero can still be undone, if you are clever about it.',
   reason: 'If the area goes to zero, the plane is flattened onto a line (or a point). Then some start other than the origin lands on the origin, exactly where the origin lands. Two starts, one landing: no undo can know which one to send it back to. That is why a zero determinant means no inverse.',
-  goal: 'Drag the two column arrows. **Challenge it** with a move that cannot be undone, or **Back it**.',
+  goal: 'Drag the two column arrows. **Back it** or **Challenge it**.',
   view: '2d',
   setup(p) {
     p.grid();
     p.g.stage.view2D({ center: [1, 1], height: 10, ms: 0 });
-    const a = new VectorHandle(p, { to: [2, 0, 0], color: C.v, label: '$A\\mathbf e_1$', countMoves: false });
-    const b = new VectorHandle(p, { to: [1, 2, 0], color: C.w, label: '$A\\mathbf e_2$', countMoves: false });
+    // a singular move must be exact (|det| ≤ 1e-9): snap even on Commander, as in Ch 13 and Ch 14
+    const a = new VectorHandle(p, { to: [2, 0, 0], color: C.v, label: '$A\\mathbf e_1$', snap: p.snap() ?? 0.5, limit: 4, countMoves: false });
+    const b = new VectorHandle(p, { to: [1, 2, 0], color: C.w, label: '$A\\mathbf e_2$', snap: p.snap() ?? 0.5, limit: 4, countMoves: false });
     const par = new Parallelogram(p.g.stage, [2, 0, 0], [1, 2, 0], { color: C.result, opacity: 0.16 });
     const lost = new Arrow([0, 0, 0], [1, 0, 0], { color: C.violet, label: 'lands on 0', width: 0.04 });
     p.add(par, lost);
@@ -48,7 +49,7 @@ export const q1: DoubtDef = {
       holds: () => L.q1Holds(cols(a.vec, b.vec)),
       describe: () => {
         const M = cols(a.vec, b.vec), n = L.lostStart(M);
-        return n ? `columns ${fmt(a.vec)} and ${fmt(b.vec)}: det 0, and the start ${fmt(n)} lands on the origin, just like the origin itself` : `columns ${fmt(a.vec)} and ${fmt(b.vec)}: det ${nice(det(M))}, so this move can be undone`;
+        return n ? `columns ${fmt(a.vec)} and ${fmt(b.vec)}: det 0, and the start ${fmt(n)} lands on the origin, exactly where the origin lands` : `columns ${fmt(a.vec)} and ${fmt(b.vec)}: det ${nice(det(M))}, so this move can be undone`;
       },
       randomize(rr, edge) {
         const E: [number[], number[]][] = [[[1, 2], [2, 4]], [[0, 0], [1, 3]]];
@@ -65,9 +66,9 @@ export const q1: DoubtDef = {
 
 export const q2: DoubtDef = {
   id: 'c27-q2', who: 'ilse', isTrue: true,
-  claim: 'For a symmetric matrix, the lines that do not turn are always at right angles.',
+  claim: 'For a symmetric matrix you can always find two lines that do not turn, at right angles to each other.',
   reason: 'Take two such lines with different stretches λ and μ. For a symmetric S, (S x) · y = x · (S y), so λ (x · y) = μ (x · y). With λ ≠ μ that forces x · y = 0. When λ = μ every direction holds, and you can pick two at right angles.',
-  goal: 'Set a symmetric matrix with the sliders. **Back it** (then it is shaken) or **Challenge it** with a case where the lines are not at right angles.',
+  goal: 'Set a symmetric matrix with the sliders. **Back it** (then it is shaken) or **Challenge it** with a symmetric matrix where no two lines that hold are at right angles.',
   view: '2d',
   setup(p) {
     p.grid();
@@ -95,7 +96,7 @@ export const q2: DoubtDef = {
     const setAll = (x: number, y: number, z: number) => { a = x; b = y; d = z; sa.set(x, false); sb.set(y, false); sd.set(z, false); upd(); };
     return {
       holds: () => L.q2Holds(a, b, d),
-      describe: () => `S = [[${nice(a)}, ${nice(b)}], [${nice(b)}, ${nice(d)}]]: the two lines meet at a right angle`,
+      describe: () => `S = [[${nice(a)}, ${nice(b)}], [${nice(b)}, ${nice(d)}]]: ${L.q2EqualStretch(a, b, d) ? 'stretches equal: every line holds; these two are one perpendicular pair' : 'the two lines meet at a right angle'}`,
       randomize(rr, edge) {
         const E = [[2, 0, 2], [3, 1, 3]];
         if (edge !== undefined) { setAll(E[edge][0], E[edge][1], E[edge][2]); return; }
@@ -244,8 +245,8 @@ export const q5: DoubtDef = {
 export const q6: DoubtDef = {
   id: 'c27-q6', who: 'ilse', isTrue: false,
   claim: 'A system of linear equations could have exactly two solutions. Two crossing points, say.',
-  reason: 'Straight lines (and planes) meet in nothing, one point, or a whole line. If two different points x and y both solve A x = b, then A (x + t (y − x)) = b + t (b − b) = b for every t: the whole line through them solves it. So never exactly two.',
-  goal: 'Each equation is a line through two knobs. **Challenge it**: build a system that has two different solutions, and see what else solves it.',
+  reason: 'Two straight lines meet in nothing, one point, or a whole line. If two different points x and y both solve A x = b, then A (x + t (y − x)) = b + t (b − b) = b for every t: the whole line through them solves it. So never exactly two.',
+  goal: 'Each equation is a line through two knobs; the readout counts the points on both. **Back it** or **Challenge it**.',
   view: '2d',
   setup(p) {
     p.grid();
@@ -282,7 +283,7 @@ export const q6: DoubtDef = {
         upd();
       },
       edgeCases: 1,
-      async showMe() { await Promise.all([ks[2].moveTo([1, 1, 0], 500), ks[3].moveTo([3, -1, 0], 500)]); upd(); },
+      async showMe() { await Promise.all([ks[0].moveTo([0, 2, 0], 500), ks[1].moveTo([2, 0, 0], 500), ks[2].moveTo([1, 1, 0], 500), ks[3].moveTo([3, -1, 0], 500)]); upd(); },
     };
   },
 };

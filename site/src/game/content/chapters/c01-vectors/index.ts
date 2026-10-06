@@ -6,7 +6,7 @@ import { BurnChain } from '../../../kit/flight';
 import { near } from '../../../kit/handle';
 import { Pad, Dot } from '../../../gfx/markers';
 import { Arrow } from '../../../gfx/arrow';
-import { Parallelogram, InfLine } from '../../../gfx/shapes';
+import { Parallelogram } from '../../../gfx/shapes';
 import { FatLine } from '../../../gfx/lines';
 import { Label } from '../../../gfx/label';
 import { Slider, parseNum } from '../../../ui/widgets';
@@ -18,6 +18,7 @@ import { sfx } from '../../../audio/sfx';
 import { S } from './script';
 import { p1, p4, p6 } from './puzzles2';
 import { sayit, doubtOrder, doubtFlip, law, compare } from './briefing';
+import { P3_KMAX, P3_PAR, P5_PAR, p3SweptFull } from './logic';
 
 const fmt = (v: V3) => `(${nice(v[0])}, ${nice(v[1])})`;
 
@@ -83,12 +84,16 @@ const debris: PuzzleDef = {
         if (!near(end, [3, 2, 0]) || won) return 'miss';
         won = true;
         void pad.hit();
+        // the win is declared after the replay; until then the Fire button stays off
+        if (chain.fireBtn) chain.fireBtn.disabled = true;
         replay = (async () => {
           // replay in the other order: the parallelogram appears
           const w = chain.free[0].vec;
           const g1 = new Arrow([0, 0, 0], [0, 0, 0], { color: C.v, opacity: 0.6, width: 0.035 });
           const g2 = new Arrow([w[0], w[1], 0], [w[0], w[1], 0], { color: '#9aa7bd', opacity: 0.6, width: 0.035 });
           const par = new Parallelogram(p.g.stage, [4, -1, 0], [w[0], w[1], 0], { color: C.result, opacity: 0 });
+          // hide the edges too (the constructor's opacity sets only the fill), so nothing shows before the fade
+          par.setOpacity(0, 0);
           p.add(g1, g2, par);
           await g1.moveTo([w[0], w[1], 0], 700);
           await g2.moveTo([w[0] + 4, w[1] - 1, 0], 700);
@@ -99,7 +104,10 @@ const debris: PuzzleDef = {
       },
     });
     return {
-      async showMe() { await chain.moveBurn(0, [-1, 3, 0]); await chain.fire(); await replay; },
+      async showMe() {
+        if (replay) return replay;
+        await chain.moveBurn(0, [-1, 3, 0]); await chain.fire(); await replay;
+      },
     };
   },
 };
@@ -109,58 +117,107 @@ const debris: PuzzleDef = {
 const scale: PuzzleDef = {
   id: 'c01-p3',
   title: 'How far can one thruster take you?',
-  goal: 'Thruster three only pushes along **(2, 1)**. Set the amount, then **Fire**. Reach each marker buoy from the start.',
-  subgoals: ['Reach the buoy at (6, 3)', 'Reach the buoy at (−4, −2)'],
+  goal: 'Thruster three only pushes along **(2, 1)**. Set the amount, then **Fire**. Reach each marker buoy from the start. Then sweep the amount from −4 to 4 to see every point it reaches, and drag beacon C onto the **out of reach** pad.',
+  subgoals: ['Reach the buoy at (6, 3)', 'Reach the buoy at (−4, −2)', 'Mark the beacon at (3, 2) out of reach'],
   predict: {
     prompt: 'The thruster pushes along (2, 1). Can one burn reach the buoy at (−4, −2)?',
     choices: [{ id: 'yes', text: 'Yes, fire it backwards' }, { id: 'no', text: 'No, it only pushes forwards' }, { id: 'two', text: 'Only with two burns' }],
     answer: 'yes',
-    reveal: 'A negative amount flips the arrow: $-2 \\times (2, 1) = (-4, -2)$. One thruster reaches **every point on its own line**, forwards and backwards.',
+    reveal: 'A negative amount flips the arrow: $-2 \\times (2, 1) = (-4, -2)$. One thruster reaches **every point on its own line**, forwards and backwards, and nothing off it.',
   },
-  hints: ['(6, 3) is three times (2, 1).', '(−4, −2) points the other way. Try a negative amount.', 'Amounts 3 and −2.'],
-  par: 2,
+  hints: [
+    '(6, 3) is three times (2, 1).',
+    '(−4, −2) points the other way. Try a negative amount.',
+    'Amounts 3 and −2.',
+    'Every point the thruster reaches has across = 2 × up. For (3, 2): 3 ≠ 2 × 2.',
+  ],
+  par: P3_PAR,
   onWin: S.scaleWin,
   setup(p) {
     p.grid();
     p.g.stage.view2D({ center: [1, 0.5], height: 11, ms: 0 });
     const d: V3 = [2, 1, 0];
-    const line = new InfLine(p.g.stage, [0, 0, 0], d, { color: '#7d8aa5', width: 1.2, opacity: 0.45, dashed: true });
-    p.add(line.object);
-    p.onDispose(() => line.dispose());
     const targets: V3[] = [[6, 3, 0], [-4, -2, 0]];
     const pads = targets.map((t, i) => new Pad(p.g.stage, t, { label: i === 0 ? 'buoy A' : 'buoy B', color: '#9fd8ff' }));
     p.add(...pads);
-    const done = [false, false];
+    // beacon C sits off the thruster's line; its marker goes on the "out of reach" pad
+    const beaconC: V3 = [3, 2, 0];
+    const outPos: V3 = [-4, 3, 0];
+    const padC = new Pad(p.g.stage, beaconC, { label: 'beacon C', color: '#ffb86b' });
+    const padOut = new Pad(p.g.stage, outPos, { label: 'out of reach', color: '#9aa7bd' });
+    const marker = new Dot([beaconC[0], beaconC[1], 0.05], { color: '#ffb86b', size: 0.13 });
+    p.add(padC, padOut, marker);
+    const done = [false, false, false];
     const step = p.difficulty === 'cadet' ? 1 : p.difficulty === 'navigator' ? 0.5 : 0.25;
     const r = p.readout('Thruster three');
     let k = 1;
+    // the part of the thruster's line the amount has swept so far: it grows as the amount changes
+    let kmin = 0, kmax = 0;
+    const reach = new FatLine(p.g.stage, [[0, 0, 0.01], [0, 0, 0.01]], { color: C.v, width: 2.5, opacity: 0.4 });
+    p.add(reach.object);
+    p.onDispose(() => reach.dispose());
     const show = () => {
       r.row('k', 'amount $k$', nice(k));
       r.row('b', 'burn $k(2, 1)$', fmt([2 * k, k, 0]), C.v);
+      r.row('s', 'amounts swept', `${nice(kmin)} to ${nice(kmax)}`);
     };
+    const sweep = (kk: number) => {
+      if (kk >= kmin && kk <= kmax) return;
+      const was = p3SweptFull(kmin, kmax);
+      kmin = Math.min(kmin, kk); kmax = Math.max(kmax, kk);
+      reach.setPoints([[d[0] * kmin, d[1] * kmin, 0.01], [d[0] * kmax, d[1] * kmax, 0.01]]);
+      if (!was && p3SweptFull(kmin, kmax) && !done[2]) p.bark('lantern', 'That is the whole line thruster three can reach.');
+    };
+    const check = () => { if (done.every(Boolean)) p.win(); };
     const chain = new BurnChain(p, {
       free: [[2, 1, 0]], labels: ['$k\\mathbf d$'], snap: null,
       constrain: (_i, q) => {
         const t = Math.round(((q.x * 2 + q.y * 1) / 5) / step) * step;
-        k = Math.max(-4, Math.min(4, t));
+        k = Math.max(-P3_KMAX, Math.min(P3_KMAX, t));
         slider.set(k, false);
-        show();
         return new Vector3(2 * k, k, 0);
       },
+      // every change of the burn (slider, drag, Show me) extends the swept line
+      onChange: (_end, burns) => { sweep(burns[0][1]); show(); },
       onArrive: (end) => {
         const i = targets.findIndex((t) => near(end, t));
         if (i < 0) return 'miss';
         if (!done[i]) { done[i] = true; void pads[i].hit(); p.subgoal(i); }
-        if (done[0] && done[1]) { p.win(); return 'win'; }
+        if (done.every(Boolean)) { p.win(); return 'win'; }
         return 'ok';
       },
     });
     const slider = new Slider({
-      label: 'amount $k$', min: -4, max: 4, step, value: 1,
-      onInput: (v) => { k = v; chain.setBurn(0, [2 * k, k, 0]); show(); },
+      label: 'amount $k$', min: -P3_KMAX, max: P3_KMAX, step, value: 1,
+      onInput: (v) => { k = v; chain.setBurn(0, [2 * k, k, 0]); },
     });
     p.dock().prepend(slider.el);
     show();
+    // beacon C's marker: it files on the out-of-reach pad only after the whole line has been swept
+    const markerHome: V3 = [beaconC[0], beaconC[1], 0.05];
+    const fileC = () => {
+      if (done[2]) return;
+      done[2] = true;
+      marker.at([outPos[0], outPos[1], 0.05]);
+      void padOut.hit();
+      p.subgoal(2);
+      check();
+    };
+    p.g.drag.add({
+      target: marker.mesh, getPos: () => marker.group.position.clone(), snap: () => 0.5,
+      onMove: (q) => { if (!done[2]) marker.at([q.x, q.y, 0.05]); },
+      onEnd: () => {
+        if (done[2]) return;
+        const q = marker.group.position;
+        if (near([q.x, q.y, 0], beaconC, 0.4)) { marker.at(markerHome); return; }
+        p.move();
+        if (!near([q.x, q.y, 0], outPos, 0.75)) { marker.at(markerHome); return; }
+        if (p3SweptFull(kmin, kmax)) { fileC(); return; }
+        marker.at(markerHome);
+        sfx.miss();
+        p.bark('lantern', 'Sweep the amount from −4 to 4 first. Then we know every point the thruster reaches.');
+      },
+    });
     return {
       async showMe() {
         for (const [i, kk] of [[0, 3], [1, -2]] as const) {
@@ -169,6 +226,16 @@ const scale: PuzzleDef = {
           await chain.moveBurn(0, [2 * kk, kk, 0], 700);
           await chain.fire();
         }
+        if (p.won) return;
+        // sweep the dial end to end: the whole line the thruster can reach
+        for (const kk of [-P3_KMAX, P3_KMAX]) {
+          if (p3SweptFull(kmin, kmax)) break;
+          k = kk; slider.set(kk, false);
+          await chain.moveBurn(0, [2 * kk, kk, 0], 900);
+        }
+        const from = marker.group.position.clone();
+        await animate(600, (t) => marker.at([from.x + (outPos[0] - from.x) * t, from.y + (outPos[1] - from.y) * t, 0.05]), ease.inOut);
+        fileC();
       },
     };
   },
@@ -179,10 +246,10 @@ const scale: PuzzleDef = {
 const home: PuzzleDef = {
   id: 'c01-p5',
   title: 'How far is home?',
-  goal: 'Three pulses knocked the ship off course (grey). Plot **one** burn straight home and **Fire**. Then type how far home was.',
+  goal: 'Three debris strikes knocked the ship off course (grey). Plot **one** burn straight home and **Fire**. Then type how far home was.',
   subgoals: ['Fly home in one burn', 'Type the distance home'],
   hints: ['Add the three knocks: across 2 − 3 + 4, up 5 + 1 − 2.', 'The ship is at (3, 4). Home is 3 back and 4 down.', 'The distance is the long side of a right-angled triangle with sides 3 and 4.'],
-  par: 1,
+  par: P5_PAR,
   onWin: S.homeWin,
   setup(p) {
     p.grid();
@@ -205,14 +272,19 @@ const home: PuzzleDef = {
     });
     const input = h('input', { class: 'cell', style: 'width:90px', inputmode: 'decimal', 'aria-label': 'distance home in grid steps', placeholder: '?' }) as HTMLInputElement;
     const msg = h('span', { class: 'c-muted', style: 'font-size:13px' });
+    // one typed answer is one move, whether it arrives by Enter, by change or by blur
+    let lastChecked = '';
     const tryAnswer = () => {
-      const v = parseNum(input.value);
+      const text = input.value.trim();
+      if (flags[1] || text === lastChecked) return;
+      lastChecked = text;
+      const v = parseNum(text);
       if (v === null) return;
       p.move();
       if (Math.abs(v - 5) < 0.01) { flags[1] = true; input.classList.remove('bad'); input.style.borderColor = C.good; msg.textContent = '√(3² + 4²) = 5'; p.subgoal(1); check(); }
       else { input.classList.add('bad'); sfx.miss(); msg.textContent = Math.abs(v - 7) < 0.01 ? '3 + 4 is the zig-zag route. The arrow cuts the corner.' : 'Not quite. Think of the right-angled triangle.'; }
     };
-    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryAnswer(); e.stopPropagation(); });
+    input.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); tryAnswer(); } });
     input.addEventListener('change', tryAnswer);
     p.dock().append(h('label', { style: 'display:flex;gap:10px;align-items:center;font-size:14px' }, 'Distance home:', input, 'grid steps'), msg);
     return {
@@ -236,7 +308,7 @@ const NAME_VECTOR: Beat = {
         means: 'An arrow is a move. The same two numbers move you the same way from anywhere, so the arrow does not depend on where it starts.',
         name: 'A **vector** is an arrow given by how far it moves along each axis. We write its numbers in a column. Doing one move after another is **adding vectors**: add the across numbers, add the up numbers.',
         formula: '\\cg{\\begin{bmatrix} 4 \\\\ -1 \\end{bmatrix}} + \\cr{\\begin{bmatrix} -1 \\\\ 3 \\end{bmatrix}} = \\cy{\\begin{bmatrix} 3 \\\\ 2 \\end{bmatrix}}',
-        why: 'Each part adds on its own: $4 + (-1) = 3$ across and $-1 + 3 = 2$ up. Adding numbers does not care about order, so neither does adding vectors.',
+        why: 'Each part adds on its own: $4 + (-1) = 3$ across and $-1 + 3 = 2$ up. Two numbers give the same sum in either order, so two vectors do too.',
         cue: 'When you see **“how far in each direction”**, think **vector**.',
         use: 'Every data point a model reads is a vector: a list of numbers that places it in space. A 28×28 image is a vector with 784 numbers.',
       },
@@ -245,10 +317,10 @@ const NAME_VECTOR: Beat = {
 const NAME_SCALAR: Beat = {
       kind: 'name', id: 'name-scalar', entry: {
         id: 'scalar-multiple', term: 'scalar multiple', question: 'What happens when I use more or less of one arrow?', nodes: ['N02'],
-        saw: 'With one thruster, every burn lay on one line through the start. Bigger amounts went further along it. Negative amounts went the other way.',
-        means: 'Multiplying a vector by a number stretches it along its own line. A negative number also flips it.',
-        name: 'A **scalar** is a plain number. The **scalar multiple** $k\\mathbf v$ multiplies every part of $\\mathbf v$ by $k$.',
-        formula: '3\\,\\cg{\\begin{bmatrix} 2 \\\\ 1 \\end{bmatrix}} = \\cy{\\begin{bmatrix} 6 \\\\ 3 \\end{bmatrix}} \\qquad -2\\,\\cg{\\begin{bmatrix} 2 \\\\ 1 \\end{bmatrix}} = \\cy{\\begin{bmatrix} -4 \\\\ -2 \\end{bmatrix}}',
+        saw: 'With one thruster, every burn lay on one line through the start. Bigger amounts went further along it. Negative amounts went the other way. Beacon C, off that line, was out of reach.',
+        means: 'Multiplying a vector by a number stretches it along its own line. A negative number also flips it. No amount takes it off the line, so a point off the line is out of one arrow\'s reach.',
+        name: 'A **scalar** is a plain number. The **scalar multiple** $k\\mathbf v$ multiplies every part of $\\mathbf v$ by $k$. Two arrows are **parallel** when one is a scalar multiple of the other. Drawn from the same start, they lie on one line, even when they point opposite ways. The amount 0 gives the **zero vector** $\\mathbf 0$: the move that goes nowhere.',
+        formula: '3\\,\\cg{\\begin{bmatrix} 2 \\\\ 1 \\end{bmatrix}} = \\cy{\\begin{bmatrix} 6 \\\\ 3 \\end{bmatrix}} \\qquad -2\\,\\cg{\\begin{bmatrix} 2 \\\\ 1 \\end{bmatrix}} = \\cy{\\begin{bmatrix} -4 \\\\ -2 \\end{bmatrix}} \\qquad 0\\,\\mathbf v = \\mathbf 0',
         why: 'Every part is multiplied by the same number, so the ratio across : up stays 2 : 1. The arrow stays on its line.',
         cue: 'When you see **“the same direction, more or less of it”**, think **scalar multiple**.',
         use: 'Turning up an image\'s brightness multiplies its pixel vector by a scalar.',

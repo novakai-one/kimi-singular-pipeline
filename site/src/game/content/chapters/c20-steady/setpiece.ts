@@ -198,7 +198,7 @@ const texFree = (M: Mat) => `(${M.map((r) => r.map((x) => fmtN(x)).join(', ')).j
 const vellReal: DoubtDef = {
   id: 'c20-r-real', who: 'vell', isTrue: false,
   claim: 'Every real matrix has a real eigenvector. Something must hold still.',
-  reason: 'A turn holds nothing still except the origin. The quarter turn $\\begin{bmatrix} 0 & -1 \\\\ 1 & 0 \\end{bmatrix}$ has $\\det(A - \\lambda I) = \\lambda^2 + 1$: no real root, eigenvalues $\\pm i$, no real eigenvector.',
+  reason: 'A turn holds nothing still except the origin. The quarter turn $\\left[\\begin{smallmatrix} 0 & -1 \\\\ 1 & 0 \\end{smallmatrix}\\right]$ has $\\det(A - \\lambda I) = \\lambda^2 + 1$: no real root, eigenvalues $\\pm i$, no real eigenvector.',
   goal: 'Drag the grid arrows to set a move; the sweep shows every line it keeps. **Challenge it** or **Back it**.',
   view: '2d',
   setup(p) {
@@ -219,7 +219,7 @@ const vellReal: DoubtDef = {
 const vellDiag: DoubtDef = {
   id: 'c20-r-diag', who: 'vell', isTrue: false,
   claim: 'Every matrix can be diagonalised. Pick the right grid and any move is only stretches.',
-  reason: 'The shear $\\begin{bmatrix} 1 & 1 \\\\ 0 & 1 \\end{bmatrix}$ keeps one line, so there is no second eigenvector to make a grid with: geometric multiplicity 1, algebraic multiplicity 2. A turn has no real eigenvector at all.',
+  reason: 'The shear $\\left[\\begin{smallmatrix} 1 & 1 \\\\ 0 & 1 \\end{smallmatrix}\\right]$ keeps one line, so there is no second eigenvector to make a grid with: geometric multiplicity 1, algebraic multiplicity 2. A turn has no real eigenvector at all.',
   goal: 'Drag the grid arrows. When there are two independent lines that hold, they are drawn as a violet grid. **Challenge it** or **Back it**.',
   view: '2d',
   setup(p) {

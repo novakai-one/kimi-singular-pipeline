@@ -21,7 +21,7 @@ const NAME_BASIS: Beat = {
     means: 'Two arrows reach the plane with none wasted: each adds a direction the other cannot. A third arrow on the plane is a mix of the first two, so it adds nothing.',
     name: 'A **basis** of a subspace is a set of arrows that reaches the whole subspace with none wasted: it spans the subspace and is linearly independent. Every basis of the same subspace has the same number of arrows: its **dimension**.',
     formula: '\\{\\cg{(1, 0, 1)},\\ \\cr{(0, 1, 1)}\\} \\text{ is a basis of the plane } z = x + y, \\qquad \\dim = 2',
-    why: 'Each vector has exactly one set of weights in a basis: two different sets would subtract to a loop, and a basis has none. If one basis had more arrows than another, the extra ones would be mixes of the smaller set.',
+    why: 'Each vector has exactly one set of weights in a basis: two different sets would subtract to a loop, and a basis has none. If one basis had more arrows than another, every arrow of the bigger one would be a mix of the smaller one. More weight lists than entries always loop (like four arrows in 3-D), and the same weights make a loop in the bigger set, so it could not be a basis.',
     cue: 'When you see **“the fewest arrows that still reach”**, think **basis**.',
     use: 'An image compressor stores a picture as weights on a small basis of patterns instead of every pixel.',
   },
@@ -56,7 +56,7 @@ const NAME_VS: Beat = {
 const NAME_FOUR: Beat = {
   kind: 'name', id: 'name-four', entry: {
     id: 'four-subspaces', term: 'four fundamental subspaces', question: 'Where does every part of a matrix live?', nodes: ['N18'],
-    saw: 'For Vell’s scanner $M$, in the inputs: the plane through the rows, and the null space along $(1, -2, 1)$, at right angles to it. In the outputs: the column space, and the line along $(2, -1, 0)$, at right angles to every column. Both planes held 2 directions.',
+    saw: 'For Vell’s debris scanner $M$, in the inputs: the plane through the rows, and the null space along $(1, -2, 1)$, at right angles to it. In the outputs: the column space, and the line along $(2, -1, 0)$, at right angles to every column. Both planes held 2 directions.',
     means: 'Each input splits into a part in the plane of the rows and a part in the null space; the second part is flattened. The outputs split the same way around the column space.',
     name: 'The **row space** $\\operatorname{Row} A$ is the span of the rows. The **left null space** $\\operatorname{Nul} A^T$ is every output at right angles to every column. With $\\operatorname{Col} A$ and $\\operatorname{Nul} A$ they are the **four fundamental subspaces**.',
     formula: '\\dim \\operatorname{Row} A = \\dim \\operatorname{Col} A = \\operatorname{rank} A, \\qquad \\operatorname{Nul} A \\perp \\operatorname{Row} A, \\qquad \\operatorname{Nul} A^T \\perp \\operatorname{Col} A',
@@ -75,7 +75,7 @@ const NAME_IMT: Beat = {
     formula: '\\det A \\ne 0 \\iff \\operatorname{rank} A = n \\iff \\operatorname{Nul} A = \\{\\mathbf 0\\} \\iff A^{-1} \\text{ exists}',
     why: 'All of them come back to the pivots. $n$ pivots in an $n \\times n$ matrix means no free column (nothing flattened) and no zero row (every target reached).',
     cue: 'When you see **any one** of these facts about a square matrix, you know **all** of them.',
-    use: 'A solver that finds one pivot that is zero knows the whole system has no single answer, without checking anything else.',
+    use: 'A solver that finishes elimination with a column that has no pivot knows the system has no single answer, without checking anything else.',
   },
 };
 

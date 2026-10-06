@@ -122,6 +122,19 @@ export function p6OrderOk(order: readonly string[]): boolean {
   if (order.length !== 4 || order[0] !== 't1' || order[3] !== 't4') return false;
   return [...order].sort().join() === 't1,t2,t3,t4';
 }
+/**
+ * Navigator's typed argument for one tagged matrix (it must have a free column): the rank (pivot
+ * columns), the arrow to the origin from its last free column (that variable 1, any other free ones 0),
+ * the nullity (free columns) and their sum, the number of columns.
+ */
+export function p6Argument(A: Mat): { rank: number; freeCol: number; arrow: Vec; nullity: number; n: number } {
+  const piv = pivotCols(A), n = A[0].length;
+  const free = [...Array(n).keys()].filter((j) => !piv.includes(j));
+  if (!free.length) throw new Error('p6Argument: no free column');
+  return { rank: piv.length, freeCol: free[free.length - 1], arrow: freeArrows(A)[free.length - 1], nullity: free.length, n };
+}
+/** Commander's last line: a matrix of a new shape, given its rank; its nullity is typed (zero rows would say 1). */
+export const P6_LAST = { m: 4, n: 6, rank: 3, nullity: 3 };
 
 // ------------------------------------------------------------------ p7 [S] Extend to a basis of 3-D
 

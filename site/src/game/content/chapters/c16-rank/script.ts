@@ -18,7 +18,7 @@ export const S: Record<string, Line[]> = {
     { who: 'bram', text: 'Two. Every way you pick them, two.' },
   ],
   p2Intro: [
-    { who: 'lantern', text: 'The cutter’s debris scanner: three readings from four inputs. Its matrix is on the row board.' },
+    { who: 'lantern', text: 'The cutter’s survey scanner: three readings from four inputs. Its matrix is on the row board.' },
     { who: 'vell', text: 'Count what my scanner keeps, Navigator. Then count what it throws away.' },
   ],
   p2Win: [
@@ -70,10 +70,10 @@ export const S: Record<string, Line[]> = {
   ],
   spIntro: [
     { who: 'vell', text: 'Before we go any further, a review. Your navigator, my scanner, the same numbers.' },
-    { who: 'vell', text: 'Here is the scanner matrix my people use on debris. Show me where everything goes.' },
+    { who: 'vell', text: 'Here is a second matrix: the one my people use on debris. Three readings from three inputs. Show me where everything goes.' },
   ],
   sp1Win: [
-    { who: 'lantern', text: 'In the inputs: the row space, a plane, and the null space, the line at right angles to it. In the outputs: the column space and the line at right angles to it.' },
+    { who: 'lantern', text: 'In the inputs: the plane through the rows, and the null space, the line at right angles to it. In the outputs: the column space and the line at right angles to it.' },
     { who: 'lantern', text: 'Two kept directions on each side.' },
   ],
   sp2Intro: [

@@ -26,7 +26,7 @@ export const S: Record<string, Line[]> = {
   scaleOk: [{ who: 'wren', text: 'Got that one. Back to the start for the next.' }],
   scaleWin: [{ who: 'bram', text: 'Backwards is a minus sign. Same thruster, same line, other way.' }],
   knocks: [
-    { who: 'lantern', text: 'Three small pulses while we worked. Each one knocked the ship.' },
+    { who: 'lantern', text: 'Three debris strikes while we worked. Each one knocked the ship.' },
     { who: 'lantern', text: 'Two across and five up. Three back and one up. Four across and two down.' },
     { who: 'wren', text: 'And now home is somewhere behind us. Nav: one burn, straight home. Then tell me how far it was.' },
   ],

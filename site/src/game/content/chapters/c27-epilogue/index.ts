@@ -89,7 +89,7 @@ async function credits(g: Game): Promise<void> {
       h('div', null, `${fns} function${fns === 1 ? '' : 's'} of lantern.py written by you`)),
     h('div', { class: 'credits-block' }, h('div', { class: 'kicker' }, 'The crew'),
       h('div', null, 'Wren · pilot'), h('div', null, 'Bram Haldane · engineer'), h('div', null, 'LANTERN · ship'),
-      h('div', null, 'Dr Ilse Varga · science officer, Meridian'), h('div', null, 'Teo Okafor · sleeper, Meridian'), h('div', null, 'Vell · Anchor Authority')),
+      h('div', null, 'Dr Ilse Varga · science officer, Meridian'), h('div', null, 'Teo Okafor · sleeper, Meridian'), h('div', null, 'Marcus Vell · director, Survey Authority')),
     h('div', { class: 'credits-block' }, h('div', { class: 'kicker' }, 'Made with'),
       h('div', null, 'Three.js · KaTeX · Pyodide · Kokoro voices · Blender')),
     h('div', { class: 'credits-block' }, h('div', { class: 'kicker' }, 'Twelve thousand sleepers'), h('div', null, 'awake')));
@@ -166,7 +166,7 @@ const beats: Beat[] = [
       means: 'A matrix keeps lines straight, so on its own it can only cut with a straight line. The clip bends the picture, and the next step can use the bend.',
       name: 'A **layer** multiplies by a matrix of **weights**, adds a vector called the **bias**, then clips every negative output to zero: the **ReLU**.',
       formula: '\\text{layer}(\\mathbf x) = \\max\\big(0,\\; W\\mathbf x + \\mathbf b\\big)',
-      why: 'Without the clip, two layers in a row are one matrix (Chapter 12), and nothing new can be sorted.',
+      why: 'Without the clip, two layers in a row are one matrix plus one bias: $W_2W_1\\mathbf x + (W_2\\mathbf b_1 + \\mathbf b_2)$ (Chapter 12). The cut is still a straight line, so nothing new can be sorted.',
       cue: 'When you see **“sort what no straight line can”**, think **layers**.',
       use: 'Every neural network is layers like this, stacked. Training adjusts the weights; every layer is still a matrix you can read.',
     },

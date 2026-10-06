@@ -29,8 +29,8 @@ export const S: Record<string, Line[]> = {
   ],
   after: [
     { who: 'wren', text: 'Everyone in one piece? Nav?' },
-    { who: 'lantern', text: 'Thrusters two and four are dark. Every buoy has moved.' },
-    { who: 'bram', text: 'Every buoy, all at once. Nav, check the reference buoys before we touch anything. I want to know what that pulse did.' },
+    { who: 'lantern', text: 'Thrusters two and four are dark. The buoys have moved.' },
+    { who: 'bram', text: 'All of them, all at once. Nav, check the reference buoys before we touch anything. I want to know what that pulse did.' },
   ],
   lineWin: [
     { who: 'lantern', text: 'The three white buoys are still on one straight line. The four cyan buoys are still evenly spaced: one step fits every gap.' },
@@ -40,7 +40,7 @@ export const S: Record<string, Line[]> = {
     { who: 'lantern', text: 'Setting the origin of our grid at that point.' },
   ],
   close: [
-    { who: 'lantern', text: 'Pulse summary. Every buoy moved. Straight lines of buoys are still straight. Even spacing is still even. One point did not move.' },
+    { who: 'lantern', text: 'Pulse summary. Every buoy moved except one. Straight lines of buoys are still straight. Even spacing is still even. One point did not move: the point under the Anchor.' },
     { who: 'bram', text: 'Straight stays straight. Even stays even. One point stays put. That is not a random shove.' },
     { who: 'wren', text: 'So it follows a rule.' },
     { who: 'bram', text: 'A rule we can learn. Learn it, and we can fly through it. Maybe even undo it.' },

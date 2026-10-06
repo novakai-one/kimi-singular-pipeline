@@ -120,7 +120,7 @@ export function diagScene(p: PuzzleCtx, M0: Mat, title: string) {
 export const doubtInv: DoubtDef = {
   id: 'c19-d-inv', who: 'bram', isTrue: false,
   claim: 'If a move can be written in a grid of lines that hold, it can be undone. Diagonalisable means invertible.',
-  reason: 'The two questions are separate. $\\begin{bmatrix} 0 & 0 \\\\ 0 & 1 \\end{bmatrix}$ is already diagonal, so it is diagonalisable, and it flattens the plane onto a line: no inverse. The shear is the other way round: invertible, not diagonalisable.',
+  reason: 'The two questions are separate. $\\left[\\begin{smallmatrix} 0 & 0 \\\\ 0 & 1 \\end{smallmatrix}\\right]$ is already diagonal, so it is diagonalisable, and it flattens the plane onto a line: no inverse. The shear is the other way round: invertible, not diagonalisable.',
   goal: 'Drag the grid arrows to set a move. **Challenge it** (diagonalisable but flat) or **Back it**.',
   view: '2d',
   setup(p) {

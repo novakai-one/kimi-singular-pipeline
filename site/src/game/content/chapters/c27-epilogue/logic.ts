@@ -1,11 +1,16 @@
 // Epilogue: pure rules (no DOM, no three) for the last setting, Ilse's six questions and the layer.
 import { det, eigSym, matMul, inverse, svd, type Mat, type Vec } from '../../../math/la.ts';
+import { P } from '../../truth.ts';
 
 export const near = (a: number, b: number, tol = 1e-9): boolean => Math.abs(a - b) <= tol;
 export const isIdentity = (M: Mat, tol = 1e-9): boolean => M.every((r, i) => r.every((x, j) => near(x, i === j ? 1 : 0, tol)));
 
-/** P M P⁻¹ (the same move written in another grid). */
-export function inGrid(P: Mat, M: Mat): Mat { return matMul(matMul(P, M), inverse(P)!); }
+/**
+ * The move a spire setting makes in our (ship) grid: spire numbers are written in the Anchor's grid,
+ * so a setting S moves our grid by P S P⁻¹ (as in Ch 17's shipMove; Ch 17's in_grid(P, A) is the
+ * other direction, P⁻¹ A P). `G` defaults to the Anchor's grid P.
+ */
+export function shipMove(S: Mat, G: Mat = P): Mat { return matMul(matMul(G, S), inverse(G)!); }
 
 // ------------------------------------------------------------------ Q1 (F) a zero-determinant move can be undone
 
@@ -26,10 +31,13 @@ export function symEigenDirs(a: number, b: number, d: number): { values: number[
   const e = eigSym([[a, b], [b, d]]);
   return { values: e.values, dirs: e.vectors };
 }
+/** "You can always find two lines that do not turn, at right angles": the two returned directions are. */
 export const q2Holds = (a: number, b: number, d: number): boolean => {
   const { dirs } = symEigenDirs(a, b, d);
   return Math.abs(dirs[0][0] * dirs[1][0] + dirs[0][1] * dirs[1][1]) < 1e-6;
 };
+/** Equal stretches (S a multiple of I): every line holds, and the two shown are one perpendicular pair. */
+export const q2EqualStretch = (a: number, b: number, d: number): boolean => { const { values } = symEigenDirs(a, b, d); return Math.abs(values[0] - values[1]) < 1e-9; };
 
 // ------------------------------------------------------------------ Q3 (T) least squares error ⟂ the column
 
@@ -109,4 +117,47 @@ export function layerPoints(seed = 7): { blob: Vec[]; ring: Vec[] } {
 /** Does the cut `score > t` put every ring point outside and every blob point inside? */
 export function separates(t: number, clip: boolean, pts = layerPoints()): boolean {
   return pts.blob.every((x) => score(x, clip) <= t) && pts.ring.every((x) => score(x, clip) > t);
+}
+
+export const apply2 = (M: Mat, x: Vec): Vec => [M[0][0] * x[0] + M[0][1] * x[1], M[1][0] * x[0] + M[1][1] * x[1]];
+
+export interface Cut { n: Vec; c: number; blobBelow: boolean; wrong: number }
+
+/**
+ * The best straight cut n · y = c across the direction n (n · y ≤ c on one side): the level and side
+ * that put the fewest stars on the wrong side.
+ */
+export function bestCutAlong(n: Vec, blob: Vec[], ring: Vec[]): Cut {
+  const s = [...blob.map((x) => ({ v: n[0] * x[0] + n[1] * x[1], blob: true })), ...ring.map((x) => ({ v: n[0] * x[0] + n[1] * x[1], blob: false }))].sort((a, b) => a.v - b.v);
+  // cut below index k (k = 0 … N): stars 0 … k−1 on the low side
+  let bLow = 0, rLow = 0;
+  let best: Cut = { n, c: s[0].v - 1, blobBelow: true, wrong: Infinity };
+  for (let k = 0; k <= s.length; k++) {
+    if (k > 0) { if (s[k - 1].blob) bLow++; else rLow++; }
+    if (k > 0 && k < s.length && s[k].v - s[k - 1].v < 1e-12) continue;   // no gap: not a real cut
+    const c = k === 0 ? s[0].v - 1 : k === s.length ? s[k - 1].v + 1 : (s[k - 1].v + s[k].v) / 2;
+    const below = (blob.length - bLow) + rLow;          // cluster below: wrong are high cluster stars and low ring stars
+    const above = bLow + (ring.length - rLow);           // cluster above
+    if (below < best.wrong) best = { n, c, blobBelow: true, wrong: below };
+    if (above < best.wrong) best = { n, c, blobBelow: false, wrong: above };
+  }
+  return best;
+}
+
+/** One move M, then the best straight cut of the moved stars (cut directions every 180/steps degrees). */
+export function bestMoveAndCut(M: Mat, pts = layerPoints(), steps = 180): Cut {
+  const blob = pts.blob.map((x) => apply2(M, x)), ring = pts.ring.map((x) => apply2(M, x));
+  let best: Cut | null = null;
+  for (let i = 0; i < steps; i++) {
+    const a = (i * Math.PI) / steps;
+    const cut = bestCutAlong([Math.cos(a), Math.sin(a)], blob, ring);
+    if (!best || cut.wrong < best.wrong) best = cut;
+  }
+  return best!;
+}
+
+/** Is a star on the wrong side of a cut (after the move M)? */
+export function wrongSide(cut: Cut, y: Vec, isBlob: boolean): boolean {
+  const low = cut.n[0] * y[0] + cut.n[1] * y[1] <= cut.c;
+  return isBlob ? low !== cut.blobBelow : low === cut.blobBelow;
 }

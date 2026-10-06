@@ -119,7 +119,6 @@ export const law: LawDef<OrderCase> = {
       { id: 'short', text: 'exactly when both arrows are shorter than 3' },
     ] },
   },
-  cadetSlots: ['where'],
   draw(g, c) {
     const v = c.v, w = c.w;
     const end: V3 = [v[0] + w[0], v[1] + w[1], 0];
@@ -135,7 +134,7 @@ export const law: LawDef<OrderCase> = {
   reason: {
     ask: 'Your Law survived. **Why** does the order never matter?',
     options: [
-      { id: 'a', text: 'Each direction adds on its own: across, $v_1 + w_1 = w_1 + v_1$; up, $v_2 + w_2 = w_2 + v_2$.', right: true, why: 'Yes. Adding numbers does not care about order, and a vector adds part by part. That is the whole reason.' },
+      { id: 'a', text: 'Each direction adds on its own: across, $v_1 + w_1 = w_1 + v_1$; up, $v_2 + w_2 = w_2 + v_2$.', right: true, why: 'Yes. Two numbers give the same sum in either order, and vectors add part by part. That is the whole reason.' },
       { id: 'b', text: 'The ship flies straight to the end point either way.', right: false, why: 'The two routes are different paths: one goes along v first, the other along w first. They meet at the end because the totals match.' },
       { id: 'c', text: 'The two routes are the same length.', right: false, why: 'They are the same length, but that would not put them at the same point: many different points are the same distance away.' },
     ],

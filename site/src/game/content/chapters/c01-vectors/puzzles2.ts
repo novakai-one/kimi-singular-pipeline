@@ -12,6 +12,7 @@ import { Slider } from '../../../ui/widgets';
 import { C } from '../../../core/theme';
 import { nice } from '../../../math/frac';
 import { S } from './script';
+import { P4_PAR, p4Burn } from './logic';
 
 const fmt = (v: number[]) => `(${nice(v[0])}, ${nice(v[1])})`;
 
@@ -65,7 +66,7 @@ export const p4: PuzzleDef = {
   goal: 'The ship is at **P = (1, 4)**; the dock is at **Q = (6, 1)**. Work out the burn by hand, then **Fire**. Then drop markers halfway and a quarter of the way.',
   subgoals: ['Work out Q − P and how long the tether must be', 'Fly to the dock', 'Drop the halfway marker', 'Drop the quarter-way marker'],
   hints: ['Each part of the burn is end minus start: across 6 − 1, up 1 − 4.', 'The tether runs along the straight side of the triangle: √(5² + (−3)²) = √34.', 'Halfway is P + ½(Q − P); a quarter of the way is P + ¼(Q − P).'],
-  par: 6,
+  par: P4_PAR,
   onWin: S.p4Win,
   setup(p) {
     p.grid();
@@ -94,22 +95,38 @@ export const p4: PuzzleDef = {
         onEnd: () => { p.move(); const q = dot.group.position; if (near([q.x, q.y, 0], target)) { dot.setColor(C.good); tick(i); } },
       });
     }
+    // Two worksheets, so the burn Q − P is its own final step and is checked on every difficulty
+    // (Commander checks only a worksheet's last step). The tether opens once the burn is right.
+    const burn = p4Burn(P0, Q0);
+    let tether: StepWorksheet | null = null;
+    const openTether = () => {
+      if (tether) return tether;
+      tether = new StepWorksheet(p, {
+        steps: [
+          { prompt: 'Tether length: $\\sqrt{5^2 + (-3)^2}$', answer: Math.sqrt(34), tol: 0.01, mistakes: [[8, '5 + 3 is the zig-zag route. The tether is the straight side of the triangle.'], [2, 'Square the parts before adding.']] },
+        ],
+        onDone: () => {
+          chain.setBurn(0, [burn[0], burn[1], 0]);
+          if (chain.fireBtn) chain.fireBtn.disabled = false;
+          tick(0);
+          p.bark('lantern', 'Burn set to (5, −3). Tether 5.83. Fire when ready.');
+        },
+      });
+      return tether;
+    };
     const ws = new StepWorksheet(p, {
       steps: [
-        { prompt: 'Across: $q_1 - p_1 = 6 - 1$', answer: 5, mistakes: [[-5, 'That is start minus end. The burn goes from P to Q: end minus start.']] },
-        { prompt: 'Up: $q_2 - p_2 = 1 - 4$', answer: -3, mistakes: [[3, 'Q is below P, so the up part is negative.']] },
-        { prompt: 'Tether length: $\\sqrt{5^2 + (-3)^2}$', answer: Math.sqrt(34), tol: 0.01, mistakes: [[8, '5 + 3 is the zig-zag route. The tether is the straight side of the triangle.'], [2, 'Square the parts before adding.']] },
+        {
+          prompt: 'Burn $Q - P = (6 - 1,\\ 1 - 4)$', answer: burn,
+          mistakes: [[[-5, 3], 'That is start minus end. The burn goes from P to Q: end minus start.'], [[5, 3], 'Q is below P, so the up part is negative.']],
+        },
       ],
-      onDone: () => {
-        chain.setBurn(0, [5, -3, 0]);
-        if (chain.fireBtn) chain.fireBtn.disabled = false;
-        tick(0);
-        p.bark('lantern', 'Burn set to (5, −3). Tether 5.83. Fire when ready.');
-      },
+      onDone: () => { chain.setBurn(0, [burn[0], burn[1], 0]); openTether(); },
     });
     return {
       async showMe() {
         await ws.showMe(300);
+        await openTether().showMe(300);
         await chain.fire();
         half.at([3.5, 2.5, 0.05]); half.setColor(C.good); tick(2);
         quarter.at([2.25, 3.25, 0.05]); quarter.setColor(C.good); tick(3);
@@ -148,8 +165,16 @@ export const p6: PuzzleDef = {
       const r = p.readout('Pythagoras twice');
       r.row('f', 'floor: $2^2 + 3^2$', '13');
       r.row('t', 'then: $13 + 6^2$', '49');
-      slider = new Slider({ label: 'tether', min: 0, max: 12, step: 0.5, value: 4, onInput: (x) => { p.move(); if (Math.abs(x - 7) < 1e-9) finish(); } });
-      p.dock().appendChild(slider.el);
+      // checked when the player lets go (change), not on every step the thumb passes
+      const sl = new Slider({ label: 'tether', min: 0, max: 12, step: 0.5, value: 4 });
+      sl.el.addEventListener('change', () => {
+        if (won) return;
+        p.move();
+        if (Math.abs(sl.get() - 7) < 1e-9) finish();
+        else p.bark('lantern', 'Not yet. The tether must be the square root of 49.');
+      });
+      slider = sl;
+      p.dock().appendChild(sl.el);
     } else {
       const steps = [
         { prompt: 'Floor diagonal squared: $2^2 + 3^2$', answer: 13 },

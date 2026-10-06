@@ -36,3 +36,24 @@ export const lawCore: LawCore<OrderCase> & { answer: Record<string, string> } = 
   },
   describe: (c) => `v = ${fmt(c.v)}, w = ${fmt(c.w)}: both orders end at ${fmt([c.v[0] + c.w[0], c.v[1] + c.w[1]])}`,
 };
+
+/** p3: one thruster along d reaches q only when q lies on d's line (q = k d for some k). */
+export const onThrusterLine = (d: number[], q: number[]) => Math.abs(d[0] * q[1] - d[1] * q[0]) < 1e-9;
+
+/** p3: the dial runs from −4 to 4; the whole reachable line is drawn once the sweep covers both ends. */
+export const P3_KMAX = 4;
+export const p3SweptFull = (kmin: number, kmax: number) => kmin <= -P3_KMAX + 1e-9 && kmax >= P3_KMAX - 1e-9;
+
+/** p3 par: two Fires (one per buoy), one marker drop (beacon C onto "out of reach"). */
+export const P3_PAR = 2 + 1;
+
+/** p4 [H]: the typed burn is end minus start, Q − P. */
+export const P4_P = [1, 4];
+export const P4_Q = [6, 1];
+export const p4Burn = (p: number[], q: number[]) => [q[0] - p[0], q[1] - p[1]];
+
+/** p4 par: Navigator's fewest moves. Two checked steps (Q − P, tether), one Fire, two marker drops. */
+export const P4_PAR = 2 + 1 + 2;
+
+/** p5 par: one Fire home, one typed distance. */
+export const P5_PAR = 1 + 1;

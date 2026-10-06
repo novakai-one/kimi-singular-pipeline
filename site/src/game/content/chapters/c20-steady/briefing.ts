@@ -124,7 +124,7 @@ export function baysScene(p: PuzzleCtx) {
 export const doubtSettles: DoubtDef = {
   id: 'c20-d-settles', who: 'bram', isTrue: false,
   claim: 'Every chain settles eventually. Give it enough hours.',
-  reason: 'The swap $\\begin{bmatrix} 0 & 1 \\\\ 1 & 0 \\end{bmatrix}$ never settles: all the drones change bay every hour, forever. Its eigenvalues are 1 and −1, and the −1 part flips sign every hour without shrinking. A chain settles from every start when its other eigenvalues are smaller than 1 in size; a regular chain always is.',
+  reason: 'The swap $\\left[\\begin{smallmatrix} 0 & 1 \\\\ 1 & 0 \\end{smallmatrix}\\right]$ never settles: all the drones change bay every hour, forever. Its eigenvalues are 1 and −1, and the −1 part flips sign every hour without shrinking. A chain settles from every start when its other eigenvalues are smaller than 1 in size; a regular chain always is.',
   goal: 'Set each bay’s stay share. The green line is Bay 1’s share of the drones, hour by hour. **Challenge it** (a chain that never settles) or **Back it**.',
   view: '2d',
   setup(p) {
