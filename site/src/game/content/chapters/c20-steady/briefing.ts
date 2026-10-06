@@ -13,7 +13,7 @@ import { rint } from '../../../game/lawcheck';
 import { matVec, type Mat, type Vec } from '../../../math/la';
 import { DRONES, DRONES_STEADY } from '../../truth';
 import { ptag } from '../c18-eigen/parts';
-import { FlowBoard, Simplex, triPoint, triSplit } from './board';
+import { FlowBoard, Simplex, boardView, triPoint, triSplit } from './board';
 import {
   LAW_CORE, PROC_REF, STATIONS, TOTAL, fmtN, fmtV, movingAtSteady, randChain, runProc, settlesHolds, startMattersHolds,
   steadyOf, stillMovingHolds, type ChainCase,
@@ -145,12 +145,12 @@ export const doubtSettles: DoubtDef = {
 
 export const doubtMoving: DoubtDef = {
   id: 'c20-d-moving', who: 'bram', isTrue: true,
-  claim: 'Settled doesn’t mean the drones stop. They keep moving; the counts just stop changing.',
+  claim: 'Settled doesn’t mean the drones stop. They keep moving; only the counts stop changing.',
   reason: `At $(150, 90, 60)$, ${fmtN(movingAtSteady(DRONES))} drones change section every hour. The flows balance: as many arrive in each section as leave it, so $P\\mathbf q = \\mathbf q$ while the drones keep moving.`,
   goal: 'The drones sit at the settled arrangement. **Run an hour** and count who moves. **Back it** (Bram will shake in other chains) or **Challenge it**.',
   view: '2d',
   setup(p) {
-    void p.g.stage.view2D({ center: [0, 0.9], height: 8.6, ms: 0 });
+    void boardView(p);
     let P = DRONES.map((r) => r.slice());
     const fb = new FlowBoard(p, { P, x0: steadyOf(P, TOTAL)!, names: STATIONS });
     const r = p.readout('Settled, and moving');

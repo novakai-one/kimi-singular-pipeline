@@ -12,7 +12,7 @@ import { sfx } from '../../../audio/sfx';
 import { matVec, type Vec } from '../../../math/la';
 import { DRONES_START } from '../../truth';
 import { Bars, ptag } from '../c18-eigen/parts';
-import { FlowBoard } from './board';
+import { FlowBoard, boardView } from './board';
 import {
   BAYS, HOURS, LINK_M, LINKS, NEED, P5_BEST, PR, PR_ORDER, PR_STEPS, STATIONS, TERMINALS, TOTAL, bays, designP, fmtN, fmtV, p5Won, p6Won, p7Won,
   settled2, steadyOf, sternAt,
@@ -40,7 +40,7 @@ export const p5: PuzzleDef = {
   onWin: S.p5Win,
   setup(p) {
     const d = p.difficulty;
-    void p.g.stage.view2D({ center: [0, 0.9], height: 8.6, ms: 0 });
+    void boardView(p);
     let pct = 60;
     const fb = new FlowBoard(p, { P: designP(pct / 100), x0: DRONES_START, names: STATIONS });
     const r = p.readout('The Stern rule');

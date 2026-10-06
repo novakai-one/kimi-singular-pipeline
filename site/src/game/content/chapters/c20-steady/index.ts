@@ -55,7 +55,7 @@ const NAME_REGULAR: Beat = {
   },
 };
 
-const WHY = 'A web reader who follows random links, and sometimes jumps to a random page, is a Markov chain on the web. Where readers settle, the steady-state vector, ranked pages for Google’s first search engine: **PageRank** is the terminal puzzle you just solved, on billions of pages, by repetition.\n\nThe drone allocation, next, runs on your `steady_state`.';
+const WHY = 'A web reader who follows random links, and sometimes jumps to a random page, is a Markov chain on the web. Where readers settle, the steady-state vector, ranked pages for Google’s first search engine: **PageRank** is the terminal puzzle you solved, on billions of pages, by repetition.\n\nThe drone allocation, next, runs on your `steady_state`.';
 
 const ch: ChapterDef = {
   id: 'c20',

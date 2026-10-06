@@ -8,11 +8,11 @@ import { RightAngle } from '../../../kit/geom';
 import { StepWorksheet } from '../../../kit/steps';
 import { h, button } from '../../../ui/ui';
 import { C } from '../../../core/theme';
-import { animate, ease, wait } from '../../../core/tween';
+import { animate, ease } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
 import { dot, matMul, norm, normalize, vscale, vsub, type Vec } from '../../../math/la';
 import {
-  DRIFT, DRIFT_NAMES, P6_A, P6_QR, P6_R, P7_X, P2_Q, angleDeg, classicalGS, driftFixed, fmtN, fmtV, horizonLean, modifiedGS, starRatio,
+  DRIFT, DRIFT_NAMES, P6_QR, P6_R, P7_X, P2_Q, angleDeg, classicalGS, driftFixed, fmtN, fmtV, horizonLean, modifiedGS, starRatio,
 } from './logic';
 import { v3 } from './puzzles';
 import { S } from './script';
@@ -165,8 +165,7 @@ export const p6: PuzzleDef = {
     const q1 = new Arrow([0, 0, 0], v3(P2_Q[0]), { color: C.result, width: 0.04, label: '$\\mathbf q_1$' });
     const q2 = new Arrow([0, 0, 0], v3(P2_Q[1]), { color: C.result, width: 0.04, label: '$\\mathbf q_2$' });
     p.add(a1, a2, q1, q2);
-    const m = new RightAngle(p, [0, 0, 0], v3(P2_Q[0]), v3(P2_Q[1]), 0.14, { color: C.result });
-    void m;
+    new RightAngle(p, [0, 0, 0], v3(P2_Q[0]), v3(P2_Q[1]), 0.14, { color: C.result });
     const r = p.readout('$A = QR$');
     r.eq('Q = \\begin{bmatrix} \\tfrac{1}{\\sqrt2} & \\tfrac{1}{\\sqrt6} \\\\ \\tfrac{1}{\\sqrt2} & -\\tfrac{1}{\\sqrt6} \\\\ 0 & \\tfrac{2}{\\sqrt6} \\end{bmatrix}');
     let done = false;
@@ -191,7 +190,6 @@ export const p6: PuzzleDef = {
       ],
       onDone: finish,
     });
-    void P6_A;
     return {
       async showMe() { await ws.showMe(300); finish(); },
       solve() { ws.solve(); finish(); },
@@ -250,7 +248,6 @@ export const p7: PuzzleDef = {
       h('div', { class: 'a8-btns' }, button('Run classical', () => void run('c'), { cls: 'small' }), button('Run modified', () => void run('m'), { cls: 'small' })),
       h('div', { class: 'a8-row' }, h('span', { class: 'k' }, 'Which stayed square?'), button('Classical', () => pick('c'), { cls: 'small ghost' }), button('Modified', () => pick('m'), { cls: 'small ghost' })),
       msg);
-    void wait;
     return {
       async showMe() { await run('c'); await run('m'); pick('m'); },
       async solve() { await run('c'); await run('m'); pick('m'); },

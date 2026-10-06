@@ -18,7 +18,10 @@ import { TRI, apportion, fmtN, triPoint, triSplit } from './logic';
 export { TRI, apportion, triPoint, triSplit };
 
 const SECTION_COLORS = ['#9fd8ff', '#c9b49a', '#ffd166'];
-export const SECTIONS_AT: [number, number][] = [[-3.4, -1.2], [3.4, -1.2], [0, 2.3]];
+export const SECTIONS_AT: [number, number][] = [[-3, -1.2], [3, -1.2], [0, 2.2]];
+
+/** Frame the three sections to the right of the dock and below the readout. */
+export const boardView = (p: PuzzleCtx, cx = -2.6): Promise<void> => p.g.stage.view2D({ center: [cx, 0.5], height: 10, ms: 0 });
 
 export interface FlowOpts { P: Mat; x0: Vec; names: string[]; centres?: [number, number][]; total?: number; w?: number; hgt?: number }
 

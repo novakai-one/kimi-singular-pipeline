@@ -18,7 +18,7 @@ import { matVec, transpose, type Mat, type Vec } from '../../../math/la';
 import { DRONES, DRONES_START, DRONES_STEADY } from '../../truth';
 import { ptag } from '../c18-eigen/parts';
 import { fmt2 } from '../c18-eigen/logic';
-import { FlowBoard, Simplex, triPoint } from './board';
+import { FlowBoard, Simplex, boardView, triPoint } from './board';
 import {
   HOURS, ONES, P1_HOUR1, P1_HOUR2, P1_ROWS, P2_AUG, P2_Q1, P3_STARTS, P4_DECOYS, P4_ORDER, P4_TILES, STATIONS, TOTAL, colSums, fmtN, fmtV,
   isStochastic, p1Won, settlesTo, shiftDet,
@@ -33,7 +33,7 @@ const msgBox = () => {
 
 /** The flow board with readout rows per section. */
 export function board(p: PuzzleCtx, P: Mat, x0: Vec, title: string) {
-  void p.g.stage.view2D({ center: [0, 0.9], height: 8.6, ms: 0 });
+  void boardView(p);
   const fb = new FlowBoard(p, { P, x0, names: STATIONS });
   const r = p.readout(title);
   const paint = () => { fb.x.forEach((x, i) => r.row(`s${i}`, STATIONS[i], fmtN(Math.round(x * 10) / 10), C.result)); };
@@ -137,7 +137,7 @@ export const p2: PuzzleDef = {
   onWin: S.p2Win,
   setup(p) {
     const d = p.difficulty;
-    void p.g.stage.view2D({ center: [0, -0.6], height: 9.6, ms: 0 });
+    void boardView(p, -2.85);
     const fb = new FlowBoard(p, { P: DRONES, x0: DRONES_START, names: STATIONS });
     const r = p.readout('The drones');
     const paint = () => fb.x.forEach((x, i) => r.row(`s${i}`, STATIONS[i], fmtN(Math.round(x * 10) / 10), C.result));

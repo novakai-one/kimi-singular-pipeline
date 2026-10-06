@@ -48,13 +48,13 @@ export const p5: PuzzleDef = {
     const finish = async () => {
       if (done) return;
       done = true;
-      await pr.reveal(1200);
-      tag(p, '$\\mathbf p$', v3(P5_P), 'y', [18, 14]);
       r.row('x', 'weights $\\hat{\\mathbf x}$', fmtV(P5_X), C.result);
       r.row('p', 'nearest point $\\mathbf p$', fmtV(P5_P), C.result);
       r.row('d1', 'leftover $\\cdot\\,\\mathbf a_1$', fmtN(dot(P5_LEFT, P5_A1)), C.good);
       r.row('d2', 'leftover $\\cdot\\,\\mathbf a_2$', fmtN(dot(P5_LEFT, P5_A2)), C.good);
       p.win();
+      await pr.reveal(1200);
+      tag(p, '$\\mathbf p$', v3(P5_P), 'y', [18, 14]);
     };
     const ws = new StepWorksheet(p, {
       steps: [
@@ -121,13 +121,13 @@ export const p6: PuzzleDef = {
       done = true;
       dl.setEnabled(false);
       keepA.object.visible = true;
-      await keepA.moveTo(v3(keep, 0.02), 700, [0, 0, 0.02]);
       (meter.querySelector('.bar span') as HTMLElement).style.width = '72%';
       r.row('k', 'kept', fmtV(keep), C.result);
       r.row('kd', 'kept $\\cdot\\,\\mathbf d$', fmtN(dot(keep, P6_D)), C.good);
       msg.className = 'a8-msg good';
       msg.textContent = 'Hum removed. The static dropped one step.';
       p.win();
+      await keepA.moveTo(v3(keep, 0.02), 700, [0, 0, 0.02]);
     };
     const remove = () => {
       p.move();
@@ -257,15 +257,15 @@ export const p8: PuzzleDef = {
     const cloud = new PointCloud(p, { points: CLOUD, color: C.accent, size: 0.05, glow: 0.3 });
     const r = p.readout('One matrix');
     let built = false, drops = 0, done = false;
+    let pts: number[][] = CLOUD.map((q) => q.slice());
     const drop = async () => {
       if (!built) { p.bark('lantern', 'Finish the matrix first.'); sfx.miss(); return; }
       p.move();
-      const before = cloud.points;
+      const before = pts;
       const after = before.map((q) => matVec(P8, q));
       const moved = Math.max(...before.map((q, i) => norm(vsub(q, after[i]))));
-      await cloud.to(after, 900, C.result);
+      pts = after;
       drops++;
-      if (drops === 1) p.bark('lantern', 'Seventy buoys dropped onto the plane.');
       if (drops >= 2 && moved < 1e-9 && !done) {
         done = true;
         r.row('pp', '$P^2 - P$', '0', C.good);
@@ -273,6 +273,8 @@ export const p8: PuzzleDef = {
         p.bark('lantern', 'Second drop. No buoy moved.');
         p.win();
       }
+      await cloud.to(after, 900, C.result);
+      if (drops === 1) p.bark('lantern', 'Seventy buoys dropped onto the plane.');
     };
     const ws = new StepWorksheet(p, {
       steps: [

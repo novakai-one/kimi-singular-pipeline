@@ -70,7 +70,7 @@ export function sweepScene(p: PuzzleCtx, M0: Mat) {
 
 export const doubtEvery: DoubtDef = {
   id: 'c18-d-every', who: 'bram', isTrue: false,
-  claim: 'Every pulse has some line it doesn’t turn. You just have to sweep far enough.',
+  claim: 'Every pulse has some line it doesn’t turn. Sweep far enough and you’ll find it.',
   reason: 'A turn keeps no real line. For the quarter turn, $\\det(A - \\lambda I) = \\lambda^2 + 1$ is never 0 for a real λ: its eigenvalues are $\\pm i$. The routine pulse is the same: a quarter turn in its own grid.',
   goal: 'Drag the grid arrows to set a move; the sweep shows every line it keeps (violet). **Challenge it** (a move that keeps no line) or **Back it**.',
   view: '2d',

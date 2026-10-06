@@ -16,7 +16,7 @@ import { animate, ease, wait } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
 import { det, dot, identity, matVec, mlerp, norm, transpose, vscale, vsub, type Mat, type Vec } from '../../../math/la';
 import {
-  MOVES, P1_B1, P1_B2, P1_C, P1_Q1, P1_Q2, P1_V2, P2_C21, P2_C31, P2_C32, P2_LEN2, P2_Q, P2_V2, P2_V3, P2_X, P3_C, P3_Q, P3_Q1,
+  MOVES, P1_B1, P1_B2, P1_C, P1_Q1, P1_Q2, P2_C21, P2_C31, P2_C32, P2_LEN2, P2_Q, P2_V2, P2_V3, P2_X, P3_C, P3_Q, P3_Q1,
   P3_Q2, P3_X, SAFE, angleDeg, fmtN, fmtV, maxOffDot, near, p1Q1Ok, p1Q2Ok, p3Won, p4Won, tolFor,
 } from './logic';
 import { S } from './script';
@@ -211,10 +211,8 @@ export const p2: PuzzleDef = {
     p.add(...arrows);
     const marks = [0, 1, 2].map(() => { const m = new RightAngle(p, [0, 0, 0], [1, 0, 0], [0, 1, 0], 0.16, { color: C.result }); m.show(false); return m; });
     const r = p.readout('Square up three');
-    let done = false;
-    const finish = async () => {
-      if (done) return;
-      done = true;
+    let fin: Promise<void> | null = null;
+    const finish = () => (fin ??= (async () => {
       sfx.whoosh(0.6);
       await Promise.all([arrows[1].moveTo(v3(P2_V2), 700, [0, 0, 0]), arrows[2].moveTo(v3(P2_V3), 700, [0, 0, 0])]);
       arrows[1].setLabel('$\\mathbf v_2$'); arrows[2].setLabel('$\\mathbf v_3$');
@@ -226,7 +224,7 @@ export const p2: PuzzleDef = {
       r.row('dot', 'largest dot product between two', maxOffDot(P2_Q).toExponential(0).replace('-', '−'), C.good);
       r.row('len', 'lengths', P2_Q.map((q) => fmtN(norm(q), 3)).join(', '), C.good);
       p.win();
-    };
+    })());
     const ws = new StepWorksheet(p, {
       steps: [
         { prompt: '$\\frac{\\mathbf x_2\\cdot\\mathbf v_1}{\\mathbf v_1\\cdot\\mathbf v_1}$, with $\\mathbf v_1 = \\mathbf x_1$', answer: P2_C21, mistakes: [[1, 'Divide by $\\mathbf v_1\\cdot\\mathbf v_1 = 2$, not by 1.']] },

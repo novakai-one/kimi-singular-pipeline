@@ -391,11 +391,11 @@ export const p3: PuzzleDef = {
     const ws = new StepWorksheet(p, {
       steps: [
         { prompt: '$P$: lines that hold as columns (λ = 3 first; first entries 1)', answer: P3_P, mistakes: [[[[1, 0], [1, -1]], 'Columns, not rows: $(1, 0)$ is the first column.']] as [Mat, string][] },
-        { prompt: '$D$, in the same order', answer: P3_D, mistakes: [[[[2, 0], [0, 3]], 'Same order as the columns of $P$: 3 first.']] as [Mat, string][] },
-        { prompt: '$P^{-1}$', answer: P3_PINV },
+        { prompt: 'The diagonal of $D$, in the same order', answer: [P3_D[0][0], P3_D[1][1]], mistakes: [[[2, 3], 'Same order as the columns of $P$: 3 first.']] as [Vec, string][] },
+        { prompt: '$P^{-1}$', answer: P3_PINV, mistakes: [[[[1, 1], [0, 1]], 'Check: $P P^{-1}$ must be $I$. Here $P$ is its own inverse.']] as [Mat, string][] },
         { prompt: '$(1, 1)$ in the grid of lines that hold: $P^{-1}(1, 1)$', answer: P3_C, mistakes: [[[1, 1], 'Those are its numbers in our grid. Multiply by $P^{-1}$.']] as [Vec, string][] },
         { prompt: '$A^{10}(1, 1) = 2\\cdot 3^{10}\\,\\mathbf p_1 - 1\\cdot 2^{10}\\,\\mathbf p_2$', answer: P3_RESULT, mistakes: [[[59049, 1024], 'Two of $\\mathbf p_1$: $2 \\cdot 59049 - 1024$ across.']] as [Vec, string][] },
-        { prompt: 'Last chapter’s 3 × 3 has stretches 2, 5, −5. In its own grid, $A^4 = D^4 =$', answer: P3_SUB_D4, mistakes: [[[[16, 0, 0], [0, 625, 0], [0, 0, -625]], '$(-5)^4$: an even power of a negative number is positive.']] as [Mat, string][] },
+        { prompt: 'Last chapter’s 3 × 3 has stretches 2, 5, −5. In its own grid, the diagonal of $A^4 = D^4$', answer: [P3_SUB_D4[0][0], P3_SUB_D4[1][1], P3_SUB_D4[2][2]], mistakes: [[[16, 625, -625], '$(-5)^4$: an even power of a negative number is positive.']] as [Vec, string][] },
       ],
       onDone: () => { tick(0); tick(1); tick(2); paint(5); void drawPath(); r.note('Ten repeats, two powers: $3^{10}$ along $(1, 0)$ and $2^{10}$ along $(1, -1)$.'); p.win(); },
     });

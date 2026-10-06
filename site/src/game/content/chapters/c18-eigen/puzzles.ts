@@ -172,10 +172,10 @@ export const p3: PuzzleDef = {
   onWin: S.p3Win,
   setup(p) {
     const d = p.difficulty;
-    void p.g.stage.view2D({ center: [0.6, -0.2], height: 9.2, ms: 0 });
+    void p.g.stage.view2D({ center: [-1.9, 0.2], height: 9.4, ms: 0 });
     const grid = p.grid({ main: 0.55, base: 0.14, axis: 0.7 });
     hideLandingLine(grid);
-    let l = 0;
+    let l = 3.5;
     const sq = new Parallelogram(p.g.stage, [1, 0, 0], [0, 1, 0], { color: C.result, opacity: 0.2 });
     const c1 = new Arrow([0, 0, 0.01], [1, 0, 0.01], { color: C.v, width: 0.045 });
     const c2 = new Arrow([0, 0, 0.01], [0, 1, 0.01], { color: C.w, width: 0.045 });
@@ -238,7 +238,8 @@ export const p3: PuzzleDef = {
     const step = d === 'cadet' ? 0.5 : d === 'navigator' ? 0.25 : 0.05;
     const slider = new Slider({ label: 'dial $\\lambda$', min: -1, max: 8, step, value: l, format: (x) => fmtN(x), onInput: (x) => { l = x; paint(); if (d === 'cadet') lockAt(l, true); } });
     const lockBtn = button('Lock λ', () => { p.move(); lockAt(l); }, { cls: 'primary small' });
-    p.dock().append(plot.el, h('div', { class: 'a7-row' }, slider.el, d === 'cadet' ? null : lockBtn), msgEl);
+    r.el.append(plot.el);
+    p.dock().append(h('div', { class: 'a7-row' }, slider.el, d === 'cadet' ? null : lockBtn), msgEl);
     slider.el.addEventListener('change', () => p.move());
     // the derivation, by level (GDD §7.1): cadet watches, navigator types the steps, commander orders the reason first
     let ws: StepWorksheet | null = null, tiles: TileOrder | null = null, last: StepWorksheet | null = null;
@@ -250,10 +251,12 @@ export const p3: PuzzleDef = {
       if (!last) last = new StepWorksheet(p, { title: 'The last line · only the answer is checked', steps: [{ prompt: 'Solve $\\lambda^2 - 7\\lambda + 10 = 0$: the roots, larger first', answer: P3_ROOTS }], mount: box, onDone: () => { derived = true; winCheck(); } });
     };
     const steps = [
-      { prompt: '$\\det(A - \\lambda I) = (4 - \\lambda)(3 - \\lambda) - 2 = \\lambda^2 + b\\lambda + c$. Type $(b, c)$', answer: [-7, 10], mistakes: [[[7, 10], 'Multiply out $(4 - \\lambda)(3 - \\lambda)$: the λ terms are $-4\\lambda - 3\\lambda$.'], [[-7, 12], 'Take away the off-diagonal product $1 \\cdot 2 = 2$.']] as [number[], string][] },
-      { prompt: 'Its roots, larger first', answer: P3_ROOTS, mistakes: [[[2, 5], 'Larger first: 5, then 2.']] as [number[], string][] },
-      { prompt: 'An arrow $A - 5I$ sends to the origin (first entry 1)', answer: [1, 1] },
-      { prompt: 'An arrow $A - 2I$ sends to the origin (first entry 1)', answer: [1, -2], mistakes: [[[1, 2], '$A - 2I = \\begin{bmatrix} 2 & 1 \\\\ 2 & 1 \\end{bmatrix}$: $2x + y = 0$.']] as [number[], string][] },
+      { prompt: '$(4 - \\lambda)(3 - \\lambda) - 2 = \\lambda^2 + b\\lambda + c$: $b =$', answer: -7, mistakes: [[7, 'Multiply out: the λ terms are $-4\\lambda - 3\\lambda$.']] as [number, string][] },
+      { prompt: '$c =$', answer: 10, mistakes: [[12, 'Take away the off-diagonal product $1 \\cdot 2 = 2$.']] as [number, string][] },
+      { prompt: 'The larger root', answer: P3_ROOTS[0] },
+      { prompt: 'The smaller root', answer: P3_ROOTS[1] },
+      { prompt: '$A - 5I$ sends $(1, y)$ to the origin: $y =$', answer: 1 },
+      { prompt: '$A - 2I$ sends $(1, y)$ to the origin: $y =$', answer: -2, mistakes: [[2, '$A - 2I = \\begin{bmatrix} 2 & 1 \\\\ 2 & 1 \\end{bmatrix}$: $2 + y = 0$.']] as [number, string][] },
     ];
     const box = h('div', { class: 'a7-deriv', style: 'display:flex;flex-direction:column;gap:8px' });
     if (d === 'navigator') {

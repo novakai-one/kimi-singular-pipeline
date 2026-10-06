@@ -74,8 +74,8 @@ export const p5: PuzzleDef = {
     const steps = [
       { prompt: '$\\det(A - \\lambda I) = (2 - \\lambda)\\,[(3 - \\lambda)(-3 - \\lambda) - 16]$. The bracket is $\\lambda^2 + c$: $c =$', answer: P5_BLOCK_C, mistakes: [[-9, 'Take away $4 \\cdot 4 = 16$ as well: $-9 - 16$.'], [7, 'The product of the diagonal is $(3)(-3) = -9$, then take away 16.']] as [number, string][] },
       { prompt: 'The eigenvalues, largest first', answer: P5_VALUES, mistakes: [[[5, 2, 5], '$\\lambda^2 = 25$ has two roots: 5 and −5.'], [[2, 5, -5], 'Largest first: 5, 2, −5.']] as [number[], string][] },
-      { prompt: 'An eigenvector for $\\lambda = 5$ (second entry 2)', answer: P5_VECS[0], mistakes: [[[0, 1, -2], 'That one belongs to λ = −5. For λ = 5: $-2y + 4z = 0$.']] as [number[], string][] },
-      { prompt: 'An eigenvector for $\\lambda = -5$ (second entry 1)', answer: P5_VECS[2], mistakes: [[[0, 1, 2], '$A - (-5)I$ has the row $(0, 8, 4)$: $8y + 4z = 0$, so $z = -2y$.']] as [number[], string][] },
+      { prompt: 'An eigenvector for $\\lambda = 5$ is $(0, 2, z)$: $z =$', answer: P5_VECS[0][2], mistakes: [[-4, 'That one solves for λ = −5. For λ = 5: $-2y + 4z = 0$.']] as [number, string][] },
+      { prompt: 'An eigenvector for $\\lambda = -5$ is $(0, 1, z)$: $z =$', answer: P5_VECS[2][2], mistakes: [[2, '$A + 5I$ has the row $(0, 8, 4)$: $8 + 4z = 0$.']] as [number, string][] },
       { prompt: 'Check: $\\lambda_1 + \\lambda_2 + \\lambda_3$ (the trace)', answer: P5_VALUES.reduce((a, b) => a + b, 0) },
       { prompt: 'Check: $\\lambda_1\\lambda_2\\lambda_3$ ($\\det A$)', answer: P5_VALUES.reduce((a, b) => a * b, 1), mistakes: [[50, 'One of the three is negative.']] as [number, string][] },
       { prompt: `Triangular: the eigenvalues of $${texM(P5_TRI)}$, top to bottom`, answer: P5_TRI_VALUES },
