@@ -73,6 +73,7 @@ export const p1: PuzzleDef = {
         sfx.success();
         handles.forEach((x) => x.setEnabled(false));
         stabBtn.hidden = false;
+        p.dock().append(stabBtn);
         p.setGoal('The hold reads 6. Apply the stabiliser $\\begin{bmatrix} 2 & 1 \\\\ 1 & 1 \\end{bmatrix}$ to everything, the hold and one plain grid square, and watch their areas.');
         void animate(400, (k) => square.setOpacity(k));
         grid.set(identity(2));
@@ -103,7 +104,6 @@ export const p1: PuzzleDef = {
       void burst(p.g.stage, [1, 1, 0.05], C.good, 50, 3);
       p.win();
     };
-    p.dock().append(stabBtn);
     show();
     return {
       async showMe() {
@@ -134,7 +134,7 @@ export const p2: PuzzleDef = {
   par: 6,
   onWin: S.p2Win,
   setup(p) {
-    p.g.stage.view2D({ center: [3.4, 1.3], height: 7.6, ms: 0 });
+    p.g.stage.view2D({ center: [1.6, 0.6], height: 7.6, ms: 0 });
     p.grid({ base: 0.42, main: 0.5, axis: 0.8 });
     const [W, H] = P2_BOX;
     const box = new FatLine(p.g.stage, [[0, 0, 0.01], [W, 0, 0.01], [W, H, 0.01], [0, H, 0.01], [0, 0, 0.01]], { color: C.white, width: 2, opacity: 0.8, dashed: true, dashSize: 0.14, gapSize: 0.1 });

@@ -114,7 +114,9 @@ export const p2: PuzzleDef = {
     const board = new RowOpsBoard(p, { aug: P2.aug, n: 3, varNames: X, showSolution: false, title: 'Pod bay conduits' });
     new SystemView(p, { n: 3, aug: P2.aug, board, varNames: X });
     const bars = pipes(p, 'Pipes (units)', ['<i>x</i><sub>1</sub>', '<i>x</i><sub>2</sub>', '<i>x</i><sub>3</sub>'], P2.max);
-    bars.r.note('Reduce the board first. Then the dial appears.');
+    // the panel keeps its final height from the start, so the 3-D labels placed around it stay clear
+    bars.r.row('load', 'Total load', '—', C.result);
+    bars.r.note('Reduce the board first. Then a dial appears, and each of its values routes the power one way.');
     const done = [false, false, false];
     const tick = (i: number) => { if (!done[i]) { done[i] = true; p.subgoal(i); } };
     let t = 1.5;

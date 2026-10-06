@@ -158,8 +158,8 @@ export const doubtSame: DoubtDef = {
     const left = new Room(p, { origin: [-3.9, 0, 0], scale: 0.7, extent: 3, title: 'starts' });
     const right = new Room(p, { origin: [3.9, 0, 0], scale: 0.7, extent: 3, title: 'landings' });
     void twinView(p, { distance: 15.5 });
-    const sheet = new Sheet(right, [1, 1, -1], { color: C.result, size: 6, opacity: 0.1 });
-    sheet.setOpacity(0.4);
+    const sheet = new Sheet(right, [1, 1, -1], { color: C.result, size: 5, opacity: 0.1 });
+    sheet.setOpacity(0.3);
     const nul = new GlowLine(left, NULL_DIR, { opacity: 0.45 });
     let a: P3 = [2, 0, 1], b: P3 = [3, 1, 0];
     const la = new Dot([0, 0, 0], { color: C.v, size: 0.1 }), lb = new Dot([0, 0, 0], { color: C.w, size: 0.08 });

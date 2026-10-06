@@ -22,6 +22,16 @@ import {
 import { S } from './script';
 import '../c08-systems/act3.css';
 
+type Box = [number, number, number, number];
+/** 2-D sandboxes keep their lines inside a frame, clear of the goal card, the dock and the title. */
+const P4_BOX: Box = [-0.6, -2.2, 6, 5.4];
+const P5_BOX: Box = [-0.5, -4, 7, 3.3];
+function boxFrame(p: PuzzleCtx, b: Box): void {
+  const f = new FatLine(p.g.stage, [[b[0], b[1], -0.01], [b[2], b[1], -0.01], [b[2], b[3], -0.01], [b[0], b[3], -0.01], [b[0], b[1], -0.01]], { color: '#59e1ff', width: 1.2, opacity: 0.3 });
+  p.add(f.object);
+  p.onDispose(() => f.dispose());
+}
+
 const num2 = (m: FMat): Aug => m.map((r) => r.map((x) => x.value()));
 
 /** Hide the coordinates label of the yellow point while this puzzle is mounted (the player reads it). */
@@ -229,7 +239,8 @@ export const p4: PuzzleDef = {
   setup(p) {
     const d = p.difficulty;
     let m: Aug = P4.aug.map((r) => r.slice());
-    const planes = new PlaneSet(p, { n: 2, rows: m, names: ['x', 'y'] });
+    const planes = new PlaneSet(p, { n: 2, rows: m, names: ['x', 'y'], box: P4_BOX });
+    boxFrame(p, P4_BOX);
     void planes.frame({ height: 9, target: [1, 1.5] });
     const trail = new FatLine(p.g.stage, [[0, 0, 0], [0, 0, 0]], { color: C.orange, width: 2, opacity: 0, dashed: true, dashSize: 0.16, gapSize: 0.1 });
     p.add(trail.object);
@@ -383,7 +394,8 @@ export const p5: PuzzleDef = {
   onWin: S.p5Win,
   setup(p) {
     let k = 3, c = 6;
-    const planes = new PlaneSet(p, { n: 2, rows: p5Rows(k, c), names: ['x', 'y'], focus: [3, 0] });
+    const planes = new PlaneSet(p, { n: 2, rows: p5Rows(k, c), names: ['x', 'y'], focus: [3, 0], box: P5_BOX });
+    boxFrame(p, P5_BOX);
     void planes.frame({ height: 11, target: [2.5, 0.5] });
     const done = [false, false, false, false];
     const tick = (i: number) => { if (!done[i]) { done[i] = true; p.subgoal(i); } if (done.every(Boolean)) { sfx.success(); p.win(); } };

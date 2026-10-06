@@ -476,7 +476,7 @@ export const p6: PuzzleDef = {
     outline.setOpacity(0);
     p.add(outline.object);
     p.onDispose(() => outline.dispose());
-    const centre = new Label('the blob’s centre: the origin', [0, -0.45, 0], { className: 'coord' });
+    const centre = new Label('the blob’s centre: the origin', [0.9, -0.55, 0], { className: 'coord' });
     centre.show(false);
     p.add(centre.object);
     p.onDispose(() => centre.dispose());

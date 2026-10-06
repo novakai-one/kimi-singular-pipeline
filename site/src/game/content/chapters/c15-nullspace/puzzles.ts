@@ -197,7 +197,7 @@ export const p2: PuzzleDef = {
     p.add(buoy);
     // the gap arrow from (1, 1, 1) up toward the plane
     const gapLine = new FatLine(p.g.stage, [room.w(P2_GAP_TARGET), room.w(P2_GAP_TARGET)], { color: C.white, width: 2.4, opacity: 0.9, dashed: true, dashSize: 0.1, gapSize: 0.07 });
-    const gapTag = new Label('', room.w(P2_GAP_TARGET), { className: 'act5-note', offset: [64, 0] });
+    const gapTag = new Label('', room.w(P2_GAP_TARGET), { className: 'act5-note', offset: [0, -26] });
     p.add(gapLine, gapTag);
     gapTag.show(false);
 
@@ -276,7 +276,7 @@ export const p2: PuzzleDef = {
       gapLine.setPoints([room.w(P2_GAP_TARGET), room.w(top)]);
       gapLine.setOpacity(gap > 0.01 ? 0.9 : 0);
       gapTag.show(gap > 0.01);
-      gapTag.at(room.w([top[0], top[1], (top[2] + P2_GAP_TARGET[2]) / 2]));
+      gapTag.at(room.w(top));
       gapTag.set(`gap ${fmtN(gap)}`);
       r.row('g', 'plane above $(1, 1)$', `height ${fmtN(planeHeight(1, 1))}`);
     };
@@ -354,8 +354,8 @@ export const p3: PuzzleDef = {
     const right = new Room(p, { origin: [3.9, 0, 0], scale: 0.72, extent: 3, title: 'landings' });
     stage1.push(left, right);
     void twinView(p, { distance: 15.5 });
-    const sheet = new Sheet(right, [1, 1, -1], { color: C.result, size: 6, opacity: 0.1 });
-    sheet.setOpacity(0.45);
+    const sheet = new Sheet(right, [1, 1, -1], { color: C.result, size: 5, opacity: 0.1 });
+    sheet.setOpacity(0.3);
     const lArrow = right.arrow([0, 0, 0], { color: C.result, width: 0.04 });
     const lDot = new Dot(right.w([0, 0, 0]), { color: C.result, size: 0.1 });
     const sArrow = left.arrow([0, 0, 0], { color: C.v, width: 0.04, opacity: 0.85 });
@@ -491,8 +491,8 @@ export const p4: PuzzleDef = {
     const left = new Room(p, { origin: [-3.9, 0, 0], scale: 0.7, extent: 3, title: 'starts' });
     const right = new Room(p, { origin: [3.9, 0, 0], scale: 0.7, extent: 3, title: 'landings' });
     void twinView(p, { distance: 15.5 });
-    const sheet = new Sheet(right, [1, 1, -1], { color: C.result, size: 6, opacity: 0.1 });
-    sheet.setOpacity(0.4);
+    const sheet = new Sheet(right, [1, 1, -1], { color: C.result, size: 5, opacity: 0.1 });
+    sheet.setOpacity(0.3);
     const flags = [false, false, false];
     const tick = (i: number) => { if (!flags[i]) { flags[i] = true; p.subgoal(i); } };
     const plateA = new Dot(left.w(P4_A), { color: C.white, size: 0.1 });

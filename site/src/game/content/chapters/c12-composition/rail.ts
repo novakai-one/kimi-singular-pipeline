@@ -139,6 +139,9 @@ export class Tracer {
     return (W) => {
       this.a1.setTo([W[0][0], W[1][0], W[2][0]]);
       this.a2.setTo([W[0][1], W[1][1], W[2][1]]);
+      // an arrow squashed to the origin keeps no label (two labels would pile up there)
+      if (this.a1.label) this.a1.label.object.visible = Math.hypot(W[0][0], W[1][0], W[2][0]) > 0.05;
+      if (this.a2.label) this.a2.label.object.visible = Math.hypot(W[0][1], W[1][1], W[2][1]) > 0.05;
     };
   }
   /** Leave a dot for each arrow where it is now, joined to the previous stage. */
@@ -160,6 +163,8 @@ export class Tracer {
     this.last = [[1, 0, 0], [0, 1, 0]];
     this.a1.setTo([1, 0, 0]);
     this.a2.setTo([0, 1, 0]);
+    if (this.a1.label) this.a1.label.object.visible = true;
+    if (this.a2.label) this.a2.label.object.visible = true;
   }
   show(v: boolean): void { this.a1.object.visible = v; this.a2.object.visible = v; this.trails.object.visible = v; this.dots.forEach((d) => { d.object.visible = v; }); }
 }

@@ -73,7 +73,7 @@ export class Room {
     const names = o.names ?? ['x', 'y', 'z'];
     const ends: V3[] = [[E + 0.45, 0, 0], [0, E + 0.45, 0], [0, 0, E + 0.4]];
     ends.forEach((e, i) => this.own(new Label(`$${names[i]}$`, this.w(e), { className: 'rob-axis' })));
-    if (o.title) this.caption = this.own(new Label(o.title, this.w([0, 0, E + 1.35]), { className: 'act5-cap' }));
+    if (o.title) this.caption = this.own(new Label(o.title, this.w([0, -E - 0.9, 0]), { className: 'act5-cap' }));
   }
 
   /** Room point → world point. */
