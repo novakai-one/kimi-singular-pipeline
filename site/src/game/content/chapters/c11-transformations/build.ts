@@ -31,7 +31,7 @@ export const TESTS = [
 
 export const buildMatvec: BuildDef = {
   id: 'c11-matvec', fn: 'matvec', title: 'Where does one point land?',
-  brief: 'Write `matvec(A, x)`. `A` is a list of rows, such as `[[1, -2], [1, -1]]`. `x` has one number per column of `A`.\n\nReturn $A\\mathbf x$: **the mix of the columns of `A`, with the numbers in `x` as the weights**. Your `lincomb(cs, vs)` from Chapter 2 does the mixing.\n\nThe columns are not stored as lists: column `j` is `[row[j] for row in A]`.',
+  brief: 'Write `matvec(A, x)`. `A` is a list of rows, such as `[[1, -2], [1, -1]]`. `x` has one number per column of `A`.\n\nReturn $A\\mathbf x$: **the mix of the columns of `A`, with the numbers in `x` as the weights**. Your `lincomb(cs, vs)` from Chapter 2 does the mixing.\n\nThe columns are not stored as lists: column `j` is `[row[j] for row in A]`.\n\nOn Write you may also use the row view: entry `i` is `dot(A[i], x)`, row `i` dotted with `x`.',
   starter: 'def matvec(A, x):\n    """Return A x: the columns of A mixed, with x as the weights."""\n    columns = []\n    # column j of A is [row[j] for row in A]\n    return lincomb(x, columns)\n',
   fill: 'def matvec(A, x):\n    """Return A x: the columns of A mixed, with x as the weights."""\n    columns = [[row[___] for row in ___] for j in range(len(___))]\n    return lincomb(___, columns)\n',
   signature: 'def matvec(A, x):\n    """Return A x: the columns of A mixed, with x as the weights.\n\n    (The row view works too: entry i is row i dotted with x.)"""\n',
@@ -40,7 +40,7 @@ export const buildMatvec: BuildDef = {
     lines: SOLUTION_LINES,
     decoys: ['    columns = A', '    return [A[i][i] * x[i] for i in range(len(x))]'],
   },
-  uses: ['lincomb', 'scale', 'add'],
+  uses: ['lincomb', 'scale', 'add', 'dot'],
   tests: TESTS,
   swarm: { gen: (r, level) => swarmCase(r, level), crew: (...a: unknown[]) => matVec(a[0] as Mat, a[1] as number[]) },
   docPrompt: 'What question does `matvec` answer, and why does the code work? Write it the way you would tell Bram.',

@@ -22,7 +22,7 @@ import { makeLantern } from '../../common/set';
 import { Gauge, addGauges, chime, fmtNum } from './meter';
 import { alongX } from './ark';
 import {
-  P3_V, P3_W, P4_HEADING, P4_SPINE, P5_CANDS, P5_T, P6_OVERSHOOT_SCALE, P6_STEPS, P6_U, P6_V, P7_READINGS, SIGNAL,
+  P3_COEFFS, P3_V, P3_W, P4_HEADING, P4_SPINE, P5_CANDS, P5_T, P6_OVERSHOOT_SCALE, P6_STEPS, P6_U, P6_V, P7_READINGS, P7_SHAKES, SIGNAL,
   axisReadings, cauchySchwarz, cosSide, deg, fmt, lockAccepted, meter, p1Won, p2Won, p3OrderOk, p4Won, p5Won, p6Won,
   p7Won, rotateAbout, type Cand,
 } from './logic';
@@ -302,15 +302,24 @@ export const p3: PuzzleDef = {
       void reveal(700);
       solveDerivation = async () => { await reveal(0); place('cos'); };
     } else if (p.difficulty === 'navigator') {
+      // the expansion for any pair: the player supplies each number in front of a term
       const ws = new StepWorksheet(p, {
-        title: 'Where it comes from · test pair v = (3, 1), w = (1, 2)',
+        title: 'Where it comes from · type the number in each box',
         steps: [
-          { prompt: '$\\|\\mathbf v-\\mathbf w\\|^2 = (3-1)^2+(1-2)^2$', answer: 5, mistakes: [[3, 'Square each part first: $2^2 + (-1)^2$.']] },
-          { prompt: '$\\|\\mathbf v\\|^2 = 3^2+1^2$', answer: 10 },
-          { prompt: '$\\|\\mathbf w\\|^2 = 1^2+2^2$', answer: 5 },
-          { prompt: '$\\mathbf v\\cdot\\mathbf w = 3\\cdot 1+1\\cdot 2$', answer: 5 },
-          { prompt: 'Expanded: $\\|\\mathbf v\\|^2+\\|\\mathbf w\\|^2-2\\,\\mathbf v\\cdot\\mathbf w$', answer: 5, mistakes: [[10, 'Subtract twice the dot product: $10 + 5 - 2 \\times 5$.']] },
-          { prompt: 'Law of cosines, solved: $\\|\\mathbf v\\|\\|\\mathbf w\\|\\cos\\theta = \\frac{10 + 5 - 5}{2}$', answer: 5 },
+          { prompt: 'Multiply out one part: $(v_1-w_1)^2 = v_1^2 + \\square\\,v_1w_1 + w_1^2$', answer: P3_COEFFS.cross, mistakes: [
+            [0, '$(v_1-w_1)^2$ is not $v_1^2+w_1^2$: the middle term is missing, and that is where $\\mathbf v\\cdot\\mathbf w$ comes from.'],
+            [-1, 'There are two middle terms: $v_1\\cdot(-w_1)$ and $(-w_1)\\cdot v_1$.'],
+            [2, 'Check the sign: $v_1\\cdot(-w_1)$ is negative.'],
+          ] },
+          { prompt: 'Do the same for $(v_2-w_2)^2$ and group: $\\|\\mathbf v-\\mathbf w\\|^2 = \\|\\mathbf v\\|^2+\\|\\mathbf w\\|^2 + \\square\\,(v_1w_1+v_2w_2)$', answer: P3_COEFFS.grouped, mistakes: [
+            [-4, 'Each part gives its own middle term. Take the common number out of $-2v_1w_1 - 2v_2w_2$.'],
+            [2, 'Check the sign: both middle terms are negative.'],
+          ] },
+          { prompt: 'The law of cosines has $-2\\|\\mathbf v\\|\\|\\mathbf w\\|\\cos\\theta$ in that place, so $v_1w_1+v_2w_2 = \\square\\,\\|\\mathbf v\\|\\|\\mathbf w\\|\\cos\\theta$', answer: P3_COEFFS.match, mistakes: [
+            [-2, 'Both lines have $-2$ in front. Divide both sides by $-2$.'],
+            [2, 'Both lines have $-2$ in front. Divide both sides by $-2$.'],
+            [-1, 'Dividing both sides by $-2$ cancels the minus signs too.'],
+          ] },
         ],
         onDone: finish,
       });
@@ -463,10 +472,10 @@ export const p4: PuzzleDef = {
 
 export const p5: PuzzleDef = {
   id: 'c04-p5',
-  title: 'Which echo is the ark?',
-  goal: 'The ark\'s pattern is $\\mathbf t = (3, 4)$. LANTERN locks only on a meter reading of **1.00**: the same direction. Fix the meter, then lock the ark\'s echo.',
+  title: 'Which one is the ark?',
+  goal: 'The ark\'s pattern is $\\mathbf t = (3, 4)$. LANTERN locks only on a meter reading of **1.00**: the same direction. Fix the meter, then lock the ark\'s beacon.',
   hints: [
-    'A long echo reads high even when it points a different way. The meter has to stop caring about length.',
+    'A long signal reads high even when it points a different way. The meter has to stop caring about length.',
     'Divide the reading by the length of $\\mathbf t$ **and** by the length of the candidate. What is left is $\\cos\\theta$.',
     'Turn on both divisions; **a** reads 1.00. Lock **a**.',
   ],
@@ -487,9 +496,9 @@ export const p5: PuzzleDef = {
     let divT = false, divX = false, locked: Cand | null = null;
     const r = p.readout('Beacon meter');
     const gauges: Record<Cand, Gauge> = {} as Record<Cand, Gauge>;
-    for (const k of keys) { gauges[k] = new Gauge(`echo $\\mathbf ${k} = ${fmt(P5_CANDS[k])}$`, { max: 80 }); addGauges(r, gauges[k]); }
+    for (const k of keys) { gauges[k] = new Gauge(`signal $\\mathbf ${k} = ${fmt(P5_CANDS[k])}$`, { max: 80 }); addGauges(r, gauges[k]); }
     const btnT = button('÷ length of t', () => { divT = !divT; p.move(); sync(); }, { cls: 'small' });
-    const btnX = button('÷ length of the echo', () => { divX = !divX; p.move(); sync(); }, { cls: 'small' });
+    const btnX = button('÷ length of the signal', () => { divX = !divX; p.move(); sync(); }, { cls: 'small' });
     const sync = () => {
       btnT.classList.toggle('primary', divT); btnX.classList.toggle('primary', divX);
       const parts = ['\\mathbf t\\cdot\\mathbf x'];
@@ -519,7 +528,7 @@ export const p5: PuzzleDef = {
       arc.show(th > 0);
       const m = meter(P5_CANDS[k], divT, divX);
       if (!lockAccepted(k, divT, divX)) {
-        p.bark('lantern', th ? `Lock refused. Echo ${k} reads ${divT && divX ? m.toFixed(2) : fmtNum(m)}, not 1.00. It points ${th}° away from the pattern.` : `Lock refused. Echo ${k} reads ${fmtNum(m)}. Same direction, but this meter still counts length.`);
+        p.bark('lantern', th ? `Lock refused. Signal ${k} reads ${divT && divX ? m.toFixed(2) : fmtNum(m)}, not 1.00. It points about ${th}° away from the pattern.` : `Lock refused. Signal ${k} reads ${fmtNum(m)}. Same direction, but this meter still counts length.`);
       }
     };
     p.dock().append(
@@ -694,18 +703,20 @@ export const p7: PuzzleDef = {
       r.note('Bram shakes it: is $|\\mathbf v\\cdot\\mathbf w|$ ever more than $\\|\\mathbf v\\|\\|\\mathbf w\\|$?');
       const csG = new Gauge('$|\\mathbf v\\cdot\\mathbf w|$ out of $\\|\\mathbf v\\|\\|\\mathbf w\\|$', { max: 1 });
       addGauges(r, csG);
-      let rs = 12345;
-      const rnd = () => { rs = (rs * 16807) % 2147483647; return rs / 2147483647; };
-      for (let i = 0; i < 6; i++) {
-        const a: V3 = [rnd() * 6 - 3, rnd() * 6 - 3, rnd() * 4], b: V3 = [rnd() * 6 - 3, rnd() * 6 - 3, rnd() * 4];
+      let survived = 0;
+      for (const [i, [sa, sb]] of P7_SHAKES.entries()) {
+        const a = v3(sa), b = v3(sb);
         caseA.setOpacity(0.9); caseB.setOpacity(0.9);
         if (fast) { caseA.set([0, 0, 0], a); caseB.set([0, 0, 0], b); } else await Promise.all([caseA.moveTo(a, 300), caseB.moveTo(b, 300)]);
         const ratio = Math.abs(dot(a, b)) / (norm(a) * norm(b));
         csG.set(ratio, `${ratio.toFixed(2)} ≤ 1`);
         if (!cauchySchwarz(a, b)) break;
+        survived++;
         sfx.tick(i);
         if (!fast) await wait(260);
       }
+      // GDD §4.2: a Shake is evidence; the card says so and gives the reason
+      r.note(`**Survived ${survived} cases.** That is evidence, not a proof. The reason: $\\mathbf v\\cdot\\mathbf w = \\|\\mathbf v\\|\\|\\mathbf w\\|\\cos\\theta$ (the law of cosines), and $|\\cos\\theta| \\le 1$, so the shadow $\\|\\mathbf v\\||\\cos\\theta|$ is never longer than $\\|\\mathbf v\\|$. The last pair is parallel, so its shadow is exactly as long as the arrow.`);
       phase = 'done';
       p.win();
     };

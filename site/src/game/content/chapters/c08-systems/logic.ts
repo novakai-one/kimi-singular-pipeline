@@ -15,6 +15,12 @@ export const p1Tip = (x: number, y: number): number[] => add(scale(P1.cols[0], x
 /** The weights that reach a tip q: solve x(1, 1) + y(1, −1) = q. */
 export const p1Weights = (q: number[]): number[] => [(q[0] + q[1]) / 2, (q[0] - q[1]) / 2];
 export const p1Won = (xy: number[], tol: number): boolean => near(xy, P1.answer, tol) && near(p1Tip(xy[0], xy[1]), P1.b, tol * 2);
+/**
+ * The twin view on the row picture / column picture card. p1's numbers are symmetric (row i reads the
+ * same as column i), so the card shows a system whose rows and columns differ: x + 2y = 5, x − y = 2.
+ * Row 1 reads (1, 2) across; column 1 reads (1, 1) down. 3(1, 1) + 1(2, −1) = (5, 2) fits p1's panels.
+ */
+export const PICTURES = { rows: [[1, 2, 5], [1, -1, 2]] as Aug, answer: [3, 1], b: [5, 2] };
 
 /** c08-p2: the three fan-beam planes and Teo's pod. */
 export const P2 = { rows: [[1, 1, 1, 6], [0, 2, 5, -4], [2, 5, -1, 27]] as Aug, pod: [5, 3, -2], start: [4, 2, -4] };
@@ -35,6 +41,10 @@ export function p3Region(t: number): 'before' | 'between' | 'beyond' | null {
 }
 /** The sweep is done once the marker has been between A and B and outside them (either side), always on every plane. */
 export const p3SweepDone = (seen: Set<string>): boolean => seen.has('between') && (seen.has('before') || seen.has('beyond'));
+/** The p3 Commander tiles: A and B are independent facts (either first), then step, zero, line. */
+export const p3OrderOk = (o: string[]): boolean => o.length === 5 && [...o.slice(0, 2)].sort().join() === 'a,b' && o.slice(2).join() === 'step,zero,line';
+/** p3 par: Navigator's fewest moves. Two marker placements, one slider gesture, three checked steps. */
+export const P3_PAR = 2 + 1 + 3;
 
 /** c08-p4: change the last right side to 5. The three lines where pairs of planes meet run side by side along (1, 1, −2). */
 export const P4 = { rows: [[1, 1, 1, 3], [1, -1, 0, 1], [2, 0, 1, 5]] as Aug, dir: [1, 1, -2] };
@@ -52,6 +62,36 @@ export const P5 = {
   cols: [[1, -1, 0], [1, 1, -1], [1, 0, 1]],
   b: [13, 1, 2],
 };
+
+/** One worksheet step (the shape kit/steps.ts takes; plain data so Node can test it). */
+export interface P5Step { prompt: string; answer: number[] | number[][]; mistakes?: [number[][], string][] }
+/** The three rows' numbers in front of x, y, z: the columns a₁, a₂, a₃ side by side. */
+const P5_A = P5.rows.map((r) => r.slice(0, 3));
+const P5_SLIP2 = 'That says A holds 1 more than B. Here B holds more: $y - x = 1$.';
+const P5_SLIP3 = 'That says B holds 2 more than C. Here C holds more: $z - y = 2$.';
+/**
+ * The c08-p5 worksheet. On Commander only the last step is checked, so the last step must need the
+ * words-to-numbers work: the columns side by side (the three rule rows again), never the right sides,
+ * which the rules print.
+ */
+export const P5_STEPS: P5Step[] = [
+  { prompt: 'Rule 1: $\\_x + \\_y + \\_z = 13$', answer: [P5_A[0]] },
+  { prompt: 'Rule 2: $\\_x + \\_y + \\_z = 1$', answer: [P5_A[1]], mistakes: [[[[1, -1, 0]], P5_SLIP2]] },
+  { prompt: 'Rule 3: $\\_x + \\_y + \\_z = 2$', answer: [P5_A[2]], mistakes: [[[[0, 1, -1]], P5_SLIP3]] },
+  { prompt: 'Column $\\mathbf a_1$: the numbers in front of $x$, top to bottom', answer: P5.cols[0] },
+  { prompt: 'Column $\\mathbf a_2$: in front of $y$', answer: P5.cols[1] },
+  { prompt: 'Column $\\mathbf a_3$: in front of $z$', answer: P5.cols[2] },
+  {
+    prompt: 'Columns $\\mathbf a_1$, $\\mathbf a_2$, $\\mathbf a_3$ side by side, as in $x\\mathbf a_1 + y\\mathbf a_2 + z\\mathbf a_3 = (13, 1, 2)$',
+    answer: P5_A,
+    mistakes: [
+      [[P5_A[0], [1, -1, 0], P5_A[2]], `Row 2: ${P5_SLIP2}`],
+      [[P5_A[0], P5_A[1], [0, 1, -1]], `Row 3: ${P5_SLIP3}`],
+      [[P5_A[0], [1, -1, 0], [0, 1, -1]], 'Rows 2 and 3 have their signs the wrong way round. B holds more than A: $y - x = 1$. C holds more than B: $z - y = 2$.'],
+      [P5.cols, 'Those are the columns written across, as rows. Write each column top to bottom: $\\mathbf a_1$ fills the first column.'],
+    ],
+  },
+];
 
 // ------------------------------------------------------------------ the Doubts (by construction)
 
@@ -100,8 +140,10 @@ export function d2Random(rng: () => number, edge = -1): { rows: Aug; w: number[]
     if (fits(rows, w)) return { rows, w };
   }
 }
-export const D2_START = { rows: [[2, 1, 4], [1, -1, -1]] as Aug, w: [0, 0] };
-export const D2_SHOW = { rows: [[2, 1, 4], [1, -1, -1]] as Aug, w: [1, 2] };
+// Not symmetric (row 2 starts −1, column 1 ends −1, column 2 starts 1), so reading across a row and
+// reading down a column give different arrows. The tip (4, 1) and the point (1, 2) fit both panels.
+export const D2_START = { rows: [[2, 1, 4], [-1, 1, 1]] as Aug, w: [0, 0] };
+export const D2_SHOW = { rows: [[2, 1, 4], [-1, 1, 1]] as Aug, w: [1, 2] };
 
 // ------------------------------------------------------------------ the Law
 
@@ -171,7 +213,7 @@ export const LAW_C08: Omit<LawDef<C08Case>, 'draw'> = {
       options: [
         { id: 'line', text: 'every point on the line through them' },
         { id: 'two', text: 'no point except those two' },
-        { id: 'between', text: 'exactly the points between them' },
+        { id: 'between', text: 'every point between them, and no other point,' },
         { id: 'plane', text: 'every point on the plane through them and the origin' },
       ],
     },

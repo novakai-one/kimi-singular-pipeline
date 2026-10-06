@@ -19,7 +19,7 @@ export const buildCheck: BuildDef = {
       '        out.append(left - row[-1])',
       '    return out',
     ],
-    decoys: ['        out.append(left + row[-1])', '        left = sum(a * xi for a, xi in zip(row, x))'],
+    decoys: ['        out.append(left + row[-1])', '        left = sum(a * xi for a, xi in zip(row[1:], x))'],
   },
   tests: [
     { name: 'the pod (5, 3, −2) is on all three fan-beam planes', args: [[[1, 1, 1, 6], [0, 2, 5, -4], [2, 5, -1, 27]], [5, 3, -2]], expect: [0, 0, 0] },
@@ -36,7 +36,7 @@ export const buildCheck: BuildDef = {
     },
     crew: (...a: unknown[]) => checkCrew(a[0] as number[][], a[1] as number[]),
   },
-  docPrompt: 'What question does `check` answer, and why does a row of zeros at the end mean the point is on every plane? Write it the way you would tell Bram.',
+  docPrompt: 'What question does `check` answer, and why does getting back a list of all zeros mean the point is on every plane? Write it the way you would tell Bram.',
   ilseNote: 'check: substitute the point into each equation and report the leftover. All zeros means the point lies on every plane; one non-zero leftover names the plane it misses.',
   payoff: 'LANTERN checks the pod position with your `check`.',
 };

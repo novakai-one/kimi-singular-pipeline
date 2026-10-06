@@ -6,14 +6,14 @@ import { Dot } from '../../../gfx/markers';
 import { FatLine } from '../../../gfx/lines';
 import { InfLine, Parallelogram } from '../../../gfx/shapes';
 import { VectorHandle } from '../../../kit/handle';
-import { Slider, parseNum } from '../../../ui/widgets';
+import { parseNum } from '../../../ui/widgets';
 import { h, button, inline } from '../../../ui/ui';
 import { C } from '../../../core/theme';
 import { animate, ease } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
 import { answer, pin } from '../../../game/caseboard';
 import { matVec, type Vec } from '../../../math/la';
-import { ptag, v3, sg } from '../c18-eigen/parts';
+import { ptag, v3, sg, fslider } from '../c18-eigen/parts';
 import { hideLandingLine } from '../c18-eigen/puzzles';
 import { fmt2 } from '../c18-eigen/logic';
 import {
@@ -191,7 +191,7 @@ export const p5: PuzzleDef = {
       controls.append(h('span', { class: 'k' }, 'Forecast: share at A ='), inp);
       showShare = (v) => { inp.value = fmtN(Math.round(v * 1000) / 1000); };
     } else {
-      const sl = new Slider({ label: 'forecast: share at A', min: 0, max: 1, step: d === 'cadet' ? 1 / 6 : 1 / 12, value: 0.5, format: (v) => fmtN(Math.round(v * 12) / 12), onInput: (v) => setShare(v) });
+      const sl = fslider({ label: 'forecast: share at A', min: 0, max: 1, step: d === 'cadet' ? 1 / 6 : 1 / 12, value: 0.5, format: (v) => fmtN(Math.round(v * 12) / 12), onInput: (v) => setShare(v) });
       sl.el.addEventListener('change', () => p.move());
       controls.append(sl.el);
       showShare = (v) => sl.set(v, false);

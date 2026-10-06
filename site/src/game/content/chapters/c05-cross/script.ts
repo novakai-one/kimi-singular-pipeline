@@ -29,7 +29,7 @@ export const S: Record<string, Line[]> = {
   ],
   p4Win: [{ who: 'bram', text: 'Normal six, three, two. Three and a half square steps of door. That goes on the patch order.' }],
   p5Intro: [
-    { who: 'lantern', text: 'Hull model loaded. Eighteen thousand triangles. Nine thousand list their corners in the wrong order.' },
+    { who: 'lantern', text: 'Holotable model of her hull: eighteen thousand triangles. Nine thousand list their corners in the wrong order.' },
     { who: 'wren', text: 'So half of her renders dark. Fix the rule, Nav.' },
   ],
   p5Win: [{ who: 'lantern', text: 'Every triangle faces out. Hull model complete.' }],
@@ -39,7 +39,7 @@ export const S: Record<string, Line[]> = {
   p6Win: [{ who: 'bram', text: 'No area, no arrow. Nothing sticks out of a panel that is not there.' }],
   p7Win: [{ who: 'lantern', text: 'Left at every waypoint. The route goes round without folding back.' }],
   briefing: [
-    { who: 'bram', text: 'Before your normals light my ark, brief me.' },
+    { who: 'bram', text: 'Before your normals light that ark, brief me.' },
   ],
   install: [
     { who: 'lantern', text: 'Hull lighting installed. Every hull triangle gets its normal from its corners, then faces out.' },

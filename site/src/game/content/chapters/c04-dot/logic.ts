@@ -44,6 +44,13 @@ export const P3_V: Vec = [3, 1];
 export const P3_W: Vec = [1, 2];
 /** Both sides of the identity for any pair: v·w and |v||w|cos θ (θ measured from the picture). */
 export const cosSide = (v: Vec, w: Vec) => norm(v) * norm(w) * Math.cos(angle(v, w));
+/**
+ * Navigator's derivation, for any pair: the number in front of each term.
+ *   (v₁ − w₁)² = v₁² + cross·v₁w₁ + w₁²
+ *   ‖v − w‖² = ‖v‖² + ‖w‖² + grouped·(v₁w₁ + v₂w₂)
+ *   v₁w₁ + v₂w₂ = match·‖v‖‖w‖cos θ   (the law of cosines has −2‖v‖‖w‖cos θ in the same place)
+ */
+export const P3_COEFFS = { cross: -2, grouped: -2, match: 1 } as const;
 /** Commander's tile order for the derivation: t1 < t2 < t3 < t5 and t4 < t5, no decoys. */
 export const P3_TILES = ['t1', 't2', 't3', 't4', 't5'];
 export function p3OrderOk(order: string[]): boolean {
@@ -115,6 +122,15 @@ export const axisReadings = (v: readonly number[]) => [[1, 0, 0], [0, 1, 0], [0,
 export const p7Won = (v: readonly number[]) => nearV(axisReadings(v), P7_READINGS, 0.05);
 /** Cauchy–Schwarz: a shadow is never longer than its arrow. */
 export const cauchySchwarz = (v: Vec, w: Vec) => Math.abs(dot(v, w)) <= norm(v) * norm(w) + 1e-9;
+/** Bram's Shake after p7: five seeded pairs, then a parallel pair, where the shadow is exactly as long as the arrow. */
+export const P7_SHAKES: [Vec, Vec][] = (() => {
+  let rs = 12345;
+  const rnd = () => { rs = (rs * 16807) % 2147483647; return rs / 2147483647; };
+  const out: [Vec, Vec][] = [];
+  for (let i = 0; i < 5; i++) out.push([[rnd() * 6 - 3, rnd() * 6 - 3, rnd() * 4], [rnd() * 6 - 3, rnd() * 6 - 3, rnd() * 4]]);
+  out.push([[1, 2, 2], [2, 4, 4]]);
+  return out;
+})();
 
 // ------------------------------------------------------------------ Doubts
 

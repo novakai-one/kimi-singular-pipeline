@@ -6,7 +6,7 @@ import { Dot } from '../../../gfx/markers';
 import { Lattice3D } from '../../../gfx/shapes';
 import { RowOpsBoard } from '../../../kit/rowops';
 import { StepWorksheet, TileOrder } from '../../../kit/steps';
-import { MatrixInput, Slider } from '../../../ui/widgets';
+import { MatrixInput } from '../../../ui/widgets';
 import { h, button, inline } from '../../../ui/ui';
 import { C } from '../../../core/theme';
 import { animate, ease, wait } from '../../../core/tween';
@@ -16,11 +16,11 @@ import { fmat } from '../../../math/frac';
 import { gaussJordanSteps, isRREF } from '../../../math/rref';
 import { matVec, transpose, type Mat, type Vec } from '../../../math/la';
 import { DRONES, DRONES_START, DRONES_STEADY } from '../../truth';
-import { Bars, ptag, sg } from '../c18-eigen/parts';
+import { Bars, ptag, sg, fslider } from '../c18-eigen/parts';
 import { fmt2 } from '../c18-eigen/logic';
 import { FlowBoard, Simplex, boardView, triPoint } from './board';
 import {
-  HOURS, ONES, P1_HOUR1, P1_HOUR2, P1_ROWS, P2_AUG, P2_Q1, P3_STARTS, P4_DECOYS, P4_ORDER, P4_TILES, STATIONS, TOTAL, colSums, fmtN, fmtV,
+  HOURS, ONES, P1_HOUR1, P1_HOUR2, P1_ROWS, P2_AUG, P3_STARTS, P4_DECOYS, P4_ORDER, P4_TILES, STATIONS, TOTAL, colSums, fmtN, fmtV,
   isStochastic, p1Won, settlesTo, shiftDet,
 } from './logic';
 import { S } from './script';
@@ -128,7 +128,7 @@ export const p1: PuzzleDef = {
 export const p2: PuzzleDef = {
   id: 'c20-p2',
   title: 'Which arrangement does one more hour leave unchanged?',
-  goal: 'Solve $(P - I)\\mathbf q = \\mathbf 0$ on the row board (it holds $10(P - I)$: same answers, whole numbers). Read $\\mathbf q$ with $q_3 = 1$, scale it so the three add to **300**, then run 40 hours.',
+  goal: 'Reduce $10(P - I)\\mathbf q = \\mathbf 0$ on the row board (same answers as $P - I$, whole numbers). Scale $\\mathbf q$ to **300** drones, then run 40 hours.',
   subgoals: ['Reduce the row board', '$\\mathbf q$, scaled to 300 drones', 'Forty hours land on it'],
   hints: [
     'Clear the first column, then the second. The third column has no pivot: $q_3$ is free.',
@@ -161,21 +161,19 @@ export const p2: PuzzleDef = {
         p.win();
       }
     };
-    const check = () => { if (typed && reduced) void runHours(p.g.headless); else if (typed && !reduced) msg.say('Right answer. Finish reducing the row board too, so the reading is yours.', 'bad'); };
-    const steps = d === 'commander'
-      ? [{ prompt: '$\\mathbf q$ scaled so the three add to 300', answer: DRONES_STEADY }]
-      : [
-        { prompt: 'With $q_3 = 1$: $q_1 =$', answer: P2_Q1[0], mistakes: [[1, 'Read the first reduced row: $q_1 - 2.5q_3 = 0$.']] as [number, string][] },
-        { prompt: 'and $q_2 =$', answer: P2_Q1[1] },
-        { prompt: '$\\mathbf q$ scaled so the three add to 300', answer: DRONES_STEADY, mistakes: [[[0.5, 0.3, 0.2], 'Those are the shares. Scale to 300 drones.'], [[250, 150, 100], 'They add to 500. Scale so they add to 300.']] as [number[], string][] },
-      ];
+    let fastRun = false, running: Promise<void> | null = null;
+    const check = () => { if (typed && reduced) running = runHours(p.g.headless || fastRun); else if (typed && !reduced) msg.say('Right answer. Finish reducing the row board too, so the reading is yours.', 'bad'); };
+    // one by-hand step: the board's reduced rows give q with q₃ = 1; scaling it to 300 drones is the player's
+    const steps = [
+      { prompt: 'With $q_3 = 1$, $\\mathbf q = (q_1, q_2, 1)$. Scaled so the three add to 300:', answer: DRONES_STEADY, mistakes: [[[2.5, 1.5, 1], 'That is $\\mathbf q$ with $q_3 = 1$: it adds to 5. Scale it to 300.'], [[0.5, 0.3, 0.2], 'Those are the shares. Scale to 300 drones.'], [[250, 150, 100], 'They add to 500. Scale so they add to 300.']] as [number[], string][] },
+    ];
     const ws = new StepWorksheet(p, { steps, mount: p.dock(), onDone: () => { typed = true; sg(p, 1); check(); } });
     rob.subscribe(() => { if (typed) check(); });
     p.dock().append(msg.el);
     const ops = () => gaussJordanSteps(fmat(P2_AUG), 3).ops;
     return {
       async showMe() { await rob.play(ops(), 700); await ws.showMe(400); },
-      async solve() { await rob.play(ops(), 1); ws.solve(); },
+      async solve() { await rob.play(ops(), 1); fastRun = true; ws.solve(); if (running) await running; },
       wrong() { ws.wrong(); },
     };
   },
@@ -198,7 +196,7 @@ export const p3: PuzzleDef = {
   par: 4,
   onWin: S.p3Win,
   setup(p) {
-    void p.g.stage.view2D({ center: [0, 0.85], height: 9, ms: 0 });
+    void p.g.stage.view2D({ center: [0, 1.5], height: 10.5, ms: 0 });
     const sx = new Simplex(p, DRONES, STATIONS);
     const q = triPoint(DRONES_STEADY);
     const star = new Dot([q[0], q[1], 0.05], { color: C.result, size: 0.13 });
@@ -208,6 +206,7 @@ export const p3: PuzzleDef = {
     const msg = msgBox();
     const done = [false, false, false, false];
     const names = ['all at the Bow', 'all at the Stern', 'an even split'];
+    names.forEach((n, i) => r.row(`s${i}`, n, 'not run yet'));
     const colors = [C.v, C.w, C.u];
     let busy = false;
     const go = async (i: number, fast = false) => {
@@ -301,7 +300,7 @@ export const p4: PuzzleDef = {
       winCheck();
     };
     const step = d === 'commander' ? 0.01 : 0.05;
-    const slider = new Slider({ label: 'dial $\\lambda$', min: -0.2, max: 1.4, step, value: 0, format: (x) => fmtN(Math.round(x * 100) / 100), onInput: (x) => { l = x; paint(); if (d === 'cadet' && Math.abs(x - 1) < 1e-9) lock(1); } });
+    const slider = fslider({ label: 'dial $\\lambda$', min: -0.2, max: 1.4, step, value: 0, format: (x) => fmtN(Math.round(x * 100) / 100), onInput: (x) => { l = x; paint(); if (d === 'cadet' && Math.abs(x - 1) < 1e-9) lock(1); } });
     slider.el.addEventListener('change', () => p.move());
     const box = h('div', { style: 'display:flex;flex-direction:column;gap:8px' });
     let ws: StepWorksheet | null = null, tiles: TileOrder | null = null, last: StepWorksheet | null = null;

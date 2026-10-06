@@ -59,9 +59,9 @@ export async function residualBeat(g: Game): Promise<void> {
   try {
     g.stage.clearWorld();
     g.mood('tension');
-    await g.stage.view2D({ center: [0, 1.0], height: 7.2, ms: 0 });
+    await g.stage.view2D({ center: [0, 1.6], height: 7.2, ms: 0 });
     const W = g.stage.world;
-    const SP = 0.18, AMP = 180;
+    const SP = 0.18, AMP = 140;
     const sx = (i: number) => (i + 0.5 - 30) * SP;
     const axis = new FatLine(g.stage, [[sx(-0.5), 0, 0], [sx(59.5), 0, 0]], { color: C.white, width: 1.2, opacity: 0.5 });
     axis.object.userData.dispose = () => axis.dispose();
@@ -96,7 +96,7 @@ export async function residualBeat(g: Game): Promise<void> {
         await wait(g.headless ? 1 : 90);
         if (!alive()) throw new Gone();
       }
-      const lab = new Label('three short · three long · three short', [sx(30), 3.2, 0], { className: 'a8-pt y' });
+      const lab = new Label('three short · three long · three short', [sx(30), 2.7, 0], { className: 'a8-pt y' });
       W.add(lab.object);
       await g.say(S.residual);
       answer('teo', 'Alive, inside the flattened stern. His knocks are in the leftover of the Collapse fit: three short, three long, three short, every ninety seconds, in time with our messages.', 'c23');

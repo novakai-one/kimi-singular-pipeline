@@ -34,6 +34,22 @@ test('p3: the test pair is 45° apart; v·w = |v||w|cos θ for many pairs; the t
   assert.ok(!L.p3OrderOk(['t1', 'x', 't3', 't4', 't5']));
 });
 
+test('p3 (navigator): the coefficient steps expand ‖v − w‖² for any pair and match the law of cosines', () => {
+  const { cross, grouped, match } = L.P3_COEFFS;
+  assert.deepEqual([cross, grouped, match], [-2, -2, 1]);
+  const r = rng(13);
+  for (let i = 0; i < 50; i++) {
+    const v = [r() * 8 - 4, r() * 8 - 4], w = [r() * 8 - 4, r() * 8 - 4];
+    close((v[0] - w[0]) ** 2, v[0] ** 2 + cross * v[0] * w[0] + w[0] ** 2, 1e-9);
+    close(norm([v[0] - w[0], v[1] - w[1]]) ** 2, norm(v) ** 2 + norm(w) ** 2 + grouped * dot(v, w), 1e-9);
+    // the law of cosines: ‖v − w‖² = ‖v‖² + ‖w‖² − 2‖v‖‖w‖cos θ, so the brackets match
+    close(norm([v[0] - w[0], v[1] - w[1]]) ** 2, norm(v) ** 2 + norm(w) ** 2 - 2 * L.cosSide(v, w), 1e-9);
+    close(dot(v, w), match * L.cosSide(v, w), 1e-9);
+  }
+  // the wrong numbers the worksheet names are wrong for a real pair
+  for (const k of [0, -1, 2]) assert.ok(Math.abs((3 - 1) ** 2 - (9 + k * 3 + 1)) > 1e-9, `cross ${k}`);
+});
+
 test('p4: heading (1, 1, 0) and spine (1, 0, 1) are 60° apart; turning 60° lands on the spine', () => {
   close(dot(L.P4_HEADING, L.P4_SPINE) / (norm(L.P4_HEADING) * norm(L.P4_SPINE)), 0.5);
   close(L.P4_ANGLE, 60, 1e-9);
@@ -70,6 +86,15 @@ test('p7: the readings along the axis arrows are the parts; Cauchy–Schwarz on 
   const r = rng(11);
   for (let i = 0; i < 200; i++) { const v = [r() * 6 - 3, r() * 6 - 3, r() * 6 - 3], w = [r() * 6 - 3, r() * 6 - 3, r() * 6 - 3]; assert.ok(L.cauchySchwarz(v, w)); }
   assert.ok(L.cauchySchwarz([2, 1, 0], [4, 2, 0]), 'equality for parallel arrows');
+});
+
+test('p7: Bram\'s Shake has 6 cases, every one survives, and the last (parallel) one reaches 1.00', () => {
+  assert.equal(L.P7_SHAKES.length, 6);
+  const ratio = ([a, b]: number[][]) => Math.abs(dot(a, b)) / (norm(a) * norm(b));
+  for (const c of L.P7_SHAKES) { assert.ok(L.cauchySchwarz(c[0], c[1])); assert.ok(ratio(c) <= 1 + 1e-12); }
+  close(ratio(L.P7_SHAKES[5]), 1, 1e-12);
+  assert.equal(ratio(L.P7_SHAKES[5]).toFixed(2), '1.00');
+  for (const c of L.P7_SHAKES.slice(0, 5)) assert.ok(ratio(c) < 0.99, `${ratio(c)}`);
 });
 
 test('doubt (F): a zero reading with the signal present breaks it; the Shake finds such a case', () => {

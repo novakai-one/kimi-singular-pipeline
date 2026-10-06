@@ -193,16 +193,16 @@ export const p7Won = (dir: readonly number[]): boolean => p7Gap(dir) > 0;
 // ------------------------------------------------------------------ LANTERN's procedure (CENTRE → COVARIANCE → EIGENVECTORS → SORT → KEEP → PROJECT)
 
 export const PROC_TILES = [
-  { id: 'centre', text: '**Centre**: take the mean reading away from every reading.', py: 'Xc = [[x - m for x, m in zip(row, mean)] for row in X]' },
-  { id: 'cov', text: '**Covariance**: $C = X_c^{\\mathsf T}X_c/(n - 1)$.', py: 'C = covariance(X)' },
-  { id: 'eig', text: '**Eigenvectors** of $C$, with their eigenvalues.', py: 'values, vectors = sym_eigen(C)' },
-  { id: 'sort', text: '**Sort** them by eigenvalue, largest first.', py: 'pairs.sort(key=lambda p: -p[0])' },
-  { id: 'keep', text: '**Keep** the first $k$ eigenvectors.', py: 'keep = vectors[:k]' },
-  { id: 'project', text: '**Project**: each reading’s new numbers are its dot products with the kept eigenvectors.', py: 'return [[dot(r, w) for w in keep] for r in Xc]' },
+  { id: 'centre', text: '**Centre**: take the mean reading away.', py: 'Xc = [add(r, scale(-1, mean)) for r in X]' },
+  { id: 'cov', text: '**Covariance** $C$ of the centred readings.', py: 'C = covariance(X)' },
+  { id: 'eig', text: '**Eigenvectors** of $C$.', py: 'values, vectors = sym_eigen(C)' },
+  { id: 'sort', text: '**Sort** by eigenvalue, largest first.', py: 'pairs.sort(key=lambda p: -p[0])' },
+  { id: 'keep', text: '**Keep** the first $k$.', py: 'keep = vectors[:k]' },
+  { id: 'project', text: '**Project** each reading onto them.', py: '[[dot(r, w) for w in keep] for r in Xc]' },
 ];
 export const PROC_DECOYS = [
-  { id: 'cols', text: 'Keep the $k$ columns of the data with the most spread.', py: 'keep = top_columns(X, k)' },
-  { id: 'vert', text: 'Fit a line by vertical distances and keep its direction.', py: 'keep = [least_squares_line(X)]' },
+  { id: 'cols', text: 'Keep the $k$ columns with the most spread.', py: 'keep = top_columns(X, k)' },
+  { id: 'vert', text: 'Fit a line by vertical distances.', py: 'keep = [least_squares_line(X)]' },
 ];
 export const PROC_REF = ['centre', 'cov', 'eig', 'sort', 'keep', 'project'];
 export const PROC_KEYS = ['centre', 'sort', 'keep'];

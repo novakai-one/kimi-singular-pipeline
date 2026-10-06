@@ -39,7 +39,7 @@ export function readingsScene(p: PuzzleCtx, o: {
 }): DoubtScene & { pts(): number[][] } {
   p.grid();
   const n = o.start.length;
-  void p.g.stage.view2D({ center: [(n - 1) / 2, 3.4], height: 9, ms: 0 });
+  void p.g.stage.view2D({ center: [(n - 1) / 2, 4.4], height: 12, ms: 0 });
   let pts = o.start.map((q) => q.slice());
   const line = new FatLine(p.g.stage, [[0, 0, 0], [1, 0, 0]], { color: C.result, width: 2.6, intensity: 1.3 });
   const up = new FatSegments(p.g.stage, [[[0, 0, 0], [0, 0, 0]]], { color: C.v, width: 2, opacity: 0.85 });
@@ -70,7 +70,7 @@ export function readingsScene(p: PuzzleCtx, o: {
     pts: () => pts,
     holds: () => o.holds(pts),
     describe: () => o.describe(pts),
-    randomize(rr, edge) { setPts(edge !== undefined ? o.edges[edge] : o.cases(rr)); },
+    randomize(rr, edge) { setPts((edge !== undefined ? o.edges[edge] : o.cases(rr)).map(([t, y]) => [t, Math.max(-1, Math.min(6, y))])); },
     edgeCases: o.edges.length,
     async showMe() { setPts(o.showMe); },
   };
@@ -127,7 +127,7 @@ export const doubtExact: DoubtDef = {
   view: '2d',
   setup(p) {
     p.grid();
-    void p.g.stage.view2D({ center: [1.5, 2], height: 6.4, ms: 0 });
+    void p.g.stage.view2D({ center: [1.5, 4.2], height: 12, ms: 0 });
     const ts = [0, 1, 2, 3];
     let c0 = 1, c1 = 0.5;
     const yl = new FatLine(p.g.stage, [[0, 0, 0], [1, 0, 0]], { color: C.result, width: 2.6, intensity: 1.3 });
@@ -141,7 +141,7 @@ export const doubtExact: DoubtDef = {
       const f = fitLine(pts);
       truth.setPoints([[-3, c0 - 3 * c1, 0.005], [6, c0 + 6 * c1, 0.005]]);
       yl.setPoints([[-3, f[0] - 3 * f[1], 0.01], [6, f[0] + 6 * f[1], 0.01]]);
-      r.row('t', 'the line the readings sit on', `$y = ${fmtN(c0)} ${c1 < 0 ? '-' : '+'} ${fmtN(Math.abs(c1))}t$`);
+      r.row('t', 'line of the readings', `$y = ${fmtN(c0)} ${c1 < 0 ? '-' : '+'} ${fmtN(Math.abs(c1))}t$`);
       r.row('f', 'least squares gives', `$y = ${fmtN(f[0])} ${f[1] < 0 ? '-' : '+'} ${fmtN(Math.abs(f[1]))}t$`, C.result);
     };
     const kA = new Knob(p, [0, c0, 0.02], { color: C.white, countMoves: false, constrain: (q) => { c0 = Math.round(q.y * 4) / 4; return new Vector3(0, c0, 0.02); }, onMove: () => { c1 = (kB.pos[1] - c0) / 3; sync(); } });
@@ -151,7 +151,7 @@ export const doubtExact: DoubtDef = {
     return {
       holds: () => exactHolds(c0, c1, ts),
       describe: () => { const f = fitLine(ts.map((t) => [t, c0 + c1 * t])); return `readings on $y = ${fmtN(c0)} + ${fmtN(c1)}t$: least squares gives $y = ${fmtN(f[0])} + ${fmtN(f[1])}t$, leftover 0`; },
-      randomize(rr, edge) { const cases: [number, number][] = [[2, 0], [4, -1.5], [-1, 2]]; if (edge !== undefined) set(...cases[edge]); else set(rint(rr, -2, 4) / 2, rint(rr, -4, 4) / 2); },
+      randomize(rr, edge) { const cases: [number, number][] = [[2, 0], [4, -1.5], [-1, 1.5]]; if (edge !== undefined) set(...cases[edge]); else set(rint(rr, 0, 5) / 2, rint(rr, -1, 2) / 2); },
       edgeCases: 3,
       async showMe() { set(1, 0.5); },
     };

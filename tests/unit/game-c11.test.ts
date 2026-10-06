@@ -8,6 +8,7 @@ import * as L from '../../site/src/game/content/chapters/c11-transformations/log
 import { plan2, framesOf, T3partial, T2partial, smoothAt, stageEnd } from '../../site/src/game/content/chapters/c11-transformations/honest.ts';
 import { TESTS, buildMatvec, swarmCase } from '../../site/src/game/content/chapters/c11-transformations/build.ts';
 import { buildLincomb } from '../../site/src/game/content/chapters/c02-span/build.ts';
+import { buildDot } from '../../site/src/game/content/chapters/c04-dot/build.ts';
 import { checkLaw, rng } from '../../site/src/game/game/lawcheck.ts';
 import { det, matMul, matVec, meq, mpow, identity, rank, veq, transpose } from '../../site/src/game/math/la.ts';
 import { T, T3, S_now } from '../../site/src/game/content/truth.ts';
@@ -143,6 +144,24 @@ test('Law: “the columns are where e₁ and e₂ land, always” survives 500 c
   for (const f of L.LAW_NEAR_MISSES) assert.equal(checkLaw(L.lawCore, f).survived, false, JSON.stringify(f));
 });
 
+test('Law: every rows filling freezes on a case whose rows are not where e₁ and e₂ land', () => {
+  const firstBreak = (f: Record<string, string>) => [...L.lawCore.edgeCases].find((c) => !L.lawCore.holds(f, c));
+  const rowsLand = (A: number[][]) => veq(matVec(A, [1, 0]), A[0]) && veq(matVec(A, [0, 1]), A[1]);
+  const expect: [Record<string, string>, number[][]][] = [
+    [{ part: 'rows', when: 'always' }, L.SHEAR],
+    [{ part: 'rows', when: 'kept' }, L.SHEAR],
+    [{ part: 'rows', when: 'turn' }, L.TURN],
+    [{ part: 'cols', when: 'turn' }, L.SHEAR],
+    [{ part: 'cols', when: 'kept' }, [[1, 0], [0, 0]]],
+  ];
+  for (const [f, A] of expect) {
+    const c = firstBreak(f);
+    assert.ok(c && meq(c.A, A), `${JSON.stringify(f)} breaks first on ${JSON.stringify(c?.A)}`);
+    assert.equal(checkLaw(L.lawCore, f).counterexample, L.lawCore.describe(c!));
+    if (f.part === 'rows') assert.ok(!rowsLand(c!.A), 'the rows are visibly not the landing spots');
+  }
+});
+
 test('Doubts: two buoys fix everything unless they are on one line; the origin never moves', () => {
   assert.equal(L.d1Holds({ u: [1, 0], w: [0, 1], A: T, x: [0, 0] }), false, 'the canonical counterexample');
   assert.equal(L.d1Holds({ u: [1, 1], w: [2, 2], A: T, x: [0, 0] }), true, 'the edge case where the claim holds');
@@ -158,11 +177,13 @@ test('Doubts: two buoys fix everything unless they are on one line; the origin n
 });
 
 // The game injects only the sources named in `uses` (game/build.ts runTests), so build the library the
-// same way: Chapter 1's scale and add (copied from c01-vectors/index.ts), Chapter 2's real lincomb.
+// same way: Chapter 1's scale and add (copied from c01-vectors/index.ts), Chapter 2's real lincomb,
+// Chapter 4's real dot (for the row view).
 const SOURCES: Record<string, string> = {
   scale: 'def scale(c, v):\n    """Return the vector v stretched by the number c."""\n    return [c * x for x in v]\n',
   add: 'def add(v, w):\n    """Return the vector for move v followed by move w."""\n    return [a + b for a, b in zip(v, w)]\n',
   lincomb: buildLincomb.solution,
+  dot: buildDot.solution,
 };
 const LINCOMB = (buildMatvec.uses ?? []).map((u) => SOURCES[u] ?? '').join('\n');
 function runPy(code: string, tests: { args: unknown[]; expect: unknown }[]): boolean[] {
@@ -182,4 +203,14 @@ test('build: the matvec reference passes its tests and a swarm; each decoy fails
     assert.ok(runPy(`${lines.join('\n')}\n`, TESTS).some((ok) => !ok), decoy);
   }
   for (const t of TESTS) assert.ok(veq(matVec(t.args[0] as number[][], t.args[1] as number[]), t.expect as number[]), t.name);
+});
+
+test('build: the row view through dot passes too (the brief offers it on Write)', () => {
+  assert.ok((buildMatvec.uses ?? []).includes('dot'), 'dot is injected');
+  const rowView = 'def matvec(A, x):\n    return [dot(row, x) for row in A]\n';
+  assert.ok(runPy(rowView, TESTS).every(Boolean));
+  const r = rng(3);
+  const swarm = Array.from({ length: 60 }, (_, i) => { const [A, x] = swarmCase(r, ['cadet', 'navigator', 'commander'][i % 3]); return { args: [A, x], expect: matVec(A, x) }; });
+  assert.ok(runPy(rowView, swarm).every(Boolean));
+  assert.match(buildMatvec.brief, /dot\(A\[i\], x\)/);
 });

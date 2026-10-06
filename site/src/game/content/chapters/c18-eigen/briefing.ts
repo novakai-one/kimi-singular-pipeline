@@ -10,7 +10,6 @@ import { InfLine } from '../../../gfx/shapes';
 import { MatrixView } from '../../../kit/matrixview';
 import { VectorHandle } from '../../../kit/handle';
 import { Sweep, rad } from '../../../kit/geom';
-import { Slider } from '../../../ui/widgets';
 import { button, h } from '../../../ui/ui';
 import { C } from '../../../core/theme';
 import { animate, ease, wait } from '../../../core/tween';
@@ -18,7 +17,7 @@ import { sfx } from '../../../audio/sfx';
 import { rint } from '../../../game/lawcheck';
 import { T, R2 } from '../../truth';
 import { det, eig2, matVec, norm, type Mat } from '../../../math/la';
-import { ptag, v3 } from './parts';
+import { ptag, v3, fslider } from './parts';
 import { hideLandingLine } from './puzzles';
 import {
   LAW_CORE, PROC_A, PROC_REF, eigSum, everyLineHolds, fmt2, fmtN, fmtV, isRealEigenvalue, nullLine, runProc, shift, texSmall, trace,
@@ -124,7 +123,7 @@ export const doubtZero: DoubtDef = {
       r.row('d', '$\\det(A - \\lambda I)$', fmtN(Math.round(((ZA[0][0] - l) * (ZA[1][1] - l) - ZA[0][1] * ZA[1][0]) * 100) / 100));
       r.row('st', `is ${fmtN(l)} an eigenvalue of $A$?`, isRealEigenvalue(ZA, l) ? 'yes' : 'no', isRealEigenvalue(ZA, l) ? C.violet : C.orange);
     };
-    const slider = new Slider({ label: 'dial $\\lambda$', min: -2, max: 5, step: 0.5, value: l, format: (x) => fmtN(x), onInput: (x) => { l = x; paint(); } });
+    const slider = fslider({ label: 'dial $\\lambda$', min: -2, max: 5, step: 0.5, value: l, format: (x) => fmtN(x), onInput: (x) => { l = x; paint(); } });
     p.dock().append(slider.el, h('div', { class: 'a7-btns' }, button('Make x the zero arrow', () => { xh.set([0, 0, 0]); paint(); }, { cls: 'small' })));
     paint();
     const setCase = (x: number[], lam: number) => { l = lam; slider.set(lam, false); xh.set([x[0], x[1], 0]); paint(); };

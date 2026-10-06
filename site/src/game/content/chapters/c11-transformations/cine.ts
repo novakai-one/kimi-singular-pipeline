@@ -120,6 +120,8 @@ export async function coldOpen(g: Game): Promise<void> {
 // ------------------------------------------------------------------ the spire readings (scene before p4)
 
 export async function spireScene(g: Game): Promise<void> {
+  // clear the origin shot (buoy field, small Anchor, lamp) before the large Anchor is built
+  g.stage.clearWorld();
   const holder = new Group();
   g.stage.world.add(holder);
   const { tips } = await anchorWithTips(g, 1.1, holder);

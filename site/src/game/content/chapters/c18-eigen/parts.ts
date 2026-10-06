@@ -8,7 +8,7 @@ import type { Stage } from '../../../core/stage';
 import { Label } from '../../../gfx/label';
 import { FatSegments } from '../../../gfx/lines';
 import { Sweep, rad } from '../../../kit/geom';
-import { VectorInput, parseNum } from '../../../ui/widgets';
+import { Slider, VectorInput, parseNum } from '../../../ui/widgets';
 import { h, button, inline } from '../../../ui/ui';
 import { tex } from '../../../../lib/md';
 import { C } from '../../../core/theme';
@@ -388,4 +388,15 @@ export function sg(p: PuzzleCtx, i: number, done = true): void {
   if (!!st[i] === done) return;
   st[i] = done;
   p.subgoal(i, done);
+}
+
+/** A Slider whose shown value keeps its format when set from code (the kit's set(v, false) prints the raw number). */
+export function fslider(o: ConstructorParameters<typeof Slider>[0]): Slider {
+  const s = new Slider(o);
+  const f = o.format;
+  if (f) {
+    const set = s.set.bind(s);
+    s.set = (v: number, notify = true) => { set(v, notify); const e = s.el.querySelector('.val'); if (e) e.textContent = f(v); };
+  }
+  return s;
 }

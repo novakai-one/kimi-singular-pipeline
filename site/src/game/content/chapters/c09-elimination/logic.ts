@@ -51,6 +51,8 @@ export const oneSide = (m: Aug, i: number, delta: number): Aug => m.map((r, k) =
 export const swapCols = (m: Aug, a: number, b: number): Aug => m.map((r) => { const s = r.slice(); [s[a], s[b]] = [s[b], s[a]]; return s; });
 /** Legal: R_i → R_i + k R_j. */
 export const addRow = (m: Aug, i: number, j: number, k: number): Aug => m.map((r, q) => (q === i ? r.map((x, c) => x + k * m[j][c]) : r.slice()));
+/** The total k the sandbox has applied (row 1 never changes under the legal move; row 2's first entry is 1 + 2k). */
+export const p4AppliedK = (m: Aug): number => (m[1][0] - P4.aug[1][0]) / P4.aug[0][0];
 export const P4_FORBIDDEN = [
   { id: 'zero', label: 'Multiply row 2 by 0', apply: (m: Aug) => scaleZero(m, 1) },
   { id: 'side', label: 'Add 3 to row 1\'s right side only', apply: (m: Aug) => oneSide(m, 0, 3) },
@@ -96,7 +98,8 @@ export function scaleRandom(r: () => number, edge = -1): { m: Aug; i: number; k:
   // one meeting point, inside the doubt's frame (x from −3 to 5, y from −1.5 to 2.5)
   do { ({ aug: m, x0 } = randConsistent(r, 2, 2)); } while (kindOf(m) !== 'one' || x0[1] < -1.5 || x0[1] > 2.5);
   const ks = [-3, -2, -1, -0.5, 0.5, 2, 3];
-  return { m, i: randInt(r, 0, 1), k: edge === 0 ? 0 : ks[randInt(r, 0, ks.length - 1)] };
+  // always row 2: the Doubt's slider, readout and goal all name row 2 and its red line
+  return { m, i: 1, k: edge === 0 ? 0 : ks[randInt(r, 0, ks.length - 1)] };
 }
 
 /** (T) "Two people can reach different row echelon forms and the same pivot positions." */
@@ -236,7 +239,12 @@ export function rowMachine(tiles: string[], aug: Aug = PROC_CASE): MachineResult
       const z = a.findIndex((row) => row.every((x) => x.isZero()));
       return fail('scale-zero', `Row ${z + 1} is all zeros: you told me to multiply an equation by 0, which erased it. I cannot read ${NAMES[Math.min(z, n - 1)]} from nothing.`);
     }
-    if (!isREF(a, n) && iNext < 0) return fail('stopped', 'Nothing told me to move on, so I cleared below the first pivot only. The rows are not a staircase, and back substitution would read the wrong equation.');
+    if (!isREF(a, n) && iNext < 0) {
+      return fail('stopped', tiles.includes('clear')
+        ? 'Nothing told me to move on, so I cleared below the first pivot only. The rows are not a staircase, and back substitution would read the wrong equation.'
+        : 'Nothing told me to clear below a pivot or to move on to the next column. The rows are not a staircase, so back substitution would read the wrong equation.');
+    }
+    if (!isREF(a, n) && swappedCols) return fail('column-swap', 'You told me to swap two columns. That put numbers under the wrong unknowns, and the rows are not a staircase any more, so back substitution would read the wrong equation.');
     if (!isREF(a, n)) {
       const bad = a.findIndex((row, i) => i > 0 && leadCol(row, n) <= leadCol(a[i - 1], n) && leadCol(row, n) >= 0);
       return fail('not-cleared', `The rows are not a staircase: row ${bad + 1} still has ${NAMES[leadCol(a[bad], n)]} in it. Back substitution reads the bottom row as one unknown, so the answer it gives is wrong.`);
@@ -267,7 +275,18 @@ export function rowMachine(tiles: string[], aug: Aug = PROC_CASE): MachineResult
         }
       } else if (t === 'clear') {
         if (!found) return fail('no-pivot', 'You told me to clear below. Below what? You never told me to find a pivot.');
-        if (a[r][c].isZero()) return fail('divide-by-zero', `Row ${r + 1} has 0 in column ${c + 1}. To clear below it I would divide by that 0. I divided by zero. ${tiles.includes('swap0') ? 'Your swap step comes after clearing, so it came too late.' : 'Nothing told me to swap first.'}`);
+        if (a[r][c].isZero()) {
+          // blame the step that put the 0 there
+          const lower = a.some((row, i) => i > r && !row[c].isZero());
+          const [mis, why]: [MachineResult['misconception'], string] = erased && a[r].every((x) => x.isZero())
+            ? ['scale-zero', 'The ×0 tile wiped out that row before I could clear below it.']
+            : swappedCols
+              ? ['column-swap', lower ? 'Swapping columns moved a 0 into the pivot spot.' : 'Swapping columns moved a column of zeros into the pivot spot, and no lower row had a non-zero entry to swap in.']
+              : !tiles.includes('swap0') ? ['divide-by-zero', 'Nothing told me to swap first.']
+              : tiles.indexOf('swap0') > tiles.indexOf('clear') ? ['divide-by-zero', 'Your swap step comes after clearing, so it came too late.']
+              : ['divide-by-zero', 'No lower row has a non-zero entry there to swap in.'];
+          return fail(mis, `Row ${r + 1} has 0 in column ${c + 1}. To clear below it I would divide by that 0. I divided by zero. ${why}`);
+        }
         for (let i = r + 1; i < R; i++) {
           if (a[i][c].isZero()) continue;
           const op: RowOp = { kind: 'add', i, j: r, k: a[i][c].div(a[r][c]).neg() };
@@ -296,13 +315,32 @@ export function rowMachine(tiles: string[], aug: Aug = PROC_CASE): MachineResult
     if (found || body.length) { r++; c++; }
     if (passes > 10) break;
   }
+  // the tiles after NEXT run once, in order, after the repeat has used up the rows
   let x: number[] | null = null;
+  const last = Math.max(0, Math.min(r, R) - 1);
+  const snap = () => a.map((row) => row.map((v) => v.value()));
+  const AFTER_NAMES: Record<string, string> = { find: 'FIND PIVOT', swap0: 'SWAP IF ZERO', clear: 'CLEAR BELOW' };
   for (const t of after) {
-    if (t === 'back' || t === 'top') {
+    if (t === 'back' && x) {
+      steps.push({ kind: 'note', text: 'I already have the answer. Reading it again changes nothing.' });
+    } else if (t === 'back' || t === 'top') {
       const res = back(t === 'top');
       if (!Array.isArray(res)) return res;
       x = res;
-      break;
+    } else if (t === 'scale0') {
+      a = a.map((row, i) => (i === last ? row.map(() => Frac.ZERO) : row));
+      erased = true;
+      steps.push({ kind: 'set', m: snap(), text: `Row ${last + 1} times 0: the equation is gone.` });
+      if (x) return fail('scale-zero', `I already had the answer, then you told me to multiply row ${last + 1} by 0. That erased an equation, so the board no longer fixes the answer. Multiplying by 0 is never a row operation.`);
+    } else if (t === 'colswap') {
+      if (n >= 2) {
+        a = a.map((row) => { const s = row.slice(); [s[n - 2], s[n - 1]] = [s[n - 1], s[n - 2]]; return s; });
+        swappedCols = true;
+        steps.push({ kind: 'set', m: snap(), text: `Columns ${n - 1} and ${n} swapped: ${NAMES[n - 2]} and ${NAMES[n - 1]} trade places.` });
+      }
+      if (x) return fail('column-swap', `I already had the answer, then you told me to swap two columns. Now ${NAMES[n - 2]}'s numbers sit under ${NAMES[n - 1]}, so the board no longer matches the answer. Swapping columns is not a row operation.`);
+    } else if (AFTER_NAMES[t]) {
+      steps.push({ kind: 'note', text: `${AFTER_NAMES[t]} comes after the repeat has ended. No row is left, so it does nothing.` });
     }
   }
   if (!x) return fail('no-back', 'I made the staircase. You did not tell me to read the answer from it, so I have no answer.');

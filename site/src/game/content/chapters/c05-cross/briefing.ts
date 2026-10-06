@@ -160,7 +160,7 @@ export const law: LawDef<CrossCase> = {
     options: [
       { id: 'a', text: '$\\|\\mathbf a\\times\\mathbf b\\|^2 = \\|\\mathbf a\\|^2\\|\\mathbf b\\|^2 - (\\mathbf a\\cdot\\mathbf b)^2 = \\|\\mathbf a\\|^2\\|\\mathbf b\\|^2\\sin^2\\theta$: base times height, squared.', right: true, why: 'Yes. The length is $\\|\\mathbf a\\|\\|\\mathbf b\\|\\sin\\theta$, which is the base $\\|\\mathbf a\\|$ times the height $\\|\\mathbf b\\|\\sin\\theta$. It equals the product of the lengths only at a right angle.' },
       { id: 'b', text: 'It is the product of the lengths, rounded down by the angle.', right: false, why: 'Nothing is rounded. The angle enters as $\\sin\\theta$: at 0° the length is exactly 0, at 90° it is the full product.' },
-      { id: 'c', text: 'Because the arrow stands at a right angle to the panel.', right: false, why: 'That fixes its direction, not its length. Any multiple of $\\mathbf a\\times\\mathbf b$ stands at a right angle too; only one is as long as the area.' },
+      { id: 'c', text: 'Because the arrow stands at a right angle to the panel.', right: false, why: 'That fixes its line, not its length. Every multiple of $\\mathbf a\\times\\mathbf b$ stands at a right angle too; only $\\mathbf a\\times\\mathbf b$ and its flip are as long as the area.' },
     ],
   },
 };

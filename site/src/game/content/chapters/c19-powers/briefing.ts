@@ -218,11 +218,17 @@ export const TEO_DECOYS = [
 
 const augTex = (m: number[][]) => `$\\left[\\begin{array}{ccc|c} ${m.map((r) => r.map((x) => fmtN(Math.round(x * 100) / 100).replace('−', '-')).join(' & ')).join(' \\\\ ')} \\end{array}\\right]$`;
 
+/** The gauges as equations, inline (one line each when it wraps). */
+const TEO_EQS = TEO_AUG.map((r) => {
+  const terms = ['x', 'y', 'z'].map((v, i) => (r[i] === 1 ? v : `${fmtN(r[i])}${v}`));
+  return `$${terms.join(' + ')} = ${fmtN(r[3])}$`;
+}).join(', ');
+
 /** Teo's reply, played as he would follow the message. */
 export function teoReply(ids: readonly string[]): { ok: boolean; message: string } {
   const r = runTeo(ids);
   const set = r.x ? fmtV(r.x.map((t) => Math.round(t * 100) / 100)) : '';
-  if (r.ok) return { ok: true, message: `Played as Teo would follow it: he clears below each pivot, whole rows, and reads the bottom row first: $z = 3$, then $y = 2$, then $x = 1$. Valves ${set}. ${r.checked ? 'All three gauges read right.' : 'The gauges read right.'}` };
+  if (r.ok) return { ok: true, message: `Teo cleared below each pivot, whole rows, then read up from the bottom: $z = 3$, $y = 2$, $x = 1$. ${r.checked ? 'All three gauges read right.' : 'The gauges read right.'}` };
   switch (r.fault) {
     case 'stuck': return { ok: false, message: 'He looks at the bottom gauge, $x + 2y + 3z = 14$: three unknowns. He cannot read anything off it. Your message never says how to clear the rows below each pivot.' };
     case 'rhs': return { ok: false, message: `He clears the left-hand numbers and leaves the right-hand side as it was. His valves come out at ${set}, and the gauges read ${fmtV(r.gauges!.map((t) => Math.round(t * 10) / 10))}, not (6, 11, 14). A row operation has to change the whole row, right side included.` };
@@ -235,7 +241,7 @@ export const teo: TeoDef = {
   id: 'c19-teo',
   ask: 'Dr Varga left me three gauge equations for the air mix. Can you solve them? By hand. My suit says I’m guessing.',
   title: 'Teach Teo: three valves, by hand',
-  brief: `Order the steps of a short message. Teo follows them exactly as written on his gauges: ${augTex(TEO_AUG)}, one row per gauge, valves $x, y, z$.`,
+  brief: `Order the steps of a short message. Teo follows them exactly as written on his three gauges, ${TEO_EQS}, valves $x, y, z$.`,
   tiles: TEO_TILES,
   decoys: TEO_DECOYS,
   reference: TEO_REF,
@@ -245,8 +251,8 @@ export const teo: TeoDef = {
     g.stage.clearWorld();
     await g.stage.view2D({ center: [0.4, 1.2], height: 8, ms: 400 });
     const W = g.stage.world;
-    const board = new Label(augTex(TEO_AUG), [-1.6, 2.6, 0], { className: 'a7-board' });
-    const step = new Label('Teo’s three gauges', [0.4, 4.3, 0], { className: 'a7-board step' });
+    const board = new Label(augTex(TEO_AUG), [5.7, 2.2, 0], { className: 'a7-board' });
+    const step = new Label('Teo’s three gauges', [3.4, 4.3, 0], { className: 'a7-board step' });
     W.add(board.object, step.object);
     for (const s of res.steps) { step.set(s.label); board.set(augTex(s.aug)); sfx.tick(1); await wait(g.headless ? 2 : 650); }
     // three valves: his settings (bars) against the right ones (rings)

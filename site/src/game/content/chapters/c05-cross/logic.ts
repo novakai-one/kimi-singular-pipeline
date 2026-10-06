@@ -162,10 +162,13 @@ export const p6Won = (thetaDeg: number) => norm(cross(P6_V, p6W(thetaDeg))) < 1e
 // ------------------------------------------------------------------ p7 [S] Left or right? (signed area in 2-D)
 
 export const P7_A: Vec = [0, 0], P7_B: Vec = [4, 0], P7_C: Vec = [5, 3];
-/** The signed area v₁w₂ − v₂w₁ at each waypoint B, C, D of the loop A → B → C → D → A. */
+/**
+ * The signed area v₁w₂ − v₂w₁ (leg in, then leg out) at every corner A, B, C, D of the loop
+ * A → B → C → D → A, in that order. The turn at A is 4·D₂, so D must sit above the line AB too.
+ */
 export function turns(D: readonly number[]): number[] {
   const pts = [P7_A, P7_B, P7_C, D.slice(0, 2)];
-  return [1, 2, 3].map((k) => cross2(sub(pts[k], pts[k - 1]), sub(pts[(k + 1) % 4], pts[k])));
+  return [0, 1, 2, 3].map((k) => cross2(sub(pts[k], pts[(k + 3) % 4]), sub(pts[(k + 1) % 4], pts[k])));
 }
 export const p7Won = (D: readonly number[]) => turns(D).every((x) => x > 1e-9);
 
@@ -204,7 +207,8 @@ export const lawCore: LawCore<CrossCase> & { answer: Record<string, string> } = 
   holds(f, c) {
     const n = cross(c.a, c.b);
     const pa = Math.abs(dot(n, c.a)) < 1e-9, pb = Math.abs(dot(n, c.b)) < 1e-9;
-    const perp = f.perp === 'ab' ? pa && pb : f.perp === 'a' ? pa : f.perp === 'b' ? pb : !pa && !pb;
+    // 'a only' means at a right angle to a and not to b (and the other way round for 'b only')
+    const perp = f.perp === 'ab' ? pa && pb : f.perp === 'a' ? pa && !pb : f.perp === 'b' ? pb && !pa : !pa && !pb;
     const len = f.len === 'area' ? near(norm(n), parallelogramArea(c.a, c.b), 1e-6) : near(norm(n), norm(c.a) * norm(c.b), 1e-6);
     const ba = cross(c.b, c.a);
     const swap = f.swap === 'flips' ? nearV(ba, n.map((x) => -x), 1e-9) : nearV(ba, n, 1e-9);
@@ -212,7 +216,7 @@ export const lawCore: LawCore<CrossCase> & { answer: Record<string, string> } = 
   },
   describe(c) {
     const n = cross(c.a, c.b);
-    return `a = ${fmt(c.a)}, b = ${fmt(c.b)}: a × b = ${fmt(n)}, area ${nice(Math.round(parallelogramArea(c.a, c.b) * 100) / 100)}, b × a = ${fmt(cross(c.b, c.a))}`;
+    return `a = ${fmt(c.a)}, b = ${fmt(c.b)}: a × b = ${fmt(n)}, (a × b)·a = ${nice(dot(n, c.a))}, (a × b)·b = ${nice(dot(n, c.b))}, area ${nice(Math.round(parallelogramArea(c.a, c.b) * 100) / 100)}, b × a = ${fmt(cross(c.b, c.a))}`;
   },
 };
 

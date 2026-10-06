@@ -10,8 +10,13 @@ export type Diff = 'cadet' | 'navigator' | 'commander';
 
 /** Win tolerance by difficulty (GDD §7.1). */
 export const winTol = (d: Diff): number => (d === 'commander' ? 0.01 : 0.05);
-/** How close the marker must be for a plane to light (GDD Ch 8: within 0.1 on cadet). */
-export const glowTol = (d: Diff): number => (d === 'cadet' ? 0.1 : d === 'navigator' ? 0.05 : 0.02);
+/**
+ * How close the Ch 8 marker must be for a plane to light (GDD Ch 8: within 0.1 on cadet). The marker
+ * puzzles (c08-p2, c08-p3) also win at this distance, so a lit plane, "on it" and "✓ all 3" always count.
+ * Cadet's 0.1 is §7.1's tolerance for a typed point; a dragged cadet marker snaps to whole numbers, and
+ * no whole-number point other than an exact one comes within 0.1 of those planes.
+ */
+export const glowTol = (d: Diff): number => (d === 'cadet' ? 0.1 : winTol(d));
 
 export const dot = (a: number[], b: number[]): number => a.reduce((s, x, i) => s + x * (b[i] ?? 0), 0);
 export const sub = (a: number[], b: number[]): number[] => a.map((x, i) => x - b[i]);

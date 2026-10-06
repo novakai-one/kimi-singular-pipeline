@@ -5,15 +5,14 @@ import { Dot } from '../../../gfx/markers';
 import { Label } from '../../../gfx/label';
 import { FatLine } from '../../../gfx/lines';
 import { Arrow } from '../../../gfx/arrow';
-import { Slider } from '../../../ui/widgets';
 import { C } from '../../../core/theme';
 import { wait } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
 import { rint } from '../../../game/lawcheck';
 import { matVec, type Mat, type Vec } from '../../../math/la';
 import { DRONES, DRONES_STEADY } from '../../truth';
-import { ptag } from '../c18-eigen/parts';
-import { FlowBoard, Simplex, boardView, triPoint, triSplit } from './board';
+import { ptag, fslider } from '../c18-eigen/parts';
+import { FlowBoard, Simplex, triPoint, triSplit } from './board';
 import {
   LAW_CORE, PROC_REF, STATIONS, TOTAL, fmtN, fmtV, movingAtSteady, randChain, runProc, settlesHolds, startMattersHolds,
   steadyOf, stillMovingHolds, type ChainCase,
@@ -35,7 +34,7 @@ export const sayit: SayItDef = {
 
 /** The triangle of splits with two draggable starts and their paths. */
 export function twoStarts(p: PuzzleCtx, P0: Mat, a0: Vec, b0: Vec) {
-  void p.g.stage.view2D({ center: [0, 0.75], height: 7.2, ms: 0 });
+  void p.g.stage.view2D({ center: [0, 2.6], height: 11.2, ms: 0 });
   let P = P0;
   const sx = new Simplex(p, P, STATIONS);
   const r = p.readout('Two starts, 60 hours');
@@ -94,7 +93,7 @@ export const doubtStart: DoubtDef = {
 
 /** Two bays with a stay share each: Bay 1's drones over 30 hours, plotted. */
 export function baysScene(p: PuzzleCtx) {
-  void p.g.stage.view2D({ center: [2.6, 1.0], height: 5.6, ms: 0 });
+  void p.g.stage.view2D({ center: [2.6, 1.95], height: 5.6, ms: 0 });
   const axes = new FatLine(p.g.stage, [[0, 2.2, 0], [0, 0, 0], [5.6, 0, 0]], { color: '#8fb8e8', width: 1.4, opacity: 0.6 });
   const half = new FatLine(p.g.stage, [[0, 1, 0], [5.6, 1, 0]], { color: C.result, width: 1.2, opacity: 0.35, dashed: true });
   const graph = new FatLine(p.g.stage, [[0, 0, 0], [1, 0, 0]], { color: C.v, width: 2.2, opacity: 0.95 });
@@ -115,8 +114,8 @@ export function baysScene(p: PuzzleCtx) {
     r.row('b', 'Bay 2 stay share', `${Math.round(b * 100)}%`, C.w);
     r.row('s', 'settles?', settlesHolds(P()) ? 'yes' : 'no: it swings forever', settlesHolds(P()) ? C.good : C.orange);
   };
-  const sa = new Slider({ label: 'Bay 1 stay', min: 0, max: 0.9, step: 0.1, value: 0, format: (v) => `${Math.round(v * 100)}%`, onInput: (v) => { a = v; paint(); } });
-  const sb = new Slider({ label: 'Bay 2 stay', min: 0, max: 0.9, step: 0.1, value: 0, format: (v) => `${Math.round(v * 100)}%`, onInput: (v) => { b = v; paint(); } });
+  const sa = fslider({ label: 'Bay 1 stay', min: 0, max: 0.9, step: 0.1, value: 0, format: (v) => `${Math.round(v * 100)}%`, onInput: (v) => { a = v; paint(); } });
+  const sb = fslider({ label: 'Bay 2 stay', min: 0, max: 0.9, step: 0.1, value: 0, format: (v) => `${Math.round(v * 100)}%`, onInput: (v) => { b = v; paint(); } });
   p.dock().append(sa.el, sb.el);
   paint();
   return { P, set(na: number, nb: number) { a = na; b = nb; sa.set(na, false); sb.set(nb, false); paint(); } };
@@ -150,13 +149,14 @@ export const doubtMoving: DoubtDef = {
   goal: 'The drones sit at the settled arrangement. **Run an hour** and count who moves. **Back it** (Bram will shake in other chains) or **Challenge it**.',
   view: '2d',
   setup(p) {
-    void boardView(p);
+    // the whole board below the doubt card
+    void p.g.stage.view2D({ center: [-2.2, 2.85], height: 13, ms: 0 });
     let P = DRONES.map((r) => r.slice());
     const fb = new FlowBoard(p, { P, x0: steadyOf(P, TOTAL)!, names: STATIONS });
     const r = p.readout('Settled, and moving');
     const paint = () => {
       fb.x.forEach((x, i) => r.row(`s${i}`, STATIONS[i], fmtN(Math.round(x * 10) / 10), C.result));
-      r.row('m', 'drones changing section each hour', fmtN(Math.round(movingAtSteady(P) * 10) / 10), C.w);
+      r.row('m', 'drones moving per hour', fmtN(Math.round(movingAtSteady(P) * 10) / 10), C.w);
     };
     paint();
     return {

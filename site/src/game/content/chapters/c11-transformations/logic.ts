@@ -168,7 +168,7 @@ const isTurn = (A: Mat): boolean => {
 const colsLand = (A: Mat): boolean => near(matVec(A, [1, 0]), col(A, 0), 1e-9) && near(matVec(A, [0, 1]), col(A, 1), 1e-9);
 const rowsLand = (A: Mat): boolean => near(matVec(A, [1, 0]), A[0], 1e-9) && near(matVec(A, [0, 1]), A[1], 1e-9);
 
-/** The Law: "The [COLUMNS / ROWS] of A are where e₁ and e₂ land, [ALWAYS / ONLY WHEN …]." */
+/** The Law: "The [COLUMNS / ROWS] of A are where e₁ and e₂ land, [ALWAYS / EXACTLY WHEN …]." */
 export const lawCore: LawCore<LawCase> & { answer: Record<string, string> } = {
   id: 'c11-law',
   answer: { part: 'cols', when: 'always' },
@@ -176,8 +176,11 @@ export const lawCore: LawCore<LawCase> & { answer: Record<string, string> } = {
     const v = () => rint(r, -8, 8) / 2;
     return { A: [[v(), v()], [v(), v()]] };
   },
+  // Every rows filling breaks on a case whose rows are visibly not where e₁ and e₂ land:
+  // rows + always and rows + kept on the shear, rows + turn on the quarter turn.
   edgeCases: [
     { A: SHEAR },                 // rows are not landing spots; columns are, and it is no turn
+    { A: TURN },                  // a turn whose rows are not landing spots (as in p6)
     { A: [[1, 0], [0, 0]] },      // flattens onto the x-axis (and equals its own rows)
     { A: [[2, 0], [0, 3]] },      // a stretch: rows and columns agree, no turn
     { A: T },                     // the routine pulse
@@ -187,8 +190,8 @@ export const lawCore: LawCore<LawCase> & { answer: Record<string, string> } = {
   /** Does the filled statement hold for this case? */
   holds(f, c) {
     const lands = f.part === 'rows' ? rowsLand(c.A) : colsLand(c.A);
-    if (f.when === 'turn') return !lands || isTurn(c.A);
-    if (f.when === 'kept') return !lands || Math.abs(det(c.A)) > 1e-9;
+    if (f.when === 'turn') return lands === isTurn(c.A);
+    if (f.when === 'kept') return lands === Math.abs(det(c.A)) > 1e-9;
     return lands;
   },
   describe: (c) => {

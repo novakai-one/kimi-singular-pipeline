@@ -117,16 +117,21 @@ export const p1: PuzzleDef = {
     const ghost = new Arrow([0, 0, 0], [0, 0, -6], { color: C.result, width: 0.03, opacity: 0, label: '$(0, 0, -6)$' });
     ghost.setOpacity(0);
     p.add(ghost);
+    // the gap a miss leaves: the sideways part of n, or the missing (or extra) length along n
+    const gap = new FatLine(p.g.stage, [[0, 0, 0], [0, 0, 1]], { color: C.orange, width: 1.8, opacity: 0, dashed: true, dashSize: 0.14, gapSize: 0.1 });
+    p.add(gap);
+    let warnedLen = false;
     // cadet: both meters read live while dragging; navigator and commander read them when the arrow is set
     const live = p.difficulty === 'cadet';
-    const meters = (t: V3) => {
+    const meters = (t: V3, quiet = false) => {
       const hv = gv.set(dot(t, v), undefined, tol), hw = gw.set(dot(t, w), undefined, tol);
-      if ((hv || hw) && norm(t) > 0.1) chime();
+      if ((hv || hw) && norm(t) > 0.1 && !quiet) chime();
       ra.show(Math.abs(dot(t, v)) <= tol && norm(t) > 0.3); ra.set([0, 0, 0], v, t);
       rb.show(Math.abs(dot(t, w)) <= tol && norm(t) > 0.3); rb.set([0, 0, 0], w, t);
     };
     const upd = (t: V3) => {
       n = t;
+      gap.setOpacity(0);
       guide(t);
       if (live) meters(t);
       r.row('n', '$\\mathbf n$', fmt(t.map((x) => Math.round(x * 100) / 100)), C.result);
@@ -134,9 +139,28 @@ export const p1: PuzzleDef = {
       if (p.difficulty !== 'commander') r.row('area', 'area of the panel', nice(P1_AREA));
       vin.set(t.map((x) => Math.round(x * 100) / 100));
     };
-    const commit = async () => {
-      meters(n);
-      if (won || !p1Won(n, tol)) return;
+    /** A miss teaches: the two readings, or the length against the area, and the gap drawn. */
+    const miss = () => {
+      const rv = dot(n, v), rw = dot(n, w), L = norm(n);
+      sfx.miss();
+      if (Math.abs(rv) > tol || Math.abs(rw) > tol) {
+        p.bark('lantern', `Reads ${fmtNum(rv)} against v and ${fmtNum(rw)} against w. Both must read 0.`);
+        gap.setPoints([n, [0, 0, n[2]]]);
+        gap.setOpacity(0.8);
+        return;
+      }
+      const area = p.difficulty === 'commander' ? ' It must be as long as the panel\'s area.' : ` The panel's area is ${nice(P1_AREA)}.`;
+      p.bark('lantern', `Reads 0 against both edges, but it is ${fmtNum(L)} long.${area}`);
+      if (L > 1e-6 && p.difficulty !== 'commander') { gap.setPoints([n, v3(n.map((x) => (x * P1_AREA) / L))]); gap.setOpacity(0.8); }
+    };
+    /** `explicit`: the Raise button or a typed arrow. A drag release only speaks up once, for the near miss. */
+    const commit = async (explicit = false) => {
+      const hit = !won && p1Won(n, tol);
+      const nearMiss = !hit && !won && Math.abs(dot(n, v)) <= tol && Math.abs(dot(n, w)) <= tol;
+      const speak = !hit && !won && (explicit || (nearMiss && !warnedLen));
+      meters(n, speak);
+      if (speak) { if (nearMiss) warnedLen = true; miss(); }
+      if (!hit) return;
       won = true;
       nh.setEnabled(false);
       chime();
@@ -145,16 +169,17 @@ export const p1: PuzzleDef = {
       r.note('$(0, 0, -6)$ also reads 0 against both and is 6 long. The **order** of the edges picks one of the two.');
       p.win();
     };
-    const vin = new VectorInput({ dim: 3, values: n, onSubmit: (x) => { nh.set(v3(x)); p.move(); void commit(); } });
+    const vin = new VectorInput({ dim: 3, values: n, onSubmit: (x) => { nh.set(v3(x)); p.move(); void commit(true); } });
     const nh = new VectorHandle(p, { to: n, color: C.result, label: '$\\mathbf n$', limit: 8, onChange: upd, onCommit: () => void commit() });
     p.dock().append(h('div', { style: 'display:flex;gap:10px;align-items:center;font-size:14px' }, h('span', { html: inline('$\\mathbf n =$') }), vin.el,
-      button('Raise', () => { nh.set(v3(vin.get())); p.move(); void commit(); }, { cls: 'primary small' })));
+      button('Raise', () => { nh.set(v3(vin.get())); p.move(); void commit(true); }, { cls: 'primary small' })));
     upd(n);
     meters(n);
     return {
-      async showMe() { await nh.moveTo([0, 0, 2], 700); await nh.moveTo([0, 0, 6], 800); },
-      async solve() { nh.set([0, 0, 6]); await commit(); },
-      async wrong() { nh.set([0, 0, 5]); await commit(); nh.set([6, 0, 0]); await commit(); },
+      // the demo passes through (0, 0, 2) on the way up: no near-miss bark for it
+      async showMe() { warnedLen = true; await nh.moveTo([0, 0, 2], 700); await nh.moveTo([0, 0, 6], 800); },
+      async solve() { nh.set([0, 0, 6]); await commit(true); },
+      async wrong() { nh.set([0, 0, 5]); await commit(true); nh.set([6, 0, 0]); await commit(true); },
     };
   },
 };
@@ -596,11 +621,11 @@ export const p7: PuzzleDef = {
   id: 'c05-p7',
   title: 'Does the route turn left at every waypoint?',
   style: 'mastery',
-  goal: 'A patrol loop runs $A \\to B \\to C \\to D \\to A$. At each waypoint the number $v_1w_2 - v_2w_1$ (the leg in, then the leg out) is a signed area: **positive** means a left turn. Drag $D$ so the loop turns **left** at $B$, $C$ and $D$.',
+  goal: 'A patrol loop runs $A \\to B \\to C \\to D \\to A$. At each waypoint the number $v_1w_2 - v_2w_1$ (the leg in, then the leg out) is a signed area: **positive** means a left turn. Drag $D$ so the loop turns **left** at $A$, $B$, $C$ and $D$.',
   hints: [
     'At $C$ the leg in is $C - B = (1, 3)$ and the leg out is $D - C$. The loop turns right there now.',
     'Pull $D$ up and to the left, so the loop goes round anticlockwise.',
-    'Try $D = (1, 4)$: the three signed areas are 12, 13 and 17.',
+    'Try $D = (1, 4)$: the four signed areas at $A$, $B$, $C$ and $D$ are 16, 12, 13 and 17.',
   ],
   par: 2,
   onWin: S.p7Win,
@@ -613,17 +638,17 @@ export const p7: PuzzleDef = {
     p.add(route);
     const names = ['A', 'B', 'C'];
     [A, B, Cc].forEach((q, i) => { p.add(new Dot(q, { color: C.white, size: 0.1 })); lab(p, `$${names[i]}$`, [q[0] - 0.35, q[1] - 0.35, 0], { size: 17 }); });
-    const tags = [B, Cc, D].map(() => lab(p, '', [0, 0, 0], { size: 15 }));
+    const tags = [A, B, Cc, D].map(() => lab(p, '', [0, 0, 0], { size: 15 }));
     const r = p.readout('Signed area at each turn');
     const upd = () => {
       route.setPoints([A, B, Cc, D, A]);
       const t = turns(D);
-      [B, Cc, D].forEach((q, i) => {
+      [A, B, Cc, D].forEach((q, i) => {
         const left = t[i] > 1e-9;
         tags[i].at([q[0] + 0.55, q[1] - 0.5, 0]);
         tags[i].set(t[i] === 0 ? 'straight' : left ? `left · ${nice(Math.round(t[i] * 100) / 100)}` : `right · ${nice(Math.round(t[i] * 100) / 100)}`);
         tags[i].el.style.color = left ? '#59e1ff' : C.orange;
-        r.row(`t${i}`, `at ${['B', 'C', 'D'][i]}`, `${nice(Math.round(t[i] * 100) / 100)} · ${left ? 'left' : t[i] === 0 ? 'straight' : 'right'}`, left ? '#59e1ff' : C.orange);
+        r.row(`t${i}`, `at ${['A', 'B', 'C', 'D'][i]}`, `${nice(Math.round(t[i] * 100) / 100)} · ${left ? 'left' : t[i] === 0 ? 'straight' : 'right'}`, left ? '#59e1ff' : C.orange);
       });
     };
     const dh = new VectorHandle(p, { to: D, color: C.result, label: '$D$', limit: 7, onChange: (t) => { D = t; upd(); }, onCommit: () => { if (p7Won(D)) { chime(); p.win(); } } });

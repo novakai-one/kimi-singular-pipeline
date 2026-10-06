@@ -67,11 +67,16 @@ test('p6: as the angle closes, the cross product shrinks to (0, 0, 0)', () => {
   for (const th of [50, 40, 30, 20, 10, 0]) { const a = norm(cross(L.P6_V, L.p6W(th))); assert.ok(a < prev); prev = a; }
 });
 
-test('p7: signed areas at the waypoints; (1, 4) turns left at all three', () => {
-  assert.deepEqual(L.turns([1, 4]), [12, 13, 17]);
+test('p7: signed areas at every corner A, B, C, D; (1, 4) turns left at all four', () => {
+  assert.deepEqual(L.turns([1, 4]), [16, 12, 13, 17]);
   assert.ok(L.p7Won([1, 4]));
   assert.ok(!L.p7Won([7, 5]), 'the start turns right at C');
-  assert.ok(L.turns([7, 5])[1] < 0);
+  assert.ok(L.turns([7, 5])[2] < 0);
+  // the turn at A closes the loop: it is 4·D₂
+  for (const D of [[1, 4], [-3, -1], [2, 0], [-6, 5]]) close(L.turns(D)[0], 4 * D[1]);
+  assert.deepEqual(L.turns([-3, -1]), [-4, 12, 20, 4]);
+  assert.ok(!L.p7Won([-3, -1]), 'left at B, C and D but right at A: the loop folds back');
+  assert.ok(!L.p7Won([-1, 0]), 'straight at A');
 });
 
 test('doubts: order flips the arrow (false claim); doubling an edge doubles the length (true claim)', () => {
@@ -87,8 +92,13 @@ test('Law: the target survives 500 cases; every near-miss is broken', () => {
     { perp: 'ab', len: 'product', swap: 'flips' },
     { perp: 'ab', len: 'area', swap: 'same' },
     { perp: 'neither', len: 'area', swap: 'flips' },
+    { perp: 'a', len: 'area', swap: 'flips' },
+    { perp: 'b', len: 'area', swap: 'flips' },
     { perp: 'ab', len: 'product', swap: 'same' },
   ]) assert.equal(checkLaw(L.lawCore, f).survived, false, JSON.stringify(f));
+  // the counterexample shows both readings, so 'a only' visibly breaks
+  const cx = checkLaw(L.lawCore, { perp: 'a', len: 'area', swap: 'flips' });
+  assert.match(cx.counterexample ?? '', /\(a × b\)·a = 0, \(a × b\)·b = 0/);
 });
 
 test('crew versions', () => {

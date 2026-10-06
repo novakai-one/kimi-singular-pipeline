@@ -159,7 +159,8 @@ export const p2: PuzzleDef = {
   setup(p) {
     p.g.stage.view2D({ center: [1.2, 0.9], height: 10, ms: 0 });
     const tol = tolFor(p.difficulty);
-    const live = p.difficulty !== 'commander';
+    // Cadet sees the images follow the tips from the start; Navigator after the first Pulse (GDD §7.1).
+    const live = p.difficulty === 'cadet';
     const probes = P2_PROBES.map((q, i) => new Dot(v3(q), { color: C.white, size: 0.09, label: i === 0 ? '(1, 1)' : '(1, −1)', labelOffset: [0, 18] }));
     const pads = P2_TARGETS.map((t, i) => new Pad(p.g.stage, v3(t), { label: i === 0 ? 'send (1, 1) here' : 'keep (1, −1) here', radius: i === 0 ? 0.32 : 0.42, color: '#9fd8ff' }));
     const images = P2_PROBES.map(() => new Dot([0, 0, 0], { color: C.result, size: 0.11 }));
@@ -616,7 +617,7 @@ export const p5: PuzzleDef = {
     p.add(...colArrows);
     const r = p.readout('Hull sensor');
     r.eq(`A = ${texM(P5_A)}\\quad \\mathbf x = \\begin{bmatrix}3\\\\1\\\\2\\end{bmatrix}`);
-    r.row('size', 'size', '2 × 3: two numbers out, three in');
+    r.row('size', 'rule', '2 rows, 3 columns: three numbers in, two out');
     let flags = [false, false, false];
     let stage: 'flat' | 'space' | 'done' = 'flat';
     let fastMode = false;

@@ -17,7 +17,11 @@ export const P1 = { aug: [[1, 2, 1, 8], [0, 1, 2, 8], [0, 0, 1, 3]] as Aug, done
 export const p1Won = (m: Aug | FMat): boolean => isRREF(fmat(m as (number | Frac)[][]), 3) && sameSolutions(m, P1.aug);
 
 /** p2: flows x₁ − x₂ = 2, x₂ − x₃ = 1, x₁ − x₃ = 3: solutions (3 + t, 1 + t, t). */
-export const P2 = { aug: [[1, -1, 0, 2], [0, 1, -1, 1], [1, 0, -1, 3]] as Aug, particular: [3, 1, 0], dir: [1, 1, 1], free: 2, par: 3, max: 5 };
+export const P2 = {
+  aug: [[1, -1, 0, 2], [0, 1, -1, 1], [1, 0, -1, 3]] as Aug, particular: [3, 1, 0], dir: [1, 1, 1], free: 2, par: 3, max: 5,
+  /** The free dial. It starts at t = −1 (pipe 3 below 0), on every difficulty's step grid; the nearest legal t is 0, the least load. */
+  dial: { start: -1, min: -2, max: 4, step: { cadet: 1, navigator: 0.5, commander: 0.25 } as Record<string, number> },
+};
 export const flowsAt = (t: number): number[] => add(P2.particular, scale(P2.dir, t));
 export const pipesOk = (t: number, max = P2.max): boolean => flowsAt(t).every((f) => f >= -1e-9 && f <= max + 1e-9);
 export const totalLoad = (t: number): number => flowsAt(t).reduce((s, x) => s + x, 0);
@@ -38,6 +42,17 @@ export const P4 = {
   row: [1, 2, -1, 4], p: [4, 0, 0], d1: [-2, 1, 0], d2: [1, 0, 1],
   targets: [[2, 1, 0], [6, 0, 2], [0, 1, -2]], dials: [[1, 0], [0, 2], [1, -2]],
 };
+
+/**
+ * Par where typed or picked steps count a move (each checked worksheet line, a tile-order submit, the column pick).
+ * p2: the board's 3 steps, plus the column pick (navigator) or the worksheet's last line (commander), plus one dial drag.
+ *     Fewest moves: cadet 4, navigator 5, commander 5.
+ * p4: four single-dial changes visit (1, 0), (0, 2), (1, −2) from (0, 0); navigator also checks 3 typed lines, commander 1.
+ *     Fewest moves: cadet 4, navigator 7, commander 5.
+ * p6: one drag; navigator checks 3 typed lines; commander submits the tiles and checks 1 typed line.
+ *     Fewest moves: cadet 1, navigator 4, commander 3.
+ */
+export const PAR = { p2: P2.par + 2, p4: 7, p6: 4 };
 export const p4Point = (s: number, t: number): number[] => add(P4.p, add(scale(P4.d1, s), scale(P4.d2, t)));
 
 /** p5 [H]: [1 1 1 | 1], [1 2 3 | 2], [1 3 k | m] → [0 0 (k − 5) | (m − 3)]. */

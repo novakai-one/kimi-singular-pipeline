@@ -107,7 +107,7 @@ export const doubtScale: DoubtDef = {
 export const doubtTwoRef: DoubtDef = {
   id: 'c09-d-tworef', who: 'bram', isTrue: true,
   claim: 'Two people can reach different row echelon forms from the same board, and still find the pivots in the same places.',
-  reason: 'Different row operations give different staircases, but the pivot positions come from the planes themselves, which no row operation moves. So every staircase of the same board has its pivots in the same columns.',
+  reason: 'Different row operations give different staircases, but none of them changes which mixes of the columns add up to zero: a mix that zeroes every old row also zeroes every combination of them, and each step can be undone. A column can be made from the columns to its left exactly when it has no pivot. So every staircase of the same board has its pivots in the same columns.',
   goal: 'Bram\'s staircase is on the right. Reach a **different** staircase with the board, then compare where the pivots are. **Back it** (Bram shakes it) or **Challenge it**.',
   view: '3d',
   setup(p) {
@@ -154,7 +154,9 @@ function drawCase(g: Game, c: C09Case): void {
 
 export const law: LawDef<C09Case> = {
   ...LAW_C09,
-  frame: ['A row operation ', { slot: 'does' }, ' the solution set ', { slot: 'when' }, '.'],
+  // the subject names the three moves (scaling by any number), so the 'scale0' cases fall inside it:
+  // under the chapter's definition a row operation never scales by 0, and 'keeps always' would be true
+  frame: ['Swapping two rows, multiplying a row by a number, or adding a multiple of one row to another ', { slot: 'does' }, ' the solution set ', { slot: 'when' }, '.'],
   slots: {
     does: { options: [{ id: 'keeps', text: 'keeps' }, { id: 'changes', text: 'changes' }] },
     when: { options: [{ id: 'always', text: 'always' }, { id: 'unless0', text: 'unless it multiplies a row by zero' }] },
@@ -162,7 +164,7 @@ export const law: LawDef<C09Case> = {
   cadetSlots: ['does'],
   draw: drawCase,
   reason: {
-    ask: 'Your Law survived. **Why** does a row operation keep the solution set?',
+    ask: 'Your Law survived. **Why** do these moves keep the solution set (when no row is multiplied by 0)?',
     options: [
       { id: 'comb', right: true, text: 'A point that makes the old equations true makes any combination of them true, and each operation can be undone by another, so no point is gained or lost.', why: 'Yes. Swapping, scaling by a non-zero number and adding a multiple all have an undo. Scaling by 0 does not: the equation is gone.' },
       { id: 'look', right: false, text: 'The planes look the same afterwards.', why: 'They do not: a plane visibly turns when you add a multiple of another row. What stays is the point they share.' },

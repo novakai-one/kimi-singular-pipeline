@@ -109,7 +109,8 @@ export const p6: PuzzleDef = {
     const rec = record();
     const cloud = new PointCloud(p, { points: rec.X.map(() => [0, 0, 0]), color: C.accent, size: 0.02, glow: 0.25, core: 1.2, opacity: 0.8 });
     const path = new PointCloud(p, { points: rec.path.map(() => [0, 0, 0]), color: C.result, size: 0.05, glow: 0.5, core: 1.6 });
-    const pathLine = new FatSegments(p.g.stage, [[[0, 0, 0], [0, 0, 0]]], { color: C.result, width: 1.6, opacity: 0.6 });
+    const pathLine = new FatSegments(p.g.stage, [[[0, 0, 0], [0, 0, 0]]], { color: C.result, width: 2, opacity: 0.85 });
+    pathLine.object.traverse((o) => { o.renderOrder = 6; o.frustumCulled = false; });   // over the dense arms
     p.add(pathLine.object); p.onDispose(() => pathLine.dispose());
     const ax = [tag('', [3.75, -0.35, 0], 'dim'), tag('', [0, 3.4, 0], 'dim')];
     ax.forEach((t) => { p.add(t.object); p.onDispose(() => t.dispose()); });

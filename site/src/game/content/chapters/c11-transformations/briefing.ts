@@ -152,8 +152,8 @@ export const law: LawDef<LawCase> = {
     when: {
       options: [
         { id: 'always', text: 'always' },
-        { id: 'turn', text: 'only when the grid turns' },
-        { id: 'kept', text: 'only when nothing is flattened' },
+        { id: 'turn', text: 'exactly when the grid turns' },
+        { id: 'kept', text: 'exactly when nothing is flattened' },
       ],
     },
   },

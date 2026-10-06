@@ -218,12 +218,12 @@ export const procedure: ProcedureDef = {
   async run(g, ids) {
     const res = runProc(ids);
     g.stage.clearWorld();
-    await g.stage.view2D({ center: [1.4, 0.8], height: 9, ms: 400 });
+    await g.stage.view2D({ center: [-1.4, 0.6], height: 9, ms: 400 });   // right of the step panel
     const grid = new Grid2D(g.stage, { main: 0.14, base: 0, axis: 0.42 });
     grid.mesh.userData.dispose = () => grid.dispose();
     g.stage.world.add(grid.object);
     const fast = g.headless;
-    const step = inWorld(g, tag('LANTERN runs your steps', [1.4, 4, 0], 'c'));
+    const step = inWorld(g, tag('LANTERN runs your steps', [1.6, 3.6, 0], 'c'));
     const pts = PROC_CLOUD.map((x) => [x[0], x[1], 0]);
     const cloudG = worldCloud(g, { points: pts, color: C.accent, size: 0.05, glow: 0.3 });
     const m = meanOf(PROC_CLOUD);
@@ -236,7 +236,7 @@ export const procedure: ProcedureDef = {
     }
     if (res.dir) {
       step.set(res.fault === 'centre' ? 'Eigenvectors of the moments about the origin' : res.fault === 'sort' ? 'Kept the first eigenvector found' : 'The first principal direction');
-      inWorld(g, new InfLine(g.stage, [0, 0, 0.01], v3(res.dir), { color: res.ok ? C.result : C.orange, width: 2.4, opacity: 0.9, length: 22 }));
+      inWorld(g, new InfLine(g.stage, [0, 0, 0.01], v3(res.dir), { color: res.ok ? C.result : C.orange, width: 1.4, opacity: 0.6, length: 22 }));
       await wait(fast ? 1 : 600);
       if (res.ok || res.fault === 'keep') {
         step.set(res.ok ? 'Project: one number per reading' : 'Sent every number: nothing kept out');
@@ -300,9 +300,9 @@ const reviewTiny: DoubtDef = {
     return {
       holds: () => tinyDetHolds(M()),
       describe: () => `$\\varepsilon = ${fmtD(eps, 3)}$: $\\det A = ${fmtD(det(M()), 3)}$, ${Math.abs(det(M())) > 1e-12 ? 'and $A^{-1}$ exists' : 'no inverse'}`,
-      randomize(rr, edge) { eps = edge !== undefined ? edges[edge] : Math.round((0.1 + rr() * 0.4) * 1000) / 1000; sl.set(eps, false); paint(); },
+      randomize(rr, edge) { eps = edge !== undefined ? edges[edge] : Math.round((0.1 + rr() * 0.4) * 1000) / 1000; sl.set(eps); },
       edgeCases: edges.length,
-      async showMe(stance) { eps = stance === 'challenge' ? 0.004 : 0.5; sl.set(eps, false); paint(); },
+      async showMe(stance) { eps = stance === 'challenge' ? 0.004 : 0.5; sl.set(eps); },
     };
   },
 };

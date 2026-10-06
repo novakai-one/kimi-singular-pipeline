@@ -116,7 +116,13 @@ export const p5: PuzzleDef = {
       if (!flags[0]) { chooseA('before'); chooseB('after'); }
       method = 'qr';
       for (let i = 0; i < 3; i++) await fitRow(i);
-      if (!flags[2]) { readIn.set(col(COLLAPSE, 2).map((x) => Math.round(x * 1000) / 1000)); read(); }
+      if (!flags[2]) {
+        const v = col(COLLAPSE, 2).map((x) => Math.round(x * 1000) / 1000);
+        readIn.set(v);
+        // show all three decimals in the cells (the default display rounds to two)
+        readIn.el.querySelectorAll('input').forEach((inp, i) => { (inp as HTMLInputElement).value = String(v[i]); });
+        read();
+      }
     };
     return {
       async showMe() { await ref(); },
@@ -243,7 +249,7 @@ export const p7: PuzzleDef = {
     const fit = () => {
       p.move();
       const pp: V3[] = [];
-      for (let t = -0.5; t <= 4.5; t += 0.05) pp.push([t, P7_FIT0[0] + P7_FIT0[1] * t + P7_FIT0[2] * t * t, 0.01]);
+      for (let t = -0.5; t <= 4.25; t += 0.05) pp.push([t, P7_FIT0[0] + P7_FIT0[1] * t + P7_FIT0[2] * t * t, 0.01]);
       curve.setPoints(pp); curve.object.visible = true;
       r.row('p', 'parabola', `$${fmtN(P7_FIT0[0], 3)} + ${fmtN(P7_FIT0[1], 3)}t ${fmtN(P7_FIT0[2], 3).startsWith('−') ? '-' : '+'} ${fmtN(Math.abs(P7_FIT0[2]), 3)}t^2$`, C.result);
       tick(0);

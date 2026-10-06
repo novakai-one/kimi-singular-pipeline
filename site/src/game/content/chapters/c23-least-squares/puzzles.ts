@@ -102,13 +102,13 @@ export const p2: PuzzleDef = {
   view: '3d',
   onWin: S.p2Win,
   async setup(p) {
-    await p.g.stage.view3D({ target: [0.6, 1.0, 2.0], distance: 12.5, azimuth: -8, elevation: 20, ms: 0 });
+    await p.g.stage.view3D({ target: [0.9, 1.2, 2.0], distance: 12.5, azimuth: 90, elevation: 35, ms: 0 });
     p.grid({ base: 0.1, main: 0.2, axis: 0.45 });
     const d = p.difficulty;
     const tol = d === 'commander' ? 0.01 : 0.05;
     const bA = new Arrow([0, 0, 0], v3(P2_B), { color: C.v, label: '$\\mathbf b$' });
     p.add(bA);
-    tag(p, 'data space', [0.5, 3.8, 0.6], 'dim');
+    tag(p, 'data space', [-1.8, 0, 0.3], 'dim');
     const board = new MiniBoard({ pts: P2_TS.map((t, i) => [t, P2_B[i]]), tRange: [-0.2, 2.3], yRange: [-0.5, 4.6], title: 'The same line, on the readings' });
     const r = p.readout('Twin view');
     let done = false;
@@ -293,8 +293,8 @@ export const p4: PuzzleDef = {
       for (let t = 0; t <= 7.4; t += 0.05) { const y = curve5(t); const w = W(t, y); if (w[1] < -4.6) break; cp.push([w[0], w[1], 0.01]); }
       curve = new FatLine(p.g.stage, cp, { color: C.orange, width: 2, opacity: 0.85 });
       p.add(curve);
-      const end = cp[cp.length - 1];
-      tag(p, `curve through all six: ${fmtN(P4_CURVE10, 0)} m at hour 10`, [end[0], end[1], 0], 'o', [90, 0]);
+      const at = cp.find((q) => q[1] < -2) ?? cp[cp.length - 1];
+      tag(p, `curve through all six: ${fmtN(P4_CURVE10, 0)} m at hour 10`, [at[0], at[1], 0], 'o', [150, 0]);
       p.bark('lantern', `The curve through every reading forecasts ${fmtN(P4_CURVE10, 0)} metres at hour ten.`);
     };
     const check = () => {

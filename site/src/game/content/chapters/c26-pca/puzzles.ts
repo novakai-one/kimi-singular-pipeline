@@ -27,7 +27,7 @@ import { S } from './script';
 /** A line through a cloud: its shadows (yellow) on the line and a few perpendicular drops. */
 function shadowLine(p: PuzzleCtx, X: number[][], drops = 50) {
   const line = new InfLine(p.g.stage, [0, 0, 0.01], [1, 0, 0], { color: C.result, width: 1.2, opacity: 0.5, length: 20 });
-  const shadows = new PointCloud(p, { points: X.map(() => [0, 0, 0]), color: C.result, size: 0.04, glow: 0.3, core: 1.4, opacity: 0.9 });
+  const shadows = new PointCloud(p, { points: X.map(() => [0, 0, 0]), color: C.result, size: 0.034, glow: 0.08, core: 1.2, opacity: 0.75 });
   const seg = new FatSegments(p.g.stage, [[[0, 0, 0], [0, 0, 0]]], { color: C.result, width: 1, opacity: 0.35 });
   p.add(line.object, seg.object); p.onDispose(() => { line.dispose(); seg.dispose(); });
   return {
@@ -322,14 +322,14 @@ export const p4: PuzzleDef = {
     P4_X.forEach((x) => ptag(p, `(${x[0]}, ${x[1]})`, [x[0] + 0.15, x[1] + 0.42, 0], 'dim'));
     const mean = new Dot(v3(P4_MEAN, 0.03), { color: C.white, size: 0.08 });
     p.add(mean); mean.object.visible = false;
-    const line = new InfLine(p.g.stage, v3(P4_MEAN, 0.01), v3(P4_EIG.vectors[0]), { color: C.result, width: 2, opacity: 0, length: 14 });
+    const line = new InfLine(p.g.stage, v3(P4_MEAN, 0.01), v3(P4_EIG.vectors[0]), { color: C.result, width: 1.3, opacity: 0, length: 14 });
     p.add(line.object); p.onDispose(() => line.dispose());
     let finished = false;
     const finale = async () => {
       if (finished) return;
       finished = true;
       mean.object.visible = true;
-      await animate(p.g.headless ? 1 : 600, (k) => line.line.setOpacity(0.85 * k), ease.out);
+      await animate(p.g.headless ? 1 : 600, (k) => line.line.setOpacity(0.6 * k), ease.out);
       const u = P4_EIG.vectors[0];
       await Promise.all(dots.map((dd, i) => { const t = P4_PROJ[i]; const to: V3 = [P4_MEAN[0] + t * u[0], P4_MEAN[1] + t * u[1], 0.03]; const from = v3(P4_X[i], 0.02); return animate(p.g.headless ? 1 : 900, (k) => dd.at([from[0] + (to[0] - from[0]) * k, from[1] + (to[1] - from[1]) * k, 0.03]), ease.inOut); }));
       dots.forEach((dd) => dd.setColor(C.result));

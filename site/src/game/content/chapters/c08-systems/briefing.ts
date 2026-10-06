@@ -9,7 +9,7 @@ import { sfx } from '../../../audio/sfx';
 import { animate, ease } from '../../../core/tween';
 import { PlaneSet, worldHost } from './planes';
 import { drawTwin } from './puzzles';
-import { kindOf, onAll, pt, rowTex, type Aug } from './act3';
+import { directions, kindOf, onAll, pt, rowTex, type Aug } from './act3';
 import { D1_COUNTER, D1_START, D2_SHOW, D2_START, LAW_C08, d1Holds, d1Random, d2Holds, d2Random, type C08Case } from './logic';
 import './act3.css';
 
@@ -27,7 +27,10 @@ export const sayit: SayItDef = {
 
 const meetWords = (rows: Aug) => {
   const k = kindOf(rows);
-  return k === 'one' ? 'they meet at one point' : k === 'many' ? 'they meet along a whole line' : 'they never meet';
+  if (k !== 'many') return k === 'one' ? 'they meet at one point' : 'they never meet';
+  // one free direction: a line; two: one plane twice (or one row reads 0 = 0); three: every row reads 0 = 0
+  const free = directions(rows).length;
+  return free === 1 ? 'they meet along a whole line' : free === 2 ? 'they share a whole plane' : 'every point is on both';
 };
 
 export const doubtUnknowns: DoubtDef = {
@@ -111,7 +114,7 @@ export const law: LawDef<C08Case> = { ...LAW_C08, draw: drawCase };
 
 export const compare: CompareDef = {
   id: 'c08',
-  page: 'A **system of linear equations** asks for points that make every equation true at once. In three unknowns each equation $a_1x + a_2y + a_3z = b$ is a flat **plane** (in two unknowns, a line), so the **solutions** are the points on every plane.\n\nThree planes meet at one point, along a line, or nowhere. They never meet at exactly two points: if two points are on a plane, the whole line through them is on it, because a plane is flat. Two solutions bring the line through them, so a system has no solution, one, or infinitely many.\n\nThe same numbers read down the columns ask a second question: which weights on the column arrows reach the right side? The weights that do are the solutions. Row picture and column picture, one answer.',
+  page: 'A **system of linear equations** asks for points that make every equation true at once. In three unknowns each equation $a_1x + a_2y + a_3z = b$ is a flat **plane** (in two unknowns, a line), so the **solutions** are the points on every plane.\n\nThree planes meet at one point, along a line, or nowhere, unless all three are the same plane, which then holds every solution. They never meet at exactly two points: if two points are on a plane, the whole line through them is on it, because a plane is flat. Two solutions bring the line through them, so a system has no solution, one, or infinitely many.\n\nThe same numbers read down the columns ask a second question: which weights on the column arrows reach the right side? The weights that do are the solutions. Row picture and column picture, one answer.',
   formula: '\\begin{aligned} x + y &= 5 \\\\ x - y &= 1 \\end{aligned} \\quad\\Longleftrightarrow\\quad x\\cg{\\begin{bmatrix}1\\\\1\\end{bmatrix}} + y\\cr{\\begin{bmatrix}1\\\\-1\\end{bmatrix}} = \\cy{\\begin{bmatrix}5\\\\1\\end{bmatrix}}',
   keyIdeas: [
     'Did you say that each equation is a plane (a line in two unknowns)?',

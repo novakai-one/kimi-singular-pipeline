@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { Frac, fmat } from '../../site/src/game/math/frac.ts';
 import { applyOp, gaussSteps } from '../../site/src/game/math/rref.ts';
 import {
-  P1, P3, P4, P4_FORBIDDEN, PROC_CASE, PROC_KEYS, PROC_REFERENCE, PROC_TILES, PROC_DECOYS, LAW_C09, addRow, backSub, bramRef,
+  P1, P3, P4, P4_FORBIDDEN, p4AppliedK, PROC_CASE, PROC_KEYS, PROC_REFERENCE, PROC_TILES, PROC_DECOYS, LAW_C09, addRow, backSub, bramRef,
   expectedRow, firstColumnCleared, otherRef, p1Won, p3Won, p5Kind, p5Reduced, p6Final, refRandom, rowEchelonCrew, rowMachine,
   samePivots, scaleHolds, scaleRandom, scaleRow, swapHolds, swapRandom, twoRefHolds, D_REF_START, D_SCALE_START, D_SWAP_START,
 } from '../../site/src/game/content/chapters/c09-elimination/logic.ts';
@@ -56,6 +56,15 @@ test('p4 [D]: forbidden moves change the solutions; a legal move keeps (1, 2)', 
   assert.deepEqual(somePoint(results.cols), [2, 1], 'columns swapped: the point jumps to (2, 1)');
   for (const k of [-3, -2, -1, 1, 2, 3]) assert.ok(sameSolutions(P4.aug, addRow(P4.aug, 1, 0, k)), `k = ${k}`);
   assert.deepEqual(addRow(P4.aug, 1, 0, 2)[1], [5, 1, 7]);
+  // the "why" worksheet reads k from the matrix on screen; at (1, 2) the new row 2 reads −1 + 4k
+  for (const k of [-3, -2, -1, 1, 2, 3]) {
+    const m = addRow(P4.aug, 1, 0, k);
+    assert.equal(p4AppliedK(m), k);
+    assert.equal(m[1][0] * 1 + m[1][1] * 2, -1 + 4 * k);
+    assert.equal(p4AppliedK(addRow(m, 1, 0, 1)), k + 1, 'Apply twice: the k values add');
+  }
+  assert.deepEqual(addRow(P4.aug, 1, 0, -1)[1], [-1, -2, -5]);
+  assert.equal(p4AppliedK(P4.aug), 0);
 });
 
 test('p5 [H]: R2 − 2R1 = [0, k − 4 | c − 6]; one, many, none', () => {
@@ -90,6 +99,8 @@ test('Doubt "any number keeps the solutions" (false): random non-zero k holds, t
   const r = seeded(4);
   for (let i = 0; i < 60; i++) { const c = scaleRandom(r); assert.ok(scaleHolds(c.m, c.i, c.k)); }
   for (let i = 0; i < 10; i++) { const c = scaleRandom(r, 0); assert.equal(scaleHolds(c.m, c.i, c.k), false); }
+  // the Shake always scales row 2: the slider, the readout and the goal all name row 2 (its red line)
+  for (let i = 0; i < 40; i++) assert.equal(scaleRandom(r, i % 2 ? 0 : -1).i, 1);
 });
 
 test('Doubt "different staircases, same pivots" (true): the canonical construction and the Shake', () => {
@@ -141,6 +152,52 @@ test('Procedure: the reference order succeeds; dropping each key step fails with
   assert.equal(PROC_DECOYS.length, 3);
   // the same procedure also works on the power board (no swap needed)
   assert.deepEqual(rowMachine(PROC_REFERENCE, P1.aug).answer, P1.answer);
+});
+
+test('Procedure: tiles after NEXT run too; a decoy anywhere fails, harmless repeats do not', () => {
+  // decoys between NEXT and BACK run on the finished staircase
+  const z = rowMachine(['find', 'swap0', 'clear', 'next', 'scale0', 'back']);
+  assert.equal(z.ok, false);
+  assert.equal(z.misconception, 'scale-zero');
+  assert.ok(z.steps.some((s) => s.kind === 'set' && s.text.startsWith('Row 3 times 0')));
+  const cs = rowMachine(['find', 'swap0', 'clear', 'next', 'colswap', 'back']);
+  assert.equal(cs.ok, false);
+  assert.equal(cs.misconception, 'column-swap');
+  // decoys after the answer is read are not dropped either
+  assert.equal(rowMachine(['find', 'swap0', 'clear', 'next', 'back', 'scale0']).misconception, 'scale-zero');
+  assert.equal(rowMachine(['find', 'swap0', 'clear', 'next', 'back', 'colswap']).misconception, 'column-swap');
+  assert.equal(rowMachine(['find', 'swap0', 'clear', 'next', 'back', 'top']).misconception, 'top-down');
+  // no plan with a decoy passes
+  const keys = ['find', 'swap0', 'clear', 'next', 'back'];
+  for (const d of ['scale0', 'colswap', 'top']) {
+    for (let at = 0; at <= keys.length; at++) {
+      const plan = [...keys.slice(0, at), d, ...keys.slice(at)];
+      assert.equal(rowMachine(plan).ok, false, plan.join(','));
+    }
+  }
+  // FIND / SWAP IF ZERO / CLEAR after NEXT have nothing left to do: a note, not a failure
+  const extra = rowMachine(['find', 'swap0', 'clear', 'next', 'clear', 'find', 'swap0', 'back']);
+  assert.equal(extra.ok, true);
+  assert.ok(extra.steps.some((s) => s.kind === 'note' && s.text.includes('CLEAR BELOW')));
+});
+
+test('Procedure: each failure message names the step that caused it', () => {
+  // ×0 after the swap zeroes the swapped-in pivot row: the swap was not late
+  const z = rowMachine(['find', 'swap0', 'scale0', 'clear', 'next', 'back']);
+  assert.equal(z.misconception, 'scale-zero');
+  assert.ok(z.message.includes('×0') && !z.message.includes('too late'), z.message);
+  // a column swap after clearing moves a cleared column into the pivot spot
+  const c = rowMachine(['find', 'swap0', 'clear', 'colswap', 'next', 'back']);
+  assert.equal(c.misconception, 'column-swap');
+  assert.ok(c.message.includes('Swapping columns') && !c.message.includes('too late'), c.message);
+  // swap genuinely late or missing
+  assert.ok(rowMachine(['find', 'clear', 'swap0', 'next', 'back']).message.includes('too late'));
+  assert.ok(rowMachine(['find', 'clear', 'next', 'back']).message.includes('Nothing told me to swap first'));
+  // no CLEAR tile at all: the message does not claim a clear happened
+  const b = rowMachine(['back']);
+  assert.equal(b.misconception, 'stopped');
+  assert.ok(!b.message.includes('I cleared'), b.message);
+  assert.ok(rowMachine(['find', 'swap0', 'clear', 'back']).message.includes('I cleared below the first pivot only'));
 });
 
 const runPy = (src: string, fn: string, argsList: unknown[][]) => spawnSync('python3', ['-c', `${src}\nimport json,sys\nfor a in json.loads(sys.stdin.read()):\n    print(json.dumps(${fn}(*a)))`], { input: JSON.stringify(argsList), encoding: 'utf8' });

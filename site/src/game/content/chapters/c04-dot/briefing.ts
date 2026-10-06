@@ -32,7 +32,7 @@ export const sayit: SayItDef = {
 export const doubtZero: DoubtDef = {
   id: 'c04-d-zero', who: 'bram', isTrue: false,
   claim: 'A reading of zero means the signal\'s gone.',
-  reason: 'A reading of zero means the dish arrow is at a right angle to the signal, so its shadow on the signal\'s line is a point. The signal can be as strong as you like: $(2, 4)\\cdot(2, -1) = 4 - 4 = 0$.',
+  reason: 'A zero reading does not need the signal gone. A dish arrow at a right angle reads 0, and so does a zero dish arrow. The signal can be as strong as you like: $(2, 4)\\cdot(2, -1) = 4 - 4 = 0$.',
   goal: 'Set a signal $\\mathbf s$ and a dish arrow $\\mathbf d$. **Challenge it** (a zero reading with the signal still there) or **Back it** (Bram will shake it).',
   view: '2d',
   setup(p) {
@@ -170,7 +170,7 @@ export const compare: CompareDef = {
   formula: '\\cg{\\mathbf v}\\cdot\\cr{\\mathbf w} = v_1w_1 + v_2w_2 + v_3w_3 = \\|\\cg{\\mathbf v}\\|\\,\\|\\cr{\\mathbf w}\\|\\cos\\theta',
   keyIdeas: [
     'Did you say the dot product is one number, not an arrow?',
-    'Did you say it is zero exactly at a right angle, and why the sign flips there?',
+    'Did you say it is zero exactly at a right angle (or for a zero vector), and why the sign flips there?',
     'Did you say where the cosine comes from (the law of cosines)?',
   ],
 };

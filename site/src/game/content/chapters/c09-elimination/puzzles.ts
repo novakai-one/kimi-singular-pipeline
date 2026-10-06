@@ -17,7 +17,7 @@ import { PlaneSet, boxFrame } from '../c08-systems/planes';
 import { placeInput } from '../c08-systems/marker';
 import { classifyAug, num, pt, sameSolutions, somePoint, type Aug } from '../c08-systems/act3';
 import {
-  P1, P3, P4, P4_FORBIDDEN, addRow, expectedRow, firstColumnCleared, noFractions, p1Won, p3Won, p5Kind, p5Reduced, p5Rows, p6Final,
+  P1, P3, P4, P4_FORBIDDEN, addRow, expectedRow, p4AppliedK, firstColumnCleared, noFractions, p1Won, p3Won, p5Kind, p5Reduced, p5Rows, p6Final,
 } from './logic';
 import { S } from './script';
 import '../c08-systems/act3.css';
@@ -49,6 +49,18 @@ export function watchSteps(p: PuzzleCtx, ws: StepWorksheet, steps: Step[], onSte
       if (row.classList.contains('ok') || typedRight) { seen.add(i); onStep(i); }
     });
   });
+}
+
+/**
+ * Before the naming beats (augmented matrix, row operation, pivot): plain words on the board's own labels,
+ * and key help for the moves this board allows (add and swap; no multiply).
+ */
+function plainBoard(board: RowOpsBoard): void {
+  board.el.querySelector('.rob-rowlist')?.setAttribute('aria-label', 'Rows of the board');
+  board.el.querySelector('.rob-hist')?.setAttribute('aria-label', 'Steps so far');
+  board.el.querySelector('.rob-undo')?.setAttribute('title', 'Undo the last step (U or Ctrl+Z)');
+  const keys = board.el.querySelector('.rob-keys');
+  if (keys) keys.textContent = 'Keys: ↑ ↓ choose a row · A add · Alt+↑ ↓ swap · U undo';
 }
 
 /** The par / steps readout used by the board puzzles. */
@@ -86,8 +98,10 @@ export const p1: PuzzleDef = {
   onWin: S.p1Win,
   setup(p) {
     hideSolutionLabel(p);
-    const board = new RowOpsBoard(p, { aug: P1.aug, n: 3, title: 'The power board', showSolution: false });
+    // p1 comes before "row operation" and "pivot" are named: no multiply (its composer speaks of pivots)
+    const board = new RowOpsBoard(p, { aug: P1.aug, n: 3, title: 'The power board', showSolution: false, ops: ['add', 'swap'] });
     board.el.classList.add('c09-nochips');
+    plainBoard(board);
     new SystemView(p, { n: 3, aug: P1.aug, board, varNames: ['x', 'y', 'z'] });
     stepsReadout(p, board, P1.par, 'Each step turns one plane about the yellow light. The light does not move.');
     const check = () => {
@@ -241,13 +255,24 @@ export const p4: PuzzleDef = {
     p.add(trail.object);
     p.onDispose(() => trail.dispose());
     const done = [false, false, false, false, d === 'cadet'];
-    const tick = (i: number) => { if (!done[i]) { done[i] = true; p.subgoal(i); } if (done.every(Boolean)) { sfx.success(); p.win(); } };
+    // Navigator: typed steps; Commander: order the reasons, then the last line
+    let why: StepWorksheet | TileOrder | null = null;
+    let ws: StepWorksheet | null = null;
+    let ordered = false, typed = false;
+    const box = h('div');
+    let pending: string | null = null;
+    // the "why" step replaces the sandbox controls, so it opens only once all four sandbox subgoals are
+    // done (forbidden moves and the legal move in either order) and no forbidden move waits for Undo
+    const tick = (i: number) => {
+      if (!done[i]) { done[i] = true; p.subgoal(i); }
+      if (d !== 'cadet' && !why && !pending && done.slice(0, 4).every(Boolean)) startWhy();
+      if (done.every(Boolean)) { sfx.success(); p.win(); }
+    };
     if (d === 'cadet') p.subgoal(4);
     const matBox = h('div');
     const msg = h('div', { class: 'c09-msg' });
     const paint = () => matBox.replaceChildren(matEl(m, 2));
     let saved: Aug | null = null;
-    let pending: string | null = null;
     const where = (a: Aug) => { const k = classifyAug(a); return k.kind === 'unique' ? `the point ${pt(somePoint(a)!)}` : k.kind === 'infinite' ? 'a whole line' : 'nowhere'; };
     const show = async (next: Aug) => {
       const before = somePoint(m);
@@ -311,25 +336,25 @@ export const p4: PuzzleDef = {
       msg.className = 'c09-msg good';
       msg.textContent = `Row 2 turned about (1, 2). The point stayed at ${where(m).replace('the point ', '')}.`;
       tick(3);
-      if (done[3] && d !== 'cadet' && !why) startWhy();
     });
     const g4 = [...forbiddenBtns, apply];
     p.dock().append(h('div', { class: 'kicker' }, 'Sandbox matrix'), matBox,
       h('div', { class: 'kicker' }, 'Forbidden moves'), h('div', { class: 'c09-btns' }, ...forbiddenBtns, undo),
       h('div', { class: 'kicker' }, 'A legal row operation'), h('div', { class: 'c09-row' }, sk.el, apply), msg);
     paint();
-    // Navigator: typed steps; Commander: order the reasons, then the last line
-    let why: StepWorksheet | TileOrder | null = null;
-    let ws: StepWorksheet | null = null;
-    let ordered = false, typed = false;
-    const box = h('div');
     function startWhy(): void {
+      // the k on screen, read from the matrix, not the slider, which may have moved since (or Apply landed twice)
+      const applied = p4AppliedK(m);
+      const kk = applied || 2;
+      const row = addRow(P4.aug, 1, 0, kk)[1];
+      const tn = (x: number) => (x < 0 ? `(${x})` : String(x));
+      const kw = kk < 0 ? `(−${-kk})` : String(kk);
       const steps: Step[] = d === 'navigator' ? [
         { prompt: 'At (1, 2), row 1 reads $2(1) + 2 =$', answer: 4 },
         { prompt: 'Row 2 reads $1 - 2 =$', answer: -1 },
-        { prompt: 'Row 2 + 2 × row 1 reads $-1 + 2(4) =$', answer: 7 },
-        { prompt: 'The new row 2 is $[\\,5\\;\\;1 \\mid 7\\,]$. At (1, 2) it reads $5(1) + 2 =$', answer: 7 },
-        { prompt: 'To undo row 2 + 2 × row 1, add this many times row 1:', answer: -2 },
+        { prompt: `Row 2 + ${kw} × row 1 reads $-1 + ${tn(kk)}(4) =$`, answer: -1 + 4 * kk },
+        { prompt: `${applied ? 'The new row 2 is' : 'With $k = 2$, the new row 2 would be'} $[\\,${row[0]}\\;\\;${row[1]} \\mid ${row[2]}\\,]$. At (1, 2) it reads $${tn(row[0])}(1) + ${row[1] === 1 ? '2' : `${tn(row[1])}(2)`} =$`, answer: -1 + 4 * kk },
+        { prompt: `To undo row 2 + ${kw} × row 1, add this many times row 1:`, answer: -kk },
       ] : [{ prompt: 'To undo $R_2 \\to R_2 + 3R_1$, add this many times $R_1$:', answer: -3 }];
       ws = new StepWorksheet(p, { steps, mount: box, title: d === 'navigator' ? 'Why the point stays · each step is checked' : 'The last line', onDone: () => { typed = true; if (d === 'navigator' || ordered) tick(4); } });
       why = ws;
@@ -350,6 +375,8 @@ export const p4: PuzzleDef = {
     }
     const solveAll = async (ms: number) => {
       const until = async (cond: () => boolean) => { for (let n = 0; n < 600 && !cond(); n++) await wait(10); };
+      // a forbidden move still waiting for Undo: undo it first (this ticks its subgoal), so the pass below never stalls
+      if (pending) { await until(() => !undo.disabled); undo.click(); await wait(ms ? 900 : 0); await until(() => pending === null); }
       for (const [i, b] of forbiddenBtns.entries()) {
         if (done[i]) continue;
         await until(() => !b.disabled && pending === null);
@@ -503,7 +530,8 @@ class HandBoard {
       if (!right && this.p.difficulty === 'navigator') {
         this.wrongs++;
         const off = typed.findIndex((v, c) => Math.abs((v as number) - want[c]) > 1e-9);
-        this.say(`Entry ${off + 1} is off. Each entry is (old entry) + k × (the other row's entry), right side included.`, 'bad');
+        const rule = op.kind === 'scale' ? 'Each entry is k × (the old entry), right side included.' : 'Each entry is (old entry) + k × (the other row\'s entry), right side included.';
+        this.say(`Entry ${off + 1} is off. ${rule}`, 'bad');
         sfx.miss();
         return false;
       }

@@ -23,10 +23,11 @@ import { PlaneSet } from '../c08-systems/planes';
 import { hasFalseRow, kindOf, num, pt, somePoint } from '../c08-systems/act3';
 import { watchSteps } from '../c09-elimination/puzzles';
 import {
-  P1, P2, P3, P4, P6, SP, flowsAt, p1Won, p3Consistent, p3Rows, p4Point, p5Reduced, p5Rows, p6Won, pipesOk, spBurn,
+  P1, P2, P3, P4, P6, PAR, SP, flowsAt, p1Won, p3Consistent, p3Rows, p4Point, p5Reduced, p5Rows, p6Won, pipesOk, spBurn,
   spConsistent, spDroneWon, spFlowsOk, spHit, totalLoad, distToP2Line,
 } from './logic';
 import { S } from './script';
+import { normLine } from '../../lines';
 import '../c08-systems/act3.css';
 
 const X = ['x_1', 'x_2', 'x_3'];
@@ -106,7 +107,7 @@ export const p2: PuzzleDef = {
     'Then clear above the second pivot. The third column, $x_3$, has no pivot: call its value t. Then $x_1 = 3 + t$ and $x_2 = 1 + t$.',
     'Any t from 0 to 2 keeps every pipe between 0 and 5. t = 0 gives the least total load: 4.',
   ],
-  par: P2.par + 1,
+  par: PAR.p2,
   view: '3d',
   onWin: S.p2Win,
   setup(p) {
@@ -119,27 +120,39 @@ export const p2: PuzzleDef = {
     bars.r.note('Reduce the board first. Then a dial appears, and each of its values routes the power one way.');
     const done = [false, false, false];
     const tick = (i: number) => { if (!done[i]) { done[i] = true; p.subgoal(i); } };
-    let t = 1.5;
+    // the dial starts with pipe 3 below 0: the player turns it to route the power
+    let t = P2.dial.start;
     let dot: Dot | null = null;
     let slider: Slider | null = null;
     let least = false;
+    /** Paint the flows at t (no checks). */
     const moveT = (v: number) => {
       t = v;
       const f = flowsAt(t);
       dot?.at([f[0], f[1], f[2]]);
       bars.paint(f);
       bars.r.row('load', 'Total load', num(totalLoad(t)), C.result);
+    };
+    /** A setting chosen by the player (or Show me): check the pipes. */
+    const routed = () => {
+      if (Math.abs(t) < 1e-9 && !least) { least = true; const l = normLine(S.p2Least[0]); p.bark(l.who, l.text); }
       if (pipesOk(t)) { tick(2); if (done.every(Boolean)) { sfx.success(); p.win(); } }
-      if (Math.abs(t) < 1e-9 && !least) { least = true; p.bark('bram', 'Zero on the dial gives the least total load: 4 units. If we have to pick one, pick that.'); }
     };
     const startDial = () => {
       tick(1);
       dot = new Dot(flowsAt(t) as V3, { color: C.result, size: 0.16, glow: 2.6 });
       p.add(dot);
-      const step = d === 'cadet' ? 1 : d === 'navigator' ? 0.5 : 0.25;
-      slider = new Slider({ label: 'dial $t = x_3$', min: -2, max: 4, step, value: t, onInput: (v) => { p.move(); moveT(v); } });
+      const step = P2.dial.step[d] ?? 0.25;
+      // one drag of the dial (or one key press) counts one move, counted as it starts so a winning drag is in the score
+      let counted = false;
+      slider = new Slider({ label: 'dial $t = x_3$', min: P2.dial.min, max: P2.dial.max, step, value: t, onInput: (v) => { if (!counted) { counted = true; p.move(); } moveT(v); routed(); } });
+      const input = slider.el.querySelector('input')!;
+      const fresh = () => { counted = false; };
+      input.addEventListener('pointerdown', fresh);
+      input.addEventListener('keydown', fresh);
+      input.addEventListener('change', fresh);
       dock.append(slider.el);
-      bars.r.note('Each value of t is one way to route the power. Every plane stays satisfied.');
+      bars.r.note('Each value of t is one way to route the power. Every plane stays satisfied. Turn the dial until every pipe is between 0 and 5.');
       moveT(t);
     };
     const dock = p.dock();
@@ -174,9 +187,11 @@ export const p2: PuzzleDef = {
         if (picker) (picker.querySelectorAll('button')[P2.free] as HTMLButtonElement).click();
         if (ws) { if (ms) await ws.showMe(400); else ws.solve(); }
       }
-      if (ms) await animate(900, (k) => { const v = 1.5 - 1.5 * k; slider?.set(v, false); moveT(v); }, ease.inOut);
+      const from = t;
+      if (ms) await animate(900, (k) => { const v = from * (1 - k); slider?.set(v, false); moveT(v); }, ease.inOut);
       slider?.set(0, false);
       moveT(0);
+      routed();
     };
     return { showMe: () => run(1), solve: () => run(0) };
   },

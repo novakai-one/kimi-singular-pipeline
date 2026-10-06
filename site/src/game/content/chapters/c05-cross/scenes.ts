@@ -21,9 +21,11 @@ const check = (set: ArkSet) => { if (!set.alive()) throw new Gone(); };
 
 /** Where the Lantern meets the ark in Chapter 5 (the ark tumbles about a tilted axis). */
 export const TUMBLE: V3 = [0.25, 0.35, 1];
+/** The ark's tumble rate in degrees per second: 360 / 1.5 = 240 s, one turn every four minutes (S.open). */
+export const TUMBLE_DPS = 1.5;
 export const ARK_OPTS: ArkOpts = {
   at: [0, 0, 0], spine: [1, 0.1, 0.05], shear: 0.16, debris: 8, starLight: 2.8,
-  tumble: { axis: TUMBLE, dps: 3 },
+  tumble: { axis: TUMBLE, dps: TUMBLE_DPS },
   lantern: { at: [-30, -40, 6], face: [0.6, 0.8, -0.1], scale: 1.3, thrust: 0.25 },
 };
 
@@ -212,7 +214,7 @@ export async function install(g: Game): Promise<void> {
   try {
     g.stage.clearWorld();
     g.mood('explore');
-    let dps = 3;
+    let dps = TUMBLE_DPS;
     const set = await arkSet(g, { ...ARK_OPTS, tumble: null });
     check(set);
     // the tumble, slowed to zero once the Lantern matches it
@@ -229,7 +231,7 @@ export async function install(g: Game): Promise<void> {
     panel.append(h('div', { class: 'kicker' }, 'Hull lighting'), runOn, h('div', { style: 'height:8px;border-radius:4px;background:rgba(232,241,255,0.08)' }, bar), count);
     g.ui.scene.appendChild(panel);
     runOn.textContent = `Computing ${hull.total.toLocaleString('en')} normals…`;
-    const facing = (n: number) => { count.textContent = `${n.toLocaleString('en')} of ${hull.total.toLocaleString('en')} triangles facing out`; };
+    const facing = (n: number) => { count.textContent = `${n.toLocaleString('en')} of ${hull.total.toLocaleString('en')} triangles on the Meridian facing out`; };
     facing(bakeTo(hull, Infinity).out);
     const job = faceNormals(hull);
     await g.say(S.install);
@@ -257,7 +259,7 @@ export async function install(g: Game): Promise<void> {
     sfx.success();
     g.stage.flash(0.1, 400);
     // match the tumble: the ark's turning slows to nothing in our frame
-    void animate(4000, (k) => { dps = 3 * (1 - k); }, ease.inOut);
+    void animate(4000, (k) => { dps = TUMBLE_DPS * (1 - k); }, ease.inOut);
     void cam.to([-20, -30, 8], [4, 2, 1], 22000, ease.linear);
     await wait(600);
     await g.say(S.lit);

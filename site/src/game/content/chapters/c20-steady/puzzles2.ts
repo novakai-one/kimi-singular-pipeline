@@ -4,14 +4,13 @@
 import type { PuzzleDef } from '../../../game/types';
 import { Arrow } from '../../../gfx/arrow';
 import { Dot } from '../../../gfx/markers';
-import { Slider } from '../../../ui/widgets';
 import { h, button, inline } from '../../../ui/ui';
 import { C } from '../../../core/theme';
 import { wait } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
 import { matVec, type Vec } from '../../../math/la';
 import { DRONES_START } from '../../truth';
-import { Bars, ptag, sg } from '../c18-eigen/parts';
+import { Bars, ptag, sg, fslider } from '../c18-eigen/parts';
 import { FlowBoard, boardView } from './board';
 import {
   BAYS, HOURS, LINK_M, LINKS, NEED, P5_BEST, PR, PR_ORDER, PR_STEPS, STATIONS, TERMINALS, TOTAL, bays, designP, fmtN, fmtV, p5Won, p6Won, p7Won,
@@ -72,7 +71,7 @@ export const p5: PuzzleDef = {
       msg.say(`${P5_BEST}%: the drones settle at ${fmtV(fb.x.map((x) => Math.round(x)))}. ${NEED} at the Stern, and no share higher than it needs to be.`, 'good');
       p.win();
     };
-    const slider = new Slider({ label: 'Stern stay share', min: 50, max: 95, step: 1, value: pct, format: (v) => `${v}%`, onInput: (v) => { pct = Math.round(v); paint(); } });
+    const slider = fslider({ label: 'Stern stay share', min: 50, max: 95, step: 1, value: pct, format: (v) => `${v}%`, onInput: (v) => { pct = Math.round(v); paint(); } });
     slider.el.addEventListener('change', () => p.move());
     p.dock().append(slider.el, h('div', { class: 'a7-btns' }, button(`Commit and run ${HOURS} hours`, () => void commit(), { cls: 'primary small' })), msg.el);
     msg.say(blind ? 'The settled counts stay hidden until you commit.' : 'The bars show where the drones settle for this share.');
@@ -110,7 +109,7 @@ export const p6: PuzzleDef = {
     const paint = () => {
       r.row('s', 'stay share', `${Math.round(stay * 100)}%`, C.w);
       r.row('x', 'drones now', fmtV(fb.x.map((x) => Math.round(x * 10) / 10)), C.result);
-      r.row('h', 'Bay 1, hour by hour', hist.slice(-8).map((x) => fmtN(Math.round(x))).join(' → ') || '·');
+      r.row('h', 'Bay 1 by hour', hist.slice(-6).map((x) => fmtN(Math.round(x))).join(' → ') || '·');
       sg(p, 0, swapHours >= 4);
       sg(p, 1, stay > 0);
     };
@@ -130,7 +129,7 @@ export const p6: PuzzleDef = {
       if (s) sg(p, 2);
       if (p6Won(swapHours, stay, s)) { won = true; sfx.success(); msg.say(`With ${Math.round(stay * 100)}% staying, the bays settle at ${fmtV(fb.x.map((x) => Math.round(x)))}.`, 'good'); p.win(); }
     };
-    const slider = new Slider({ label: 'stay share', min: 0, max: 0.5, step: 0.05, value: 0, format: (v) => `${Math.round(v * 100)}%`, onInput: (v) => { stay = v; fb.P = bays(stay); paint(); } });
+    const slider = fslider({ label: 'stay share', min: 0, max: 0.5, step: 0.05, value: 0, format: (v) => `${Math.round(v * 100)}%`, onInput: (v) => { stay = v; fb.P = bays(stay); paint(); } });
     slider.el.addEventListener('change', () => p.move());
     p.dock().append(slider.el, h('div', { class: 'a7-btns' }, button('Run an hour', () => void run(1), { cls: 'small' }), button('Run four hours', () => void run(4), { cls: 'small' }), button('Run until settled', () => void run(60, false, true), { cls: 'primary small' })), msg.el);
     paint();
@@ -159,7 +158,7 @@ export const p7: PuzzleDef = {
   par: PR_STEPS,
   onWin: S.p7Win,
   setup(p) {
-    void p.g.stage.view2D({ center: [-0.5, 0], height: 6.4, ms: 0 });
+    void p.g.stage.view2D({ center: [-0.73, 0.47], height: 8.6, ms: 0 });
     // links: arrows from terminal to terminal, kept short of the nodes
     for (const [s, ts] of Object.entries(LINKS)) for (const t of ts) {
       const a = NODE_AT[s], b = NODE_AT[t];

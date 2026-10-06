@@ -92,12 +92,12 @@ function stream(g: Game, set: ArkSet): (ms: number) => Promise<void> {
     p.addScaledVector(side, jitter[i][0] * w).add(new Vector3(0, 0, jitter[i][1] * w));
     return [p.x, p.y, p.z];
   };
-  const cloud = worldCloud(g, { points: Array.from({ length: N }, (_, i) => at(i / N, i)), color: C.accent, size: 0.5, glow: 0.6, core: 1.8, opacity: 0.9 }, set.root);
+  const cloud = worldCloud(g, { points: Array.from({ length: N }, (_, i) => at(i / N, i)), color: C.accent, size: 0.32, glow: 0.3, core: 1.6, opacity: 0.85 }, set.root);
   let clock = 0, level = 1;
   set.tick((dt) => {
     clock += dt * 0.45;
     cloud.set(Array.from({ length: N }, (_, i) => at((i / N + clock) % 1, i)));
-    cloud.setOpacity(0.9 * level);
+    cloud.setOpacity(0.85 * level);
   });
   return async (ms) => { await animate(g.headless ? 1 : ms, (k) => { level = 1 - k; }); };
 }
@@ -146,8 +146,10 @@ export async function send(g: Game): Promise<void> {
     worldCloud(g, { points: pp, color: C.result, size: 0.05, glow: 0.5, core: 1.6 });
     const segs: [V3, V3][] = [];
     for (let i = 1; i < pp.length; i++) segs.push([pp[i - 1], pp[i]]);
-    inWorld(g, new FatSegments(g.stage, segs, { color: C.result, width: 1.6, opacity: 0.6 }));
-    inWorld(g, tag(`Received · ${REC_N.toLocaleString('en-GB')} entries, two numbers each`, [0, 3.95, 0], 'c'));
+    const pathLine = inWorld(g, new FatSegments(g.stage, [[[0, 0, 0], [0, 0, 0]]], { color: C.result, width: 2, opacity: 0.85 }));
+    pathLine.setSegments(segs);
+    pathLine.object.traverse((o) => { o.renderOrder = 6; o.frustumCulled = false; });   // over the dense arms
+    inWorld(g, tag(`Received · ${REC_N.toLocaleString('en-GB')} entries, two numbers each`, [0, 3.6, 0], 'c'));
     await fadeBlack(g, false, g.headless ? 1 : 700);
     if (!live()) return;
     await g.say(S.sendOut.slice(1));

@@ -18,7 +18,7 @@ import {
   add, distToRow, glowTol, num, onAll, pt, residuals, rowTex, scale, sub, winTol, type Aug, type Diff,
 } from './act3';
 import {
-  P1, P2, P3, P4, P5, lookingDown, p1Tip, p1Weights, p1Won, p2Won, p3C, p3Pair, p3Region, p3SweepDone,
+  P1, P2, P3, P3_PAR, P4, P5, P5_STEPS, lookingDown, p1Tip, p1Weights, p1Won, p2Won, p3C, p3OrderOk, p3Pair, p3Region, p3SweepDone,
 } from './logic';
 import { S } from './script';
 import './act3.css';
@@ -55,6 +55,10 @@ function offReadout(p: PuzzleCtx, title: string, rows: Aug) {
 type Box = [number, number, number, number];
 export interface TwinCfg { rows: Aug; rowO: number[]; rowBox: Box; colO: number[]; colBox: Box; colK: number }
 const P1_TWIN: TwinCfg = { rows: P1.rows, rowO: [-8.5, -1.5], rowBox: [-1, -2, 6, 5], colO: [1.5, -0.5], colBox: [-1, -3, 7, 4], colK: 1 };
+/** p1's panels with other rows (the row picture / column picture card). */
+export const twinCfg = (rows: Aug): TwinCfg => ({ ...P1_TWIN, rows });
+/** Row lines in blue and violet: green and red belong to columns 1 and 2, so a row line never shares a column arrow's colour. */
+const TWIN_ROW_COLORS = [C.u, C.violet];
 const toW = (o: number[], v: number[], z = 0, k = 1): V3 => [v[0] * k + o[0], v[1] * k + o[1], z];
 
 /** Frame, faint grid and axes for one panel (k: world units per panel unit). */
@@ -92,7 +96,7 @@ export function drawTwin(host: Host, start: number[], cfg: TwinCfg = P1_TWIN): T
   const CC = (v: number[], z = 0) => toW(CO, v, z, K);
   panel(host, RO, cfg.rowBox, '<b>Rows</b> · each equation is a line');
   const colCap = panel(host, CO, CB, '', K);
-  const planes = new PlaneSet(host, { n: 2, rows: cfg.rows, box: cfg.rowBox, showSolution: false, focus: start });
+  const planes = new PlaneSet(host, { n: 2, rows: cfg.rows, box: cfg.rowBox, showSolution: false, focus: start, colors: TWIN_ROW_COLORS });
   planes.root.position.set(RO[0], RO[1], 0);
   const rowDot = new Dot(RC(start, 0.05), { color: C.result, size: 0.13, glow: 2 });
   const rowTag = new Label('', [0, 0, 0], { className: 'c08-pt off', offset: [0, -24] });
@@ -153,7 +157,7 @@ export const p1: PuzzleDef = {
   title: 'Where do the two lines meet?',
   goal: 'Find the one point on **both lines**. Drag the yellow point on the left, or the yellow tip on the right: they move together. The tip must land on the ring at (5, 1).',
   hints: [
-    'On the left, slide the point along the green line until it also touches the red line.',
+    'On the left, slide the point along the blue line, x + y = 5, until it also touches the violet line, x − y = 1.',
     'On the right, the tip is x of the green arrow plus y of the red arrow. Across: x + y = 5. Up: x − y = 1.',
     'The point is (3, 2): 3 of the green arrow and 2 of the red arrow reach (5, 1).',
   ],
@@ -240,7 +244,7 @@ export const p2: PuzzleDef = {
       marker.setColor(n === 3 ? C.result : '#e8f1ff');
     };
     const check = (x: number[]) => {
-      if (won || !p2Won(x, winTol(d))) return;
+      if (won || !p2Won(x, glowTol(d))) return; // the distance at which the planes light: lit on all three always wins
       won = true;
       planes.showSolution(true);
       sfx.success();
@@ -262,7 +266,7 @@ export const p2: PuzzleDef = {
 
 const P3_TILES = [
   { id: 'a', text: 'At A, each equation reads its own right side.' },
-  { id: 'b', text: 'At B, each equation reads its own right side too.' },
+  { id: 'b', text: 'At B, each equation reads its own right side.' },
   { id: 'step', text: 'Walking from A towards B, each equation\'s reading changes by the same amount every step.' },
   { id: 'zero', text: 'That amount is (right side − right side) per whole step from A to B: zero.' },
   { id: 'line', text: 'So every point on the line through A and B is on every plane.' },
@@ -279,12 +283,12 @@ export const p3: PuzzleDef = {
     'Try A = (1, 0, 2) and B = (2, 1, 0). Then slide C with the dial.',
     'Every point A + t(B − A) is on every plane: each equation reads 3 + t(3 − 3) = 3 on plane 1, and the same on the others.',
   ],
-  par: 5,
+  par: P3_PAR,
   view: '3d',
   onWin: S.p3Win,
   setup(p) {
     const d = diff(p);
-    const tol = winTol(d);
+    const tol = glowTol(d); // the distance at which the markers light: '✓ all 3' always ticks the subgoal
     const planes = new PlaneSet(p, { n: 3, rows: P3.rows, showSolution: false, size: 8, focus: [1, 0, 2] });
     void planes.frame({ distance: 22 });
     const done = [false, false, false, false];
@@ -296,7 +300,7 @@ export const p3: PuzzleDef = {
     const markers: Marker3D[] = [];
     const paint = () => {
       const [A, B] = markers.map((m) => m.pos);
-      const onA = onAll(P3.rows, A, glowTol(d)), onB = onAll(P3.rows, B, glowTol(d));
+      const onA = onAll(P3.rows, A, tol), onB = onAll(P3.rows, B, tol);
       markers[0].setColor(onA ? C.result : '#e8f1ff');
       markers[1].setColor(onB ? C.result : '#e8f1ff');
       r.row('a', 'A', `${pt(A)}${onA ? ' ✓ all 3' : ''}`, onA ? C.result : undefined);
@@ -344,7 +348,10 @@ export const p3: PuzzleDef = {
       p.onDispose(() => guide?.dispose());
       cDot = new Dot([0, 0, 0], { color: C.result, size: 0.16, glow: 2.4, label: 'C' });
       p.add(cDot);
-      slider = new Slider({ label: 'slide C: $t$', min: -1.5, max: 2.5, step: 0.05, value: 0.5, onInput: (x) => { p.move(); moveC(x); } });
+      // one move per gesture (a drag fires many input events); startWhy may remove the slider mid-drag
+      let counted = false;
+      slider = new Slider({ label: 'slide C: $t$', min: -1.5, max: 2.5, step: 0.05, value: 0.5, onInput: (x) => { if (!counted) { p.move(); counted = true; } moveC(x); } });
+      for (const ev of ['change', 'pointerup']) slider.el.addEventListener(ev, () => { counted = false; });
       dock.replaceChildren(slider.el, h('div', { class: 'c08-hint' }, 't = 0 is A, t = 1 is B. Go between them, then past them.'));
       moveC(0.5);
       p.bark('lantern', 'Marker C rides the line through A and B. Slide it.');
@@ -373,7 +380,7 @@ export const p3: PuzzleDef = {
           tiles: P3_TILES, decoys: P3_DECOYS, title: 'Put the reasons in order', submitLabel: 'Check order', mount: h('div'),
           onSubmit: (o) => {
             p.move();
-            if (o.join() === P3_TILES.map((x) => x.id).join()) { ordered = true; msg.className = 'c09-msg good'; msg.textContent = 'That is the argument.'; sfx.snap(); if (typed) tick(3); }
+            if (p3OrderOk(o)) { ordered = true; msg.className = 'c09-msg good'; msg.textContent = 'That is the argument.'; sfx.snap(); if (typed) tick(3); }
             else { msg.className = 'c09-msg bad'; msg.textContent = o.includes('mid') ? 'The halfway point is one point on the line. The argument covers every point.' : 'Not in that order. Start from what is true at A and B.'; sfx.miss(); }
           },
         });
@@ -420,7 +427,7 @@ export const p4: PuzzleDef = {
     prompt: 'The three planes share a line. Change the last right side from 4 to 5. Where will all three meet?',
     choices: [{ id: 'point', text: 'At one point' }, { id: 'line', text: 'Along a line' }, { id: 'none', text: 'Nowhere' }],
     answer: 'none',
-    reveal: 'Nowhere. Plane 3 slides off the shared line. Each pair of planes still meets in a line, but the three lines run side by side: a tube with three flat walls and no point on all three.',
+    reveal: 'Nowhere. Plane 3 slides off the shared line. Each pair of planes still meets in a line, but the three lines run side by side. The three planes form a tube with no point on all three.',
   },
   hints: [
     'Use the + button next to plane 3. Watch the bright line split into three.',
@@ -513,11 +520,11 @@ function solve3(M: number[][]): number[] | null {
 export const p5: PuzzleDef = {
   id: 'c08-p5',
   title: 'What is in the ballast tanks?',
-  goal: 'Turn each rule into an equation in $x$, $y$, $z$ (tonnes in tanks A, B, C). Each one you get right appears as a plane. Then read the same numbers down the columns.',
+  goal: 'Turn each rule into an equation in $x$, $y$, $z$ (tonnes in tanks A, B, C). Each one you get right appears as a plane. Then read the same numbers down the columns, and set the three columns side by side.',
   hints: [
     '“B holds 1 more than A” is $y = x + 1$. Move $x$ to the left: $-x + y = 1$.',
     '“C holds 2 more than B” is $z = y + 2$, so $-y + z = 2$.',
-    'The rows are (1, 1, 1 | 13), (−1, 1, 0 | 1), (0, −1, 1 | 2). The columns are (1, −1, 0), (1, 1, −1), (1, 0, 1) and the right side (13, 1, 2).',
+    'The rows are (1, 1, 1 | 13), (−1, 1, 0 | 1), (0, −1, 1 | 2). The columns are (1, −1, 0), (1, 1, −1), (1, 0, 1). Side by side, the columns give back the rows.',
   ],
   par: 7,
   view: '3d',
@@ -528,18 +535,10 @@ export const p5: PuzzleDef = {
     void planes.frame({ distance: 26 });
     const r = p.readout('The logbook rules');
     r.note('**Rule 1** · Together the tanks hold **13** tonnes.\n\n**Rule 2** · Tank B holds **1** tonne more than tank A.\n\n**Rule 3** · Tank C holds **2** tonnes more than tank B.');
-    const steps = [
-      { prompt: 'Rule 1: $\\_x + \\_y + \\_z = 13$', answer: [[1, 1, 1]] },
-      { prompt: 'Rule 2: $\\_x + \\_y + \\_z = 1$', answer: [[-1, 1, 0]], mistakes: [[[[1, -1, 0]], 'That says A holds 1 more than B. Here B holds more: $y - x = 1$.']] as [number[][], string][] },
-      { prompt: 'Rule 3: $\\_x + \\_y + \\_z = 2$', answer: [[0, -1, 1]], mistakes: [[[[0, 1, -1]], 'That says B holds 2 more than C. Here C holds more: $z - y = 2$.']] as [number[][], string][] },
-      { prompt: 'Column $\\mathbf a_1$: the numbers in front of $x$, top to bottom', answer: P5.cols[0] },
-      { prompt: 'Column $\\mathbf a_2$: in front of $y$', answer: P5.cols[1] },
-      { prompt: 'Column $\\mathbf a_3$: in front of $z$', answer: P5.cols[2] },
-      { prompt: 'The right sides $\\mathbf b$, so that $x\\mathbf a_1 + y\\mathbf a_2 + z\\mathbf a_3 = \\mathbf b$', answer: P5.b },
-    ];
+    const steps = P5_STEPS;
     let shown = 0;
     const ws = new StepWorksheet(p, { steps, onDone: () => { reveal(3); sfx.success(); p.win(); } });
-    ws.el.classList.add('c08-tanks'); // seven steps, four of them columns: keep it short enough to clear the goal card
+    ws.el.classList.add('c08-tanks'); // seven steps, the last a 3 × 3 grid: keep it short enough to clear the goal card
     const reveal = (n: number) => {
       for (let i = shown; i < Math.min(3, n); i++) { planes.setRowVisible(i, true); sfx.snap(); }
       if (n >= 3 && shown < 3) {

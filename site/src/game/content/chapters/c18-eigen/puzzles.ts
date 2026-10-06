@@ -6,7 +6,7 @@ import { Arrow } from '../../../gfx/arrow';
 import { Parallelogram, InfLine, Outline2D } from '../../../gfx/shapes';
 import { Sweep, rad } from '../../../kit/geom';
 import { StepWorksheet, TileOrder } from '../../../kit/steps';
-import { Slider, parseNum } from '../../../ui/widgets';
+import { parseNum } from '../../../ui/widgets';
 import { h, button, inline } from '../../../ui/ui';
 import { C } from '../../../core/theme';
 import { animate, ease, wait } from '../../../core/tween';
@@ -14,7 +14,7 @@ import { sfx } from '../../../audio/sfx';
 import { answer } from '../../../game/caseboard';
 import { Tpartial } from '../../truth';
 import { det, identity, matMul, meq, type Mat } from '../../../math/la';
-import { CardRail, LineHunt, PolyPlot, niceDir, ptag, v3, type RailCard, sg } from './parts';
+import { CardRail, LineHunt, PolyPlot, niceDir, ptag, v3, type RailCard, sg, fslider } from './parts';
 import {
   P1_A, P2_A, P3_A, P3_ROOTS, P4_ANGLE, P4_CARDS, P4_D, P4_PRODUCT, P4_STRETCH, P4_SUM, P4_T, SWEEP_FULL, charAt, fmt2, fmtN,
   fmtV, nullLine, railProduct, rootsWon, shift, texSmall,
@@ -238,7 +238,7 @@ export const p3: PuzzleDef = {
       winCheck();
     };
     const step = d === 'cadet' ? 0.5 : d === 'navigator' ? 0.25 : 0.05;
-    const slider = new Slider({ label: 'dial $\\lambda$', min: -1, max: 8, step, value: l, format: (x) => fmtN(x), onInput: (x) => { l = x; paint(); if (d === 'cadet') lockAt(l, true); } });
+    const slider = fslider({ label: 'dial $\\lambda$', min: -1, max: 8, step, value: l, format: (x) => fmtN(x), onInput: (x) => { l = x; paint(); if (d === 'cadet') lockAt(l, true); } });
     const lockBtn = button('Lock λ', () => { p.move(); lockAt(l); }, { cls: 'primary small' });
     r.el.append(plot.el);
     p.dock().append(h('div', { class: 'a7-row' }, slider.el, d === 'cadet' ? null : lockBtn), msgEl);

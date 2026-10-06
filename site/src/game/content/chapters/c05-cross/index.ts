@@ -6,12 +6,12 @@ import { arkShot } from '../c04-dot/ark';
 import { p1, p2, p3, p4, p5, p6, p7 } from './puzzles';
 import { sayit, doubtSwap, doubtDouble, law, compare } from './briefing';
 import { buildCross, buildNormal, buildArea } from './build';
-import { TUMBLE, coldOpen, corruptHull, install } from './scenes';
+import { TUMBLE, TUMBLE_DPS, coldOpen, corruptHull, install } from './scenes';
 import { S } from './script';
 
 /** Dialogue staging: the tumbling ark, its hull half dark until the install. */
 const shot = (v: number) => async (g: Game) => {
-  const set = await arkShot(g, v, { tumble: { axis: TUMBLE, dps: 3 }, starLight: 2.8 });
+  const set = await arkShot(g, v, { tumble: { axis: TUMBLE, dps: TUMBLE_DPS }, starLight: 2.8 });
   if (set.model) corruptHull(set.model, set.ark);
 };
 
@@ -44,7 +44,7 @@ const ch: ChapterDef = {
   script: S,
   inShort: IN_SHORT,
   prereqs: ['c04'],
-  catchup: 'The **dot product** multiplies matching parts and adds. It is zero exactly when two arrows are at a right angle: $(2, 4)\\cdot(2, -1) = 4 - 4 = 0$. Story so far: the dish locked the *Meridian*\'s beacon among two hundred echoes. The ark is tumbling.',
+  catchup: 'The **dot product** multiplies matching parts and adds. It is zero exactly when two arrows are at a right angle, or one of them is the zero vector: $(2, 4)\\cdot(2, -1) = 4 - 4 = 0$. Story so far: the dish locked the *Meridian*\'s beacon among two hundred echoes. The ark is tumbling.',
   beats: [
     { kind: 'cinematic', id: 'open', run: coldOpen },
     { kind: 'card', id: 'inshort', card: { kind: 'inshort', title: 'Which way is straight out of this panel?', body: IN_SHORT } },

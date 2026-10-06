@@ -87,7 +87,7 @@ const ch: ChapterDef = {
     {
       kind: 'card', id: 'why', card: {
         kind: 'why', visual: boardScene, title: 'Why it matters',
-        body: 'Gaussian elimination on $n$ equations takes about $\\tfrac23 n^3$ multiplications. Make the system 4 times bigger and it takes about $4^3 = 64$ times longer: a million unknowns is out of reach this way, which is why large problems use specialised solvers.\n\nIt is also why libraries swap the **largest** entry into each pivot position (partial pivoting): dividing by a tiny pivot blows rounding errors up. Power routing on the ark now runs on your elimination.',
+        body: 'Gaussian elimination on $n$ equations takes about $\\tfrac23 n^3$ arithmetic operations (about $\\tfrac13 n^3$ multiplications and as many subtractions). Make the system 4 times bigger and it takes about $4^3 = 64$ times longer: a million unknowns would need about $7\\times10^{17}$ operations and 8 TB of memory, far beyond a laptop, which is why large problems use specialised solvers.\n\nLibraries also swap the **largest** entry into each pivot position (partial pivoting): dividing by a tiny pivot blows rounding errors up. Power routing on the ark now runs on your elimination.',
         cue: 'When you see a system to solve by hand, think **augmented matrix, staircase, climb back**.',
       },
     },

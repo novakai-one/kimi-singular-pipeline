@@ -2,25 +2,28 @@
 // consistent / inconsistent, solution set, row picture, column picture.
 // Act III opens inside the dark ark: three fan-beam planes locate Teo's pod.
 import type { ChapterDef, Game } from '../../../game/types';
-import { p1, p2, p3, p4, p5, drawTwin } from './puzzles';
+import { p1, p2, p3, p4, p5, drawTwin, twinCfg } from './puzzles';
 import { sayit, doubtUnknowns, doubtColumns, law, compare } from './briefing';
 import { buildCheck } from './build';
 import { coldOpen, closing, scanScene } from './cine';
 import { worldHost } from './planes';
-import { P1 } from './logic';
+import { PICTURES } from './logic';
 import { bridgeShot } from '../../common/shots';
 import { S } from './script';
 import './act3.css';
 
 const pods = scanScene('pods');
 
-const IN_SHORT = 'Where do several flat conditions all hold at once?\n\nWhere their planes meet: **at one point, along a line, or nowhere**. Never at exactly two points.';
+const IN_SHORT = 'Where do several flat conditions all hold at once?\n\nWhere their planes meet: **at one point, along a line, or nowhere** (or in a whole plane, if they are all the same plane). Never at exactly two points.';
 
-/** The twin view of the warm-up, frozen at (3, 2), behind the row picture / column picture card. */
+/**
+ * The warm-up's twin view behind the row picture / column picture card, with numbers whose rows and
+ * columns differ (the warm-up's read the same both ways), frozen at the solution (3, 1).
+ */
 async function twinReplay(g: Game): Promise<void> {
   g.stage.clearWorld();
   const host = worldHost(g);
-  drawTwin(host, P1.answer);
+  drawTwin(host, PICTURES.answer, twinCfg(PICTURES.rows));
   await g.stage.view2D({ center: [5.6, 0.2], height: 22, ms: 600 });
 }
 
@@ -63,7 +66,7 @@ const ch: ChapterDef = {
     {
       kind: 'name', id: 'name-consistent', entry: {
         id: 'consistent', term: 'consistent', question: 'How many solutions can a system have?', nodes: ['N09'], visual: pods,
-        saw: 'Three planes met at one point (the pod). The backup planes shared a whole line. Moving one number made them a tube with three walls and no point on all three.',
+        saw: 'Three planes met at one point (the pod). The backup planes shared a whole line. Moving one number made the three planes form a tube with no point on all three.',
         means: 'A system has one solution, a whole line (or plane) of them, or none. Two solutions always bring the line through them, so never exactly two.',
         name: 'A system with at least one solution is **consistent**. A system with no solution is **inconsistent**. The **solution set** is the set of all its solutions: a point, a line, a plane, or nothing.',
         formula: '\\begin{aligned} x + y + z &= 3 \\\\ x - y &= 1 \\\\ 2x + z &= \\cy{4} \\end{aligned} \\;\\Rightarrow\\; \\text{a line} \\qquad \\begin{aligned} x + y + z &= 3 \\\\ x - y &= 1 \\\\ 2x + z &= \\cy{5} \\end{aligned} \\;\\Rightarrow\\; \\text{no solution}',
@@ -77,10 +80,10 @@ const ch: ChapterDef = {
       kind: 'name', id: 'name-pictures', entry: {
         id: 'row-picture', term: 'row picture', question: 'Why did the warm-up show the same equations twice?', nodes: ['N09'],
         saw: 'On the left, each equation was a line and (3, 2) sat on both. On the right, 3 of the green arrow plus 2 of the red arrow reached (5, 1). Moving one picture moved the other.',
-        means: 'Read across a row and you get one line or plane. Read down a column and you get one arrow. Both readings ask for the same numbers.',
+        means: 'Read across a row and you get one line or plane. Read down a column and you get one arrow. The warm-up\'s numbers read the same both ways. These do not: in $x + 2y = 5$, $x - y = 2$, row 1 reads (1, 2) across, while column 1 reads (1, 1) down. Both readings still ask for the same numbers, (3, 1).',
         name: 'The **row picture** draws each equation as a line or plane and looks for where they all meet. The **column picture** reads the numbers in front of each unknown as an arrow and asks which weights on the arrows reach the right side.',
-        formula: '3\\cg{\\begin{bmatrix}1\\\\1\\end{bmatrix}} + 2\\cr{\\begin{bmatrix}1\\\\-1\\end{bmatrix}} = \\cy{\\begin{bmatrix}5\\\\1\\end{bmatrix}}',
-        why: 'Row by row, $3 \\cdot 1 + 2 \\cdot 1 = 5$ and $3 \\cdot 1 + 2 \\cdot (-1) = 1$: the same sums, read the other way.',
+        formula: '\\begin{aligned} x + 2y &= 5 \\\\ x - y &= 2 \\end{aligned} \\quad\\Longleftrightarrow\\quad 3\\cg{\\begin{bmatrix}1\\\\1\\end{bmatrix}} + 1\\cr{\\begin{bmatrix}2\\\\-1\\end{bmatrix}} = \\cy{\\begin{bmatrix}5\\\\2\\end{bmatrix}}',
+        why: 'Row by row, $3 \\cdot 1 + 1 \\cdot 2 = 5$ and $3 \\cdot 1 + 1 \\cdot (-1) = 2$: the same sums, read the other way.',
         cue: 'When you see “which mix of these arrows makes that one?”, think **the column picture of a system**.',
         use: 'A linear model asks the column question: which weights on the feature columns reach the target values?',
         visual: twinReplay,
