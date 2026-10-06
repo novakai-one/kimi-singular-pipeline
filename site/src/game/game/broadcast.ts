@@ -1,8 +1,10 @@
 // The Broadcast (GDD §4.8): the finale explain-back. The player orders their Field Manual pages into a chain,
 // writes why each link holds, walks "down to the arrows" through their own library, and exports the lecture.
-import type { BroadcastDef, BroadcastPage } from './types';
+import type { BroadcastDef } from './types';
 import type { BriefingHost } from './briefing';
 import { briefingTest } from './briefing';
+import { chainProblem } from './chain';
+export { chainProblem };
 import { h, inline, md, button, download } from '../ui/ui';
 import { S, save } from '../core/save';
 import { sfx } from '../audio/sfx';
@@ -13,16 +15,6 @@ interface BroadcastSave { order: string[]; links: Record<string, string> }
 function saved(id: string): BroadcastSave {
   const all = ((S().flags.broadcast as Record<string, BroadcastSave>) ??= {});
   return (all[id] ??= { order: [], links: {} });
-}
-
-/** The first page placed before something it needs, or null when the order respects every need. */
-export function chainProblem(order: string[], pages: BroadcastPage[]): { page: string; need: string } | null {
-  const at = new Map(order.map((id, i) => [id, i]));
-  for (const id of order) {
-    const p = pages.find((x) => x.id === id);
-    for (const n of p?.needs ?? []) if ((at.get(n) ?? Infinity) > at.get(id)!) return { page: id, need: n };
-  }
-  return null;
 }
 
 function strip(s: string): string { return s.replace(/\$([^$]+)\$/g, '$1').replace(/\*\*/g, '').replace(/\*/g, ''); }
