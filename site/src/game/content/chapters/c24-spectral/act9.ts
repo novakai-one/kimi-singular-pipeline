@@ -403,8 +403,8 @@ export const img2 = (M: Mat, x: readonly number[], z = 0): V3 => { const y = mat
 
 // ================================================================== the cracked Anchor (after the 750× pulse)
 
-/** Jagged glowing cracks over the Anchor's core, flickering. Returns a stop function. */
-export function crackAnchor(g: Game, anchor: Object3D, o: { radius?: number; count?: number; seed?: number } = {}): () => void {
+/** Jagged glowing cracks over the Anchor's core, flickering. Returns a stop function; stop.fade(ms) dims them out first. */
+export function crackAnchor(g: Game, anchor: Object3D, o: { radius?: number; count?: number; seed?: number } = {}): (() => void) & { fade(ms: number): Promise<void> } {
   const R = o.radius ?? 0.62, n = o.count ?? 7;
   let s = o.seed ?? 750;
   const rnd = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
@@ -425,11 +425,16 @@ export function crackAnchor(g: Game, anchor: Object3D, o: { radius?: number; cou
   const glow = glowSprite('#ff9f43', R * 4, 0.35);
   group.add(glow);
   anchor.add(group);
+  let level = 1;
   const off = g.stage.tick((_dt, t) => {
     const f = 0.55 + 0.45 * Math.abs(Math.sin(t * 7.3) * Math.sin(t * 2.1));
-    lines.forEach((L, i) => L.setOpacity(Math.max(0.15, f - (i % 3) * 0.12)));
-    glow.material.opacity = 0.2 + 0.25 * f;
+    lines.forEach((L, i) => L.setOpacity(level * Math.max(0.15, f - (i % 3) * 0.12)));
+    glow.material.opacity = level * (0.2 + 0.25 * f);
   });
   group.userData.dispose = () => { off(); lines.forEach((L) => L.dispose()); };
-  return () => { off(); group.removeFromParent(); lines.forEach((L) => L.dispose()); };
+  let done = false;
+  const stop = () => { if (done) return; done = true; off(); group.removeFromParent(); lines.forEach((L) => L.dispose()); };
+  return Object.assign(stop, {
+    async fade(ms: number) { await animate(g.headless ? 1 : ms, (k) => { level = 1 - k; }); stop(); },
+  });
 }

@@ -25,7 +25,7 @@ const det3 = (M: Mat) => M[0][0] * (M[1][1] * M[2][2] - M[1][2] * M[2][1]) - M[0
 export const p5: PuzzleDef = {
   id: 'c18-p5',
   title: 'What are the stretches of a 3 × 3, by hand?',
-  goal: 'By hand: the characteristic equation of $A$ (in the readout), its eigenvalues and eigenvectors, the two checks, and a triangular matrix read off its diagonal.',
+  goal: 'By hand: the eigenvalues and eigenvectors of $A$, two checks, then a triangular matrix (both in the readout).',
   subgoals: ['The characteristic equation', 'Eigenvalues and eigenvectors', 'Check: the trace and the determinant', 'A triangular matrix'],
   hints: [
     'Expand $\\det(A - \\lambda I)$ along the first row: only the $2 - \\lambda$ survives, times the 2 × 2 block $\\begin{bmatrix} 3 - \\lambda & 4 \\\\ 4 & -3 - \\lambda \\end{bmatrix}$.',
@@ -40,12 +40,13 @@ export const p5: PuzzleDef = {
     const lat = new Lattice3D(p.g.stage, { extent: 2, opacity: 0.1 });
     p.add(lat);
     // the three lines that hold, each with a unit arrow v and its image Av (revealed as the steps are solved)
+    const BASE = 0.6;
     const parts = P5_VECS.map((v, i) => {
       const u = normalize(v);
       const line = new InfLine(p.g.stage, [0, 0, 0], u as V3, { color: C.violet, width: 2.2, opacity: 0.7, length: 7 });
-      const a = new Arrow([0, 0, 0], v3(u.map((x) => x * 1.2)), { color: [C.v, C.w, C.u][i], width: 0.05 });
-      const img = new Arrow([0, 0, 0], v3(u.map((x) => x * 1.2 * P5_VALUES[i])), { color: C.result, width: 0.035, opacity: 0.85 });
-      const tg = ptag(p, `λ = ${fmtN(P5_VALUES[i])} · ${fmtV(v)}`, v3(u.map((x) => x * 1.2 * P5_VALUES[i] + (P5_VALUES[i] < 0 ? -0.4 : 0.4) * x)), 'vi', [0, -16]);
+      const a = new Arrow([0, 0, 0], v3(u.map((x) => x * BASE)), { color: [C.v, C.w, C.u][i], width: 0.05 });
+      const img = new Arrow([0, 0, 0], v3(u.map((x) => x * BASE * P5_VALUES[i])), { color: C.result, width: 0.035, opacity: 0.85 });
+      const tg = ptag(p, `λ = ${fmtN(P5_VALUES[i])} · ${fmtV(v)}`, v3(u.map((x) => x * BASE * P5_VALUES[i] + (P5_VALUES[i] < 0 ? -0.4 : 0.4) * x)), 'vi', [0, -16]);
       p.add(line.object, a, img); p.onDispose(() => line.dispose());
       for (const o of [line.object, a.group, img.group]) o.visible = false;
       tg.show(false);
@@ -57,7 +58,7 @@ export const p5: PuzzleDef = {
       q.shown = true;
       for (const o of [q.line.object, q.a.group, q.img.group]) o.visible = true;
       q.tg.show(true);
-      const tip = P5_VECS[i].map((x) => x / norm(P5_VECS[i]) * 1.2);
+      const tip = P5_VECS[i].map((x) => x / norm(P5_VECS[i]) * BASE);
       await animate(p.g.headless ? 1 : 700, (k) => q.img.setTo(v3(tip.map((x) => x * (1 + (P5_VALUES[i] - 1) * k)))), ease.out);
       sfx.snap();
     };
@@ -74,7 +75,7 @@ export const p5: PuzzleDef = {
     const done = [false, false, false, false];
     const tick = (i: number) => { if (!done[i]) { done[i] = true; sg(p, i); } };
     const steps = [
-      { prompt: '$\\det(A - \\lambda I) = (2 - \\lambda)\\,[(3 - \\lambda)(-3 - \\lambda) - 16]$. The bracket is $\\lambda^2 + c$: $c =$', answer: P5_BLOCK_C, mistakes: [[-9, 'Take away $4 \\cdot 4 = 16$ as well: $-9 - 16$.'], [7, 'The product of the diagonal is $(3)(-3) = -9$, then take away 16.']] as [number, string][] },
+      { prompt: '$\\det(A - \\lambda I) = (2 - \\lambda)(\\lambda^2 + c)$: $c =$', answer: P5_BLOCK_C, mistakes: [[-9, 'Take away $4 \\cdot 4 = 16$ as well: $-9 - 16$.'], [7, 'The product of the diagonal is $(3)(-3) = -9$, then take away 16.']] as [number, string][] },
       { prompt: 'The eigenvalues, largest first', answer: P5_VALUES, mistakes: [[[5, 2, 5], '$\\lambda^2 = 25$ has two roots: 5 and −5.'], [[2, 5, -5], 'Largest first: 5, 2, −5.']] as [number[], string][] },
       { prompt: 'An eigenvector for $\\lambda = 5$ is $(0, 2, z)$: $z =$', answer: P5_VECS[0][2], mistakes: [[-4, 'That one solves for λ = −5. For λ = 5: $-2y + 4z = 0$.']] as [number, string][] },
       { prompt: 'An eigenvector for $\\lambda = -5$ is $(0, 1, z)$: $z =$', answer: P5_VECS[2][2], mistakes: [[2, '$A + 5I$ has the row $(0, 8, 4)$: $8 + 4z = 0$.']] as [number, string][] },

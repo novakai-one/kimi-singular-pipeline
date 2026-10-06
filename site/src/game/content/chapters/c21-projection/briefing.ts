@@ -41,7 +41,7 @@ export const doubtUp: DoubtDef = {
   goal: 'The white ring is straight up from the hatch, on the plane. Drag the yellow point across the plane. **Challenge it** (a point nearer than the ring) or **Back it**.',
   view: '3d',
   async setup(p) {
-    await p.g.stage.view3D({ target: [0.5, 0.5, 0.6], distance: 8, azimuth: -60, elevation: 20, ms: 0 });
+    await p.g.stage.view3D({ target: [0.5, 0.5, 0.6], distance: 10.5, azimuth: -62, elevation: 21, ms: 0 });
     p.grid({ base: 0.1, main: 0.2, axis: 0.45 });
     let target: V3 = v3(HATCH);
     const beacon = new Beacon(p.g.stage, target, { color: C.accent });

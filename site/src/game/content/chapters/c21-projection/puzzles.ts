@@ -125,7 +125,7 @@ export const p2: PuzzleDef = {
   view: '3d',
   onWin: S.p2Win,
   async setup(p) {
-    await p.g.stage.view3D({ target: [0.45, 0.4, 0.35], distance: 7.2, azimuth: -62, elevation: 21, ms: 0 });
+    await p.g.stage.view3D({ target: [0.45, 0.45, 0.3], distance: 11, azimuth: -62, elevation: 21, ms: 0 });
     p.grid({ base: 0.1, main: 0.2, axis: 0.45 });
     const tol = tolFor(p.difficulty);
     const hatch = new Beacon(p.g.stage, v3(HATCH), { color: C.accent });
@@ -149,7 +149,7 @@ export const p2: PuzzleDef = {
       p.win();
     };
     const dp = new DropPlane(p, {
-      a: v3(THR1), b: v3(THR2), target: v3(HATCH), w0: [0, 0], step: stepFor(p, 1 / 3, 1 / 6), magnet: p.difficulty === 'cadet' ? 0.22 : 0, range: 2, size: 5,
+      a: v3(THR1), b: v3(THR2), target: v3(HATCH), w0: [0, 0], step: stepFor(p, 1 / 3, 1 / 6), magnet: p.difficulty === 'cadet' ? 0.22 : 0, range: 2, size: 4,
       labels: ['$\\mathbf t_1$', '$\\mathbf t_2$'],
       onMove: (_w, q) => { show(q); ship.at(q); },
       onEnd: (_w, q) => { if (p2Won(q, tol)) void finish(); },
@@ -181,7 +181,7 @@ export const p3: PuzzleDef = {
   view: '3d',
   onWin: S.p3Win,
   async setup(p) {
-    await p.g.stage.view3D({ target: [1.4, 1.0, 1.0], distance: 9, azimuth: -38, elevation: 20, ms: 0 });
+    await p.g.stage.view3D({ target: [1.5, 1.2, 1.1], distance: 13, azimuth: 13, elevation: 20, ms: 0 });
     p.grid({ base: 0.1, main: 0.2, axis: 0.45 });
     const d = p.difficulty;
     const tol = tolFor(d);
@@ -220,9 +220,9 @@ export const p3: PuzzleDef = {
     const steps = [
       { prompt: '$\\mathbf b\\cdot\\mathbf u_1$', answer: 4, mistakes: [[3, 'Multiply matching parts: $3 \\cdot 1 + 1 \\cdot 1 + 2 \\cdot 0$.']] as [number, string][] },
       { prompt: '$\\mathbf u_1\\cdot\\mathbf u_1$', answer: 2, mistakes: [[Math.SQRT2, 'Not the length: the dot product of $\\mathbf u_1$ with itself.']] as [number, string][] },
-      { prompt: 'shadow on $\\mathbf u_1$: $\\frac{4}{2}\\mathbf u_1$', answer: P3_S1 },
-      { prompt: 'shadow on $\\mathbf u_2$: $\\frac{\\mathbf b\\cdot\\mathbf u_2}{\\mathbf u_2\\cdot\\mathbf u_2}\\mathbf u_2$', answer: P3_S2 },
-      { prompt: 'nearest point $\\mathbf p$: the sum of the shadows', answer: P3_P, mistakes: [[[3, 1, 0], 'That deletes the height. The plane is not the floor.']] as [number[], string][] },
+      { prompt: '$\\mathbf b\\cdot\\mathbf u_2$', answer: 2 },
+      { prompt: '$\\mathbf u_2\\cdot\\mathbf u_2$', answer: 1 },
+      { prompt: 'nearest point $\\mathbf p = \\frac42\\mathbf u_1 + \\frac21\\mathbf u_2$', answer: P3_P, mistakes: [[[3, 1, 0], 'That deletes the height. The plane is not the floor.']] as [number[], string][] },
       { prompt: 'leftover $\\mathbf b - \\mathbf p$', answer: P3_LEFT },
     ];
     if (d === 'cadet') {
@@ -277,7 +277,7 @@ export const p4: PuzzleDef = {
   id: 'c21-p4',
   title: 'Why did adding the shadows miss?',
   goal: 'The floor is spanned by $\\cg{\\mathbf k_1} = (1, 0, 0)$ and $\\cr{\\mathbf k_2} = (1, 1, 0)$: not at a right angle. Adding the two shadows of $\\mathbf b = (2, 3, 4)$ lands on the orange point. Find the true nearest point, then draw the overlap.',
-  subgoals: ['Drop the true perpendicular: drag the yellow point to the nearest point of the floor', 'Draw the overlap: drop the tip of the second shadow onto the line of $\\mathbf k_1$'],
+  subgoals: ['Drop the true perpendicular: drag the yellow point to the floor point nearest the beacon', 'Draw the overlap: drop the tip of the second shadow onto the first arrow’s line'],
   predict: {
     prompt: 'The sum of the shadows lands at $(4.5, 2.5, 0)$. Is that the nearest point of the floor to $(2, 3, 4)$?',
     choices: [{ id: 'yes', text: 'Yes, the shadows always add up' }, { id: 'no', text: 'No' }],
@@ -293,7 +293,7 @@ export const p4: PuzzleDef = {
   view: '3d',
   onWin: S.p4Win,
   async setup(p) {
-    await p.g.stage.view3D({ target: [2.2, 1.6, 1.2], distance: 11, azimuth: -70, elevation: 26, ms: 0 });
+    await p.g.stage.view3D({ target: [2, 1.4, 1.4], distance: 15, azimuth: -70, elevation: 24, ms: 0 });
     p.grid({ base: 0.12, main: 0.24, axis: 0.5 });
     const d = p.difficulty;
     const tol = tolFor(d);

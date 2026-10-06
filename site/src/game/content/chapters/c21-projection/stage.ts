@@ -165,7 +165,7 @@ export function drift(g: Game, set: Set8, o: { look: V3; r: number; h: number; a
 export async function hatchShot(g: Game): Promise<void> {
   const set = await set8(g, { lantern: { at: [-30, -27, 2], face: [0.4, 1, 0.05], scale: 1.4 }, hatch: true });
   const h = set.hatch;
-  drift(g, set, { look: [(h.x - 30) / 2, (h.y - 27) / 2, 0], r: 44, h: 10, a0: -2.2 });
+  drift(g, set, { look: [(h.x - 30) / 2, (h.y - 27) / 2, 0], r: 62, h: 14, a0: -2.2 });
 }
 
 /** Scene staging: the stern sheet from further out, drones logging around it. */

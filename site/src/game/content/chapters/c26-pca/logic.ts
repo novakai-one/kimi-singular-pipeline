@@ -139,11 +139,11 @@ function gs(vs: Vec[]): Vec[] {
   return out;
 }
 /** The record: X = mean + Σ σᵢ uᵢ vᵢᵀ, with centred orthonormal u's. Components 1–2 lay out a spiral of star positions; 3 carries a pattern of its own. */
-export interface Record { X: number[][]; U: Vec[]; V: Mat; mean: number[]; path: number[] }
-let REC: Record | null = null;
+export interface RecordData { X: number[][]; U: Vec[]; V: Mat; mean: number[]; path: number[] }
+let REC: RecordData | null = null;
 /** Built on first use (it is 120,000 numbers): never at boot. */
-export function record(): Record { return (REC ??= buildRecord()); }
-function buildRecord(): Record {
+export function record(): RecordData { return (REC ??= buildRecord()); }
+function buildRecord(): RecordData {
   const r = rng(1018);
   const ang: number[] = [], rad: number[] = [];
   const raw1: number[] = [], raw2: number[] = [], raw3: number[] = [];

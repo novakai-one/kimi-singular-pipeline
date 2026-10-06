@@ -47,7 +47,7 @@ const texFree = (M: Mat) => `(${M.map((r) => r.map((x) => fmtN(x)).join(', ')).j
 
 /** A matrix the player drags (its columns), with the line hunt's sweep running on it. */
 export function sweepScene(p: PuzzleCtx, M0: Mat) {
-  void p.g.stage.view2D({ center: [0.4, 0.2], height: 8.6, ms: 0 });
+  void p.g.stage.view2D({ center: [0.4, 1.2], height: 9.6, ms: 0 });
   let sw: Sweep | null = null;
   const r = p.readout('The move');
   // declared before the MatrixView: its constructor reports the first matrix through onChange
@@ -58,7 +58,7 @@ export function sweepScene(p: PuzzleCtx, M0: Mat) {
   };
   const mv = new MatrixView(p, { M: M0, draggable: true, labels: false, snap: 0.5, grid: { main: 0.3, base: 0.08, axis: 0.5 }, onChange: (M) => { sw?.setM(M); paint(M); } });
   hideLandingLine(mv.grid);
-  sw = new Sweep(p, { M: M0, radius: 1, start: rad(100), labels: { x: '$\\mathbf x$', mx: '$A\\mathbf x$' } });
+  sw = new Sweep(p, { M: M0, radius: 1.5, start: rad(100), labels: { x: '$\\mathbf x$', mx: '$A\\mathbf x$' } });
   paint(M0);
   return {
     mv, get sweep() { return sw!; },
@@ -151,7 +151,7 @@ export const doubtZero: DoubtDef = {
 export const doubtTrace: DoubtDef = {
   id: 'c18-d-trace', who: 'bram', isTrue: true,
   claim: 'The eigenvalues add up to the trace. Every time.',
-  reason: '$\\det(A - \\lambda I) = \\lambda^2 - (a + d)\\lambda + (ad - bc)$, and a quadratic $(\\lambda - \\lambda_1)(\\lambda - \\lambda_2)$ has $-(\\lambda_1 + \\lambda_2)$ in that place. So $\\lambda_1 + \\lambda_2 = a + d$, the trace, for every 2 × 2, complex pairs included ($a \\pm bi$ add to $2a$).',
+  reason: '$\\det(A - \\lambda I) = \\lambda^2 - (a + d)\\lambda + (ad - bc)$, and a quadratic $(\\lambda - \\lambda_1)(\\lambda - \\lambda_2)$ has $-(\\lambda_1 + \\lambda_2)$ in that place. So $\\lambda_1 + \\lambda_2 = a + d$, the trace, for every 2 × 2. Complex pairs too: $a + bi$ and $a - bi$ add to $2a$.',
   goal: 'Drag the grid arrows to set a move. The readout gives its eigenvalues, their sum and the trace. **Back it** (Bram will shake it) or **Challenge it**.',
   view: '2d',
   setup(p) {
@@ -229,7 +229,7 @@ export const PROC_DECOYS = [
 export const procedure: ProcedureDef = {
   id: 'c18-proc',
   title: 'Eigenvalues and eigenvectors, step by step',
-  brief: `Order the steps. LANTERN runs them exactly as written on a new case, $A = ${'\\begin{bmatrix} 2 & 2 \\\\ 1 & 3 \\end{bmatrix}'}$, and reports every eigenvalue with its eigenvectors.`,
+  brief: `Order the steps. LANTERN runs them exactly as written on a new case, $A = ${'\\left[\\begin{smallmatrix} 2 & 2 \\\\ 1 & 3 \\end{smallmatrix}\\right]'}$, and reports every eigenvalue with its eigenvectors.`,
   tiles: PROC_TILES,
   decoys: PROC_DECOYS,
   reference: PROC_REF,

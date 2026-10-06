@@ -36,7 +36,7 @@ export const p5: PuzzleDef = {
   view: '3d',
   onWin: S.p5Win,
   async setup(p) {
-    await p.g.stage.view3D({ target: [0.4, 1.2, 1.2], distance: 9.5, azimuth: -52, elevation: 20, ms: 0 });
+    await p.g.stage.view3D({ target: [0.4, 1.3, 1.3], distance: 10.5, azimuth: 30, elevation: 20, ms: 0 });
     p.grid({ base: 0.1, main: 0.2, axis: 0.45 });
     const pr = new Projector3D(p, { a: v3(P5_A1), b: v3(P5_A2), v: v3(P5_B), showProjection: false, labels: false, size: 6 });
     tag(p, '$\\mathbf a_1$', v3(P5_A1), 'b', [14, 16]);
@@ -120,6 +120,7 @@ export const p6: PuzzleDef = {
       if (done) return;
       done = true;
       dl.setEnabled(false);
+      show(P6_T);
       keepA.object.visible = true;
       (meter.querySelector('.bar span') as HTMLElement).style.width = '72%';
       r.row('k', 'kept', fmtV(keep), C.result);
@@ -146,7 +147,7 @@ export const p6: PuzzleDef = {
       : null;
     return {
       async showMe() { await dl.moveTo(P6_T, 900); await wait(200); remove(); },
-      async solve() { dl.set(P6_T); if (typed) { typed.set(P6_KEEP); typed.submit(); } else await finish(P6_KEEP); },
+      async solve() { dl.set(P6_T); show(P6_T); if (typed) { typed.set(P6_KEEP); typed.submit(); } else await finish(P6_KEEP); },
       wrong() { dl.set(5); remove(); },
     };
   },
@@ -161,7 +162,7 @@ export const p7: PuzzleDef = {
   id: 'c21-p7',
   title: 'What happens if we drop everything twice?',
   goal: '$P = \\frac15\\begin{bmatrix} 1 & 2 \\\\ 2 & 4 \\end{bmatrix}$ drops every point onto the line through $(1, 2)$. Apply it, then apply it again. Then find an arrow it sends to the origin.',
-  subgoals: ['Apply $P$', 'Apply $P$ a second time', 'Drag $\\cg{\\mathbf x}$ to an arrow that $P$ sends to the origin'],
+  subgoals: ['Apply P', 'Apply P a second time', 'Drag the green arrow to one that P sends to the origin'],
   predict: {
     prompt: 'After the first application, what will the second one do to the buoys?',
     choices: [{ id: 'nothing', text: 'Nothing moves' }, { id: 'closer', text: 'They slide closer to the origin' }, { id: 'back', text: 'They go back where they started' }],
@@ -186,8 +187,8 @@ export const p7: PuzzleDef = {
     const dirLine = new InfLine(p.g.stage, [0, 0, 0], v3(P7_DIR), { color: C.result, width: 1.4, opacity: 0.4, dashed: true });
     const nullLine = new InfLine(p.g.stage, [0, 0, 0], v3(P7_NULL), { color: C.violet, width: 3, opacity: 0 });
     p.add(dirLine, nullLine);
-    const r = p.readout('$P$');
-    r.eq(`P = ${texM(P7)}`);
+    const r = p.readout('The matrix P');
+    r.eq('P = \\tfrac15\\begin{bmatrix} 1 & 2 \\\\ 2 & 4 \\end{bmatrix}');
     r.row('det', '$\\det P$', '0');
     const flags = [false, false, false];
     const tick = (i: number) => { if (!flags[i]) { flags[i] = true; p.subgoal(i); } if (flags.every(Boolean)) { r.note('$P^2 = P$, and $P$ flattens the line through $(2, -1)$ to the origin. Dropping twice is dropping once.'); p.win(); } };
@@ -251,11 +252,12 @@ export const p8: PuzzleDef = {
   view: '3d',
   onWin: S.p8Win,
   async setup(p) {
-    await p.g.stage.view3D({ target: [0.4, 0.8, 1.0], distance: 10.5, azimuth: -52, elevation: 22, ms: 0 });
+    await p.g.stage.view3D({ target: [0.4, 1.0, 1.1], distance: 12, azimuth: 30, elevation: 22, ms: 0 });
     const pr = new Projector3D(p, { a: v3(P5_A1), b: v3(P5_A2), v: v3(P5_B), showProjection: true, labels: false, size: 6 });
     void pr;
-    const cloud = new PointCloud(p, { points: CLOUD, color: C.accent, size: 0.05, glow: 0.3 });
+    const cloud = new PointCloud(p, { points: CLOUD, color: C.accent, size: 0.035, glow: 0.22, core: 1.25 });
     const r = p.readout('One matrix');
+    r.row('n', 'buoys', '70 in a cloud');
     let built = false, drops = 0, done = false;
     let pts: number[][] = CLOUD.map((q) => q.slice());
     const drop = async () => {
