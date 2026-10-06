@@ -94,6 +94,14 @@ page.append(
       h('div', { style: 'color:var(--muted);font-size:15px' }, 'A small model writes text one character at a time. See its top guesses, and which earlier characters it looks at.'))),
 );
 
+// ---- The linear algebra game ----------------------------------------------
+page.append(
+  h('h2', null, 'Linear algebra, as a game'),
+  h('a', { class: 'card', href: url('game/index.html'), style: 'text-decoration:none;color:inherit;display:block;max-width:760px' },
+    h('div', { style: 'font-weight:650;margin-bottom:4px' }, 'SINGULAR'),
+    h('div', { style: 'color:var(--muted);font-size:15px' }, 'A voiced story game from vectors to the singular value decomposition. You move space yourself, find out why each idea works, and explain it back in your own words.')),
+);
+
 // ---- DSA ------------------------------------------------------------------
 page.append(
   h('h2', null, 'Data structures and algorithms (DSA)'),

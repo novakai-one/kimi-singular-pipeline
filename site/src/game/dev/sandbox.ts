@@ -8,6 +8,7 @@ import { C } from '../core/theme';
 
 const el = document.getElementById('stage')!;
 const stage = new Stage(el);
+(window as any).__stage = stage;
 new Backdrop(stage);
 const grid = new Grid2D(stage);
 stage.world.add(grid.object);
@@ -26,3 +27,13 @@ const mode = params.get('m') ?? 'shear';
   if (mode === '3d') { grid.set([[2, 1], [-1, 1]]); await stage.view3D({ distance: 18, azimuth: -70, elevation: 30 }); }
   (window as any).__ready = true;
 })();
+if (mode === 'wave') { grid.set([[1, 0], [0, 1]]); setTimeout(() => void stage.shockwave([0, 0, 0], 3000), 300); }
+if (mode === 'buoys') {
+  import('../gfx/buoys').then(async ({ BuoyField }) => {
+    grid.setLook({ main: 0.15, base: 0.1, axis: 0.3 });
+    const f = new BuoyField(stage, { extent: 6 });
+    stage.world.add(f.object);
+    f.highlight([f.indexOf([1, 1, 0]), f.indexOf([2, 2, 0]), f.indexOf([3, 3, 0])], '#59e1ff');
+    await f.to([[1, 0.6], [0, 1]], 300);
+  });
+}

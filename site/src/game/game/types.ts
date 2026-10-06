@@ -104,6 +104,14 @@ export interface PuzzleDef {
   view?: '2d' | '3d';
   /** Line(s) said when the puzzle is won, before Continue. */
   onWin?: Line[];
+  /**
+   * How the puzzle is framed. 'challenge' (default). 'doubt': a crew member makes a claim that is
+   * wrong, and the goal is to build a counterexample (explain-back by construction). 'sortie':
+   * unlabelled practice (the method is not named). 'mastery': optional harder variant.
+   */
+  style?: 'challenge' | 'doubt' | 'sortie' | 'mastery';
+  /** For 'doubt': who makes the claim (cast id) and the claim itself (shown in the objective card). */
+  claim?: { who: string; text: string };
   setup(p: PuzzleCtx): PuzzleRuntime | Promise<PuzzleRuntime>;
 }
 
@@ -165,12 +173,14 @@ export interface BuildTest { name: string; args: unknown[]; expect: unknown; tol
 
 export interface BuildDef {
   id: string;
+  /** Language of starter/solution (default 'python': real Python 3 in the browser, lists not NumPy). */
+  lang?: 'python' | 'js';
   /** Function name the player writes, e.g. "dot". Stored in the player's library. */
   fn: string;
   title: string;
   /** What the function must do (markdown). */
   brief: string;
-  /** Starting code (JavaScript). */
+  /** Starting code. */
   starter: string;
   /** A working solution (shown on Show me). */
   solution: string;

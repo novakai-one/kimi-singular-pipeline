@@ -9,7 +9,7 @@ import { C } from '../core/theme';
 import { MatrixInput } from '../ui/widgets';
 import { VectorHandle } from './handle';
 import { animate, ease } from '../core/tween';
-import { det, mlerp, type Mat } from '../math/la';
+import { det, interpMat2, type Mat } from '../math/la';
 import { sfx } from '../audio/sfx';
 
 export interface MatrixViewOpts {
@@ -87,10 +87,10 @@ export class MatrixView {
   set(M: Mat): void { this.M = M.map((r) => r.slice()); this.sync(); }
 
   /** Animate from the current matrix to M (every entry moves in a straight line). */
-  async to(M: Mat, ms = 1400, sound = true): Promise<void> {
+  async to(M: Mat, ms = 1400, sound = true, mode: 'linear' | 'polar' | 'auto' = 'auto'): Promise<void> {
     const M0 = this.get();
     if (sound) sfx.whoosh(ms / 1000);
-    await animate(ms, (k) => { this.M = mlerp(M0, M, k); this.sync(true, false); }, ease.inOut);
+    await animate(ms, (k) => { this.M = interpMat2(M0, M, k, mode); this.sync(true, false); }, ease.inOut);
     this.M = M.map((r) => r.slice());
     this.sync();
   }

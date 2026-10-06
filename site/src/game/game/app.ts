@@ -36,6 +36,8 @@ export class App implements Game {
     loadSave();
     const st = S().settings;
     this.stage = new Stage(root, { quality: this.headless ? 'low' : st.quality });
+    // the software renderer used by tests is slow; keep screenshots at full quality
+    if (this.headless || navigator.webdriver) this.stage.autoQuality = false;
     this.bg = new Backdrop(this.stage);
     this.drag = new DragManager(this.stage);
     this.ui = new UI(document.body);

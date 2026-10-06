@@ -2,7 +2,7 @@
 
 Input:  a JSON list of lines [{ "id", "who", "spoken", "voice", "speed" }]
         (written by `node tests/game-lines.mjs`, which reads every line from the running game).
-Output: site/public/game/voice/<id>.mp3 for each line, and voice/manifest.json listing the ids.
+Output: voice-cache/<id>.mp3 for each line (pack_voices.py then builds the banks).
 
 Lines that already have an mp3 are skipped, so editing one line only re-records that line.
 Usage:
@@ -14,7 +14,7 @@ import numpy as np
 import soundfile as sf
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-OUT = os.path.join(ROOT, 'site', 'public', 'game', 'voice')
+OUT = os.path.join(ROOT, 'voice-cache')  # per-line recordings (not published; packed into banks)
 
 # Phoneme fixes applied after espeak's phonemiser (pattern on phonemes → replacement).
 PHONEME_FIXES = [
@@ -80,9 +80,7 @@ def main():
         if (i + 1) % 10 == 0 or i + 1 == len(todo):
             el = time.time() - t0
             print(f'  {i + 1}/{len(todo)}  ({el:.0f}s, {el / (i + 1):.1f}s per line)', flush=True)
-    ids = sorted(f[:-4] for f in os.listdir(OUT) if f.endswith('.mp3'))
-    json.dump({'ids': ids}, open(os.path.join(OUT, 'manifest.json'), 'w'))
-    print(f'manifest: {len(ids)} lines', flush=True)
+    print('done; now run tools/game/pack_voices.py to build the chapter banks', flush=True)
 
 def split_phonemes(ph, n):
     if len(ph) <= n: return [ph]

@@ -139,7 +139,9 @@ export class Runner {
     const cs = chapterSave(ch.id);
     let hintsUsed = 0;
     let prediction: string | null = null;
-    this.hud.setObjective(def.title, def.goal, def.subgoals);
+    const kicker = def.style === 'doubt' ? `${def.claim ? cast(def.claim.who).name : 'Crew'}'s doubt` : def.style === 'sortie' ? 'Sortie' : def.style === 'mastery' ? 'Mastery' : def.title;
+    const goal = def.style === 'doubt' && def.claim ? `*“${def.claim.text}”*\n\n${def.goal}` : def.goal;
+    this.hud.setObjective(kicker, def.style && def.style !== 'challenge' ? `**${def.title}**\n\n${goal}` : goal, def.subgoals);
     this.hud.setStars(cs.stars[def.id] ?? 0);
     this.g.mood('puzzle');
     music.setIntensity(0.25);

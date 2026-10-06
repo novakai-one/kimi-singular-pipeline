@@ -392,3 +392,24 @@ export function mat2To4(m: Mat): number[] {
 export function mat3To4(m: Mat): number[] {
   return [m[0][0], m[1][0], m[2][0], 0, m[0][1], m[1][1], m[2][1], 0, m[0][2], m[1][2], m[2][2], 0, 0, 0, 0, 1];
 }
+
+/**
+ * In-between matrix for animating M0 → M1 (2×2). 'linear' moves every entry in a straight line
+ * (every point travels straight to where it lands). 'polar' splits the change into a rotation and
+ * a stretch and turns the rotation by angle, so a rotation never appears to shrink or collapse on
+ * the way. 'auto' picks polar when the change includes a turn of more than 30°.
+ */
+export function interpMat2(M0: Mat, M1: Mat, t: number, mode: 'linear' | 'polar' | 'auto' = 'auto'): Mat {
+  if (mode === 'linear' || M0.length !== 2) return mlerp(M0, M1, t);
+  const inv0 = inverse(M0);
+  if (!inv0) return mlerp(M0, M1, t);
+  const P = matMul(M1, inv0); // the change, applied after M0
+  const dP = det(P);
+  if (dP <= 1e-9) return mlerp(M0, M1, t);
+  const th = Math.atan2(P[1][0] - P[0][1], P[0][0] + P[1][1]);
+  if (mode === 'auto' && Math.abs(th) < Math.PI / 6) return mlerp(M0, M1, t);
+  const R = rot2(th);
+  const S = matMul(transpose(R), P); // P = R S
+  const St = mlerp(identity(2), S, t);
+  return matMul(matMul(rot2(th * t), St), M0);
+}

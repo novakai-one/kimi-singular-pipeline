@@ -7,7 +7,7 @@ import { Color, DoubleSide, Mesh, PlaneGeometry, ShaderMaterial, Vector2 } from 
 import type { Stage } from '../core/stage';
 import { C, hdr } from '../core/theme';
 import { animate, ease } from '../core/tween';
-import { det, identity, mlerp, type Mat, normalize, col, norm } from '../math/la';
+import { det, identity, interpMat2, type Mat, normalize, col, norm } from '../math/la';
 import { FatLine } from './lines';
 
 const vert = /* glsl */`
@@ -134,12 +134,12 @@ export class Grid2D {
     }
   }
 
-  /** Animate from the current matrix to M by moving every entry in a straight line. */
-  async to(M: Mat, ms = 1400, T?: [number, number]): Promise<void> {
+  /** Animate from the current matrix to M ('auto' turns rotations by angle; 'linear' moves every entry straight). */
+  async to(M: Mat, ms = 1400, T?: [number, number], mode: 'linear' | 'polar' | 'auto' = 'auto'): Promise<void> {
     const M0 = this.M.map((r) => r.slice());
     const T0: [number, number] = [this.T[0], this.T[1]];
     const T1 = T ?? T0;
-    await animate(ms, (k) => this.set(mlerp(M0, M, k), [T0[0] + (T1[0] - T0[0]) * k, T0[1] + (T1[1] - T0[1]) * k]), ease.inOut);
+    await animate(ms, (k) => this.set(interpMat2(M0, M, k, mode), [T0[0] + (T1[0] - T0[0]) * k, T0[1] + (T1[1] - T0[1]) * k]), ease.inOut);
     this.set(M, T1);
   }
 

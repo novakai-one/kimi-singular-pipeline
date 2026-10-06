@@ -26,6 +26,12 @@ function navGroups(): { title: string; items: NavItem[] }[] {
       ],
     },
     {
+      title: 'Linear algebra',
+      items: [
+        { label: 'SINGULAR: the game', href: 'game/index.html', key: 'game', dot: 'neutral' },
+      ],
+    },
+    {
       title: 'Fields',
       items: reg.fields.map((f) => ({
         label: f.title, href: `fields/${f.slug}.html`, key: `field:${f.slug}`, num: f.num, dot: f.idea,

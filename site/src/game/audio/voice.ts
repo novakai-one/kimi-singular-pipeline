@@ -1,9 +1,12 @@
-// Voice lines (pre-generated with Kokoro TTS). Each line has an id; its audio is voice/<id>.mp3.
-// If a file is missing (or audio is off) the line still plays as text, timed by its length.
+// Voice lines (pre-generated with Kokoro TTS), packed into one audio bank per chapter:
+//   voice/manifest.json  { "banks": { "<bank>": { "<lineId>": [start_s, dur_s] } } }
+//   voice/<bank>.mp3
+// If a line has no audio (or audio is off) it still plays as text, timed by its length.
 import { audio } from './audio';
 
-const cache = new Map<string, Promise<AudioBuffer | null>>();
-let manifest: Set<string> | null = null;
+interface Slot { bank: string; start: number; dur: number }
+const where = new Map<string, Slot>();
+const banks = new Map<string, Promise<AudioBuffer | null>>();
 let manifestLoad: Promise<void> | null = null;
 let base = './voice/';
 let current: AudioBufferSourceNode | null = null;
@@ -13,33 +16,41 @@ export function setVoiceBase(url: string): void { base = url.endsWith('/') ? url
 export function setVoiceEnabled(on: boolean): void { enabled = on; if (!on) stopVoice(); }
 export function voiceEnabled(): boolean { return enabled; }
 
-/** Load the list of lines that have audio (voice/manifest.json: { "ids": [...] }). */
 export function loadVoiceManifest(): Promise<void> {
   if (manifestLoad) return manifestLoad;
   manifestLoad = fetch(`${base}manifest.json`)
-    .then((r) => (r.ok ? r.json() : { ids: [] }))
-    .then((j: { ids?: string[] }) => { manifest = new Set(j.ids ?? []); })
-    .catch(() => { manifest = new Set(); });
+    .then((r) => (r.ok ? r.json() : { banks: {} }))
+    .then((j: { banks?: Record<string, Record<string, [number, number]>> }) => {
+      for (const [bank, idx] of Object.entries(j.banks ?? {})) {
+        for (const [id, [start, dur]] of Object.entries(idx)) where.set(id, { bank, start, dur });
+      }
+    })
+    .catch(() => {});
   return manifestLoad;
 }
 
-export function hasVoice(id: string): boolean { return !!manifest?.has(id); }
+export function hasVoice(id: string): boolean { return where.has(id); }
 
-function load(id: string): Promise<AudioBuffer | null> {
-  if (!audio.ctx || !hasVoice(id)) return Promise.resolve(null);
-  let p = cache.get(id);
+function loadBank(bank: string): Promise<AudioBuffer | null> {
+  let p = banks.get(bank);
   if (!p) {
-    p = fetch(`${base}${id}.mp3`)
+    p = fetch(`${base}${bank}.mp3`)
       .then((r) => (r.ok ? r.arrayBuffer() : null))
-      .then((b) => (b ? audio.ctx!.decodeAudioData(b) : null))
+      .then((b) => (b && audio.ctx ? audio.ctx.decodeAudioData(b) : null))
       .catch(() => null);
-    cache.set(id, p);
+    banks.set(bank, p);
+    // a failed decode (e.g. no AudioContext yet) should be retried later
+    void p.then((buf) => { if (!buf) banks.delete(bank); });
   }
   return p;
 }
 
-/** Start fetching lines that will be needed soon. */
-export function preloadVoices(ids: string[]): void { ids.forEach((id) => { void load(id); }); }
+/** Start fetching the banks that hold these lines. */
+export function preloadVoices(ids: string[]): void {
+  if (!audio.ctx) return;
+  const need = new Set(ids.map((id) => where.get(id)?.bank).filter(Boolean) as string[]);
+  need.forEach((b) => { void loadBank(b); });
+}
 
 /** Estimated reading time for a line with no audio. */
 export function readingMs(text: string): number {
@@ -48,13 +59,14 @@ export function readingMs(text: string): number {
 }
 
 /**
- * Play a line. Resolves when it finishes (or is stopped). `rate` is the playback speed.
- * Returns how long the audio lasts in ms (0 if there was no audio).
+ * Play a line. Resolves when it finishes (or is stopped). Calls onStart with the duration in ms
+ * (0 if there is no audio, so the caller can time the text itself).
  */
 export async function playVoice(id: string, onStart?: (durationMs: number) => void, rate = 1): Promise<number> {
   stopVoice();
-  if (!enabled || !audio.ctx) { onStart?.(0); return 0; }
-  const buf = await load(id);
+  const slot = where.get(id);
+  if (!enabled || !audio.ctx || !slot) { onStart?.(0); return 0; }
+  const buf = await loadBank(slot.bank);
   if (!buf) { onStart?.(0); return 0; }
   const src = audio.ctx.createBufferSource();
   src.buffer = buf;
@@ -62,11 +74,11 @@ export async function playVoice(id: string, onStart?: (durationMs: number) => vo
   src.connect(audio.buses.voice);
   current = src;
   audio.duck(true);
-  const ms = (buf.duration / rate) * 1000;
+  const ms = (slot.dur / rate) * 1000;
   onStart?.(ms);
   await new Promise<void>((resolve) => {
     src.onended = () => resolve();
-    src.start();
+    src.start(0, slot.start, slot.dur + 0.05);
   });
   if (current === src) { current = null; audio.duck(false); }
   return ms;

@@ -25,19 +25,34 @@ const FOV = 32;
 
 /** Vignette + film grain + subtle chromatic edge: the final look of every frame. */
 const FinishShader = {
-  uniforms: { tDiffuse: { value: null as Texture | null }, uTime: { value: 0 }, uVignette: { value: 0.32 }, uGrain: { value: 0.035 }, uFlash: { value: 0 } },
+  uniforms: {
+    tDiffuse: { value: null as Texture | null }, uTime: { value: 0 }, uVignette: { value: 0.32 }, uGrain: { value: 0.035 }, uFlash: { value: 0 },
+    uWaveC: { value: new Vector2(0.5, 0.5) }, uWaveR: { value: -1 }, uWaveAmp: { value: 0 }, uAspect: { value: 1 },
+  },
   vertexShader: /* glsl */`varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
   fragmentShader: /* glsl */`
     uniform sampler2D tDiffuse; uniform float uTime; uniform float uVignette; uniform float uGrain; uniform float uFlash;
+    uniform vec2 uWaveC; uniform float uWaveR; uniform float uWaveAmp; uniform float uAspect;
     varying vec2 vUv;
     float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453); }
     void main(){
-      vec2 d = vUv - 0.5;
+      vec2 uv = vUv;
+      // shockwave ring: push pixels outward near the ring front
+      float ring = 0.0;
+      if (uWaveR > 0.0) {
+        vec2 w = (uv - uWaveC) * vec2(uAspect, 1.0);
+        float dist = length(w);
+        float k = (dist - uWaveR) / 0.06;
+        ring = exp(-k * k) * uWaveAmp;
+        uv -= normalize(w + 1e-6) / vec2(uAspect, 1.0) * ring * 0.035;
+      }
+      vec2 d = uv - 0.5;
       float r2 = dot(d,d);
-      vec2 off = d * 0.0022 * r2 * 4.0;
-      vec4 c = texture2D(tDiffuse, vUv);
-      c.r = texture2D(tDiffuse, vUv + off).r;
-      c.b = texture2D(tDiffuse, vUv - off).b;
+      vec2 off = d * (0.0022 * r2 * 4.0 + ring * 0.01);
+      vec4 c = texture2D(tDiffuse, uv);
+      c.r = texture2D(tDiffuse, uv + off).r;
+      c.b = texture2D(tDiffuse, uv - off).b;
+      c.rgb += vec3(0.35, 0.75, 1.0) * ring * 0.18;
       c.rgb *= 1.0 - uVignette * smoothstep(0.08, 0.55, r2);
       c.rgb += (hash(vUv * 1000.0 + uTime) - 0.5) * uGrain;
       c.rgb = mix(c.rgb, vec3(1.0), uFlash);
@@ -72,6 +87,10 @@ export class Stage {
   mode: '2d' | '3d' = '2d';
   /** Frames per second, smoothed (for the debug overlay and quality auto-tune). */
   fps = 60;
+  /** Lower the resolution / bloom when the frame rate stays low. */
+  autoQuality = true;
+  private slowFor = 0;
+  private qualityStep = 0;
 
   constructor(container: HTMLElement, opts: { quality?: 'high' | 'low' } = {}) {
     this.container = container;
@@ -166,6 +185,10 @@ export class Stage {
     const dt = Math.min(0.1, this.clock.getDelta());
     const t = this.clock.elapsedTime;
     if (dt > 0) this.fps = lerp(this.fps, 1 / dt, 0.05);
+    if (this.autoQuality && document.visibilityState === 'visible') {
+      this.slowFor = this.fps < 32 ? this.slowFor + dt : Math.max(0, this.slowFor - dt * 2);
+      if (this.slowFor > 4 && this.qualityStep < 2) { this.lowerQuality(); this.slowFor = 0; }
+    }
     stepTweens(performance.now());
     for (const f of [...this.ticks]) f(dt, t);
     if (this.controls) this.controls.update();
@@ -179,6 +202,17 @@ export class Stage {
     (this.finish.uniforms.uTime as { value: number }).value = t;
     this.composer.render(dt);
     this.labels.render(this.scene, this.camera);
+  }
+
+  /** One step down: first pixel ratio 1, then no bloom. */
+  lowerQuality(): void {
+    this.qualityStep++;
+    if (this.qualityStep === 1) {
+      this.renderer.setPixelRatio(1);
+      this.resize();
+    } else {
+      this.bloom.enabled = false;
+    }
   }
 
   // ---------- camera ----------
@@ -248,6 +282,17 @@ export class Stage {
   }
 
   nudge(amount = 0.15): void { this.shake = Math.max(this.shake, amount); }
+
+  /** A screen-space shockwave ring expanding from a world point. */
+  async shockwave(at: V3 = [0, 0, 0], ms = 1600, amp = 1): Promise<void> {
+    const u = this.finish.uniforms as Record<string, { value: unknown }>;
+    const p = this.toScreen(at);
+    (u.uWaveC.value as Vector2).set(p.x / this.size.x, 1 - p.y / this.size.y);
+    u.uAspect.value = this.size.x / this.size.y;
+    await animate(ms, (k) => { u.uWaveR.value = 0.02 + k * 1.6; u.uWaveAmp.value = amp * (1 - k) * Math.min(1, k * 8); }, ease.out);
+    u.uWaveR.value = -1;
+    u.uWaveAmp.value = 0;
+  }
 
   flash(strength = 0.35, ms = 380): void {
     const u = this.finish.uniforms.uFlash as { value: number };

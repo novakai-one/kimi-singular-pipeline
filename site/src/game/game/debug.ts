@@ -40,21 +40,55 @@ export function installDebug(app: App): void {
       return !!app.runner.puzzle?.runtime;
     },
     save: () => S(),
+    /** Every string the player reads, with where it lives (for the wording check). */
+    texts: () => {
+      const out: { where: string; text: string; order: number; term?: string }[] = [];
+      let order = 0;
+      const add = (where: string, t: string | undefined) => { if (t) out.push({ where, text: t, order }); };
+      for (const c of CHAPTERS) {
+        add(`${c.id} title`, c.title); add(`${c.id} subtitle`, c.subtitle);
+        for (const b of c.beats) {
+          order++;
+          const w = `${c.id}/${b.id}`;
+          if (b.kind === 'name') out.push({ where: `${w} TERM`, text: b.entry.term, order, term: b.entry.term });
+          if (b.kind === 'scene') b.lines.map(normLine).forEach((l, i) => add(`${w} line ${i}`, l.text));
+          if (b.kind === 'puzzle') {
+            const q = b.puzzle;
+            add(`${w} title`, q.title); add(`${w} goal`, q.goal);
+            (q.subgoals ?? []).forEach((x, i) => add(`${w} subgoal ${i}`, x));
+            q.hints.forEach((x, i) => add(`${w} hint ${i}`, x));
+            if (q.predict) { add(`${w} predict`, q.predict.prompt); q.predict.choices.forEach((x) => add(`${w} choice`, x.text)); add(`${w} reveal`, q.predict.reveal); }
+            (q.onWin ?? []).map(normLine).forEach((l) => add(`${w} onWin`, l.text));
+          }
+          if (b.kind === 'name') { const e = b.entry; for (const k of ['term', 'question', 'saw', 'means', 'name', 'why', 'cue', 'use'] as const) add(`${w} ${k}`, e[k]); }
+          if (b.kind === 'explain') {
+            const e = b.explain;
+            add(`${w} intro`, e.intro); add(`${w} summary`, e.summary); add(`${w} ownWords`, e.ownWords);
+            e.steps.forEach((s, i) => { add(`${w} step ${i}`, s.ask); s.options.forEach((o) => { add(`${w} step ${i} option`, o.text); add(`${w} step ${i} why`, o.why); }); });
+          }
+          if (b.kind === 'build') { add(`${w} title`, b.build.title); add(`${w} brief`, b.build.brief); add(`${w} payoff`, b.build.payoff); }
+        }
+        for (const [k, ls] of Object.entries(c.script ?? {})) ls.map(normLine).forEach((l, i) => add(`${c.id} script.${k} ${i}`, l.text));
+      }
+      return out;
+    },
     /** Every voiced line in the game, for the voice generator. */
     lines: () => {
-      const all: Line[] = [];
-      for (const c of CHAPTERS) {
+      const all: { ch: string; l: Line }[] = [];
+      for (const c of [...CHAPTERS, ...DEV_CHAPTERS]) {
+        const push = (ls: Line[]) => ls.forEach((l) => all.push({ ch: c.id, l }));
         for (const b of c.beats) {
-          if (b.kind === 'scene') all.push(...b.lines);
-          if (b.kind === 'explain') all.push([b.explain.who, b.explain.intro]);
-          if (b.kind === 'puzzle' && b.puzzle.onWin) all.push(...b.puzzle.onWin);
+          if (b.kind === 'scene') push(b.lines);
+          if (b.kind === 'explain') push([[b.explain.who, b.explain.intro]]);
+          if (b.kind === 'puzzle' && b.puzzle.onWin) push(b.puzzle.onWin);
         }
-        for (const ls of Object.values(c.script ?? {})) all.push(...ls);
+        for (const ls of Object.values(c.script ?? {})) push(ls);
       }
       const seen = new Set<string>();
-      return all.map(normLine).filter((l) => l.who !== 'narrator' || true).map((l) => {
-        const cm = castMember(l.who);
-        return { id: voiceId(l), who: l.who, text: l.text, spoken: spoken(l), voice: cm.voice, speed: cm.speed ?? 1 };
+      return all.map(({ ch, l }) => {
+        const o = normLine(l);
+        const cm = castMember(o.who);
+        return { id: voiceId(o), chapter: ch, who: o.who, text: o.text, spoken: spoken(o), voice: cm.voice, speed: cm.speed ?? 1 };
       }).filter((l) => (seen.has(l.id) ? false : (seen.add(l.id), true)));
     },
     app,

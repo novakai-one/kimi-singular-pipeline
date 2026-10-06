@@ -137,3 +137,17 @@ test('change of basis', () => {
   const c = coordsIn(B, [0, 2])!;
   assert.ok(veq(c, [1, 1]));
 });
+
+test('rotation-aware interpolation never collapses a rotation', async () => {
+  const { interpMat2, rot2, det: d, meq: eq } = await import('../../site/src/game/math/la.ts');
+  const R = rot2(Math.PI * 0.999);
+  for (let k = 0; k <= 10; k++) {
+    const M = interpMat2([[1, 0], [0, 1]], R, k / 10, 'auto');
+    assert.ok(Math.abs(d(M) - 1) < 1e-9, `det stays 1 at t=${k / 10}`);
+  }
+  assert.ok(eq(interpMat2([[1, 0], [0, 1]], R, 1), R));
+  const A = [[2, 1], [0, 1]];
+  assert.ok(eq(interpMat2([[1, 0], [0, 1]], A, 0.5), [[1.5, 0.5], [0, 1]]), 'small turns stay linear');
+  const B = [[0, -2], [1, 0]];
+  assert.ok(eq(interpMat2([[1, 0], [0, 1]], B, 1, 'polar'), B));
+});

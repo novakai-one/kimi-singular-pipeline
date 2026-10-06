@@ -13,3 +13,5 @@ shots/
 notebooks/**/data/
 notebooks/**/export/
 notebooks/**/model.json
+voice-cache/
+site/public/game/pyodide/
