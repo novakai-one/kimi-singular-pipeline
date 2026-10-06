@@ -15,7 +15,7 @@ import { animate, ease, wait } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
 import { rng } from '../../../game/lawcheck';
 import { identity, matMul, matVec, mlerp, type Mat, type Vec } from '../../../math/la';
-import { LineGrid, ptag, v3 } from '../c18-eigen/parts';
+import { LineGrid, ptag, v3, sg } from '../c18-eigen/parts';
 import { hideLandingLine } from '../c18-eigen/puzzles';
 import { fmt2, texSmall } from '../c18-eigen/logic';
 import {
@@ -113,7 +113,7 @@ export const p1: PuzzleDef = {
       marker = [q[0], q[1]];
       ring.set(v3(q, 0.06), v3(q, 0.06)); mdot.at(v3(q, 0.06)); mt.at(v3(q)); mt.set(`forecast ${fmtV(marker.map((x) => Math.round(x * 100) / 100))}`);
       input.set(marker);
-      if (!won) p.subgoal(0, true);
+      if (!won) sg(p, 0, true);
       paint();
       gates();
     };
@@ -154,7 +154,7 @@ export const p1: PuzzleDef = {
       cur = forecast2(P1_START, P1_PULSES);
       if (!marker) { msg('Fifty pulses run. Place a forecast first next time: it is the forecast that counts.', 'bad'); return; }
       if (p1Won(marker, k, tolOf(p))) {
-        won = true; p.subgoal(1); sfx.success();
+        won = true; sg(p, 1); sfx.success();
         msg(`The piece is at ${fmtV(P1_FORECAST)}: on your forecast.`, 'good');
         p.win();
       } else {
@@ -273,7 +273,7 @@ export const p2: PuzzleDef = {
     const msgEl = h('div', { class: 'a7-msg' });
     const msg = (t: string, kind: '' | 'good' | 'bad' = '') => { msgEl.className = `a7-msg ${kind}`; msgEl.innerHTML = inline(t); };
     const done = [false, false, false];
-    const tick = (i: number) => { if (!done[i]) { done[i] = true; p.subgoal(i); } };
+    const tick = (i: number) => { if (!done[i]) { done[i] = true; sg(p, i); } };
     let derived = d === 'cadet', cancelled = false, played = false, busy = false;
     const winCheck = () => { if (cancelled && derived && played && !p.won) { sfx.success(); msg('Fifty pulses, three moves. Every piece lands on the line $(1, 1)$.', 'good'); p.win(); } };
     const cancel = async (ms: number) => {
@@ -387,7 +387,7 @@ export const p3: PuzzleDef = {
       sfx.snap();
     };
     const done = [false, false, false];
-    const tick = (i: number) => { if (!done[i]) { done[i] = true; p.subgoal(i); } };
+    const tick = (i: number) => { if (!done[i]) { done[i] = true; sg(p, i); } };
     const ws = new StepWorksheet(p, {
       steps: [
         { prompt: '$P$: lines that hold as columns (λ = 3 first; first entries 1)', answer: P3_P, mistakes: [[[[1, 0], [1, -1]], 'Columns, not rows: $(1, 0)$ is the first column.']] as [Mat, string][] },

@@ -23,6 +23,8 @@ const ch = chs.find((c) => c.id === chId);
 if (!ch) { console.error(`no chapter ${chId}`); process.exit(1); }
 const beats = beatArg !== undefined ? [Number(beatArg)] : ch.beats.map((_, i) => i);
 for (const i of beats) {
+  // one failing beat is reported, not fatal: the run goes on to the next beat
+  try {
   const kind = ch.beats[i].kind;
   await p.evaluate(([id, i]) => window.__game.goto(id, i), [chId, i]);
   // wait for the beat to be live (puzzle mounted / briefing step ready), then for frames
@@ -56,7 +58,7 @@ for (const i of beats) {
   } else if (kind === 'broadcast') {
     const res = [];
     for (let k = 0; k < 3; k++) {
-      await p.waitForFunction(() => !!window.__game.briefing(), null, { timeout: 30000 }).catch(() => {});
+      await p.waitForFunction(() => !!window.__game.briefing(), null, { timeout: 90000 }).catch(() => {});
       const r = await p.evaluate(() => window.__game.solveBriefing());
       res.push(r ? r.ok : 'none');
       await frames(6);
@@ -65,7 +67,7 @@ for (const i of beats) {
     console.log(`beat ${i} broadcast: ${res.join(', ')}`);
   } else if (['doubt', 'law', 'procedure', 'teo'].includes(kind)) {
     // the speaker may voice a line first (doubts); give the step time to open
-    await p.waitForFunction(() => !!window.__game.briefing(), null, { timeout: 30000 }).catch(() => {});
+    await p.waitForFunction(() => !!window.__game.briefing(), null, { timeout: 90000 }).catch(() => {});
     const r = await p.evaluate(() => window.__game.solveBriefing());
     await frames(10);
     await p.screenshot({ path: `${out}/${tag}-solved.png` });
@@ -82,6 +84,10 @@ for (const i of beats) {
     await frames(6);
     await p.screenshot({ path: `${out}/${tag}-solved.png` });
     console.log(`beat ${i} build ${ch.beats[i].id}: ${modes.join(', ')}`);
+  }
+  } catch (e) {
+    console.log(`beat ${i} ${ch.beats[i].kind}: FAILED (${String(e.message ?? e).split('\n')[0]})`);
+    errors.push(`beat ${i}: ${e.message ?? e}`);
   }
 }
 console.log(errors.length ? `ERRORS:\n${errors.join('\n')}` : 'no console errors');

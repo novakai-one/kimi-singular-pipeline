@@ -13,7 +13,7 @@ import { rint, rng } from '../../../game/lawcheck';
 import { eigvals3, identity, matMul, matVec, mlerp, mpow, normalize, type Mat, type Vec } from '../../../math/la';
 import { V, VELL_CUTTER, DRONES } from '../../truth';
 import { fieldSet, type Field } from '../c18-eigen/scenes';
-import { ptag } from '../c18-eigen/parts';
+import { ptag, sg } from '../c18-eigen/parts';
 import { everyLineHolds, fmt2, texSmall } from '../c18-eigen/logic';
 import { randMat, sweepScene } from '../c18-eigen/briefing';
 import { diagScene } from '../c19-powers/briefing';
@@ -44,7 +44,7 @@ export const sp: PuzzleDef = {
     void p.g.stage.view3D({ target: [1, 0.8, 0.6], distance: 17, azimuth: -62, elevation: 24 });
     const f: Field = await fieldSet(p.g, { lines: false, cutter: true, n: 700 });
     const done = [false, false, false, false, false];
-    const tick = (i: number) => { if (!done[i]) { done[i] = true; p.subgoal(i); } };
+    const tick = (i: number) => { if (!done[i]) { done[i] = true; sg(p, i); } };
     const r = p.readout('The fiftieth pulse');
     r.row('V', '$V$', '$\\tfrac{1}{60}\\left[\\begin{smallmatrix} 37 & 7 & 16 \\\\ 7 & 37 & 16 \\\\ 16 & 16 & 28 \\end{smallmatrix}\\right]$');
     r.row('c', 'cutter now', fmtV(VELL_CUTTER), C.white);

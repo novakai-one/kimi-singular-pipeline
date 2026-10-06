@@ -16,7 +16,7 @@ export const NUMPY_CARDS: Record<number, CardDef> = {
   },
   3: {
     kind: 'numpy', title: 'Solving in NumPy',
-    body: '`np.linalg.solve(A, b)` answers "where do the planes meet?" in one call.\n\nIt does what your `row_echelon` and `back_sub` do, with one change: **partial pivoting**. Before clearing each column it swaps up the row with the largest entry, so rounding errors cannot grow. It calls LAPACK, a library tuned since the 1970s.\n\n**Yours and theirs:** `solve` refuses a system with no single answer (it raises an error). Your `solve` says **none**, **one** or **many**, and gives the directions of the many.',
+    body: '`np.linalg.solve(A, b)` answers "where do the planes meet?" in one call.\n\nIt does what your `row_echelon` and `back_sub` do, with one change: **partial pivoting**. Before clearing each column it swaps up the row with the largest entry, so rounding errors cannot grow. It calls LAPACK, a library tuned since the 1970s.\n\n**Yours and theirs:** `solve` refuses a system with no single answer (it raises an error). Your `solve` says **none**, **one** or **many**, and gives the directions of the many. When readings disagree and no exact answer exists, NumPy offers `np.linalg.lstsq`: the closest answer. You will meet the idea behind it in Act VIII.',
     code: 'import numpy as np\nA = np.array([[1., 1, 1], [1, -1, 2], [2, 1, -1]]); b = np.array([6., 5, 1])\nprint(np.linalg.solve(A, b))',
   },
   4: {

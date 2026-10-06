@@ -10,7 +10,7 @@ import { C } from '../../../core/theme';
 import { animate, ease, wait } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
 import { matVec, mlerp, norm, normalize, type Mat, type Vec } from '../../../math/la';
-import { LineHunt, niceDir, ptag, v3 } from './parts';
+import { LineHunt, niceDir, ptag, v3, sg } from './parts';
 import {
   P3_A, P5_A, P5_BLOCK_C, P5_TRI, P5_TRI_VALUES, P5_VALUES, P5_VECS, P6_CANDIDATES, P6_LINES, P6_V, P7_U, eigenLines, fmt2, fmtN, fmtV,
   lineAngleDeg, p6Won, texM, trace, turnDeg, type Lock,
@@ -70,7 +70,7 @@ export const p5: PuzzleDef = {
     };
     paint(0);
     const done = [false, false, false, false];
-    const tick = (i: number) => { if (!done[i]) { done[i] = true; p.subgoal(i); } };
+    const tick = (i: number) => { if (!done[i]) { done[i] = true; sg(p, i); } };
     const steps = [
       { prompt: '$\\det(A - \\lambda I) = (2 - \\lambda)\\,[(3 - \\lambda)(-3 - \\lambda) - 16]$. The bracket is $\\lambda^2 + c$: $c =$', answer: P5_BLOCK_C, mistakes: [[-9, 'Take away $4 \\cdot 4 = 16$ as well: $-9 - 16$.'], [7, 'The product of the diagonal is $(3)(-3) = -9$, then take away 16.']] as [number, string][] },
       { prompt: 'The eigenvalues, largest first', answer: P5_VALUES, mistakes: [[[5, 2, 5], '$\\lambda^2 = 25$ has two roots: 5 and −5.'], [[2, 5, -5], 'Largest first: 5, 2, −5.']] as [number[], string][] },
@@ -152,7 +152,7 @@ export const p6: PuzzleDef = {
     const msg = (t: string, k: '' | 'good' | 'bad' = '') => { msgEl.className = `a7-msg ${k}`; msgEl.innerHTML = inline(t); };
     let won = false;
     const winCheck = () => {
-      P6_LINES.forEach(([dir, val], i) => p.subgoal(i, locks.some((k) => k.ok && lineAngleDeg(k.dir, dir) < 0.5 && Math.abs(k.stretch - val) < 0.02)));
+      P6_LINES.forEach(([dir, val], i) => sg(p, i, locks.some((k) => k.ok && lineAngleDeg(k.dir, dir) < 0.5 && Math.abs(k.stretch - val) < 0.02)));
       if (!won && p6Won(locks.filter((k) => k.ok))) { won = true; sfx.success(); msg('Three lines hold. Every other arrow is turned towards (1, 1, 1).', 'good'); p.win(); }
     };
     const test = async (dir: Vec, fast = false) => {
@@ -268,7 +268,7 @@ export const p7: PuzzleDef = {
       sfx.whoosh(1);
       await animate(fast ? 1 : 1200, (k) => grid.set(mlerp(P3_A, P7_U, k)), ease.inOut);
       grid.set(P7_U);
-      p.subgoal(0);
+      sg(p, 0);
       r.row('m', 'row-reduced', `$${texM(P7_U)}$`);
       hunt = new LineHunt(p, { M: P7_U, radius: 1.2, autoLock: true, typedStretch: false, tolDeg: 3, mount: box, title: 'Sweep the row-reduced matrix', onChange: () => check() });
       btn.disabled = true;
@@ -276,7 +276,7 @@ export const p7: PuzzleDef = {
     const check = () => {
       if (!hunt) return;
       if (hunt.rows.length) r.row('u', 'stretches of the row-reduced matrix', hunt.rows.map((x) => fmtN(x.line.value)).join(' and '), C.result);
-      if (hunt.done && !won) { won = true; p.subgoal(1); sfx.success(); hunt.say('Different lines, different stretches. Row operations change the move.', 'good'); p.win(); }
+      if (hunt.done && !won) { won = true; sg(p, 1); sfx.success(); hunt.say('Different lines, different stretches. Row operations change the move.', 'good'); p.win(); }
     };
     const btn = button('Row reduce: R₂ → R₂ − ½ R₁', () => void reduce(), { cls: 'primary small' });
     p.dock().append(h('div', { class: 'a7-row' }, btn), box);

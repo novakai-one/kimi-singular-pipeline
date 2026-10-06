@@ -99,7 +99,7 @@ function start(): Promise<void> {
       const url = URL.createObjectURL(new Blob([WORKER(base)], { type: 'text/javascript' }));
       worker = new Worker(url, { type: 'module' });
     } catch (e) { ready = null; reject(e); return; }
-    const t = window.setTimeout(() => { reject(new Error('Python did not start (timed out).')); }, 45000);
+    const t = window.setTimeout(() => { reject(new Error('Python did not start (timed out).')); }, 45000 * SLOW);
     worker.onmessage = (e) => {
       const d = e.data as PyResult & { id?: number; ready?: boolean };
       if (d.ready) { window.clearTimeout(t); resolve(); return; }
@@ -137,15 +137,18 @@ async function send(msg: Record<string, unknown>, timeoutMs: number): Promise<Py
   });
 }
 
+/** Automated browsers here run on a starved software GPU and CPU: give Python more time there. */
+const SLOW = typeof navigator !== 'undefined' && navigator.webdriver ? 6 : 1;
+
 export function runPythonTests(lib: string, code: string, fn: string, tests: unknown[], timeoutMs = 4000): Promise<PyResult> {
-  return send({ kind: 'test', lib, code, fn, tests }, timeoutMs);
+  return send({ kind: 'test', lib, code, fn, tests }, timeoutMs * SLOW);
 }
 
 export function callPython(lib: string, fn: string, args: unknown[], timeoutMs = 3000): Promise<PyResult> {
-  return send({ kind: 'call', lib, fn, args }, timeoutMs);
+  return send({ kind: 'call', lib, fn, args }, timeoutMs * SLOW);
 }
 
 /** Call fn once per argument list, all in one worker message (installs: thousands of points at event time). */
 export function mapPython(lib: string, fn: string, cases: unknown[][], timeoutMs = 8000): Promise<PyResult> {
-  return send({ kind: 'map', lib, fn, cases }, timeoutMs);
+  return send({ kind: 'map', lib, fn, cases }, timeoutMs * SLOW);
 }

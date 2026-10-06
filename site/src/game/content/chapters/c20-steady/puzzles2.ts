@@ -11,7 +11,7 @@ import { wait } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
 import { matVec, type Vec } from '../../../math/la';
 import { DRONES_START } from '../../truth';
-import { Bars, ptag } from '../c18-eigen/parts';
+import { Bars, ptag, sg } from '../c18-eigen/parts';
 import { FlowBoard, boardView } from './board';
 import {
   BAYS, HOURS, LINK_M, LINKS, NEED, P5_BEST, PR, PR_ORDER, PR_STEPS, STATIONS, TERMINALS, TOTAL, bays, designP, fmtN, fmtV, p5Won, p6Won, p7Won,
@@ -66,9 +66,9 @@ export const p5: PuzzleDef = {
       const stern = sternAt(pct);
       r.row('q', 'settles at', fmtV(fb.x.map((x) => Math.round(x * 10) / 10)), C.result);
       if (stern < NEED - 1e-9) { sfx.miss(); msg.say(`At ${pct}% the Stern settles ${fmtN(Math.round(stern * 10) / 10)} drones: fewer than ${NEED}.`, 'bad'); p.bark('lantern', `${fmtN(Math.round(stern * 10) / 10)} at the Stern. The rescue needs ${NEED}.`); return; }
-      p.subgoal(0);
+      sg(p, 0);
       if (!p5Won(pct)) { sfx.miss(); msg.say(`At ${pct}% the Stern settles ${fmtN(Math.round(stern * 10) / 10)}: enough, but a smaller share also works. Every drone kept at the Stern is one the Bow and Mid lose.`, 'bad'); return; }
-      won = true; p.subgoal(1); sfx.success();
+      won = true; sg(p, 1); sfx.success();
       msg.say(`${P5_BEST}%: the drones settle at ${fmtV(fb.x.map((x) => Math.round(x)))}. ${NEED} at the Stern, and no share higher than it needs to be.`, 'good');
       p.win();
     };
@@ -111,8 +111,8 @@ export const p6: PuzzleDef = {
       r.row('s', 'stay share', `${Math.round(stay * 100)}%`, C.w);
       r.row('x', 'drones now', fmtV(fb.x.map((x) => Math.round(x * 10) / 10)), C.result);
       r.row('h', 'Bay 1, hour by hour', hist.slice(-8).map((x) => fmtN(Math.round(x))).join(' → ') || '·');
-      p.subgoal(0, swapHours >= 4);
-      p.subgoal(1, stay > 0);
+      sg(p, 0, swapHours >= 4);
+      sg(p, 1, stay > 0);
     };
     const run = async (n: number, fast = false, untilSettled = false) => {
       if (busy || won) return;
@@ -127,7 +127,7 @@ export const p6: PuzzleDef = {
       busy = false;
       const s = stay > 0 && settled2(fb.P, fb.x);
       if (stay === 0 && swapHours >= 4) msg.say('Every hour all the drones change bay. It never settles.', 'bad');
-      if (s) p.subgoal(2);
+      if (s) sg(p, 2);
       if (p6Won(swapHours, stay, s)) { won = true; sfx.success(); msg.say(`With ${Math.round(stay * 100)}% staying, the bays settle at ${fmtV(fb.x.map((x) => Math.round(x)))}.`, 'good'); p.win(); }
     };
     const slider = new Slider({ label: 'stay share', min: 0, max: 0.5, step: 0.05, value: 0, format: (v) => `${Math.round(v * 100)}%`, onInput: (v) => { stay = v; fb.P = bays(stay); paint(); } });
@@ -181,7 +181,7 @@ export const p7: PuzzleDef = {
       TERMINALS.forEach((t, i) => { bars.set(t, x[i]); dots[i].group.scale.setScalar(0.6 + 3 * x[i]); });
       r.row('k', 'steps', String(k), C.accent);
       r.row('c', 'largest change in the last step', k ? change.toFixed(4) : '·', change < 1e-3 ? C.good : C.white);
-      p.subgoal(0, change < 1e-3);
+      sg(p, 0, change < 1e-3);
     };
     const step = () => {
       if (won) return;
@@ -200,7 +200,7 @@ export const p7: PuzzleDef = {
       if (change >= 1e-3) { msg.say('Step until the shares settle first.', 'bad'); return; }
       order.push(t); paintRank(); sfx.click();
       if (order.length === 4) {
-        if (p7Won(order)) { won = true; p.subgoal(1); sfx.success(); msg.say(`${PR_ORDER.join(', ')}: ${PR_ORDER.map((tt) => PR[TERMINALS.indexOf(tt)].toFixed(3)).join(', ')}. That is PageRank.`, 'good'); p.win(); }
+        if (p7Won(order)) { won = true; sg(p, 1); sfx.success(); msg.say(`${PR_ORDER.join(', ')}: ${PR_ORDER.map((tt) => PR[TERMINALS.indexOf(tt)].toFixed(3)).join(', ')}. That is PageRank.`, 'good'); p.win(); }
         else { sfx.miss(); msg.say('Not that order. Most-read first: compare the bars.', 'bad'); order.length = 0; window.setTimeout(paintRank, 600); }
       }
     };

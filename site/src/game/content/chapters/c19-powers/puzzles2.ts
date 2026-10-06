@@ -13,7 +13,7 @@ import { animate, ease } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
 import { answer, pin } from '../../../game/caseboard';
 import { matVec, type Vec } from '../../../math/la';
-import { ptag, v3 } from '../c18-eigen/parts';
+import { ptag, v3, sg } from '../c18-eigen/parts';
 import { hideLandingLine } from '../c18-eigen/puzzles';
 import { fmt2 } from '../c18-eigen/logic';
 import {
@@ -57,7 +57,7 @@ export const p4: PuzzleDef = {
       box.setColor(Math.abs(d) < 1e-9 ? C.orange : C.result);
       for (const [k, v] of [['a', a], ['b', b]] as [string, Vec][]) r.row(k, k === 'a' ? '$\\mathbf p_1$ kept on its line?' : '$\\mathbf p_2$ kept on its line?', shearKeeps(v) ? `yes · ${fmtV(v)}` : `no · turned to ${fmtV(matVec(P4_SHEAR, v))}`, shearKeeps(v) ? C.violet : C.orange);
       r.row('d', '$\\det P$', fmtN(d), Math.abs(d) < 1e-9 ? C.orange : C.white);
-      p.subgoal(0, shearKeeps(a) && shearKeeps(b));
+      sg(p, 0, shearKeeps(a) && shearKeeps(b));
     };
     const h1: VectorHandle = new VectorHandle(p, { to: [1, 1, 0], color: C.v, label: '$\\mathbf p_1$', limit: 3, onChange: () => paint() });
     const h2: VectorHandle = new VectorHandle(p, { to: [0, 1, 0], color: C.w, label: '$\\mathbf p_2$', limit: 3, onChange: () => paint() });
@@ -69,7 +69,7 @@ export const p4: PuzzleDef = {
       if (bad >= 0) { sfx.miss(); msg(`$\\mathbf p_${bad + 1}$ is turned by the shear: it lands at ${fmtV(matVec(P4_SHEAR, [a, b][bad]))}. A column of $P$ has to be a line that holds.`, 'bad'); p.bark('lantern', `Column ${bad + 1} is not a line that holds.`); return; }
       if (!p4Rejected(a, b)) return;
       built = true;
-      p.subgoal(1);
+      sg(p, 1);
       sfx.collapse();
       p.g.stage.nudge(0.12);
       msg('**Rejected.** Both columns lie on one line: $\\det P = 0$, so $P^{-1}$ does not exist. The shear has one line, and a grid needs two.', 'bad');
@@ -84,7 +84,7 @@ export const p4: PuzzleDef = {
       answer('c19-shear', 'No. The shear $\\begin{bmatrix} 1 & 1 \\\\ 0 & 1 \\end{bmatrix}$ keeps one line, so any $P$ built from its eigenvectors has both columns on that line: $\\det P = 0$ and no $P^{-1}$. A quarter turn has no real line at all; it can be written that way only with complex numbers.', 'c19');
       p.g.toast('Can every move be written as stretches along lines that hold?', 'Case board · evidence pinned');
       sfx.discover();
-      p.subgoal(2);
+      sg(p, 2);
       msg('Pinned. The quarter turn fails too, with real numbers: it keeps no real line. With complex numbers it can be written this way.', 'good');
       p.win();
     };
@@ -160,10 +160,10 @@ export const p5: PuzzleDef = {
     };
     const check = () => {
       const fOk = share !== null && Math.abs(share - P5_LONG[0]) <= (d === 'commander' ? 0.005 : 0.02);
-      p.subgoal(0, fOk);
-      p.subgoal(1, k >= 3);
+      sg(p, 0, fOk);
+      sg(p, 1, k >= 3);
       if (d === 'cadet' && k >= 3) ratioOk = true;
-      p.subgoal(2, ratioOk);
+      sg(p, 2, ratioOk);
       if (!won && fOk && k >= 3 && ratioOk && p5Won(share!, k, P5_RATIO)) { won = true; sfx.success(); msg('Two thirds at A. The gap is 0.7 of itself every step: the other line’s stretch.', 'good'); p.win(); }
     };
     const setShare = (s: number) => {
@@ -277,7 +277,7 @@ export const p6: PuzzleDef = {
       paint();
       if (fibWon(s)) {
         won = true;
-        p.subgoal(0); p.subgoal(1, s.products <= FIB_PAR);
+        sg(p, 0); sg(p, 1, s.products <= FIB_PAR);
         sfx.success();
         msg(`$R = M^{50}$: $F_{50} = ${big(F50)}$, in ${s.products} products. The ratio of neighbours has settled at the larger stretch, 1.618.`, 'good');
         p.win();

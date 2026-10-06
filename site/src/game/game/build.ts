@@ -20,8 +20,9 @@ const PASSING = 'buildPassing';
 const DOCS = 'buildDocs';
 
 /** Register every BuildDef (called once at boot from the chapter registry). */
-export function registerBuild(def: BuildDef): void {
-  if (REF.has(def.fn)) return; // story chapters register first; a dev chapter never replaces them
+export function registerBuild(def: BuildDef, replace = false): void {
+  // a later story chapter may refactor a function (reachable -> solve); a dev chapter never replaces one
+  if (REF.has(def.fn) && !replace) return;
   REF.set(def.fn, def.solution); LANG.set(def.fn, def.lang ?? 'python'); DEFS.set(def.fn, def); }
 
 /** The player's own docstrings ("in your own words"), by function name. */

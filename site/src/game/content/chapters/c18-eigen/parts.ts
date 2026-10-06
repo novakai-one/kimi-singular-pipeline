@@ -379,3 +379,13 @@ export class Bars {
 
 /** World point of a 2-D vector on the plane (for camera placement of labels). */
 export const at3 = (v: readonly number[], z = 0): Vector3 => new Vector3(v[0], v[1], (v[2] ?? 0) + z);
+
+const GOALS = new WeakMap<PuzzleCtx, boolean[]>();
+/** Tick (or untick) subgoal i only when it changes, so the chime plays once. */
+export function sg(p: PuzzleCtx, i: number, done = true): void {
+  const st = GOALS.get(p) ?? [];
+  GOALS.set(p, st);
+  if (!!st[i] === done) return;
+  st[i] = done;
+  p.subgoal(i, done);
+}

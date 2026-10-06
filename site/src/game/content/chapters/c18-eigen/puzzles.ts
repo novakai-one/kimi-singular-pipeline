@@ -14,7 +14,7 @@ import { sfx } from '../../../audio/sfx';
 import { answer } from '../../../game/caseboard';
 import { Tpartial } from '../../truth';
 import { det, identity, matMul, meq, type Mat } from '../../../math/la';
-import { CardRail, LineHunt, PolyPlot, niceDir, ptag, v3, type RailCard } from './parts';
+import { CardRail, LineHunt, PolyPlot, niceDir, ptag, v3, type RailCard, sg } from './parts';
 import {
   P1_A, P2_A, P3_A, P3_ROOTS, P4_ANGLE, P4_CARDS, P4_D, P4_PRODUCT, P4_STRETCH, P4_SUM, P4_T, SWEEP_FULL, charAt, fmt2, fmtN,
   fmtV, nullLine, railProduct, rootsWon, shift, texSmall,
@@ -77,8 +77,8 @@ export const p1: PuzzleDef = {
     const check = () => {
       paint();
       const n = h1.rows.filter((r) => r.ok).length;
-      p.subgoal(0, n >= 1);
-      p.subgoal(1, n >= 2);
+      sg(p, 0, n >= 1);
+      sg(p, 1, n >= 2);
       if (h1.done && !won) { won = true; sfx.success(); h1.say('Both lines locked. Every other arrow turns.', 'good'); p.win(); }
     };
     const h1: LineHunt = hunt(p, P1_A, { radius: 1.05, title: 'Lines that hold', onChange: () => check() });
@@ -120,8 +120,8 @@ export const p2: PuzzleDef = {
     const check = () => {
       paint();
       const swept = h2.sweep.coverage >= SWEEP_FULL;
-      p.subgoal(0, swept);
-      p.subgoal(1, h2.done);
+      sg(p, 0, swept);
+      sg(p, 1, h2.done);
       if (swept && h2.done && !won) { won = true; sfx.success(); h2.say('One line, and the whole circle swept. There is no second line.', 'good'); p.win(); }
     };
     const h2: LineHunt = hunt(p, P2_A, { radius: 1.3, title: 'Lines that hold', onChange: () => check() });
@@ -190,7 +190,7 @@ export const p3: PuzzleDef = {
     const tol = 1e-6;
     let derived = d === 'cadet';
     const done = [false, false, false];
-    const tick = (i: number) => { if (!done[i]) { done[i] = true; p.subgoal(i); } };
+    const tick = (i: number) => { if (!done[i]) { done[i] = true; sg(p, i); } };
     let won = false;
     const winCheck = () => {
       if (stops.length >= 1) tick(0);
@@ -313,7 +313,7 @@ export const p4: PuzzleDef = {
     void p.g.stage.view2D({ center: [0.4, 0.2], height: 8.4, ms: 0 });
     const grid = p.grid({ main: 0.22, base: 0, axis: 0.45 });
     const done = [false, false, false, false];
-    const tick = (i: number) => { if (!done[i]) { done[i] = true; p.subgoal(i); } };
+    const tick = (i: number) => { if (!done[i]) { done[i] = true; sg(p, i); } };
     const r = p.readout('The routine pulse');
     const msgEl = h('div', { class: 'a7-msg' });
     const msg = (t: string, k: '' | 'good' | 'bad' = '') => { msgEl.className = `a7-msg ${k}`; msgEl.innerHTML = inline(t); };
@@ -451,6 +451,7 @@ export const p4: PuzzleDef = {
       p.setGoal('**4.** Put the routine pulse on the rail until it brings the plate home, then **Play**.');
       r.row('m', '$T$', `$${texSmall(P4_T)}$`);
       r.row('cov', 'its λ', '$i$ and $-i$', C.violet);
+      e1.setLabel('$\\mathbf e_1$ lands'); e2.setLabel('$\\mathbf e_2$ lands');
       showM(identity(2));
       railC = new CardRail({ palette: [T_CARD], max: 6, title: 'The routine pulse: click it to add one more', onChange: () => { if (!railC?.locked) showM(identity(2)); } });
       stageEl.replaceChildren(railC.el, h('div', { class: 'a7-row' }, button('Play the rail', () => void playFour(), { cls: 'primary small' })));

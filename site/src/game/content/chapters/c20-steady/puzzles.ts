@@ -16,7 +16,7 @@ import { fmat } from '../../../math/frac';
 import { gaussJordanSteps, isRREF } from '../../../math/rref';
 import { matVec, transpose, type Mat, type Vec } from '../../../math/la';
 import { DRONES, DRONES_START, DRONES_STEADY } from '../../truth';
-import { Bars, ptag } from '../c18-eigen/parts';
+import { Bars, ptag, sg } from '../c18-eigen/parts';
 import { fmt2 } from '../c18-eigen/logic';
 import { FlowBoard, Simplex, boardView, triPoint } from './board';
 import {
@@ -76,7 +76,7 @@ export const p1: PuzzleDef = {
       if (d === 'commander') return;
       sums.replaceChildren(h('span', { class: 'k' }, 'column sums'), ...colSums(M).map((s, j) => h('span', { class: `c20-sum ${Math.abs(s - 1) < 1e-9 ? 'ok' : ''}` }, `${STATIONS[j]} ${fmtN(Math.round(s * 100) / 100)}`)));
     };
-    const mi = new MatrixInput({ rows: 3, cols: 3, values: M, colourCols: true, label: 'P =', step: 0.1, onChange: (m) => { M = m; paintSums(); p.subgoal(0, isStochastic(M)); } });
+    const mi = new MatrixInput({ rows: 3, cols: 3, values: M, colourCols: true, label: 'P =', step: 0.1, onChange: (m) => { M = m; paintSums(); sg(p, 0, isStochastic(M)); } });
     mi.el.classList.add('a7-in');
     let ran = false, busy = false;
     const run = async (fast = false) => {
@@ -99,7 +99,7 @@ export const p1: PuzzleDef = {
       busy = false;
       if (p1Won(M)) {
         ran = true;
-        p.subgoal(0); p.subgoal(1);
+        sg(p, 0); sg(p, 1);
         sfx.success();
         msg.say(`One hour: ${fmtV(P1_HOUR1)}. A second hour: ${fmtV(P1_HOUR2)}.`, 'good');
         if (!fast) { await wait(500); await fb.hour(1100); paint(); }
@@ -149,14 +149,14 @@ export const p2: PuzzleDef = {
     const msg = msgBox();
     const rob = new RowOpsBoard(p, { aug: P2_AUG, n: 3, varNames: ['q_1', 'q_2', 'q_3'], title: 'The row board: 10(P − I) q = 0' });
     let reduced = d === 'commander';
-    rob.subscribe((m) => { if (isRREF(m, 3)) { reduced = true; p.subgoal(0); } });
+    rob.subscribe((m) => { if (isRREF(m, 3)) { reduced = true; sg(p, 0); } });
     let typed = false, ran = false;
     const runHours = async (fast: boolean) => {
       if (ran) return;
       ran = true;
       for (let k = 0; k < HOURS; k++) { await fb.hour(fast ? 1 : k < 4 ? 600 : 90); paint(); }
       if (settlesTo(DRONES, DRONES_START, DRONES_STEADY)) {
-        p.subgoal(2); sfx.success();
+        sg(p, 2); sfx.success();
         msg.say(`Forty hours: ${fmtV(round(fb.x))}. On $\\mathbf q$. Drones still move every hour; the counts no longer change.`, 'good');
         p.win();
       }
@@ -168,7 +168,7 @@ export const p2: PuzzleDef = {
         { prompt: '$\\mathbf q$ with $q_3 = 1$', answer: P2_Q1, mistakes: [[[1, 1, 1], 'Read the reduced rows: $q_1 - 2.5q_3 = 0$.']] as [number[], string][] },
         { prompt: '$\\mathbf q$ scaled so the three add to 300', answer: DRONES_STEADY, mistakes: [[[0.5, 0.3, 0.2], 'Those are the shares. Scale to 300 drones.'], [[250, 150, 100], 'They add to 500. Scale so they add to 300.']] as [number[], string][] },
       ];
-    const ws = new StepWorksheet(p, { steps, mount: p.dock(), onDone: () => { typed = true; p.subgoal(1); check(); } });
+    const ws = new StepWorksheet(p, { steps, mount: p.dock(), onDone: () => { typed = true; sg(p, 1); check(); } });
     rob.subscribe(() => { if (typed) check(); });
     p.dock().append(msg.el);
     const ops = () => gaussJordanSteps(fmat(P2_AUG), 3).ops;
@@ -215,7 +215,7 @@ export const p3: PuzzleDef = {
       const end = await sx.grow(i, P3_STARTS[i], HOURS, colors[i], fast ? 1 : 1400);
       busy = false;
       r.row(`s${i}`, names[i], fmtV(end.map((x) => Math.round(x))), colors[i]);
-      if (settlesTo(DRONES, P3_STARTS[i], DRONES_STEADY)) { done[i] = true; p.subgoal(i); sfx.snap(); }
+      if (settlesTo(DRONES, P3_STARTS[i], DRONES_STEADY)) { done[i] = true; sg(p, i); sfx.snap(); }
       if (done[0] && done[1] && done[2]) msg.say('Three starts, one end. Now the random ones.', 'good');
     };
     const shake = async (fast = false) => {
@@ -228,7 +228,7 @@ export const p3: PuzzleDef = {
         await sx.grow(3 + k, x.map((t) => (t / s) * TOTAL), HOURS, '#9aa7bd', fast ? 1 : 700);
       }
       busy = false;
-      done[3] = true; p.subgoal(3);
+      done[3] = true; sg(p, 3);
       sfx.success();
       msg.say('Every start ends at $(150, 90, 60)$. The start does not matter.', 'good');
       p.win();
@@ -271,7 +271,7 @@ export const p4: PuzzleDef = {
     const r = p.readout('The dial on P');
     const msg = msgBox();
     const done = [false, false, false];
-    const tick = (i: number) => { if (!done[i]) { done[i] = true; p.subgoal(i); } };
+    const tick = (i: number) => { if (!done[i]) { done[i] = true; sg(p, i); } };
     let derived = d === 'cadet';
     const winCheck = () => { if (derived) tick(2); if (done[0] && done[1] && derived && !p.won) { sfx.success(); msg.say('Columns add to 1, so $P^{\\mathsf T}\\mathbf 1 = \\mathbf 1$; a transpose keeps the determinant, so $\\det(P - I) = 0$.', 'good'); p.win(); } };
     const paint = () => {
