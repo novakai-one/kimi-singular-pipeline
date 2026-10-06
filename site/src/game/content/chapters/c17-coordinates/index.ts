@@ -16,7 +16,8 @@ import { anchorShot, clearCine, clearShot, coldOpen, gridsShot, reveal, sternSho
 import { texM } from './logic';
 import { S } from './script';
 
-const IN_SHORT = 'Same point, different grid: what are its numbers now?\n\nIts numbers are the amounts of each grid arrow you need to reach it. Change the arrows and the numbers change; **the point does not move**. To do a move written in another grid: translate in, move, translate back.';
+const IN_SHORT_ANSWER = 'Its numbers are the amounts of each grid arrow you need to reach it. Change the arrows and the numbers change; **the point does not move**. To do a move written in another grid: translate in, move, translate back.';
+const IN_SHORT = `Same point, different grid: what are its numbers now?\n\n${IN_SHORT_ANSWER}`;
 
 const closeCase = (id: string, text: string, q: string) => async (g: Game) => {
   answer(id, text, 'c17');
@@ -83,7 +84,7 @@ const ch: ChapterDef = {
   catchup: 'A matrix’s **columns** are where the grid arrows land, and $A\\mathbf x$ mixes them with the numbers of $\\mathbf x$ as weights. A **basis** reaches every point with no arrow wasted. Story so far: the stern is flat, Vell holds the Anchor, and Ilse’s nine numbers forecast a quarter turn while the measured pulse leans the grid.',
   beats: [
     { kind: 'cinematic', id: 'open', run: coldOpen },
-    { kind: 'card', id: 'inshort', card: { kind: 'inshort', title: 'Same point, different grid: what are its numbers now?', body: IN_SHORT } },
+    { kind: 'card', id: 'inshort', card: { kind: 'inshort', title: 'Same point, different grid: what are its numbers now?', body: IN_SHORT_ANSWER } },
     { kind: 'scene', id: 'p1-intro', lines: S.p1Intro, setup: anchorShot },
     { kind: 'puzzle', id: 'p1', puzzle: p1 },
     NAME_COORDS,

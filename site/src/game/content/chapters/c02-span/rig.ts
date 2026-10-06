@@ -192,7 +192,7 @@ export class DialRig {
   readonly gap: Gap;
   readonly fireBtn: HTMLButtonElement | null = null;
   private readonly guides: InfLine[] = [];
-  private readonly rows: { row: HTMLElement; range: HTMLInputElement | null; cell: HTMLInputElement | null }[] = [];
+  private readonly rows: { els: HTMLElement[]; range: HTMLInputElement | null; cell: HTMLInputElement | null }[] = [];
   private previewOn: boolean;
   private flying = false;
   private fired = 0;
@@ -272,6 +272,9 @@ export class DialRig {
     const names = o.names ?? ['a', 'b', 'c', 'd'];
     const tags = o.tags ?? [];
     const noRows = o.sliders === false && o.typed === false;
+    // one grid for all dial rows, so the labels, sliders and boxes line up
+    const table = h('div', { style: 'display:grid;grid-template-columns:auto minmax(120px,1fr) auto;gap:10px 12px;align-items:center;min-width:300px' });
+    if (!noRows) dock.appendChild(table);
     this.arrows.forEach((_, i) => {
       if (noRows) return;
       const range = o.sliders === false ? null : h('input', {
@@ -303,9 +306,9 @@ export class DialRig {
         cell.addEventListener('focus', () => cell.select());
       }
       const label = h('span', { style: `color:${colors[i]};font-size:14px;white-space:nowrap`, html: inline(`$${names[i]}$${tags[i] ? ` · ${tags[i]}` : ''}`) });
-      const row = h('div', { style: 'display:grid;grid-template-columns:minmax(64px,auto) 1fr auto;gap:10px;align-items:center;min-width:300px' }, label, range ?? h('span'), cell ?? h('span'));
-      this.rows.push({ row, range, cell });
-      dock.appendChild(row);
+      const els = [label, range ?? h('span'), cell ?? h('span')];
+      table.append(...els);
+      this.rows.push({ els, range, cell });
     });
     if (o.fireLabel !== null) {
       this.fireBtn = button(o.fireLabel ?? 'Fire', () => void this.fire(), { cls: 'primary', kbd: 'F' });
@@ -394,7 +397,7 @@ export class DialRig {
     if (!on) this.dials[i] = 0;
     const r = this.rows[i];
     if (r) {
-      r.row.style.opacity = on ? '1' : '0.35';
+      r.els.forEach((e) => { e.style.opacity = on ? '1' : '0.35'; });
       if (r.range) r.range.disabled = !on;
       if (r.cell) r.cell.disabled = !on;
     }

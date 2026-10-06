@@ -491,7 +491,7 @@ export const p4: PuzzleDef = {
     const st: P4State = { spire: null, spireMark: null, real: null, realMark: null };
     let ready = false;
     let phase: 'spire' | 'spireMark' | 'real' | 'realMark' | 'fire' | 'done' = 'spire';
-    const bow = new Dot([1, 0, 0], { color: C.white, size: 0.1, label: 'bow', labelOffset: [0, 20], glow: 1 });
+    const bow = new Dot([1, 0, 0], { color: C.white, size: 0.1, label: 'bow', labelOffset: [-34, 26], glow: 1 });
     p.add(bow);
     const ghost = new Dot([1, 0, 0], { color: C.result, size: 0.09 });
     ghost.setOpacity(0);
