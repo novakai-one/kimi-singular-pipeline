@@ -86,10 +86,21 @@ You move space with your own hands, find out *why* each idea works, explain it b
 
 **What is in it**
 
-- A Prologue, 26 chapters in nine acts and an Epilogue: one big idea per chapter, each one found by doing (drag, fire, build), then named, then derived, then done by hand.
-- The **Briefing** after each chapter: write your own Field Manual page first, settle a sceptic's Doubts by building cases, engrave a Law and watch it survive 500 random cases, then compare with Ilse's page.
-- **lantern.py**: an optional Python thread (real Python in the browser). Assemble, Fill or Write each function; a swarm of random cases checks it; the ship then runs on your code. Export `lantern.py` and `test_lantern.py` from the Codex.
-- Three difficulties (Cadet, Navigator, Commander), Viva mode for exam revision, text size and high-contrast settings.
+- **The story:** a Prologue, 26 chapters in nine acts, and an Epilogue. A pulse knocks the survey tug *Lantern* off course; every chapter is one question the crew must answer to reach the colony ark *Meridian*. Each big idea is found by doing (drag, fire, build), then named, then derived, then done by hand.
+- **The Briefing** after each chapter:
+  - write your own Field Manual page first;
+  - settle a sceptic's Doubts by building cases;
+  - engrave a Law and watch it survive 500 random cases, then give the reason that makes it a proof;
+  - compare with Ilse's page; teach Teo a procedure; act reviews.
+- **lantern.py:** an optional Python thread (real Python in the browser through Pyodide).
+  - Assemble, Fill or Write each function; a swarm of random cases checks it.
+  - The ship then runs on your code, and says so when it does.
+  - Export `lantern.py` and `test_lantern.py` from Settings.
+- **The Broadcast** (Epilogue): chain every idea from vectors to the SVD in your own words, then export it as a lecture.
+- **Also:** a case board of 13 clues, a holotable for free play with any 2 × 2 move, Viva mode for exam revision, NumPy cards after each act.
+- **Settings:** three difficulties (Cadet, Navigator, Commander), code help level, text size, high contrast, reduced motion.
+- **Sound:** voice acting for every line (Kokoro), and a generative score that changes key and character with each act.
+- **Models:** the *Lantern*, the *Meridian*, the Anchor, Vell's cutter, buoys, debris and the bridge, all built in Blender from code.
 
 | Where | What |
 |---|---|
@@ -97,7 +108,7 @@ You move space with your own hands, find out *why* each idea works, explain it b
 | `site/game/index.html` | the game page |
 | `site/src/game/` | the game: `core/` (stage, tweens, drag, save), `gfx/` (grid shader, arrows, buoys, shapes, models), `kit/` (puzzle components), `ui/`, `audio/` (music, effects, voice), `game/` (runner, builder, Python runner), `math/` (exact linear algebra), `content/` (chapters, cast, script) |
 | `site/public/game/` | voice banks (`voice/`), Blender models (`models/`); Pyodide is copied in by `npm run gen` |
-| `tools/game/` | `voices.py` + `pack_voices.py` (Kokoro voice acting), `blender/*.py` (procedural 3-D models) |
+| `tools/game/` | `voices.py` + `pack_voices.py` + `voice-chapters.sh` (Kokoro voice acting), `blender/*.py` (procedural 3-D models), `artifact.mjs` (package the built game as one folder for hosting) |
 
 **Checks**
 
