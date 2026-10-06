@@ -464,7 +464,7 @@ export const p4: PuzzleDef = {
         title: p.difficulty === 'commander' ? 'By hand · only the answer is checked' : undefined,
         steps: [
           { prompt: `Row 2 has one non-zero entry, $1$, sign $+$. Its minor is $${texM(P4_MINOR3)}$. The minor's middle column has one non-zero entry, $1$, sign $+$. What is left: $\\det${texM(P4_MINOR2)} =$`, answer: det(P4_MINOR2), mistakes: [[1, 'It is 1 · 2 − 3 · 1.']] },
-          { prompt: '$\\det N = 1 \\cdot 1 \\cdot (-1) =$', answer: det(P4_M4) },
+          { prompt: '$\\det N = 1 \\cdot 1 \\cdot (\\text{what is left}) =$', answer: det(P4_M4) },
         ],
         onDone: () => { flags[1] = true; p.subgoal(1); sfx.success(); p.win(); },
         mount: host,
@@ -502,7 +502,7 @@ export const p5: PuzzleDef = {
   par: 6,
   onWin: S.p5Win,
   setup(p) {
-    void p.g.stage.view3D({ target: [1.5, 1.5, 1.4], distance: 14, azimuth: -55, elevation: 24, ms: 0 });
+    void p.g.stage.view3D({ target: [0.3, 0.7, 0.9], distance: 15, azimuth: -55, elevation: 24, ms: 0 });
     const box = new Parallelepiped(p.g.stage, col3(P5_M, 0), col3(P5_M, 1), col3(P5_M, 2), { color: C.result, opacity: 0.16 });
     const arrows = [C.v, C.w, C.u].map((c, j) => new Arrow([0, 0, 0], col3(P5_M, j), { color: c, width: 0.045 }));
     p.add(box, ...arrows);
@@ -543,7 +543,7 @@ export const p5: PuzzleDef = {
       steps: [
         { prompt: 'The pivot spot of column 1 holds 0. Swap $R_1$ and $R_2$. The sign of the determinant is now', answer: -1, mistakes: [[1, 'A swap turns the box over: the sign flips.']] },
         { prompt: '$R_3 \\to R_3 - 2R_1$, then $R_3 \\to R_3 + \\tfrac12 R_2$. The diagonal of the triangle:', answer: P5_DIAG, mistakes: [[[1, 2, -3], 'Adding half of R2 leaves −3/2 in the corner: −2 + ½ · 1.']] },
-        { prompt: '$\\det M = (-1) \\times 1 \\times 2 \\times (-\\tfrac32)$', answer: P5_DET, mistakes: [[-3, 'Keep the sign from the swap.']] },
+        { prompt: '$\\det M = (\\text{sign}) \\times (\\text{product of the diagonal})$', answer: P5_DET, mistakes: [[-3, 'Keep the sign from the swap.']] },
       ],
       onDone: () => void toShield(),
     });

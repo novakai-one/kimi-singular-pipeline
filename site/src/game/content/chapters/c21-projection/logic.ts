@@ -5,6 +5,7 @@ import {
   type Mat, type Vec,
 } from '../../../math/la.ts';
 import { rint, type LawCore } from '../../../game/lawcheck.ts';
+import { niceTex } from '../../../math/frac.ts';
 import { HATCH, HATCH_FOOT, TETHER } from '../../truth.ts';
 
 export { HATCH, HATCH_FOOT, TETHER };
@@ -14,6 +15,8 @@ const r2 = (x: number) => Math.round(x * 100) / 100;
 export const fmtV = (v: readonly number[], d = 2): string => `(${v.map((x) => { const y = Math.round(x * 10 ** d) / 10 ** d; return Object.is(y, -0) || Math.abs(y) < 10 ** -d / 2 ? '0' : String(y).replace('-', '−'); }).join(', ')})`;
 export const fmtN = (x: number, d = 2): string => { const y = Math.round(x * 10 ** d) / 10 ** d; return Math.abs(y) < 10 ** -d / 2 ? '0' : y.toFixed(d).replace('-', '−'); };
 export const near = (a: readonly number[], b: readonly number[], tol: number): boolean => norm(vsub([...a], [...b])) <= tol;
+/** A matrix in TeX, entries as simple fractions. */
+export const texM = (M: Mat): string => `\\begin{bmatrix} ${M.map((r) => r.map((x) => niceTex(x)).join(' & ')).join(' \\\\ ')} \\end{bmatrix}`;
 export const tolFor = (d: string): number => (d === 'commander' ? 0.01 : 0.05);
 
 /** The orthogonal projection of b onto the column space of A (any columns, dependent ones dropped). */

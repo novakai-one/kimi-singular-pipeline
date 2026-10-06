@@ -4,7 +4,7 @@
 import type { ChapterDef } from '../../../game/types';
 import { S } from './script';
 import { p1, p2, p3, p4, p5, p6, lift } from './puzzles';
-import { sayit, doubtZero, doubtApart, law, compare, why, reviewThree, reviewOneWay, reviewDeck, reviewZero, numpy } from './briefing';
+import { sayit, doubtZero, doubtApart, law, compare, why, reviewThree, reviewOneWay, reviewDeck, reviewZero } from './briefing';
 import { buildFindLoop } from './build';
 import { coldOpen, holotable, reveal } from './scenes';
 
@@ -66,7 +66,6 @@ const ch: ChapterDef = {
     { kind: 'puzzle', id: 'sp', puzzle: lift },
     { kind: 'scene', id: 'review-intro', lines: S.review, setup: holotable },
     { kind: 'review', id: 'c03-review', review: { id: 'c03-review', who: 'bram', title: 'Act I Review', claims: [reviewThree, reviewDeck, reviewOneWay, reviewZero] } },
-    { kind: 'card', id: 'numpy', card: numpy },
     { kind: 'cinematic', id: 'reveal', run: reveal },
   ],
 };

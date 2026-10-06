@@ -32,7 +32,7 @@ const NAME_SKEW: Beat = {
     saw: 'Our path along $(1, 0, 0)$ and the debris along $(0, 1, 0)$ point different ways, yet never meet: one runs 2 above the other. The shortest link between them is at a right angle to both, along $(1, 0, 0)\\times(0, 1, 0) = (0, 0, 1)$, and it is 2 long.',
     means: 'In 3-D, two lines can miss without being parallel. The gap between them is measured along the arrow at a right angle to both directions: their cross product.',
     name: 'Lines that are not parallel and never meet are **skew lines**.',
-    formula: '\\begin{gathered}\\text{gap} = \\frac{|(\\mathbf p_2 - \\mathbf p_1)\\cdot(\\cg{\\mathbf d_1}\\times\\cr{\\mathbf d_2})|}{\\|\\cg{\\mathbf d_1}\\times\\cr{\\mathbf d_2}\\|} \\\\[4pt] \\frac{|(0, 1, 2)\\cdot(0, 0, 1)|}{1} = 2\\end{gathered}',
+    formula: '\\begin{gathered}\\text{gap} = \\frac{|(\\mathbf p_2 - \\mathbf p_1)\\cdot(\\cg{\\mathbf d_1}\\times\\htmlClass{c-red}{\\mathbf d_2})|}{\\|\\cg{\\mathbf d_1}\\times\\htmlClass{c-red}{\\mathbf d_2}\\|} \\\\[4pt] \\frac{|(0, 1, 2)\\cdot(0, 0, 1)|}{1} = 2\\end{gathered}',
     why: 'The cross product points across both lines. The shadow of any arrow from one line to the other on that direction is the gap.',
     cue: 'When two lines **never meet and are not parallel**, think **skew**: measure the gap along $\\mathbf d_1\\times\\mathbf d_2$.',
     use: 'Robot arms and physics engines check how close two moving rods come with this gap.',
