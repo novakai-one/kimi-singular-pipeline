@@ -525,7 +525,7 @@ class PuzzleCtxImpl implements PuzzleCtx {
   snap(): number | null { return this.difficulty === 'cadet' ? 1 : this.difficulty === 'navigator' ? 0.5 : null; }
 
   win(): void {
-    if (this.won) return;
+    if (this.won || this.disposed) return;
     this.won = true;
     const t = this.g.stage.target;
     void celebrate(this.g.stage, [t.x, t.y, 0]);
@@ -538,12 +538,18 @@ class PuzzleCtxImpl implements PuzzleCtx {
     this.moveCount += n;
   }
   moves(): number { return this.moveCount; }
-  subgoal(i: number, done = true): void { this.hud.subgoal(i, done); if (done) sfx.success(); }
-  setGoal(m: string): void { this.hud.setGoal(m); }
+  subgoal(i: number, done = true): void { if (this.disposed) return; this.hud.subgoal(i, done); if (done) sfx.success(); }
+  setGoal(m: string): void { if (!this.disposed) this.hud.setGoal(m); }
 
   add(...objs: (Object3D | { object: Object3D })[]): void {
     for (const o of objs) {
       const obj = 'isObject3D' in o ? (o as Object3D) : (o as { object: Object3D }).object;
+      if (this.disposed) {
+        // a late timer adding to a torn-down puzzle: dispose at once instead of leaking into the next beat
+        const d = (o as { dispose?: () => void }).dispose;
+        if (typeof d === 'function' && !('isObject3D' in o)) { try { d.call(o); } catch { /* already gone */ } }
+        continue;
+      }
       this.g.stage.world.add(obj);
       const d = (o as { dispose?: () => void }).dispose;
       if (typeof d === 'function' && !('isObject3D' in o)) this.disposers.push(() => d.call(o));
@@ -564,7 +570,7 @@ class PuzzleCtxImpl implements PuzzleCtx {
   readout(title?: string): Readout {
     const r = new Readout(title);
     r.el.style.pointerEvents = 'auto';
-    this.g.ui.scene.appendChild(r.el);
+    if (!this.disposed) this.g.ui.scene.appendChild(r.el);
     return r;
   }
 
@@ -587,7 +593,11 @@ class PuzzleCtxImpl implements PuzzleCtx {
     window.setTimeout(() => el.remove(), 5200);
   }
 
+  /** True once the puzzle is torn down: late timers from a puzzle must not touch the next beat. */
+  disposed = false;
+
   disposeAll(): void {
+    this.disposed = true;
     for (const d of this.disposers.splice(0)) { try { d(); } catch (e) { console.error(e); } }
     this.dockEl?.remove();
   }

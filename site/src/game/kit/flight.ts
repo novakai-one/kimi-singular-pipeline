@@ -91,7 +91,7 @@ export class BurnChain {
       this.fireBtn = button(o.fireLabel ?? 'Fire', () => void this.fire(), { cls: 'primary', kbd: 'F' });
       p.dock().appendChild(this.fireBtn);
       const onKey = (e: KeyboardEvent) => {
-        if ((e.key === 'f' || e.key === 'F') && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement) && !p.g.dialogue.active) void this.fire();
+        if ((e.key === 'f' || e.key === 'F') && !this.fireBtn?.disabled && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement) && !p.g.dialogue.active) void this.fire();
       };
       document.addEventListener('keydown', onKey);
       p.onDispose(() => document.removeEventListener('keydown', onKey));

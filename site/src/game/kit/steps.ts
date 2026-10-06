@@ -43,7 +43,7 @@ const same = (a: number[], b: number[], tol: number) => a.length === b.length &&
 
 export class StepWorksheet {
   readonly el: HTMLElement;
-  private readonly rows: { inputs: HTMLInputElement[]; status: HTMLElement; row: HTMLElement; done: boolean }[] = [];
+  private readonly rows: { inputs: HTMLInputElement[]; status: HTMLElement; row: HTMLElement; done: boolean; last?: string }[] = [];
   private finished = false;
   private readonly mode: 'cadet' | 'navigator' | 'commander';
 
@@ -92,6 +92,10 @@ export class StepWorksheet {
     const row = this.rows[i];
     const got = this.read(i);
     if (!got) return;
+    // Enter then blur fires two checks of the same value: count (and judge) it once
+    const key = got.join(',');
+    if (row.last === key) return;
+    row.last = key;
     const want = flat(s.answer);
     const ok = same(got, want, s.tol ?? 1e-6);
     const last = i === this.o.steps.length - 1;
@@ -113,7 +117,8 @@ export class StepWorksheet {
     } else {
       row.row.classList.add('bad');
       sfx.miss();
-      const m = s.mistakes?.find(([v]) => same(flat(v), got, 1e-6));
+      // typed decimals of a root (2.24 for √5) still match their misconception
+      const m = s.mistakes?.find(([v]) => same(flat(v), got, Math.max(s.tol ?? 1e-6, 0.01)));
       row.status.innerHTML = m ? inline(m[1]) : this.mode === 'commander' ? 'Not this. Check your working above.' : 'Not this one.';
     }
   }

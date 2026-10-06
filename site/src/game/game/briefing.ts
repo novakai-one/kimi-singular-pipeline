@@ -268,6 +268,7 @@ export async function runReview(host: BriefingHost, r: ReviewDef): Promise<void>
     if (!res.skipped && !res.right) lost++;
   }
   const stars = Math.max(0, 3 - lost);
+  const count = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'][r.claims.length] ?? String(r.claims.length);
   const cs = chapterSave(host.chapterId);
   cs.stars[r.id] = Math.max(cs.stars[r.id] ?? 0, stars);
   save();
@@ -276,8 +277,8 @@ export async function runReview(host: BriefingHost, r: ReviewDef): Promise<void>
     h('div', { class: 'kicker' }, `${r.title} · settled`),
     h('h2', null, `${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}`),
     h('div', { class: 'card-body', html: md(lost
-      ? `${who.name}'s four claims are settled. ${lost === 1 ? 'One first call was' : `${lost} first calls were`} the wrong way round; each one's reason is in your Field Manual.`
-      : `${who.name}'s four claims are settled, every one by construction, and every first call right.`) }));
+      ? `${who.name}'s ${count} claims are settled. ${lost === 1 ? 'One first call was' : `${lost} first calls were`} the wrong way round; each one's reason is in your Field Manual.`
+      : `${who.name}'s ${count} claims are settled, every one by construction, and every first call right.`) }));
   g.ui.scene.appendChild(el);
   sfx.solved();
   try { await host.guard(hud.primary('Continue')); } finally { el.remove(); }
