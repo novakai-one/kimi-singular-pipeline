@@ -14,7 +14,15 @@ export interface PyResult { error?: string; results?: PyTestResult[]; stdout?: s
 
 const WORKER = (indexURL: string) => `
 import { loadPyodide } from '${indexURL}pyodide.mjs';
-const py = await loadPyodide({ indexURL: '${indexURL}' });
+// hosts that cannot serve a .zip get the standard library as base64 text (tools/game/artifact.mjs)
+let stdLibURL;
+try { const h = await fetch('${indexURL}python_stdlib.zip', { method: 'HEAD' }); if (!h.ok) throw new Error('no zip'); }
+catch {
+  const t = await (await fetch('${indexURL}python_stdlib.b64.txt')).text();
+  const bin = Uint8Array.from(atob(t.trim()), (c) => c.charCodeAt(0));
+  stdLibURL = URL.createObjectURL(new Blob([bin], { type: 'application/zip' }));
+}
+const py = await loadPyodide(stdLibURL ? { indexURL: '${indexURL}', stdLibURL } : { indexURL: '${indexURL}' });
 let out = [];
 py.setStdout({ batched: (s) => out.push(s) });
 py.setStderr({ batched: (s) => out.push(s) });

@@ -84,6 +84,8 @@ You move space with your own hands, find out *why* each idea works, explain it b
 
 **Play:** `npm install`, then `npm run dev` and open http://localhost:5173/game/ (or **Linear algebra → SINGULAR** in the site menu).
 
+**Hosted build:** https://claude.ai/artifact/GJA9T9nmKE8HxSLm37AWmz (private until shared). To rebuild it: `npm run build && node tools/game/artifact.mjs dist out/singular`, then publish `out/singular/index.html` with the files listed in `out/singular-groups.json`. The packager converts models to glTF JSON and the Python standard library to base64 text, for hosts that serve only web file types; the game falls back to those automatically.
+
 **What is in it**
 
 - **The story:** a Prologue, 26 chapters in nine acts, and an Epilogue. A pulse knocks the survey tug *Lantern* off course; every chapter is one question the crew must answer to reach the colony ark *Meridian*. Each big idea is found by doing (drag, fire, build), then named, then derived, then done by hand.

@@ -18,7 +18,8 @@ export function setModelBase(url: string): void { base = url.endsWith('/') ? url
 export async function loadModel(name: string): Promise<Object3D | null> {
   let p = cache.get(name);
   if (!p) {
-    p = loader.loadAsync(`${base}${name}.glb`).then((g) => {
+    // a .glb, or the same model as glTF JSON for hosts that cannot serve .glb (tools/game/artifact.mjs)
+    p = loader.loadAsync(`${base}${name}.glb`).catch(() => loader.loadAsync(`${base}${name}.json`)).then((g) => {
       g.scene.traverse((o) => {
         const m = o as Mesh;
         if (!m.isMesh) return;

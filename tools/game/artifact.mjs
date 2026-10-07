@@ -17,7 +17,8 @@ const html = readFileSync(page, 'utf8');
 const head = html.match(/<head>([\s\S]*?)<\/head>/i)?.[1] ?? '';
 const body = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1] ?? '';
 const keepHead = head.split('\n').filter((l) => !/<meta charset|<meta name="viewport"/i.test(l)).join('\n');
-const pageOut = `${keepHead.trim()}\n${body.trim()}\n`.replaceAll('../assets/', 'assets/');
+// the host names the page from its <title>: the game's name alone
+const pageOut = `${keepHead.trim()}\n${body.trim()}\n`.replaceAll('../assets/', 'assets/').replace(/<title>[^<]*<\/title>/, '<title>SINGULAR</title>');
 writeFileSync(join(out, 'index.html'), pageOut);
 
 // 2. the build files the page reaches, followed through every import and url()
@@ -54,6 +55,24 @@ const copyDir = (from, to) => {
   }
 };
 for (const d of ['models', 'voice', 'pyodide']) copyDir(join(dist, 'game', d), join(out, d));
+
+// hosts that serve only web types: models as glTF JSON (buffer embedded), the Python standard library as base64 text
+for (const n of readdirSync(join(out, 'models'))) {
+  if (!n.endsWith('.glb')) continue;
+  const glb = readFileSync(join(out, 'models', n));
+  const jsonLen = glb.readUInt32LE(12);
+  const gltf = JSON.parse(glb.subarray(20, 20 + jsonLen).toString('utf8'));
+  const binStart = 20 + jsonLen;
+  if (binStart < glb.length) {
+    const binLen = glb.readUInt32LE(binStart);
+    const bin = glb.subarray(binStart + 8, binStart + 8 + binLen);
+    gltf.buffers[0].uri = `data:application/octet-stream;base64,${bin.toString('base64')}`;
+  }
+  writeFileSync(join(out, 'models', n.replace(/\.glb$/, '.json')), JSON.stringify(gltf));
+  rmSync(join(out, 'models', n));
+}
+const zip = join(out, 'pyodide', 'python_stdlib.zip');
+if (existsSync(zip)) { writeFileSync(join(out, 'pyodide', 'python_stdlib.b64.txt'), readFileSync(zip).toString('base64')); rmSync(zip); }
 
 // 4. report, and upload groups under 60 MB and 250 files each (index.html goes in the first)
 const files = [];
