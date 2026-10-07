@@ -391,7 +391,7 @@ export const p4: PuzzleDef = {
       // T can send an arrow more than 90° round, so measure against the line, not the arrow
       r.row('t', 'angle between yellow and the dashed line', `${Math.round(turnDeg(P4_T, x))}°`);
       r.row('cov', 'circle swept', `${Math.round(sw.coverage * 100)}%`, sw.coverage >= SWEEP_FULL ? C.good : C.white);
-      r.row('found', 'lines that hold', sw.coverage >= SWEEP_FULL ? 'none' : '·', sw.coverage >= SWEEP_FULL ? C.orange : C.white);
+      r.row('found', 'lines that hold', sw.coverage >= SWEEP_FULL ? 'none' : 'none yet (keep turning)', sw.coverage >= SWEEP_FULL ? C.orange : C.white);
     };
     const nextBtn = button('Next', () => void startB(), { cls: 'primary small' });
     const doneA = () => {
