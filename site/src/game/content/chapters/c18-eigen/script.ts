@@ -1,6 +1,6 @@
 // Chapter 18: every voiced line. Plain data; story numbers are formatted from logic.ts / truth.ts, never typed.
 import type { Line } from '../../lines';
-import { CUTTER, P1_A, P2_A, P5_VALUES, P6_LINES, P7_VALUES, P3_LINES, P1_LINES, fmtN, fmtV, sayV, spell } from './logic.ts';
+import { CUTTER, P1_A, P2_A, P4_T, P5_VALUES, P6_LINES, P7_VALUES, P3_LINES, P1_LINES, fmtN, fmtV, sayV, spell } from './logic.ts';
 
 const col = (M: number[][], j: number) => M.map((r) => r[j]);
 const vals = (xs: number[]) => xs.map(fmtN).join(', ');
@@ -32,9 +32,10 @@ export const S: Record<string, Line[]> = {
     { who: 'bram', text: 'Good. Nobody plans on a line that isn’t there.' },
   ],
   p3Intro: [
-    { who: 'lantern', text: 'A faster search. Pick a number λ on the dial and take away λ times the identity: the grid shows A − λI.', say: 'A faster search. Pick a number, lambda, on the dial, and take away lambda times the identity. The grid shows A minus lambda I.' },
-    { who: 'lantern', text: 'An arrow that A stretches by λ is sent to the origin by A − λI. So at that λ, the grid goes flat.', say: 'An arrow that A stretches by lambda is sent to the origin by A minus lambda I. So at that lambda, the grid goes flat.' },
-    { who: 'bram', text: 'Flat on purpose, this time. Turn the dial, Nav.' },
+    { who: 'lantern', text: 'A faster search. A line holds when Ax = λx: yellow is green times a number λ.', say: 'A faster search. A line holds when A x equals lambda x: yellow is green times a number, lambda.' },
+    { who: 'lantern', text: 'Take λx to the other side: (A − λI)x = 0. I is the identity matrix, so λI x is λx.', say: 'Take lambda x to the other side: A minus lambda I, times x, is zero. I is the identity matrix, so lambda I x is lambda x.' },
+    { who: 'lantern', text: 'So the matrix A − λI sends a non-zero arrow to zero. A matrix can do that only if it flattens the grid.', say: 'So the matrix A minus lambda I sends a non-zero arrow to zero. A matrix can do that only if it flattens the grid.' },
+    { who: 'bram', text: 'Flat on purpose, this time. Turn the dial until the yellow square has no area, Nav.' },
   ],
   p3Win: [
     { who: 'lantern', text: `The grid goes flat at λ = ${fmtN(P3_LINES[0][1])} and at λ = ${fmtN(P3_LINES[1][1])}. The lines it sends to the origin: ${fmtV(P3_LINES[0][0])} and ${fmtV(P3_LINES[1][0])}.`, say: `The grid goes flat at lambda equals ${spell(P3_LINES[0][1])}, and at lambda equals ${spell(P3_LINES[1][1])}. The lines it sends to the origin: ${sayV(P3_LINES[0][0])}, and ${sayV(P3_LINES[1][0])}.` },
@@ -46,15 +47,16 @@ export const S: Record<string, Line[]> = {
     { who: 'bram', text: 'Same fact, another face. Flat is flat.' },
   ],
   p4Intro: [
-    { who: 'lantern', text: 'The routine pulse, on the ground layer. Every fourth one brings the ground layer home.' },
-    { who: 'wren', text: 'So which lines does that one keep?' },
+    { who: 'lantern', text: `The routine pulse, on the ground layer. It is a matrix too, T. It sends ${fmtV([1, 0])} to ${fmtV(col(P4_T, 0))}, and ${fmtV([0, 1])} to ${fmtV(col(P4_T, 1))}.`, say: `The routine pulse, on the ground layer. It is a matrix too, T. It sends one, zero to ${sayV(col(P4_T, 0))}, and zero, one to ${sayV(col(P4_T, 1))}.` },
+    { who: 'lantern', text: 'Every fourth pulse brings the ground layer home: four T’s in a row leave every point where it started.' },
+    { who: 'wren', text: 'So which lines does T keep?' },
   ],
   p4Win: [
     { who: 'lantern', text: 'No real line holds. In its own slanted grid, each routine pulse is a quarter turn. Four quarter turns are one full turn: everything is home.' },
     { who: 'bram', text: 'That’s the fourth pulse, then. Not luck. Arithmetic.' },
   ],
   p5Intro: [
-    { who: 'lantern', text: 'Three dimensions: a pulse that keeps the first axis and mixes the other two. By hand, this time. I check each step.' },
+    { who: 'lantern', text: 'Three dimensions now: a 3 × 3 matrix A. It keeps the first axis and mixes the other two. By hand, this time: no dial, no sweep.', say: 'Three dimensions now: a three by three matrix, A. It keeps the first axis and mixes the other two. By hand, this time: no dial, no sweep.' },
     { who: 'bram', text: 'By hand, so you can do it when I’m not standing here.' },
   ],
   p5Win: [
@@ -63,7 +65,7 @@ export const S: Record<string, Line[]> = {
   ],
   p6Intro: [
     { who: 'vell', text: 'Here is my setting, Navigator. Written in your numbers, so nobody argues about grids.' },
-    { who: 'lantern', text: 'Vell’s pulse, V. Testing lines through the Anchor.' },
+    { who: 'lantern', text: 'Vell’s pulse is a 3 × 3 matrix, V. The same test as the first one: which arrows does V leave on their own line?', say: 'Vell’s pulse is a three by three matrix, V. The same test as the first one: which arrows does V leave on their own line?' },
   ],
   p6Win: [
     { who: 'lantern', text: `Three lines hold. Along ${fmtV(P6_LINES[0][0])}, stretch ${fmtN(P6_LINES[0][1])}. Along ${fmtV(P6_LINES[1][0])}, stretch ${fmtN(P6_LINES[1][1])}. Along ${fmtV(P6_LINES[2][0])}, stretch ${fmtN(P6_LINES[2][1])}.`, say: `Three lines hold. Along ${sayV(P6_LINES[0][0])}, stretch ${spell(P6_LINES[0][1])}. Along ${sayV(P6_LINES[1][0])}, stretch ${spell(P6_LINES[1][1])}. Along ${sayV(P6_LINES[2][0])}, stretch ${spell(P6_LINES[2][1])}.` },
@@ -71,10 +73,10 @@ export const S: Record<string, Line[]> = {
     { who: 'bram', text: 'Everything. Remember he said that.' },
   ],
   p7Intro: [
-    { who: 'lantern', text: 'Optional. A shortcut people try: row reduce the pulse first, then read the stretches off it.' },
+    { who: 'lantern', text: 'Optional. A shortcut people try: row reduce the matrix first, then read the stretches off the result. Does it work?' },
   ],
   p7Win: [
-    { who: 'lantern', text: `Row reduced, the stretches are ${vals(P7_VALUES)}. The pulse’s are 5 and 2. Row operations change the move, so they change its stretches.`, say: `Row reduced, the stretches are four and two point five. The pulse's are five and two. Row operations change the move, so they change its stretches.` },
+    { who: 'lantern', text: `Row reduced, the stretches are ${vals(P7_VALUES)}. A’s are 5 and 2. Row operations change the matrix, so they change its stretches.`, say: `Row reduced, the stretches are four and two point five. A's are five and two. Row operations change the matrix, so they change its stretches.` },
   ],
   briefing: [
     { who: 'bram', text: 'Holotable. Before anyone trusts Vell’s lines, I want this in plain words.' },

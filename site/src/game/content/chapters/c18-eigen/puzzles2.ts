@@ -12,7 +12,7 @@ import { sfx } from '../../../audio/sfx';
 import { matVec, mlerp, norm, normalize, type Mat, type Vec } from '../../../math/la';
 import { LineHunt, niceDir, ptag, v3, sg } from './parts';
 import {
-  P3_A, P5_A, P5_BLOCK_C, P5_TRI, P5_TRI_VALUES, P5_VALUES, P5_VECS, P6_CANDIDATES, P6_LINES, P6_V, P7_U, eigenLines, fmt2, fmtN, fmtV,
+  P3_A, P5_A, P5_BLOCK_C, P5_TRI, P5_TRI_VALUES, P5_VALUES, P5_VECS, P6_CANDIDATES, P6_LINES, P6_V, P7_U, eigenLines, fmtN, fmtV, texSmall,
   lineAngleDeg, p6Won, texM, trace, turnDeg, type Lock,
 } from './logic';
 import { S } from './script';
@@ -25,8 +25,8 @@ const det3 = (M: Mat) => M[0][0] * (M[1][1] * M[2][2] - M[1][2] * M[2][1]) - M[0
 export const p5: PuzzleDef = {
   id: 'c18-p5',
   title: 'What are the stretches of a 3 × 3, by hand?',
-  goal: 'By hand: the eigenvalues of $A$, two checks and its eigenvectors, then the eigenvalues of a triangular matrix. Both matrices are in the readout.',
-  subgoals: ['The characteristic equation', 'Eigenvalues and eigenvectors', 'Check: the trace and the determinant', 'A triangular matrix'],
+  goal: 'No dial or sweep this time: find the stretches of a 3 × 3 matrix $A$ (in the readout) on paper. As with the dial, the stretches (the eigenvalues) are the λ where $\\det(A - \\lambda I) = 0$. Fill in the sheet: that equation, its roots, two checks, then an arrow on each line (an eigenvector). Each line appears in the picture once your answers are right. Last, a triangular matrix.',
+  subgoals: ['The equation $\\det(A - \\lambda I) = 0$', 'Eigenvalues and eigenvectors', 'Check: sum (the trace) and product (the determinant)', 'A triangular matrix'],
   hints: [
     'Expand $\\det(A - \\lambda I)$ along the first row: only the $2 - \\lambda$ survives, times the 2 × 2 block $\\begin{bmatrix} 3 - \\lambda & 4 \\\\ 4 & -3 - \\lambda \\end{bmatrix}$.',
     'The block’s determinant is $(3 - \\lambda)(-3 - \\lambda) - 16 = \\lambda^2 - 9 - 16 = \\lambda^2 - 25$, so the eigenvalues are 2, 5 and −5.',
@@ -44,7 +44,8 @@ export const p5: PuzzleDef = {
     const parts = P5_VECS.map((v, i) => {
       const u = normalize(v);
       const line = new InfLine(p.g.stage, [0, 0, 0], u as V3, { color: C.violet, width: 2.2, opacity: 0.7, length: 7 });
-      const a = new Arrow([0, 0, 0], v3(u.map((x) => x * BASE)), { color: [C.v, C.w, C.u][i], width: 0.05 });
+      // green: an arrow on the line; yellow: where A sends it (λ times as long)
+      const a = new Arrow([0, 0, 0], v3(u.map((x) => x * BASE)), { color: C.v, width: 0.05 });
       const img = new Arrow([0, 0, 0], v3(u.map((x) => x * BASE * P5_VALUES[i])), { color: C.result, width: 0.035, opacity: 0.85 });
       const tg = ptag(p, `λ = ${fmtN(P5_VALUES[i])} · ${fmtV(v)}`, v3(u.map((x) => x * BASE * P5_VALUES[i] + (P5_VALUES[i] < 0 ? -0.4 : 0.4) * x)), 'vi', [0, -16]);
       p.add(line.object, a, img); p.onDispose(() => line.dispose());
@@ -64,7 +65,9 @@ export const p5: PuzzleDef = {
     };
     const r = p.readout('By hand');
     r.row('A', '$A$', `$${texM(P5_A)}$`);
+    // the triangular one waits until its own step opens
     r.row('U', 'the triangular one', `$${texM(P5_TRI)}$`);
+    r.hideRow('U');
     // Cadet: LANTERN shows the trace and det A from the start, and the sum and product once the eigenvalues
     // are in. Navigator and Commander work the checks by hand: each pair shows only once its check is right.
     const cadet = p.difficulty === 'cadet';
@@ -95,6 +98,13 @@ export const p5: PuzzleDef = {
     let tri: StepWorksheet | null = null;
     const openTri = () => {
       if (tri) return tri;
+      r.hideRow('U', false);
+      p.setGoal('The 3 × 3 is done: its lines are in the picture. **Last:** the triangular matrix in the readout (zeros below the diagonal). Find its eigenvalues.');
+      // the finished sheet folds to one line, so the new step has the dock (its answers live on in the readout and the picture)
+      const summary = h('div', { class: 'a7-msg good', html: inline(`The 3 × 3: λ = ${P5_VALUES.map(fmtN).join(', ')}, each with its line. ✓`) });
+      summary.style.display = 'none';
+      p.dock().append(summary);
+      if (!p.g.headless) window.setTimeout(() => { ws.el.style.display = 'none'; summary.style.display = ''; }, 1500);
       tri = new StepWorksheet(p, {
         steps: [{ prompt: 'The triangular one (readout): its eigenvalues, top to bottom', answer: P5_TRI_VALUES }],
         onDone: () => {
@@ -132,7 +142,13 @@ export const p5: PuzzleDef = {
     ws.el.addEventListener('keyup', watch);
     ws.el.addEventListener('click', () => window.setTimeout(watch, 30));
     return {
-      async showMe() { await ws.showMe(420); watch(); await openTri().showMe(420); },
+      async showMe() {
+        await ws.showMe(420); watch(); await openTri().showMe(420);
+        if (!p.g.headless) {
+          const why = h('div', { class: 'a7-msg good', html: inline('Why: $\\det(A - \\lambda I) = (2 - \\lambda)\\big((3 - \\lambda)(-3 - \\lambda) - 16\\big) = (2 - \\lambda)(\\lambda^2 - 25)$, so λ = 2, 5 or −5. Each λ’s line is where $A - \\lambda I$ sends arrows to zero.') });
+          p.dock().append(why);
+        }
+      },
       solve() { ws.solve(); openTri().solve(); },
       wrong() { ws.wrong(); tri?.wrong(); },
     };
@@ -141,63 +157,97 @@ export const p5: PuzzleDef = {
 
 // ------------------------------------------------------------------ p6 · Vell's lines
 
+const P6_GOAL_PICK = 'Vell’s pulse is a 3 × 3 matrix, $V$. **Green** is your test arrow $\\mathbf x$; **yellow** is where $V$ sends it. Press an arrow under **Test** to try it. Most arrows come out **turned**. Find the arrows whose yellow lands **on the dashed line through green**, so yellow is λ times green. There are three such lines. For each, type λ.';
+const P6_GOAL_TYPED = 'Vell’s pulse is a 3 × 3 matrix, $V$. **Type an arrow** $\\mathbf x$ (green) and press **Test**: yellow is where $V$ sends it. Most arrows come out **turned**. Find the arrows whose yellow lands **on the dashed line through green**, so yellow is λ times green. There are three such lines. For each, type λ.';
+
 export const p6: PuzzleDef = {
   id: 'c18-p6',
   title: 'Which lines does Vell’s pulse keep?',
-  goal: 'Test arrows through the Anchor under Vell’s pulse $V$. **Lock** every line $V$ keeps (the yellow image stays on the white arrow’s line), and give its stretch.',
-  subgoals: ['Lock the line with stretch 1', 'Lock the line with stretch 0.5', 'Lock the line with stretch 0.2'],
+  goal: P6_GOAL_PICK,
+  subgoals: ['Find the first line, and its λ', 'Find the second line, and its λ', 'Find the third line, and its λ'],
   hints: [
-    'A line holds when $V\\mathbf x$ is a multiple of $\\mathbf x$. Where $\\mathbf x$ has a 0, $V\\mathbf x$ must have a 0 too. Elsewhere, divide each entry of $V\\mathbf x$ by the matching entry of $\\mathbf x$: the ratios must agree, and that ratio is the stretch.',
-    '$V(1, 1, 1) = (1, 1, 1)$: stretch 1. Try $(1, -1, 0)$ and $(1, 1, -2)$ as well.',
-    'Lock $(1, 1, 1)$ × 1, $(1, -1, 0)$ × 0.5 and $(1, 1, -2)$ × 0.2.',
+    'Yellow is on the dashed line when $V\\mathbf x$ is a number times $\\mathbf x$. Where $\\mathbf x$ has a 0, $V\\mathbf x$ must have a 0 too. Elsewhere, divide each entry of $V\\mathbf x$ by the matching entry of $\\mathbf x$: the ratios must agree, and that ratio is λ.',
+    'Each row of $V$ adds up to 1: try $(1, 1, 1)$. Swapping the first two entries of $\\mathbf x$ swaps the first two of $V\\mathbf x$: try $(1, -1, 0)$. Then try $(1, 1, -2)$.',
+    '$(1, 1, 1)$ with λ = 1, $(1, -1, 0)$ with λ = 0.5, and $(1, 1, -2)$ with λ = 0.2.',
   ],
-  par: 6,
+  par: 10, // testing arrows is how this is solved: exploring must not cost stars
   view: '3d',
   onWin: S.p6Win,
   setup(p) {
     const d = p.difficulty;
-    void p.g.stage.view3D({ target: [0, 0, 0], distance: 13, azimuth: -38, elevation: 22 });
-    const lat = new Lattice3D(p.g.stage, { extent: 2, opacity: 0.1 });
-    const latV = new Lattice3D(p.g.stage, { extent: 2, opacity: 0.16, color: '#9b7bff' });
-    latV.set(P6_V);
-    p.add(lat, latV);
-    const L = 2.6;
-    const probe = new Arrow([0, 0, 0], [L, 0, 0], { color: C.white, width: 0.05, label: '$\\mathbf x$' });
-    const img = new Arrow([0, 0, 0], v3(matVec(P6_V, [1, 0, 0]).map((t) => t * L)), { color: C.result, width: 0.045, label: '$V\\mathbf x$' });
-    p.add(probe, img);
-    const shown: InfLine[] = [];
+    const typedMode = d === 'commander';
+    if (typedMode) p.setGoal(P6_GOAL_TYPED);
+    if (d === 'cadet') p.setGoal(P6_GOAL_PICK.replace('For each, type λ.', 'LANTERN reads off λ for each.'));
+    const VIEW = { distance: 10, azimuth: -38, elevation: 22 };
+    void p.g.stage.view3D({ target: [0, 0, 0], ...VIEW });
+    const lat = new Lattice3D(p.g.stage, { extent: 2, opacity: 0.12 });
+    p.add(lat);
+    // green: the test arrow at its true length; yellow: V x; the dashed line through green is where yellow must land
     let x: Vec = [1, 0, 0];
-    const r = p.readout('Vell’s pulse');
+    // yellow is thinner and labelled mid-shaft, so green still shows when the two coincide (λ = 1)
+    const probe = new Arrow([0, 0, 0], v3(x), { color: C.v, width: 0.05, label: '$\\mathbf x$' });
+    const img = new Arrow([0, 0, 0], v3(matVec(P6_V, x)), { color: C.result, width: 0.03, label: '$V\\mathbf x$', labelAt: 'mid' });
+    const xLine = new InfLine(p.g.stage, [0, 0, 0], v3(x), { color: C.v, width: 1.4, opacity: 0.55, dashed: true });
+    p.add(xLine.object, img, probe); p.onDispose(() => xLine.dispose());
+    const shown: InfLine[] = [];
+    const num = (t: number) => (Math.abs(t - Math.round(t)) < 1e-9 ? String(Math.round(t)) : t.toFixed(2)).replace(/^-/, '−');
+    const texN = (t: number) => num(t).replace('−', '-');
+    const texV = (v: readonly number[]) => `(${v.map(texN).join(',\\ ')})`;
+    const r = p.readout('Green and yellow');
     r.row('V', '$V$', '$\\tfrac{1}{60}\\left[\\begin{smallmatrix} 37 & 7 & 16 \\\\ 7 & 37 & 16 \\\\ 16 & 16 & 28 \\end{smallmatrix}\\right]$');
+    const locks: (Lock & { ok: boolean; line: number })[] = [];
     const paint = () => {
       const y = matVec(P6_V, x);
-      r.row('x', '$\\mathbf x$', fmtV(x), C.white);
-      r.row('y', '$V\\mathbf x$', `(${y.map((t) => fmt2(t)).join(', ')})`, C.result);
-      r.row('t', 'turned off the line of $\\mathbf x$', `${Math.round(turnDeg(P6_V, x))}°`, turnDeg(P6_V, x) < 1 ? C.violet : C.white);
+      const deg = turnDeg(P6_V, x);
+      r.row('x', 'green: your arrow $\\mathbf x$', `(${x.map(num).join(', ')})`, C.v);
+      r.row('y', 'yellow: $V\\mathbf x$', `(${y.map(num).join(', ')})`, C.result);
+      // the link: 60 V has whole numbers, so V x is a whole-number arrow over 60
+      r.eq(`V\\mathbf x = \\tfrac{1}{60}\\,(${y.map((t) => texN(t * 60)).join(',\\ ')})`);
+      r.row('t', 'angle between green and yellow', `${Math.round(deg)}°`, deg < 0.5 ? C.violet : C.white);
+      r.row('n', 'lines found', String(locks.filter((k) => k.ok).length));
     };
-    const locks: (Lock & { ok: boolean; line: number })[] = [];
-    const inputs = new Map<number, HTMLInputElement>();
     const list = h('div', { class: 'a7-locks' });
+    const log = h('div', { class: 'a7-log' });
     const msgEl = h('div', { class: 'a7-msg' });
     const msg = (t: string, k: '' | 'good' | 'bad' = '') => { msgEl.className = `a7-msg ${k}`; msgEl.innerHTML = inline(t); };
     let won = false;
     const winCheck = () => {
-      P6_LINES.forEach(([dir, val], i) => sg(p, i, locks.some((k) => k.ok && lineAngleDeg(k.dir, dir) < 0.5 && Math.abs(k.stretch - val) < 0.02)));
+      const n = locks.filter((k) => k.ok).length;
+      [0, 1, 2].forEach((i) => sg(p, i, n > i));
+      paint();
       if (!won && p6Won(locks.filter((k) => k.ok))) { won = true; sfx.success(); msg('Three lines hold. Every other arrow with a part along (1, 1, 1) is turned towards that line. Arrows in the plane $x + y + z = 0$ stay in it.', 'good'); p.win(); }
+    };
+    /** Zoom out so a long typed arrow stays on screen (keeping the player's angle); back in when it fits. */
+    const fit = (v: Vec) => {
+      if (p.g.headless) return;
+      const need = Math.max(VIEW.distance, 4.6 * Math.max(...v.map(Math.abs)));
+      const cam = p.g.stage.camera.position;
+      const dist = cam.length();
+      if (Math.abs(need - dist) / dist < 0.08) return;
+      void p.g.stage.view3D({ target: [0, 0, 0], distance: need, azimuth: (Math.atan2(cam.y, cam.x) * 180) / Math.PI, elevation: (Math.asin(cam.z / dist) * 180) / Math.PI, ms: 500 });
     };
     const test = async (dir: Vec, fast = false) => {
       if (norm(dir) < 1e-9) { msg('The zero arrow has no line. Try an arrow that is not zero.', 'bad'); sfx.miss(); return; }
       p.move();
+      typed?.set(dir.slice());
+      const x0 = x.slice(), y0 = matVec(P6_V, x0);
       x = dir.slice();
-      const u = normalize(dir);
-      const y = matVec(P6_V, u);
-      probe.set([0, 0, 0], v3(u.map((t) => t * L)));
-      await animate(fast ? 1 : 800, (k) => img.set([0, 0, 0], v3(u.map((t, i) => (t + (y[i] - t) * k) * L))), ease.inOut);
+      const y = matVec(P6_V, x);
+      xLine.set([0, 0, 0], v3(x));
+      fit(x);
+      await animate(fast ? 1 : 800, (k) => {
+        probe.set([0, 0, 0], v3(x0.map((t, i) => t + (x[i] - t) * k)));
+        img.set([0, 0, 0], v3(y0.map((t, i) => t + (y[i] - t) * k)));
+      }, ease.inOut);
       paint();
       const lines = eigenLines(P6_V);
       const hit = lines.findIndex((l) => lineAngleDeg(l.dir, dir) < 0.5);
-      if (hit < 0) { sfx.miss(); msg(`$V\\mathbf x$ is turned ${Math.round(turnDeg(P6_V, dir))}° off the line of ${fmtV(dir)}. That line does not hold.`, 'bad'); p.bark('lantern', `Turned ${Math.round(turnDeg(P6_V, dir))} degrees. Not a line that holds.`); return; }
-      if (locks.some((k) => k.line === hit)) { msg('That line is locked already.'); return; }
+      const deg = turnDeg(P6_V, dir);
+      // the log: every test, hit or miss, with its numbers
+      log.prepend(h('div', { class: `a7-logrow ${hit >= 0 ? 'hit' : ''}`, html: inline(`$\\mathbf x = ${texV(x)}$ → $V\\mathbf x = ${texV(y.map((t) => Math.round(t * 100) / 100))}$ · ${hit >= 0 ? '**on the dashed line**' : `turned ${Math.round(deg)}°`}`) }));
+      while (log.children.length > 4) log.lastElementChild?.remove();
+      if (hit < 0) { sfx.miss(); msg(`Yellow is turned ${Math.round(deg)}° off the dashed line through green. $V$ turns this arrow, so its line does not hold.`, 'bad'); return; }
+      if (locks.some((k) => k.line === hit)) { msg('That line is found already. Look for another.'); return; }
       const val = lines[hit].value;
       const lock = { dir: lines[hit].dir, stretch: d === 'cadet' ? val : NaN, ok: d === 'cadet', line: hit };
       locks.push(lock);
@@ -206,9 +256,9 @@ export const p6: PuzzleDef = {
       const nd = niceDir(lines[hit].dir);
       const row = h('div', { class: `a7-lock ${lock.ok ? 'ok' : ''}` }, h('span', { class: 'd', html: inline(`line ${fmtV(nd)}`) }));
       const st = h('span', { class: 'st' }, lock.ok ? '✓' : '');
-      if (d === 'cadet') row.append(h('span', { class: 's', html: inline(`stretch $\\lambda = ${fmtN(val)}$`) }), st);
+      if (d === 'cadet') row.append(h('span', { class: 's', html: inline(`$\\lambda = ${fmtN(val)}$`) }), st);
       else {
-        const inp = h('input', { class: 'cell', inputmode: 'decimal', 'aria-label': `stretch along ${fmtV(nd)}`, placeholder: '?' }) as HTMLInputElement;
+        const inp = h('input', { class: 'cell', inputmode: 'decimal', 'aria-label': `lambda along ${fmtV(nd)}`, placeholder: '?' }) as HTMLInputElement;
         const chk = () => {
           const v = parseNum(inp.value);
           if (v === null) return;
@@ -216,30 +266,38 @@ export const p6: PuzzleDef = {
           lock.stretch = v; lock.ok = Math.abs(v - val) < (d === 'commander' ? 0.005 : 0.02);
           row.classList.toggle('ok', lock.ok); st.textContent = lock.ok ? '✓' : 'not this one';
           if (lock.ok) sfx.snap(); else sfx.miss();
+          const left = 3 - locks.filter((k) => k.ok).length;
+          if (lock.ok && left > 0) msg(`Right: along ${fmtV(nd)}, yellow is ${fmtN(v)} × green. ${left === 1 ? 'One line left.' : 'Two lines left.'}`, 'good');
           winCheck();
         };
         inp.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') chk(); });
         inp.addEventListener('change', chk);
-        row.append(h('span', { class: 's', html: inline('stretch $\\lambda =$') }), inp, st);
+        row.append(h('span', { class: 's', html: inline('yellow = $\\lambda$ × green, $\\lambda =$') }), inp, st);
         inputs.set(hit, inp);
         if (!fast) window.setTimeout(() => inp.focus(), 30);
       }
       list.append(row);
       sfx.snap();
-      msg(`Locked: $V$ keeps the line of ${fmtV(nd)}.`, 'good');
+      msg(d === 'cadet'
+        ? `Yellow lands on the dashed line: $V$ leaves the line through ${fmtV(nd)} on itself, with λ = ${fmtN(val)}.`
+        : 'Yellow lands on the dashed line: $V\\mathbf x$ is a number times $\\mathbf x$. Which number? Type it.', 'good');
       winCheck();
     };
+    const inputs = new Map<number, HTMLInputElement>();
     const pick = h('div', { class: 'a7-btns' });
     let typed: VectorInput | null = null;
-    if (d === 'commander') {
+    if (typedMode) {
       typed = new VectorInput({ dim: 3, values: [1, 0, 0], label: '\\mathbf x =', step: 1, onSubmit: (v) => void test(v) });
       typed.el.classList.add('a7-in');
       pick.append(typed.el, button('Test this arrow', () => void test(typed!.get()), { cls: 'primary small' }));
     } else {
       pick.append(h('span', { class: 'k' }, 'Test:'), ...P6_CANDIDATES.map((c) => button(fmtV(c), () => void test(c), { cls: 'small' })));
     }
-    p.dock().append(h('div', { class: 'a7-kick' }, d === 'commander' ? 'Find the lines yourself: type an arrow' : 'Candidate lines through the Anchor'), pick, list, msgEl);
+    p.dock().append(h('div', { class: 'a7-kick' }, 'Lines that hold'), pick, log, list, msgEl);
     paint();
+    msg(typedMode
+      ? 'Green is $(1, 0, 0)$; $V$ sends it off the dashed line. Type another arrow and press **Test**. Drag the picture to turn it.'
+      : 'Green is $(1, 0, 0)$; $V$ sends it off the dashed line. Try the arrows under **Test**. Drag the picture to turn it.');
     const fill = () => {
       for (const k of locks) {
         const inp = inputs.get(k.line);
@@ -248,10 +306,15 @@ export const p6: PuzzleDef = {
         inp.dispatchEvent(new Event('change'));
       }
     };
+    // Show me runs the search a person would: two misses, the three hits, then the reason
+    const reason = 'Why these three: each row of $V$ adds up to 1, so $V(1, 1, 1) = (1, 1, 1)$. Swapping the first two entries of $\\mathbf x$ swaps the first two of $V\\mathbf x$, so $V(1, -1, 0) = (0.5, -0.5, 0)$. And $V(1, 1, -2) = (0.2, 0.2, -0.4)$.';
     return {
       async showMe() {
-        for (const [dir] of P6_LINES) { typed?.set(dir); await test(dir); await wait(p.g.headless ? 1 : 400); }
+        const ms = p.g.headless ? 1 : 1100;
+        for (const dir of [[1, 0, 0], [1, 1, 0]]) { await test(dir); await wait(ms); }
+        for (const [dir] of P6_LINES) { await test(dir); await wait(ms); }
         fill();
+        if (!p.g.headless) msg(reason, 'good');
       },
       async solve() { for (const [dir] of P6_LINES) await test(dir, true); fill(); },
       async wrong() { await test([1, 0, 0], true); await test([1, 1, 0], true); },
@@ -264,33 +327,43 @@ export const p6: PuzzleDef = {
 export const p7: PuzzleDef = {
   id: 'c18-p7',
   title: 'What happens to the stretches if you row reduce first?',
-  goal: '$A = \\begin{bmatrix} 4 & 1 \\\\ 2 & 3 \\end{bmatrix}$ has stretches 5 and 2. **Row reduce** it to $U$, then sweep $U$ and lock its lines. Are they $A$’s?',
+  goal: `A shortcut people try: row reduce first, then find the stretches. Does it work? The grid shows $A = ${texSmall(P3_A)}$, which keeps the two faint violet lines (stretches 5 and 2). **1.** Press **Row reduce**: $A$ becomes $U$. **2.** Turn green (your arrow) round; yellow is where $U$ sends it. A line of $U$ locks when yellow lands on the dashed line through green. Are they $A$’s lines?`,
   subgoals: ['Row reduce: $R_2 \\to R_2 - \\tfrac12 R_1$', 'Lock both lines of $U$'],
   hints: [
     'Press the row operation. It clears the 2 under the first pivot.',
-    'Then sweep: $U$ is triangular, so its stretches are its diagonal, 4 and 2.5.',
+    'Then turn green round: $U$ is triangular, so its stretches are its diagonal, 4 and 2.5.',
     'Its lines are $(1, 0)$ and $(2, -3)$, not $A$’s $(1, 1)$ and $(1, -2)$.',
   ],
-  par: 3,
+  par: 6,
   onWin: S.p7Win,
   setup(p) {
     void p.g.stage.view2D({ center: [0.6, 0], height: 9.4, ms: 0 });
     const grid = p.grid({ main: 0.4, base: 0.1, axis: 0.6 });
     hideLandingLine(grid);
     grid.set(P3_A);
-    // A's own lines, dashed, for comparison
+    // A's own lines, faint and dashed, for comparison
     for (const l of eigenLines(P3_A)) {
       const L = new InfLine(p.g.stage, [0, 0, 0.002], v3(l.dir), { color: C.violet, width: 1.6, opacity: 0.35, dashed: true });
       p.add(L.object); p.onDispose(() => L.dispose());
       const nd = niceDir(l.dir);
-      ptag(p, `A: ${fmtV(nd)} × ${fmtN(l.value)}`, v3(l.dir.map((t) => t * 3.4)), 'vi dim', [0, -14]);
+      // on the upper half of each line, between the goal card and the readout, clear of where U x lands
+      const s = l.dir[1] >= 0 ? 2.4 : -2.4;
+      ptag(p, `A keeps ${fmtV(nd)} × ${fmtN(l.value)}`, v3(l.dir.map((t) => t * s)), 'vi dim', [0, -14]);
     }
     const r = p.readout('Row reduced or not');
     r.row('a', 'stretches of $A$', '5 and 2', C.violet);
     r.row('u', 'stretches of $U$', '?', C.result);
+    const num = (t: number) => (Math.abs(t - Math.round(t)) < 1e-9 ? String(Math.round(t)) : t.toFixed(2)).replace(/^-/, '−');
     let hunt: LineHunt | null = null;
     let reduced = false, won = false;
     const box = h('div', { style: 'display:flex;flex-direction:column;gap:8px' });
+    const paint = () => {
+      if (!hunt) return;
+      // green, yellow, and the angle between them, as in the first puzzles
+      r.row('x', 'green: your arrow $\\mathbf x$', `(${hunt.x.map(num).join(', ')})`, C.v);
+      r.row('y', 'yellow: where $U$ sends it', `(${hunt.image.map(num).join(', ')})`, C.result);
+      r.row('t', 'angle between green and yellow', `${Math.round(hunt.turn)}°`, hunt.turn <= 3 ? C.violet : C.white);
+    };
     const reduce = async (fast = false) => {
       if (reduced) return;
       reduced = true;
@@ -299,19 +372,31 @@ export const p7: PuzzleDef = {
       await animate(fast ? 1 : 1200, (k) => grid.set(mlerp(P3_A, P7_U, k)), ease.inOut);
       grid.set(P7_U);
       sg(p, 0);
-      r.row('m', '$U$, row-reduced', `$${texM(P7_U)}$`);
-      hunt = new LineHunt(p, { M: P7_U, radius: 1.2, autoLock: true, typedStretch: false, tolDeg: 3, mount: box, title: 'Sweep U', onChange: () => check() });
+      r.row('m', '$U$, row reduced', `$${texM(P7_U)}$`);
+      hunt = new LineHunt(p, { M: P7_U, radius: 1.2, autoLock: true, typedStretch: false, tolDeg: 3, mount: box, title: 'Lines of U', labels: { x: '$\\mathbf x$', mx: '$U\\mathbf x$' }, onChange: () => check() });
       btn.disabled = true;
+      hunt.say('The grid now shows $U$. Drag green round and watch yellow.');
+      paint();
     };
     const check = () => {
       if (!hunt) return;
+      paint();
       if (hunt.rows.length) r.row('u', 'stretches of $U$', hunt.rows.map((x) => fmtN(x.line.value)).join(' and '), C.result);
-      if (hunt.done && !won) { won = true; sg(p, 1); sfx.success(); hunt.say('Different lines, different stretches. Row operations change the move.', 'good'); p.win(); }
+      if (hunt.done && !won) { won = true; sg(p, 1); sfx.success(); hunt.say('Different lines, different stretches. Row operations change the matrix, so they change its stretches.', 'good'); p.win(); }
     };
     const btn = button('Row reduce: R₂ → R₂ − ½ R₁', () => void reduce(), { cls: 'primary small' });
     p.dock().append(h('div', { class: 'a7-row' }, btn), box);
     return {
-      async showMe() { await reduce(); await wait(300); await hunt!.showMe(); },
+      async showMe() {
+        await reduce();
+        await wait(500);
+        // first, A's line (1, 1) under U: yellow is turned off it
+        await hunt!.sweep.turnTo(Math.PI / 4, 900);
+        hunt!.say(`Try $A$’s line $(1, 1)$: $U(1, 1) = (5, 2.5)$, not a multiple of $(1, 1)$. Yellow is turned ${Math.round(hunt!.turn)}° off the dashed line, so $U$ does not keep it.`, 'bad');
+        await wait(2200);
+        await hunt!.showMe();
+        if (!p.g.headless) hunt!.say('Why: row reducing changed the matrix. $U$ is triangular, so its stretches are its diagonal, 4 and 2.5, along $(1, 0)$ and $(2, -3)$. $A$’s are 5 and 2.', 'good');
+      },
       async solve() { await reduce(true); await hunt!.showMe(10); },
     };
   },

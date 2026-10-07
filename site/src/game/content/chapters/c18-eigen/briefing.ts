@@ -26,7 +26,7 @@ import {
 
 export const sayit: SayItDef = {
   id: 'c18', who: 'bram',
-  ask: 'Why do we need $\\det(A - \\lambda I) = 0$ rather than solving $(A - \\lambda I)\\mathbf v = \\mathbf 0$ directly?',
+  ask: 'To find the stretches, why do we solve $\\det(A - \\lambda I) = 0$, and not $(A - \\lambda I)\\mathbf v = \\mathbf 0$ straight away?',
   frames: {
     see: 'Most arrows were ___ by the move. A few stayed on their own ___ and only ___.',
     means: 'An arrow that only stretches by λ is sent to the ___ by A − λI, so A − λI ___ space and its ___ is zero.',
@@ -57,7 +57,7 @@ export function sweepScene(p: PuzzleCtx, M0: Mat) {
   };
   const mv = new MatrixView(p, { M: M0, draggable: true, labels: false, snap: 0.5, grid: { main: 0.3, base: 0.08, axis: 0.5 }, onChange: (M) => { sw?.setM(M); paint(M); } });
   hideLandingLine(mv.grid);
-  sw = new Sweep(p, { M: M0, radius: 1.5, start: rad(100), labels: { x: '$\\mathbf x$', mx: '$A\\mathbf x$' } });
+  sw = new Sweep(p, { M: M0, radius: 1.5, start: rad(100), xLine: true, labels: { x: '$\\mathbf x$', mx: '$A\\mathbf x$' } });
   paint(M0);
   return {
     mv, get sweep() { return sw!; },
@@ -70,9 +70,9 @@ export function sweepScene(p: PuzzleCtx, M0: Mat) {
 
 export const doubtEvery: DoubtDef = {
   id: 'c18-d-every', who: 'bram', isTrue: false,
-  claim: 'Every pulse has some line it doesn’t turn. Sweep far enough and you’ll find it.',
-  reason: 'A turn by any angle except 0° or 180° keeps no real line (the half turn flips every arrow: λ = −1). For the quarter turn, $\\det(A - \\lambda I) = \\lambda^2 + 1$ is never 0 for a real λ: its eigenvalues are $\\pm i$. The routine pulse is the same: a quarter turn in its own grid.',
-  goal: 'Drag the grid arrows to set a move; the sweep shows every line it keeps (violet). **Challenge it** (a move that keeps no line) or **Back it**.',
+  claim: 'Every matrix has some line it doesn’t turn. Sweep far enough and you’ll find it.',
+  reason: 'A turn by any angle except 0° or 180° keeps no real line (the half turn flips every arrow: λ = −1). For the quarter turn, $\\det(A - \\lambda I) = \\lambda^2 + 1$ is never 0 for a real λ: its eigenvalues are $\\pm i$. The routine pulse $T$ is the same: a quarter turn in its own slanted grid.',
+  goal: 'Drag the two grid arrows (where $(1, 0)$ and $(0, 1)$ land) to set a matrix $A$. Green is a test arrow; yellow is where $A$ sends it. As green sweeps round, any line where yellow lands on the dashed line through green lights up violet. **Challenge it** (find a matrix that keeps no line) or **Back it**.',
   view: '2d',
   setup(p) {
     const sc = sweepScene(p, [[2, 1], [1, 2]]);
@@ -96,7 +96,7 @@ export const doubtZero: DoubtDef = {
   id: 'c18-d-zero', who: 'bram', isTrue: false,
   claim: 'The zero arrow is an eigenvector of every matrix. $A\\mathbf 0 = \\lambda\\mathbf 0$, after all.',
   reason: '$A\\mathbf 0 = \\lambda\\mathbf 0$ holds for **every** λ. If the zero arrow counted, every number would be an eigenvalue of every matrix, and the word would say nothing. So eigenvectors are non-zero by definition. (An eigenvalue can be 0; an eigenvector cannot be the zero arrow.)',
-  goal: 'Set the arrow $\\mathbf x$ and the dial λ. If the zero arrow counted, then with $\\mathbf x = \\mathbf 0$ every λ would be an eigenvalue of $A$. **Challenge it** (a λ where that fails) or **Back it**.',
+  goal: 'Drag green ($\\mathbf x$) and turn the dial λ. Yellow is $A\\mathbf x$ and violet is $\\lambda\\mathbf x$: an eigenvector needs them equal. If the zero arrow counted, then with $\\mathbf x = \\mathbf 0$ every λ would be an eigenvalue of $A$. **Challenge it** (set up a case where that fails) or **Back it**.',
   view: '2d',
   setup(p) {
     void p.g.stage.view2D({ center: [0.6, 0.4], height: 8.6, ms: 0 });
@@ -151,7 +151,7 @@ export const doubtTrace: DoubtDef = {
   id: 'c18-d-trace', who: 'bram', isTrue: true,
   claim: 'The eigenvalues add up to the trace. Every time.',
   reason: '$\\det(A - \\lambda I) = \\lambda^2 - (a + d)\\lambda + (ad - bc)$, and a quadratic $(\\lambda - \\lambda_1)(\\lambda - \\lambda_2)$ has $-(\\lambda_1 + \\lambda_2)$ in that place. So $\\lambda_1 + \\lambda_2 = a + d$, the trace, for every 2 × 2. Complex pairs too: $p + qi$ and $p - qi$ add to $2p = a + d$.',
-  goal: 'Drag the grid arrows to set a move. The readout gives its eigenvalues, their sum and the trace. **Back it** (Bram will shake it) or **Challenge it**.',
+  goal: 'Drag the two grid arrows (where $(1, 0)$ and $(0, 1)$ land) to set a matrix $A$. The readout gives its eigenvalues, their sum, and the trace (the sum down the diagonal, $a + d$). **Back it** (Bram will shake it) or **Challenge it**.',
   view: '2d',
   setup(p) {
     void p.g.stage.view2D({ center: [0.4, 0.9], height: 9.6, ms: 0 });
@@ -161,7 +161,7 @@ export const doubtTrace: DoubtDef = {
       r.row('m', '$A$', `$${texSmall(M)}$`);
       r.row('e', 'eigenvalues', e.kind === 'real' ? `${fmt2(e.values[0])} and ${fmt2(e.values[1])}` : `$${fmt2(e.re)} \\pm ${fmt2(e.im)}i$`, C.violet);
       r.row('s', 'their sum', fmt2(eigSum(M)), C.result);
-      r.row('t', 'trace $a + d$', fmt2(trace(M)), C.result);
+      r.row('t', 'trace: sum down the diagonal, $a + d$', fmt2(trace(M)), C.result);
     };
     const mv = new MatrixView(p, { M: [[2, 1], [1, 2]], draggable: true, snap: 0.5, labels: true, onChange: (M) => paint(M) });
     hideLandingLine(mv.grid);
@@ -228,7 +228,7 @@ export const PROC_DECOYS = [
 export const procedure: ProcedureDef = {
   id: 'c18-proc',
   title: 'Eigenvalues and eigenvectors, step by step',
-  brief: `Order the steps. LANTERN runs them exactly as written on a new case, $A = ${'\\left[\\begin{smallmatrix} 2 & 2 \\\\ 1 & 3 \\end{smallmatrix}\\right]'}$, and reports every eigenvalue with its eigenvectors.`,
+  brief: `Put the steps in order. LANTERN, the ship’s computer, runs them exactly as written on a new matrix, $A = ${'\\left[\\begin{smallmatrix} 2 & 2 \\\\ 1 & 3 \\end{smallmatrix}\\right]'}$, and reports every eigenvalue with its eigenvectors.`,
   tiles: PROC_TILES,
   decoys: PROC_DECOYS,
   reference: PROC_REF,
@@ -281,7 +281,7 @@ export const procedure: ProcedureDef = {
 
 export const compare: CompareDef = {
   id: 'c18',
-  page: 'An **eigenvector** of $A$ is a non-zero arrow that $A$ keeps on its own line: $A\\mathbf v = \\lambda\\mathbf v$. The number λ, its **eigenvalue**, is the stretch: bigger, smaller, or flipped when it is negative.\n\nTo find them, move $\\lambda\\mathbf v$ across: $(A - \\lambda I)\\mathbf v = \\mathbf 0$. A non-zero arrow lands on the origin only if $A - \\lambda I$ flattens space, that is when $\\det(A - \\lambda I) = 0$. That equation has λ in it and nothing else, so we can solve it. Solving $(A - \\lambda I)\\mathbf v = \\mathbf 0$ first gets us nowhere: for almost every λ the only answer is $\\mathbf v = \\mathbf 0$.\n\nFor each root λ, the eigenvectors are the non-zero arrows in the null space of $A - \\lambda I$.\n\nA turn by any angle except 0° or 180° keeps no real line, so its eigenvalues are complex: $p \\pm qi$ is a turn (in its own grid) by the angle of $p + qi$ and a stretch by its size. The eigenvalues add up to the trace and multiply to the determinant.',
+  page: 'An **eigenvector** of $A$ is a non-zero arrow that $A$ keeps on its own line: $A\\mathbf v = \\lambda\\mathbf v$. The number λ, its **eigenvalue**, is the stretch: bigger, smaller, or flipped when it is negative.\n\nTo find them, move $\\lambda\\mathbf v$ across: $(A - \\lambda I)\\mathbf v = \\mathbf 0$. A non-zero arrow lands on the origin only if $A - \\lambda I$ flattens space, that is when $\\det(A - \\lambda I) = 0$. That equation has λ in it and nothing else, so we can solve it. Solving $(A - \\lambda I)\\mathbf v = \\mathbf 0$ first gets us nowhere: for almost every λ the only answer is $\\mathbf v = \\mathbf 0$.\n\nFor each root λ, the eigenvectors are the non-zero arrows in the null space of $A - \\lambda I$.\n\nA turn by any angle except 0° or 180° keeps no real line, so its eigenvalues are complex: a pair $p \\pm qi$. In its own slanted grid, the move is a turn by the angle of $p + qi$ and a stretch by its size, $\\sqrt{p^2 + q^2}$. The eigenvalues add up to the trace and multiply to the determinant.',
   formula: 'A\\mathbf v = \\lambda\\mathbf v,\\ \\mathbf v \\neq \\mathbf 0 \\iff (A - \\lambda I)\\mathbf v = \\mathbf 0,\\ \\mathbf v \\neq \\mathbf 0 \\iff \\det(A - \\lambda I) = 0',
   keyIdeas: [
     'Did you say an eigenvector stays on its own line and only stretches, shrinks or flips?',

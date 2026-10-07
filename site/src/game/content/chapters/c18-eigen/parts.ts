@@ -41,7 +41,8 @@ export function niceDir(u: readonly number[]): Vec {
   for (const c of cands) {
     if (norm(c) < 1e-9) continue;
     const a = lineAngleDeg(c, u);
-    if (a < bestA - 1e-9 || (best && Math.abs(a - bestA) < 1e-9 && norm(c) < norm(best))) { best = c; bestA = a; }
+    // acos near 1 is noisy (about 1e-6°): a tie within 1e-4° goes to the shorter arrow, (1, −1, 0) not (3, −3, 0)
+    if (a < bestA - 1e-4 || (best && Math.abs(a - bestA) <= 1e-4 && norm(c) < norm(best))) { best = c; bestA = a; }
   }
   if (!best) return u.map((x) => Math.round(x * 100) / 100);
   // first non-zero entry positive
