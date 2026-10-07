@@ -363,7 +363,7 @@ button.law-slot.open, button.law-slot:focus-visible { border-color: var(--accent
 .sandbox-toggles, .sandbox-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .sandbox-toggles .btn[aria-pressed="true"] { background: var(--accent); color: #031018; border-color: var(--accent); }
 /* ---------- the Broadcast (Epilogue) ---------- */
-.brief.broadcast { left: 50%; top: 84px; bottom: 96px; transform: translateX(-50%); width: min(1040px, calc(100vw - 32px)); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.brief.broadcast { left: 50%; top: 84px; max-height: calc(100vh - 180px); transform: translateX(-50%); width: min(1040px, calc(100vw - 32px)); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
 .bc-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
 .bc-tray, .bc-chain { display: flex; flex-direction: column; gap: 6px; min-height: 60px; margin: 0; padding: 0; list-style: none; }
 .bc-chain { counter-reset: link; border-left: 1px solid var(--line); padding-left: 16px; }
