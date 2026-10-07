@@ -356,6 +356,12 @@ export interface SweepOpts {
   arc?: boolean;
   /** Within this many degrees of an eigen-direction counts as found (default 2). */
   tol?: number;
+  /** Draw the line through x (dashed): where Mx must land to count as "on its own line". */
+  xLine?: boolean;
+  /** Draw the circle x sweeps around (default true). */
+  circle?: boolean;
+  /** Label each found line with its λ (default true; off when the player must work the stretch out). */
+  valueLabels?: boolean;
   onChange?: (t: number) => void;
   onCommit?: (t: number) => void;
   /** Called the first time x comes within tol of eigen-direction i. */
@@ -389,6 +395,10 @@ export class Sweep extends Composite {
   private readonly eigGroup = new Group();
   private job: Handle | null = null;
   private lastTickDeg = 0;
+  /** A typed test arrow at its true length (setVector); null while x rides the circle. */
+  private free: [number, number] | null = null;
+  private readonly xl: FatLine | null = null;
+  private readonly circ: FatLine;
   enabled = true;
 
   constructor(p: PuzzleCtx, o: SweepOpts) {
@@ -403,7 +413,9 @@ export class Sweep extends Composite {
     // the circle x moves on
     const circ: V3[] = [];
     for (let i = 0; i <= 128; i++) { const a = (i / 128) * Math.PI * 2; circ.push([this.radius * Math.cos(a), this.radius * Math.sin(a), 0]); }
-    this.own(new FatLine(st, circ, { color: C.v, width: 1.3, opacity: 0.32 }));
+    this.circ = this.own(new FatLine(st, circ, { color: C.v, width: 1.3, opacity: 0.32 }));
+    this.circ.object.visible = o.circle !== false;
+    if (o.xLine) this.xl = this.own(new FatLine(st, [[-60, 0, 0.01], [60, 0, 0.01]], { color: C.v, width: 1.4, opacity: 0.55, dashed: true }));
     if (o.trace !== false) {
       this.trace = this.own(new FatSegments(st, [[[0, 0, 0], [0, 0, 0]]], { color: C.result, width: 1.6, opacity: 0.5 }));
       this.trace.object.visible = false;
@@ -439,7 +451,7 @@ export class Sweep extends Composite {
   get kind(): EigenDirs['kind'] { return this.eig.kind; }
 
   /** The test vector x and its image Mx. */
-  get xVec(): V3 { return [this.radius * Math.cos(this.t), this.radius * Math.sin(this.t), 0]; }
+  get xVec(): V3 { return this.free ? [this.free[0], this.free[1], 0] : [this.radius * Math.cos(this.t), this.radius * Math.sin(this.t), 0]; }
   get image(): V3 { return flat(matVec(this.M, this.xVec.slice(0, 2))); }
 
   /** The nearest eigen-direction to x and how far it is (radians, as lines). */
@@ -473,18 +485,48 @@ export class Sweep extends Composite {
     if (e.kind === 'all') mk(this.t, e.value);
   }
 
-  /** Put x at angle t (radians). */
+  /** Put x at angle t (radians), on the circle. */
   setAngle(t: number, notify = true): void {
     const prev = this.t;
+    this.free = null;
     this.t = t;
+    this.render(prev, notify);
+  }
+
+  /** Put x at a typed arrow, at its true length (not on the circle). */
+  setVector(v: readonly number[], notify = true): void {
+    const prev = this.t;
+    this.free = [v[0], v[1]];
+    if (Math.hypot(v[0], v[1]) > 1e-9) this.t = Math.atan2(v[1], v[0]);
+    this.render(prev, notify);
+  }
+
+  /** Glide a typed arrow from where it is to v (a straight slide, not a turn). */
+  async slideTo(v: readonly number[], ms = 600): Promise<void> {
+    this.job?.cancel();
+    const a = this.xVec;
+    const job = animate(ms, (k) => this.setVector([a[0] + (v[0] - a[0]) * k, a[1] + (v[1] - a[1]) * k]), ease.inOut);
+    this.job = job;
+    await job;
+    if (this.job === job) this.job = null;
+    this.setVector(v);
+  }
+
+  private render(prev: number, notify: boolean): void {
+    const t = this.t;
     const x = this.xVec, y = this.image;
+    if (this.xl) {
+      const d: V3 = [Math.cos(t), Math.sin(t), 0.01];
+      this.xl.setPoints([scale3(d, -60), scale3(d, 60)]);
+      this.xl.object.visible = len3(x) > 1e-6;
+    }
     this.x.set([0, 0, 0.03], [x[0], x[1], 0.03]);
     this.mx.set([0, 0, 0], y);
     const yl = len3(y);
     this.mx.object.visible = yl > 0.02;
     this.arc?.show(yl >= 0.05);
     this.arc?.set(x, y);
-    this.markTrace(prev, t);
+    if (!this.free) this.markTrace(prev, t); // the trail records the sweep round the circle, not typed arrows
     this.updateGlow(notify);
     this.placeLabels(x, y);
     const dg = Math.round((t * 180) / Math.PI / 6);
@@ -541,7 +583,7 @@ export class Sweep extends Composite {
         if (notify) { sfx.snap(); this.o.onFound?.(i, l.angle, l.value); }
       }
       this.setLevel(l, Math.max(this.found.has(i) ? 0.5 : 0, near));
-      l.label.show(this.found.has(i));
+      l.label.show(this.found.has(i) && this.o.valueLabels !== false);
     });
   }
 

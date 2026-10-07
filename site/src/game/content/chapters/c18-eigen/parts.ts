@@ -7,7 +7,7 @@ import type { PuzzleCtx, V3 } from '../../../game/types';
 import type { Stage } from '../../../core/stage';
 import { Label } from '../../../gfx/label';
 import { FatSegments } from '../../../gfx/lines';
-import { Sweep, rad } from '../../../kit/geom';
+import { Sweep } from '../../../kit/geom';
 import { Slider, VectorInput, parseNum } from '../../../ui/widgets';
 import { h, button, inline } from '../../../ui/ui';
 import { tex } from '../../../../lib/md';
@@ -68,6 +68,8 @@ export interface LineHuntOpts {
   ratio?: boolean;
   title?: string;
   labels?: { x?: string; mx?: string };
+  /** The puzzle's view: a typed arrow (or its image) that would leave it zooms out, centred on the origin. */
+  view?: { center: [number, number]; height: number };
   /** Dock for the controls (default the puzzle dock). */
   mount?: HTMLElement;
   onChange?: () => void;
@@ -81,12 +83,16 @@ interface LockRow { lock: Lock; line: EigLine; row: HTMLElement; input: HTMLInpu
  * The kit's Sweep (a green test arrow on a circle, its yellow image, the trace, violet lines where they
  * share a line) plus a Lock button and one row per locked line, where the stretch is typed or read.
  */
+/** A vector as a TeX row, short numbers. */
+const texV = (v: readonly number[]): string => `(${v.map((x) => fmtN(Math.abs(x - Math.round(x)) < 1e-9 ? Math.round(x) : +x.toFixed(2))).join(',\\ ')})`;
+
 export class LineHunt {
   readonly sweep: Sweep;
   readonly el: HTMLElement;
   readonly rows: LockRow[] = [];
   private readonly list: HTMLElement;
   private readonly msg: HTMLElement;
+  private readonly log: HTMLElement;
   private readonly typed: VectorInput | null = null;
   private readonly lines: EigLine[];
   private readonly tol: number;
@@ -96,9 +102,11 @@ export class LineHunt {
     this.tol = o.tolDeg ?? 2;
     this.sTol = o.stretchTol ?? 0.05;
     this.lines = eigenLines(o.M);
+    const typed = (o.mode ?? 'drag') === 'typed';
     this.sweep = new Sweep(p, {
-      M: o.M, radius: o.radius ?? 1.6, start: o.start ?? rad(110), tol: this.tol, labels: o.labels ?? { x: '$\\mathbf x$', mx: '$A\\mathbf x$' },
-      draggable: (o.mode ?? 'drag') === 'drag',
+      // x starts at (1, 0), so its image is A's first column: the arrow the story just read out
+      M: o.M, radius: o.radius ?? 1.6, start: o.start ?? 0, tol: this.tol, labels: o.labels ?? { x: '$\\mathbf x$', mx: '$A\\mathbf x$' },
+      draggable: !typed, xLine: true, circle: !typed, valueLabels: !o.typedStretch,
       onChange: () => o.onChange?.(),
       // autoLock locks the line the Sweep found, not the arrow where it was found: onFound fires once, at
       // up to tol off the line, where Ax can be turned by more than tol (twice the offset near (1, −1)).
@@ -110,8 +118,11 @@ export class LineHunt {
     });
     this.list = h('div', { class: 'a7-locks' });
     this.msg = h('div', { class: 'a7-msg' });
+    this.log = h('div', { class: 'a7-log' });
     const controls = h('div', { class: 'a7-row' });
-    if ((o.mode ?? 'drag') === 'typed') {
+    if (typed) {
+      // the typed arrow is drawn at its true length, so what you type is what you see
+      this.sweep.setVector([1, 0], false);
       this.typed = new VectorInput({ dim: 2, values: [1, 0], label: '\\mathbf x =', step: 1, onSubmit: () => void this.test() });
       this.typed.el.classList.add('a7-in');
       controls.append(this.typed.el, button('Test this arrow', () => void this.test(), { cls: 'primary small' }));
@@ -121,7 +132,7 @@ export class LineHunt {
         button('Sweep once', () => { this.p.move(); void this.sweep.animateSweep(6000); }, { cls: 'small ghost' }));
     }
     this.el = h('div', { class: 'a7-hunt', style: 'display:flex;flex-direction:column;gap:8px' },
-      o.title ? h('div', { class: 'a7-kick' }, o.title) : null, controls, this.list, this.msg);
+      o.title ? h('div', { class: 'a7-kick' }, o.title) : null, controls, this.log, this.list, this.msg);
     (o.mount ?? p.dock()).append(this.el);
   }
 
@@ -133,13 +144,34 @@ export class LineHunt {
 
   say(t: string, kind: '' | 'good' | 'bad' = ''): void { this.msg.className = `a7-msg ${kind}`; this.msg.innerHTML = inline(t); }
 
-  /** Commander: turn the test arrow to the typed direction, then try to lock. */
-  async test(): Promise<void> {
-    const d = this.typed!.get();
+  /** Commander: slide the test arrow to the typed arrow (true length), log what A does to it, try to lock. */
+  async test(v?: readonly number[]): Promise<void> {
+    if (v) this.typed?.set(v.slice());
+    const d = v ? v.slice() : this.typed!.get();
     if (norm(d) < 1e-9) { this.say('The zero arrow has no line to keep. Type an arrow that is not zero.', 'bad'); sfx.miss(); return; }
     this.p.move();
-    await this.sweep.turnTo(Math.atan2(d[1], d[0]), this.p.g.headless ? 10 : 700);
+    await this.sweep.slideTo(d, this.p.g.headless ? 10 : 600);
+    this.fit(d);
+    const ax = matVec(this.o.M, d), deg = turnDeg(this.o.M, d);
+    const on = deg <= this.tol;
+    const k = on ? stretchOf(this.o.M, d) : NaN;
+    // the log: every test, hit or miss, with its numbers (the evidence the player builds the answer from)
+    const entry = h('div', { class: `a7-logrow ${on ? 'hit' : ''}`, html: inline(
+      `$\\mathbf x = ${texV(d)}$ → $A\\mathbf x = ${texV(ax)}$ · ${on ? (this.o.typedStretch ? '**on the dashed line**' : `**${fmtN(k)} × x**`) : `turned ${Math.round(deg)}°`}`) });
+    this.log.prepend(entry);
+    while (this.log.children.length > 5) this.log.lastElementChild?.remove();
     this.lock(d);
+  }
+
+  /** Zoom out so a typed arrow and its image stay on screen; back to the puzzle's view when they fit. */
+  private fit(d: readonly number[]): void {
+    const v = this.o.view;
+    if (!v || this.p.g.headless) return;
+    const ax = matVec(this.o.M, d.slice());
+    const m = Math.max(...[...d, ...ax].map(Math.abs));
+    const need = 2.6 * m + 2;
+    const out = need > v.height;
+    void this.p.g.stage.view2D({ center: out ? [0, 0] : v.center, height: out ? need : v.height, ms: 500 });
   }
 
   /** Lock the line under the test arrow (or the given direction), if A keeps it. */
@@ -149,7 +181,7 @@ export class LineHunt {
     const near = this.lines.find((l) => lineAngleDeg(l.dir, x) <= this.tol);
     if (deg > this.tol || !near) {
       sfx.miss();
-      this.say(`$A\\mathbf x$ is turned ${Math.round(deg)}° off the line of $\\mathbf x$. That line does not hold.`, 'bad');
+      this.say(`Yellow is turned ${Math.round(deg)}° off the dashed line through green. $A$ turns this arrow, so this line does not hold.`, 'bad');
       this.o.onMiss?.(deg);
       return false;
     }
@@ -186,7 +218,9 @@ export class LineHunt {
     this.rows.push(r);
     this.list.append(row);
     sfx.snap();
-    this.say(`Locked: $A\\mathbf x$ stays on the line of ${fmtV(d)}.`, 'good');
+    this.say(this.o.typedStretch
+      ? `Yellow lands on the dashed line: $A\\mathbf x$ is a multiple of $\\mathbf x$. How many times $\\mathbf x$ is it? Type that number.`
+      : `Locked: $A$ leaves the line through ${fmtV(d)} on itself.`, 'good');
     this.o.onLock?.(lock, near);
     this.o.onChange?.();
     if (input) window.setTimeout(() => input?.focus(), 30);
@@ -213,7 +247,7 @@ export class LineHunt {
       const t0 = this.sweep.t;
       const d = Math.atan2(Math.sin(a - t0), Math.cos(a - t0));
       const target = Math.abs(d) <= Math.PI / 2 ? a : a + Math.PI;
-      if (this.typed) this.typed.set(niceDir(l.dir));
+      if (this.typed) { await this.test(niceDir(l.dir)); continue; }
       await this.sweep.turnTo(target, this.p.g.headless ? 10 : ms);
       if (!this.rows.some((r) => lineAngleDeg(r.line.dir, l.dir) < 1e-6)) this.lock(l.dir);
     }

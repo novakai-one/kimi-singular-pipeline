@@ -80,3 +80,10 @@
 .c20-sum { font-family: var(--mono); padding: 1px 7px; border-radius: 7px; border: 1px solid rgba(255, 159, 67, 0.45); color: #ffb347; }
 .c20-sum.ok { border-color: rgba(61, 220, 132, 0.5); color: var(--good); }
 .a7-btns .btn.on { border-color: var(--violet); color: var(--violet); }
+
+/* the line hunt's test log (typed arrows): every test with its numbers, newest first */
+.a7-log { display: flex; flex-direction: column; gap: 4px; }
+.a7-log:empty { display: none; }
+.a7-logrow { font-size: 13px; color: var(--ink-2); padding: 3px 8px; border-radius: 7px; background: rgba(255, 255, 255, 0.03); }
+.a7-logrow.hit { color: var(--ink); background: rgba(179, 136, 255, 0.1); }
+.a7-logrow b, .a7-logrow strong { color: var(--violet); font-weight: 600; }

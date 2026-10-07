@@ -15,8 +15,9 @@ export const S: Record<string, Line[]> = {
     { who: 'bram', text: 'Most lines through the Anchor get turned by a pulse. A few might only stretch. We find those first.' },
   ],
   p1Intro: [
-    { who: 'lantern', text: `A test first, on a pulse we know: the stretch from the spire bench. The grid arrows land at ${fmtV(col(P1_A, 0))} and ${fmtV(col(P1_A, 1))}.`, say: `A test first, on a pulse we know: the stretch from the spire bench. The grid arrows land at ${sayV(col(P1_A, 0))}, and ${sayV(col(P1_A, 1))}.` },
-    { who: 'bram', text: 'Swing a test arrow all the way round, Nav. Tell me where the pulse leaves it on its own line.' },
+    { who: 'lantern', text: `A test first, on a matrix we know from the spire bench. It sends ${fmtV([1, 0])} to ${fmtV(col(P1_A, 0))}, and ${fmtV([0, 1])} to ${fmtV(col(P1_A, 1))}.`, say: `A test first, on a matrix we know from the spire bench. It sends one, zero to ${sayV(col(P1_A, 0))}, and zero, one to ${sayV(col(P1_A, 1))}.` },
+    { who: 'bram', text: 'Green is your arrow. Yellow is where the pulse throws it. Most arrows come out turned.' },
+    { who: 'bram', text: 'Find the ones that come out pointing the same way, Nav. Only longer or shorter.' },
   ],
   p1Win: [
     { who: 'lantern', text: `Two lines hold. Along ${fmtV(P1_LINES[0][0])} every arrow is stretched ${spell(P1_LINES[0][1])} times. Along ${fmtV(P1_LINES[1][0])} every arrow keeps its length.`, say: `Two lines hold. Along ${sayV(P1_LINES[0][0])}, every arrow is stretched ${spell(P1_LINES[0][1])} times. Along ${sayV(P1_LINES[1][0])}, every arrow keeps its length.` },

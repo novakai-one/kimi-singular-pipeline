@@ -22,9 +22,9 @@ import {
 import { S } from './script';
 
 const tolDeg = (p: PuzzleCtx) => (p.difficulty === 'cadet' ? 3 : p.difficulty === 'navigator' ? 2 : 1);
-const hunt = (p: PuzzleCtx, M: Mat, o: { radius?: number; title?: string; onChange?: () => void } = {}) => new LineHunt(p, {
+const hunt = (p: PuzzleCtx, M: Mat, o: { radius?: number; title?: string; view?: { center: [number, number]; height: number }; onChange?: () => void } = {}) => new LineHunt(p, {
   M, radius: o.radius ?? 1.25, tolDeg: tolDeg(p), mode: p.difficulty === 'commander' ? 'typed' : 'drag', autoLock: p.difficulty === 'cadet',
-  typedStretch: p.difficulty !== 'cadet', stretchTol: p.difficulty === 'commander' ? 0.01 : 0.05, title: o.title, onChange: o.onChange,
+  typedStretch: p.difficulty !== 'cadet', stretchTol: p.difficulty === 'commander' ? 0.01 : 0.05, title: o.title, view: o.view, onChange: o.onChange,
 });
 
 /** The plain grid for the line hunts (the test arrow and its image do the talking). */
@@ -38,13 +38,21 @@ export function hideLandingLine(g: Grid2D): void {
 }
 
 /** Readout rows shared by the hunts: how far the test arrow is turned, and the length ratio. */
-function huntReadout(p: PuzzleCtx, hu: () => LineHunt, title: string, extra?: (r: ReturnType<PuzzleCtx['readout']>) => void) {
+function huntReadout(p: PuzzleCtx, hu: () => LineHunt, title: string, extra?: (r: ReturnType<PuzzleCtx['readout']>) => void, M?: Mat) {
   const r = p.readout(title);
+  const num = (v: number) => (Math.abs(v - Math.round(v)) < 1e-9 ? String(Math.round(v)) : v.toFixed(2));
   const paint = () => {
     const x = hu();
-    r.row('turn', 'turn from $\\mathbf x$ to $A\\mathbf x$', `${Math.round(x.turn)}°`, x.turn <= tolDeg(p) ? C.violet : C.white);
-    if (p.difficulty !== 'commander') r.row('ratio', 'along the line of $\\mathbf x$: $A\\mathbf x$ is', `${fmt2(x.ratio)} × $\\mathbf x$`, C.result);
-    r.row('locked', 'lines locked', String(x.rows.filter((k) => k.ok).length));
+    const xv = x.x, yv = x.image;
+    // green, yellow, and the multiplication that turns one into the other
+    if (M) {
+      r.row('x', 'green: your arrow $\\mathbf x$', `(${xv.map(num).join(', ')})`, C.v);
+      r.row('ax', 'yellow: where $A$ sends it', `(${yv.map(num).join(', ')})`, C.result);
+      r.eq(`A\\mathbf x = ${texSmall(M)}\\begin{bmatrix} ${num(xv[0])} \\\\ ${num(xv[1])} \\end{bmatrix} = \\begin{bmatrix} ${num(yv[0])} \\\\ ${num(yv[1])} \\end{bmatrix}`);
+    }
+    r.row('turn', 'angle between green and yellow', `${Math.round(x.turn)}°`, x.turn <= tolDeg(p) ? C.violet : C.white);
+    if (p.difficulty !== 'commander') r.row('ratio', 'yellow along the dashed line', `${fmt2(x.ratio)} × green`, C.result);
+    r.row('locked', 'lines found', String(x.rows.filter((k) => k.ok).length));
     extra?.(r);
   };
   return { r, paint };
@@ -54,40 +62,56 @@ function huntReadout(p: PuzzleCtx, hu: () => LineHunt, title: string, extra?: (r
 
 export const p1: PuzzleDef = {
   id: 'c18-p1',
-  title: 'Which arrows does this move leave on their own line?',
-  goal: 'Turn the green test arrow $\\mathbf x$ round the circle; its image $A\\mathbf x$ is yellow. **Lock** each line where $A\\mathbf x$ lands on the line of $\\mathbf x$, and give its stretch: how many times $\\mathbf x$ fits into $A\\mathbf x$.',
-  subgoals: ['Lock the first line and its stretch', 'Lock the second line and its stretch'],
+  title: 'Which arrows come out pointing the same way?',
+  goal: 'The matrix $A$ moves every arrow. **Green** is your arrow $\\mathbf x$. **Yellow** is where $A$ sends it. Most arrows come out **turned**. Find the arrows whose yellow lands **on the dashed line through green**: same direction, just longer or shorter. There are two such lines. For each, say how many times longer yellow is.',
+  subgoals: ['Find the first line, and how many times longer yellow is', 'Find the second line, and how many times longer'],
   predict: {
-    prompt: 'The move stretches the grid: its arrows land at $(2, 1)$ and $(1, 2)$. How many lines through the origin does it leave on themselves?',
-    choices: [{ id: 'none', text: 'None: every line turns' }, { id: 'one', text: 'One' }, { id: 'two', text: 'Two' }, { id: 'all', text: 'Every line' }],
+    prompt: 'This matrix sends $(1, 0)$ to $(2, 1)$, and $(0, 1)$ to $(1, 2)$: both come out turned. How many lines through the centre come out **not** turned?',
+    choices: [{ id: 'none', text: 'None: every arrow turns' }, { id: 'one', text: 'One' }, { id: 'two', text: 'Two' }, { id: 'all', text: 'Every line' }],
     answer: 'two',
-    reveal: 'Two lines hold. Every other arrow is turned towards the more stretched line. Find both: turn $\\mathbf x$ until $A\\mathbf x$ stays on the line of $\\mathbf x$.',
+    reveal: 'Two. Every other arrow gets turned, towards the line that is stretched most.',
   },
   hints: [
-    'Watch the small arc between $\\mathbf x$ and $A\\mathbf x$. It closes when $A\\mathbf x$ lands on the line of $\\mathbf x$.',
-    'One line is a diagonal. Try $\\mathbf x$ pointing up and to the right at 45°: $A(1, 1) = (3, 3)$.',
-    'Lock $(1, 1)$ with stretch 3 and $(1, -1)$ with stretch 1: $A(1, -1) = (1, -1)$.',
+    'Start at $(1, 0)$: yellow is $(2, 1)$, which is not on the dashed line through $(1, 0)$. You are looking for an arrow where yellow is green times a number.',
+    'For $\\mathbf x = (a, b)$, yellow is $(2a + b,\\ a + 2b)$. Try an arrow with $a = b$, then one with $b = -a$.',
+    '$A(1, 1) = (3, 3)$: 3 times $(1, 1)$. $A(1, -1) = (1, -1)$: 1 times $(1, -1)$.',
   ],
-  par: 4,
+  par: 8, // testing arrows is how this is solved: exploring must not cost stars
   onWin: S.p1Win,
   setup(p) {
-    void p.g.stage.view2D({ center: [0.6, 1.2], height: 11, ms: 0 });
+    const view = { center: [0.6, 1.2] as [number, number], height: 11 };
+    void p.g.stage.view2D({ ...view, ms: 0 });
     quietGrid(p);
     let won = false;
+    const typed = p.difficulty === 'commander';
+    if (typed) p.setGoal('The matrix $A$ moves every arrow. **Type an arrow** $\\mathbf x$ (green) and press **Test**: yellow is where $A$ sends it, worked out in the readout. Most arrows come out **turned**. Find arrows whose yellow lands **on the dashed line through green**, so yellow is green times a number. There are two such lines. For each, type that number.');
     const check = () => {
       paint();
       const n = h1.rows.filter((r) => r.ok).length;
       sg(p, 0, n >= 1);
       sg(p, 1, n >= 2);
-      if (h1.done && !won) { won = true; sfx.success(); h1.say('Both lines locked. Every other arrow turns.', 'good'); p.win(); }
+      if (h1.done && !won) {
+        won = true; sfx.success();
+        h1.say('Both lines found. Along $(1, 1)$ yellow is 3 times green; along $(1, -1)$ it is green itself. Every other arrow gets turned.', 'good');
+        p.win();
+      }
     };
-    const h1: LineHunt = hunt(p, P1_A, { radius: 1.05, title: 'Lines that hold', onChange: () => check() });
-    const { paint } = huntReadout(p, () => h1, 'The test arrow');
+    const h1: LineHunt = hunt(p, P1_A, { radius: 1.5, title: 'Lines that hold', view, onChange: () => check() });
+    const { paint } = huntReadout(p, () => h1, 'Green and yellow', undefined, P1_A);
     paint();
-    if (p.difficulty === 'commander') h1.say('Type an arrow and test it. The circle shows where it goes.');
+    h1.say(typed
+      ? 'Green is $(1, 0)$; $A$ sends it to $(2, 1)$, off the dashed line. Type another arrow and press **Test**.'
+      : 'Green is $(1, 0)$; $A$ sends it to $(2, 1)$, off the dashed line. Drag green round the circle and watch yellow.');
+    // Show me runs the search a person would: two misses, then the two hits, then the reason
+    const reason = 'Why these two: yellow is $(2a + b,\\ a + 2b)$. For it to be λ times $(a, b)$, subtract the two parts: $a - b = \\lambda(a - b)$. So either $a = b$ (and λ = 3), or λ = 1 (and then $b = -a$).';
+    const show = async (ms: number) => {
+      if (typed) { await h1.test([1, 0]); await wait(ms ? 900 : 0); await h1.test([0, 1]); await wait(ms ? 900 : 0); }
+      await h1.showMe(ms || 10);
+      if (!p.g.headless) h1.say(reason, 'good');
+    };
     return {
-      async showMe() { await h1.showMe(); },
-      async solve() { await h1.showMe(10); },
+      async showMe() { await show(900); },
+      async solve() { await show(0); },
       wrong() { h1.lock([1, 0]); },
     };
   },
@@ -98,7 +122,7 @@ export const p1: PuzzleDef = {
 export const p2: PuzzleDef = {
   id: 'c18-p2',
   title: 'How many lines does a shear keep?',
-  goal: 'Sweep the test arrow **all the way round** (the faint yellow trace records every image). Lock every line the shear keeps, with its stretch.',
+  goal: 'Same search, new matrix: a **shear**. Green is your arrow; yellow is where the shear sends it. Turn green **all the way round** (the faint yellow trail shows everywhere yellow has been). **Lock** every line where yellow lands on the dashed line through green, and say how many times longer it is. A full turn is the proof that there are no others.',
   subgoals: ['Sweep the whole circle', 'Lock every line that holds, with its stretch'],
   predict: {
     prompt: 'The stretch kept two lines. How many will the shear $\\begin{bmatrix} 1 & 1 \\\\ 0 & 1 \\end{bmatrix}$ keep?',
@@ -124,8 +148,10 @@ export const p2: PuzzleDef = {
       sg(p, 1, h2.done);
       if (swept && h2.done && !won) { won = true; sfx.success(); h2.say('One line, and the whole circle swept. There is no second line.', 'good'); p.win(); }
     };
-    const h2: LineHunt = hunt(p, P2_A, { radius: 1.3, title: 'Lines that hold', onChange: () => check() });
-    const { paint } = huntReadout(p, () => h2, 'The test arrow', (r) => r.row('cov', 'circle swept', `${Math.round(h2.sweep.coverage * 100)}%`, h2.sweep.coverage >= SWEEP_FULL ? C.good : C.white));
+    const view2 = { center: [0.5, 0.9] as [number, number], height: 8.8 };
+    if (p.difficulty === 'commander') p.setGoal('Same search, new matrix: a **shear**. **Type arrows** and press **Test**: yellow is where the shear sends green. Find every line where yellow lands on the dashed line through green, and type how many times longer it is. Then press **Sweep once**: a full turn of green is the proof that there are no others.');
+    const h2: LineHunt = hunt(p, P2_A, { radius: 1.3, title: 'Lines that hold', view: view2, onChange: () => check() });
+    const { paint } = huntReadout(p, () => h2, 'Green and yellow', (r) => r.row('cov', 'circle swept', `${Math.round(h2.sweep.coverage * 100)}%`, h2.sweep.coverage >= SWEEP_FULL ? C.good : C.white), P2_A);
     paint();
     p.tick(() => { if (!won) paint(); });
     if (p.difficulty === 'commander') {
