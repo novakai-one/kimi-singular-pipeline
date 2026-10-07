@@ -15,3 +15,6 @@ notebooks/**/export/
 notebooks/**/model.json
 voice-cache/
 site/public/game/pyodide/
+
+# scratch browser scripts (tests/_tmp-*.mjs) used while iterating
+tests/_tmp-*.mjs
