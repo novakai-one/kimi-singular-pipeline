@@ -401,7 +401,16 @@ table.cmp { border-collapse: collapse; width: 100%; min-width: 640px; font-size:
           if (q) break;
         }
         if (q) this.label('yellow must land on this line', [q[0] - side[0] * 0.8, q[1] - side[1] * 0.8], 'var(--green)', { sans: true, size: 17, weight: 500, anchor: q[0] > this.w / 2 ? 'end' : 'start' });
-        for (const f of P.found) if (f.ok) { const n2 = Math.hypot(f.dir[0], f.dir[1]); const qq = this.px([(f.dir[0] / n2) * half * 0.95, (f.dir[1] / n2) * half * 0.95]); this.label(`keeps this line · ×${fmt(f.lam)}`, [qq[0] + 12, qq[1] - 18], 'var(--violet)', { mono: true, size: 16, weight: 500 }); }
+        // each found line's label goes on the end of the line away from yellow, so it never sits on yellow's label
+        for (const f of P.found) if (f.ok) {
+          const n2 = Math.hypot(f.dir[0], f.dir[1]), u = [f.dir[0] / n2, f.dir[1] / n2];
+          const away = u[0] * ax[0] + u[1] * ax[1] > 0 ? -1 : 1;
+          let qq = null;
+          for (let t = half * 0.95; t > 0 && !qq; t -= half * 0.05) { const c = this.px([u[0] * t * away, u[1] * t * away]); if (c[0] > 60 && c[0] < this.w - 60 && c[1] > 170 && c[1] < this.h - 190) qq = c; }
+          if (!qq) continue;
+          const right = qq[0] > this.w / 2;
+          this.label(`keeps this line · ×${fmt(f.lam)}`, [qq[0] + (right ? -14 : 14), qq[1] - 18], 'var(--violet)', { mono: true, size: 16, weight: 500, anchor: right ? 'end' : 'start' });
+        }
       } else {
         this.label('x', out(xp, 22), 'var(--green)', { size: 28 });
         this.label('Ax', out(ap, 24), 'var(--yellow)', { size: 28 });
