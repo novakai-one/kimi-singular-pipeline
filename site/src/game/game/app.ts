@@ -301,6 +301,11 @@ export class App implements Game {
         button('Resume', () => close(), { cls: 'primary' }),
         button('Restart this part', () => { action = 'restart'; close(); }),
         button('Chapter map', () => { action = 'map'; close(); }),
+        // CH1: retain access to the d01 navigation items folded into its hamburger.
+        ...(this.ui.root.dataset.d01Interactive ? [
+          button('Log', () => { close(); void this.logScreen(); }),
+          button('Case board', () => { close(); void caseBoardScreen(this.ui); }),
+        ] : []),
         button('Codex', () => { close(); void this.codexScreen(); }),
         button('Settings', () => { close(); void this.settingsScreen(); }),
         button('Title screen', () => { action = 'title'; close(); }, { cls: 'ghost' })),

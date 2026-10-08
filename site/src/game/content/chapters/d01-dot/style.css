@@ -1,0 +1,71 @@
+/* All policies are rooted at the explicit d01 beat scope. */
+[data-d01-interactive] .hud-tr > :not([data-chrome-menu]) { display: none; }
+[data-d01-interactive] .d01-actions { position: absolute; right: 20px; bottom: 20px; display: flex; gap: 8px; align-items: flex-end; justify-content: flex-end; pointer-events: auto; max-width: calc(100% - 40px); opacity: .7; transition: opacity .15s; }
+[data-d01-interactive] .d01-actions:hover,
+[data-d01-interactive] .d01-actions:focus-within { opacity: 1; }
+[data-d01-interactive] .d01-actions .hud-tr,
+[data-d01-interactive] .d01-actions .hud-br { position: static; }
+[data-d01-interactive] .d01-actions .hud-br:empty { display: none; }
+[data-d01-interactive] .hud-tl { max-width: min(420px, calc(100vw - 220px)); }
+[data-d01-interactive] .objective .stars { display: none; }
+[data-d01-interactive] .objective[data-expanded=false] > :not(.d01-goal-toggle) { display: none; }
+[data-d01-interactive] .objective[data-expanded=false] { padding: 0; width: fit-content; border-radius: 999px; }
+[data-d01-interactive] .d01-goal-toggle { align-self: flex-start; }
+[data-d01-interactive] .readout { top: 18px; right: 20px; left: auto; bottom: auto; width: min(250px, 30vw); }
+[data-d01-interactive] .bark { animation-duration: 4s; }
+[data-d01-interactive] .d01-prediction { position: absolute; left: 20px; bottom: 20px; display: grid; gap: 8px; padding: 14px 16px; width: min(360px, calc(100vw - 40px)); pointer-events: auto; }
+[data-d01-interactive] .d01-prediction p { margin: 0; }
+[data-d01-interactive] .d01-prediction input,
+[data-d01-interactive] .d01-answer { width: 90px; color: inherit; background: #101925; border: 1px solid #6d839b; border-radius: 6px; padding: 10px; font: inherit; }
+[data-d01-interactive] .d01-feedback { position: absolute; left: 50%; transform: translateX(-50%); bottom: 100px; max-width: min(600px, calc(100vw - 40px)); padding: 14px 16px; white-space: pre-line; }
+[data-d01-interactive] .d01-actions .dock { position: static; padding: 0; margin-right: 12px; box-shadow: none; background: transparent; border: 0; backdrop-filter: none; }
+[data-d01-interactive] .d01-actions .choice-cards { display: flex; }
+[data-d01-interactive] .d01-actions .choice-card { min-width: 56px; text-align: center; padding: 8px 12px; }
+[data-d01-interactive] .d01-actions .choice-card p { margin: 0; }
+[data-d01-interactive] .doubt-actions { margin: 0; }
+[data-d01-interactive] .brief.law { left: 20px; top: 76px; bottom: auto; transform: none; width: min(530px, calc(100vw - 40px)); max-height: calc(100vh - 170px); }
+[data-d01-interactive] .brief.law > .kicker { display: none; }
+[data-d01-interactive] .brief.law .law-reason:empty,
+[data-d01-interactive] .brief.law .law-status:empty { display: none; }
+[data-d01-interactive] .win-card { top: auto; bottom: 96px; left: 50%; right: auto; transform: translateX(-50%); width: 260px; margin: 0; }
+[data-d01-interactive=build] .build { top: 100px; bottom: 100px; height: auto; transform: translateX(-50%); }
+[data-d01-interactive=build] .build-left > :not(h2):not(.build-brief):not(.build-status) { display: none; }
+[data-d01-interactive=build] .build-status { white-space: pre-line; margin-top: 16px; padding: 14px 0; }
+[data-d01-interactive=build] .build-actions { padding: 0; }
+[data-d01-interactive=build] .build-right > .build-stdout { display: none; }
+[data-d01-interactive=build] .build-mode-tip { display: none; }
+@media (max-width: 600px) {
+  [data-d01-active] .hud-tr { top: 8px; right: 8px; gap: 3px; }
+  [data-d01-active] .hud-tr button { font-size: 11px; padding: 6px; }
+  [data-d01-active] .hud-tl { max-width: calc(100vw - 24px); }
+  [data-d01-active] .hud-chapter { max-width: calc(100vw - 28px); margin-top: 38px; }
+  [data-d01-active] .name-card,
+  [data-d01-active] .brief.sayit,
+  [data-d01-active] .brief.compare { top: 146px; bottom: 84px; left: 12px; right: 12px; width: auto; max-height: none; transform: none; overflow-y: auto; }
+  [data-d01-interactive] .hud-tl { top: 12px; left: 12px; max-width: calc(100vw - 164px); }
+  [data-d01-interactive] .objective { padding: 10px; }
+  [data-d01-interactive] .objective .goal { font-size: 13px; }
+  [data-d01-interactive] .objective .kicker { font-size: 10px; }
+  [data-d01-interactive] .readout { top: 12px; right: 12px; width: 136px; padding: 12px; }
+  [data-d01-interactive] .readout .row { font-size: 12px; }
+  [data-d01-interactive] .readout:has(.eq:not([hidden])) { width: 235px; }
+  [data-d01-interactive] .d01-actions { bottom: 12px; right: 12px; max-width: calc(100% - 24px); flex-wrap: wrap; gap: 6px; }
+  [data-d01-interactive] .d01-actions .hud-br { gap: 5px; }
+  [data-d01-interactive] .d01-actions .btn.small { padding: 0 8px; font-size: 12px; }
+  [data-d01-interactive] .d01-actions .kbd { display: none; }
+  [data-d01-interactive] .d01-actions .dock { flex-basis: 100%; margin: 0; align-items: flex-end; }
+  [data-d01-interactive] .d01-prediction { bottom: 72px; left: 12px; width: calc(100vw - 24px); font-size: 13px; }
+  [data-d01-interactive] .d01-feedback,
+  [data-d01-interactive] .bark { left: 12px; right: 12px; bottom: 140px; max-width: none; transform: none; font-size: 13px; }
+  [data-d01-interactive] .win-card { bottom: 118px; width: 220px; }
+  [data-d01-interactive] .brief.law { top: 68px; left: 12px; right: 12px; width: auto; max-height: 52vh; padding: 14px; }
+  [data-d01-interactive] .brief.law .choice-card { padding: 9px; }
+  [data-d01-interactive=build] .build { top: 86px; bottom: 108px; left: 12px; right: 12px; width: auto; height: auto; transform: none; }
+  [data-d01-interactive=build] .build-left { max-height: 28vh; padding: 14px; }
+  [data-d01-interactive=build] .build-left h2 { font-size: 20px; margin-top: 0; }
+  [data-d01-interactive=build] .build-brief p { margin: 8px 0; font-size: 13px; }
+  [data-d01-interactive=build] .build-status { margin-top: 8px; padding: 8px 0; font-size: 13px; }
+  [data-d01-interactive=build] .build-actions { flex-wrap: nowrap; gap: 5px; }
+  [data-d01-interactive=build] .code-ta,
+  [data-d01-interactive=build] .code-hl { font-size: 12px; padding: 12px; }
+}

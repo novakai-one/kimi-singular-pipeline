@@ -2,11 +2,14 @@
 import { h, type Child } from '../../lib/dom';
 import { md, inline } from '../../lib/md';
 import { sfx } from '../audio/sfx';
+import { compactBeatChrome, TransientSlot } from './beat-chrome';
 
 export { h, md, inline };
 export type { Child };
 
 export class UI {
+  private compact = false;
+  private readonly transient = new TransientSlot();
   readonly root: HTMLElement;
   readonly hud: HTMLElement;
   readonly scene: HTMLElement;    // puzzle widgets (readouts, inputs)
@@ -34,11 +37,32 @@ export class UI {
 
   toast(text: string, kicker = ''): void {
     const t = h('div', { class: 'toast glass' }, kicker ? h('span', { class: 'kicker' }, kicker) : null, h('span', { html: inline(text) }));
-    this.toasts.appendChild(t);
-    window.setTimeout(() => t.remove(), 3500);
+    this.showTransient(t, 3500, this.toasts);
   }
 
-  clearScene(): void { this.scene.replaceChildren(); }
+  /** CH3: chapter-scoped replacement and teardown, with no document observer. */
+  setBeatChrome(chapter: string, beat: string): void {
+    this.transient.clear();
+    this.compact = compactBeatChrome(chapter, beat);
+    if (this.compact) this.toasts.replaceChildren();
+    if (chapter === 'd01-dot') this.root.dataset.d01Active = 'true';
+    else delete this.root.dataset.d01Active;
+    if (this.compact) this.root.dataset.d01Interactive = beat;
+    else delete this.root.dataset.d01Interactive;
+    this.root.dispatchEvent(new CustomEvent('game:beat-chrome', { bubbles: true, detail: { ui: this, chapter, beat } }));
+  }
+
+  showTransient(el: HTMLElement, ms?: number, parent = this.scene, onDismiss?: () => void): () => void {
+    let timer = 0;
+    const remove = () => { window.clearTimeout(timer); el.remove(); onDismiss?.(); };
+    const dismiss = this.compact ? this.transient.replace(remove) : remove;
+    parent.appendChild(el);
+    if (ms !== undefined) timer = window.setTimeout(dismiss, ms);
+    return dismiss;
+  }
+
+  clearTransient(): void { this.transient.clear(); }
+  clearScene(): void { if (this.compact) this.transient.clear(); this.scene.replaceChildren(); }
 }
 
 export function button(label: string, onClick: () => void, o: { cls?: string; title?: string; kbd?: string; html?: boolean } = {}): HTMLButtonElement {

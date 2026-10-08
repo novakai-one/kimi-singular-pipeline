@@ -1,5 +1,6 @@
 // Heads-up display: where you are, what to do, and the puzzle controls.
 import { h, inline, md, button, type UI } from '../ui/ui';
+import { compactBeatChrome } from '../ui/beat-chrome';
 
 export interface PuzzleControls {
   onHint: () => void;
@@ -18,6 +19,7 @@ export class Hud {
   private subs: HTMLElement[] = [];
   private starsEl: HTMLElement | null = null;
   private hintBtn: HTMLButtonElement | null = null;
+  private compactActions: HTMLElement | null = null;
 
   constructor(private readonly ui: UI, menu: { onMenu: () => void; onCodex: () => void; onSettings: () => void; onLog: () => void; onCase: () => void }) {
     this.chapterEl = h('div', { class: 'hud-chapter' });
@@ -31,8 +33,29 @@ export class Hud {
       button('⚙', menu.onSettings, { cls: 'ghost small icon', title: 'Settings' }),
       button('☰', menu.onMenu, { cls: 'ghost small icon', title: 'Menu (Esc)' }));
     this.br = h('div', { class: 'hud-br' });
+    this.tr.lastElementChild!.setAttribute('data-chrome-menu', '');
     ui.hud.append(this.tl, this.tr, this.br);
     for (const el of [this.tl, this.tr, this.br]) el.style.pointerEvents = 'auto';
+  }
+
+  /** CH1–CH2: only this licensed chapter collapses navigation and removes its banner. */
+  setBeatChrome(chapter: string, beat: string): void {
+    if (compactBeatChrome(chapter, beat)) {
+      this.chapterEl.remove();
+      if (!this.compactActions) {
+        this.compactActions = h('div', { class: 'd01-actions', 'data-attention': 'actions' });
+        this.compactActions.append(this.br, this.tr);
+        this.ui.hud.append(this.compactActions);
+      }
+    } else {
+      this.tl.prepend(this.chapterEl);
+      if (this.compactActions) {
+        this.ui.hud.append(this.tr, this.br);
+        this.compactActions.remove();
+        this.compactActions = null;
+      }
+    }
+    this.ui.setBeatChrome(chapter, beat);
   }
 
   setChapter(kicker: string, title: string): void {

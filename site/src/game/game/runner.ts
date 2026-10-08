@@ -54,6 +54,7 @@ export class Runner {
     this.g.ui.panel.replaceChildren();
     this.g.ui.clearScene();
     this.hud.clearControls();
+    this.hud.setBeatChrome('', '');
   }
 
   /** What the Briefing engines borrow from the runner. */
@@ -180,6 +181,7 @@ export class Runner {
   }
 
   async runBeat(ch: ChapterDef, beat: Beat): Promise<void> {
+    this.hud.setBeatChrome(ch.id, beat.kind);
     switch (beat.kind) {
       case 'scene': {
         this.hud.hideObjective();
@@ -379,7 +381,7 @@ export class Runner {
 
     // the prediction reveal, then any closing lines
     const card = this.winCard(def, outcome, stars, prediction);
-    this.g.ui.scene.appendChild(card);
+    this.g.ui.showTransient(card);
     if (def.onWin?.length) await this.guard(this.g.say(def.onWin, { noSkip: false }));
     await this.guard(this.hud.primary('Continue'));
     card.remove();
@@ -614,8 +616,7 @@ class PuzzleCtxImpl implements PuzzleCtx {
     if (this.disposed) return; // a late timer from a puzzle the player has left
     const c = cast(who);
     const el = h('div', { class: 'bark glass', html: `<span class="kicker" style="color:${c.color}">${c.name}</span> ${inline(text)}` });
-    this.g.ui.scene.appendChild(el);
-    window.setTimeout(() => el.remove(), 5200);
+    this.g.ui.showTransient(el, this.g.ui.root.dataset.d01Interactive ? 4000 : 5200);
   }
 
   /** True once the puzzle is torn down: late timers from a puzzle must not touch the next beat. */
