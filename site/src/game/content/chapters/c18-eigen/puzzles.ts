@@ -1,4 +1,4 @@
-// Chapter 18 puzzles 1–4: the sweep finds the lines a stretch keeps (p1), the one line a shear keeps (p2),
+// Chapter 18 puzzles 2–4 (p1 is the trajectory problem, traj-puzzles.ts): the one line a shear keeps (p2),
 // the λ dial flattens A − λI at each stretch (p3 [D]), and the routine pulse keeps no real line at all (p4).
 import type { PuzzleCtx, PuzzleDef } from '../../../game/types';
 import type { Grid2D } from '../../../gfx/grid';
@@ -15,7 +15,7 @@ import { Tpartial } from '../../truth';
 import { det, identity, matMul, matVec, meq, type Mat } from '../../../math/la';
 import { CardRail, LineHunt, PolyPlot, niceDir, ptag, v3, type RailCard, sg, fslider } from './parts';
 import {
-  P1_A, P2_A, P3_A, P3_ROOTS, P4_ANGLE, P4_CARDS, P4_D, P4_PRODUCT, P4_STRETCH, P4_SUM, P4_T, SWEEP_FULL, charAt, fmt2, fmtN,
+  P2_A, P3_A, P3_ROOTS, P4_ANGLE, P4_CARDS, P4_D, P4_PRODUCT, P4_STRETCH, P4_SUM, P4_T, SWEEP_FULL, charAt, fmt2, fmtN,
   fmtV, nullLine, railProduct, rootsWon, shift, texSmall, turnDeg,
 } from './logic';
 import { S } from './script';
@@ -57,64 +57,7 @@ function huntReadout(p: PuzzleCtx, hu: () => LineHunt, title: string, extra?: (r
   return { r, paint };
 }
 
-// ------------------------------------------------------------------ p1 · an old friend
-
-export const p1: PuzzleDef = {
-  id: 'c18-p1',
-  title: 'Which arrows come out pointing the same way?',
-  goal: 'The matrix $A$ moves every arrow. **Green** is your arrow $\\mathbf x$. **Yellow** is where $A$ sends it. Most arrows come out **turned**. Find the arrows whose yellow lands **on the dashed line through green**: same direction, only longer or shorter. There are two such lines. For each, say how many times longer yellow is.',
-  subgoals: ['Find the first line, and how many times longer yellow is', 'Find the second line, and how many times longer'],
-  predict: {
-    prompt: 'This matrix sends $(1, 0)$ to $(2, 1)$, and $(0, 1)$ to $(1, 2)$: both come out turned. How many lines through the centre come out **not** turned?',
-    choices: [{ id: 'none', text: 'None: every arrow turns' }, { id: 'one', text: 'One' }, { id: 'two', text: 'Two' }, { id: 'all', text: 'Every line' }],
-    answer: 'two',
-    reveal: 'Two. Every other arrow gets turned, towards the line that is stretched most.',
-  },
-  hints: [
-    'Start at $(1, 0)$: yellow is $(2, 1)$, which is not on the dashed line through $(1, 0)$. You are looking for an arrow where yellow is green times a number.',
-    'For $\\mathbf x = (a, b)$, yellow is $(2a + b,\\ a + 2b)$. Try an arrow with $a = b$, then one with $b = -a$.',
-    '$A(1, 1) = (3, 3)$: 3 times $(1, 1)$. $A(1, -1) = (1, -1)$: 1 times $(1, -1)$.',
-  ],
-  par: 8, // testing arrows is how this is solved: exploring must not cost stars
-  onWin: S.p1Win,
-  setup(p) {
-    const view = { center: [0.6, 1.2] as [number, number], height: 11 };
-    void p.g.stage.view2D({ ...view, ms: 0 });
-    quietGrid(p);
-    let won = false;
-    const typed = p.difficulty === 'commander';
-    if (typed) p.setGoal('The matrix $A$ moves every arrow. **Type an arrow** $\\mathbf x$ (green) and press **Test**: yellow is where $A$ sends it, worked out in the readout. Most arrows come out **turned**. Find arrows whose yellow lands **on the dashed line through green**, so yellow is green times a number. There are two such lines. For each, type that number.');
-    const check = () => {
-      paint();
-      const n = h1.rows.filter((r) => r.ok).length;
-      sg(p, 0, n >= 1);
-      sg(p, 1, n >= 2);
-      if (h1.done && !won) {
-        won = true; sfx.success();
-        h1.say('Both lines found. Along $(1, 1)$ yellow is 3 times green; along $(1, -1)$ it is green itself. Every other arrow gets turned.', 'good');
-        p.win();
-      }
-    };
-    const h1: LineHunt = hunt(p, P1_A, { radius: 1.5, title: 'Lines that hold', view, onChange: () => check() });
-    const { paint } = huntReadout(p, () => h1, 'Green and yellow', undefined, P1_A);
-    paint();
-    h1.say(typed
-      ? 'Green is $(1, 0)$; $A$ sends it to $(2, 1)$, off the dashed line. Type another arrow and press **Test**.'
-      : 'Green is $(1, 0)$; $A$ sends it to $(2, 1)$, off the dashed line. Drag green round the circle and watch yellow.');
-    // Show me runs the search a person would: two misses, then the two hits, then the reason
-    const reason = 'Why these two: yellow is $(2a + b,\\ a + 2b)$. For it to be λ times $(a, b)$, subtract the two parts: $a - b = \\lambda(a - b)$. So either $a = b$ (and λ = 3), or λ = 1 (and then $b = -a$).';
-    const show = async (ms: number) => {
-      if (typed) { await h1.test([1, 0]); await wait(ms ? 900 : 0); await h1.test([0, 1]); await wait(ms ? 900 : 0); }
-      await h1.showMe(ms || 10);
-      if (!p.g.headless) h1.say(reason, 'good');
-    };
-    return {
-      async showMe() { await show(900); },
-      async solve() { await show(0); },
-      wrong() { h1.lock([1, 0]); },
-    };
-  },
-};
+// p1 (the opening encounter) is the trajectory problem: traj-puzzles.ts.
 
 // ------------------------------------------------------------------ p2 · a shear
 

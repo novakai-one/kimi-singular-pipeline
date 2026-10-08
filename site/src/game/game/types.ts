@@ -88,6 +88,18 @@ export interface PuzzleRuntime {
   wrong?(): void | Promise<void>;
   /** Optional extra cleanup. */
   dispose?(): void;
+  /**
+   * Optional: hints that follow the puzzle's own stage (multi-round puzzles). When present, the Hint
+   * button asks this instead of reading `def.hints`. Returns the hint (markdown) and how many are left
+   * for the current stage, or null when there is nothing to add. The puzzle records the help itself.
+   */
+  hint?(): { text: string; left: number } | null;
+  /**
+   * Optional: Show me for one stage only. When present, Show me runs this instead of `showMe()` and does
+   * not end the puzzle; the puzzle demonstrates the current stage, records it as assisted and carries on.
+   * Counts as a hint for the stars.
+   */
+  showStep?(): Promise<void>;
 }
 
 export interface PuzzleDef {

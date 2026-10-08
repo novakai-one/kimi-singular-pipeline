@@ -1,27 +1,38 @@
 // Chapter 18: "Which lines does the pulse not turn?" (GDD §6.9, N20), the first chapter of Act VII.
-// Eigenvectors and eigenvalues: the sweep finds the lines a move keeps, the λ dial flattens A − λI at
+// Eigenvectors and eigenvalues. The opening is the trajectory problem (game-design/ch18-trajectory-spec.md):
+// a failed launch, two kept directions and their multipliers, the name, a two-pulse mission, ten practice
+// rounds and an independent challenge. Then the sweep finds the one line a shear keeps, the λ dial flattens A − λI at
 // each stretch (the characteristic polynomial), a turn keeps no real line (complex eigenvalues, the
 // fourth-pulse clue closes), a 3 × 3 by hand, Vell's lines. Briefing with LANTERN's Procedure; builds
 // eig2 and power_iteration; the line finder runs on the player's power_iteration.
 import type { Beat, ChapterDef } from '../../../game/types';
 import { bridgeShot } from '../../common/shots';
-import { p1, p2, p3, p4 } from './puzzles';
+import { p2, p3, p4 } from './puzzles';
+import { m1, p1, solo } from './traj-puzzles';
+import { drill } from './drill';
 import { p5, p6, p7 } from './puzzles2';
 import { compare, doubtEvery, doubtTrace, doubtZero, law, procedure, sayit } from './briefing';
 import { buildEig2, buildPower } from './build';
 import { coda, coldOpen, fieldShot, finder, whyVisual } from './scenes';
 import { S } from './script';
+import { S as SAVE } from '../../../core/save';
+import { NAME_TEXT, nameFormula, nameSaw, type Seen } from './traj-text';
 
 const IN_SHORT_ANSWER = 'Which arrows stay on their own line? Most arrows turn. A few only **stretch, shrink or flip**. They sit where the move minus a stretch flattens space. A quarter turn keeps no line at all.';
+// The card before Scene 1 states the problem only: the player discovers the answer by flying (spec §3, §7).
+const IN_SHORT_PROBLEM = 'Which arrows stay on their own line? Each pulse transforms your trajectory, and most launches are turned off course. Find the launches it does not turn.';
 
+// Named only after the player has launched, failed, found two kept directions and typed both multipliers
+// (Scenes 1–3). Every symbol of A v = λ v is tied to the pulse and the vectors this player used (p1 records them).
+const seen = () => SAVE().flags['c18-seen'] as Seen | undefined;
 const NAME_EIG: Beat = {
   kind: 'name', id: 'name-eigen', entry: {
-    id: 'eigenvector', term: 'eigenvector', question: 'Which arrows does a move leave on their own line?', nodes: ['N20'],
-    saw: 'The test arrow went all the way round. Almost everywhere, $A\\mathbf x$ pointed somewhere new. On two lines it did not: along $(1, 1)$ it came back three times as long, and along $(1, -1)$ the same length.',
-    means: 'Most arrows change direction when the matrix moves them. A few only get **longer, shorter or flipped**. Along those lines the move is a single number.',
-    name: 'An **eigenvector** of $A$ is a non-zero arrow $\\mathbf v$ that $A$ keeps on its own line: $A\\mathbf v = \\lambda\\mathbf v$. The stretch λ is its **eigenvalue**.',
-    formula: '\\begin{bmatrix} 2 & 1 \\\\ 1 & 2 \\end{bmatrix}\\cg{\\begin{bmatrix} 1 \\\\ 1 \\end{bmatrix}} = \\cy{3}\\cg{\\begin{bmatrix} 1 \\\\ 1 \\end{bmatrix}} \\qquad \\begin{bmatrix} 2 & 1 \\\\ 1 & 2 \\end{bmatrix}\\cr{\\begin{bmatrix} 1 \\\\ -1 \\end{bmatrix}} = \\cy{1}\\cr{\\begin{bmatrix} 1 \\\\ -1 \\end{bmatrix}}',
-    why: 'Every non-zero multiple of an eigenvector is one too: the whole line holds. A negative λ flips the arrow; λ = 0 sends it to the origin.',
+    id: 'eigenvector', term: 'eigenvector', question: 'What do we call a launch direction the pulse does not turn?', nodes: ['N20'],
+    get saw() { return nameSaw(seen()); },
+    means: 'Along a kept direction the pulse does one thing: it multiplies the vector by a number. Every non-zero vector on that line is multiplied by the same number.',
+    name: NAME_TEXT,
+    get formula() { return nameFormula(seen()); },
+    why: 'The zero vector is never an eigenvector: it has no direction. Any non-zero multiple of an eigenvector is another eigenvector on the same line, with the same eigenvalue. λ can be negative (the vector flips through the Anchor) or 0 (it collapses onto the Anchor).',
     cue: 'When you see **“stays on its own line”**, think **eigenvector**.',
     use: 'Google’s first ranking of web pages was one eigenvector of a matrix of links.',
   },
@@ -83,10 +94,13 @@ const ch: ChapterDef = {
   catchup: 'A matrix moves every point; its columns are where the grid arrows land. A move **flattens space** exactly when its determinant is 0, and then some non-zero arrow lands on the origin. Story so far: the ark is out of the debris stream, Ilse is alive in the core, and Vell holds the Anchor.',
   beats: [
     { kind: 'cinematic', id: 'open', run: coldOpen },
-    { kind: 'card', id: 'inshort', card: { kind: 'inshort', title: 'Which lines does the pulse not turn?', body: IN_SHORT_ANSWER } },
+    { kind: 'card', id: 'inshort', card: { kind: 'inshort', title: 'Which lines does the pulse not turn?', body: IN_SHORT_PROBLEM } },
     { kind: 'scene', id: 'p1-intro', lines: S.p1Intro, setup: bridgeShot },
     { kind: 'puzzle', id: 'p1', puzzle: p1 },
     NAME_EIG,
+    { kind: 'puzzle', id: 'm1', puzzle: m1 },
+    { kind: 'puzzle', id: 'drill', puzzle: drill },
+    { kind: 'puzzle', id: 'solo', puzzle: solo },
     { kind: 'scene', id: 'p2-intro', lines: S.p2Intro, setup: bridgeShot },
     { kind: 'puzzle', id: 'p2', puzzle: p2 },
     { kind: 'scene', id: 'p3-intro', lines: S.p3Intro, setup: bridgeShot },
