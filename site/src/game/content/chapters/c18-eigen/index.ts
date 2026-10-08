@@ -1,11 +1,15 @@
 // Chapter 18: "Which lines does the pulse not turn?" (GDD §6.9, N20), the first chapter of Act VII.
-// Eigenvectors and eigenvalues: the sweep finds the lines a move keeps, the λ dial flattens A − λI at
+// Eigenvectors and eigenvalues. The opening is the trajectory problem (game-design/ch18-trajectory-spec.md):
+// a failed launch, two kept directions and their multipliers, the name, a two-pulse mission, ten practice
+// rounds and an independent challenge. Then the sweep finds the one line a shear keeps, the λ dial flattens A − λI at
 // each stretch (the characteristic polynomial), a turn keeps no real line (complex eigenvalues, the
 // fourth-pulse clue closes), a 3 × 3 by hand, Vell's lines. Briefing with LANTERN's Procedure; builds
 // eig2 and power_iteration; the line finder runs on the player's power_iteration.
 import type { Beat, ChapterDef } from '../../../game/types';
 import { bridgeShot } from '../../common/shots';
-import { p1, p2, p3, p4 } from './puzzles';
+import { p2, p3, p4 } from './puzzles';
+import { m1, p1, solo } from './traj-puzzles';
+import { drill } from './drill';
 import { p5, p6, p7 } from './puzzles2';
 import { compare, doubtEvery, doubtTrace, doubtZero, law, procedure, sayit } from './briefing';
 import { buildEig2, buildPower } from './build';
@@ -14,14 +18,16 @@ import { S } from './script';
 
 const IN_SHORT_ANSWER = 'Which arrows stay on their own line? Most arrows turn. A few only **stretch, shrink or flip**. They sit where the move minus a stretch flattens space. A quarter turn keeps no line at all.';
 
+// Named only after the player has launched, failed, found two kept directions and typed both multipliers
+// (Scenes 1–3). Every symbol of A v = λ v is tied to the pulse and the vectors just used.
 const NAME_EIG: Beat = {
   kind: 'name', id: 'name-eigen', entry: {
-    id: 'eigenvector', term: 'eigenvector', question: 'Which arrows does a move leave on their own line?', nodes: ['N20'],
-    saw: 'The test arrow went all the way round. Almost everywhere, $A\\mathbf x$ pointed somewhere new. On two lines it did not: along $(1, 1)$ it came back three times as long, and along $(1, -1)$ the same length.',
-    means: 'Most arrows change direction when the matrix moves them. A few only get **longer, shorter or flipped**. Along those lines the move is a single number.',
-    name: 'An **eigenvector** of $A$ is a non-zero arrow $\\mathbf v$ that $A$ keeps on its own line: $A\\mathbf v = \\lambda\\mathbf v$. The stretch λ is its **eigenvalue**.',
-    formula: '\\begin{bmatrix} 2 & 1 \\\\ 1 & 2 \\end{bmatrix}\\cg{\\begin{bmatrix} 1 \\\\ 1 \\end{bmatrix}} = \\cy{3}\\cg{\\begin{bmatrix} 1 \\\\ 1 \\end{bmatrix}} \\qquad \\begin{bmatrix} 2 & 1 \\\\ 1 & 2 \\end{bmatrix}\\cr{\\begin{bmatrix} 1 \\\\ -1 \\end{bmatrix}} = \\cy{1}\\cr{\\begin{bmatrix} 1 \\\\ -1 \\end{bmatrix}}',
-    why: 'Every non-zero multiple of an eigenvector is one too: the whole line holds. A negative λ flips the arrow; λ = 0 sends it to the origin.',
+    id: 'eigenvector', term: 'eigenvector', question: 'What do we call a launch direction the pulse does not turn?', nodes: ['N20'],
+    saw: 'Most launches were turned off their line: the pulse moved $(1, 0)$ to $(2, 1)$. Two directions held. $(1, 1)$ came back as $(3, 3)$, the same line three times as long, and $(1, -1)$ came back as itself. $(2, 2)$ held too, but it was the line of $(1, 1)$ again.',
+    means: 'Along a kept direction the pulse does one thing: it multiplies the vector by a number. Every non-zero vector on that line is multiplied by the same number.',
+    name: 'A non-zero vector $\\mathbf v$ that $A$ keeps on its own line is an **eigenvector** of $A$. The number it is multiplied by, λ, is its **eigenvalue**: $A\\mathbf v = \\lambda\\mathbf v$.',
+    formula: '\\begin{gathered} \\underbrace{\\begin{bmatrix} 2 & 1 \\\\ 1 & 2 \\end{bmatrix}}_{A \\text{ (the pulse)}} \\underbrace{\\cg{\\begin{bmatrix} 1 \\\\ 1 \\end{bmatrix}}}_{\\mathbf v \\text{ (launch)}} = \\underbrace{\\cy{\\begin{bmatrix} 3 \\\\ 3 \\end{bmatrix}}}_{A\\mathbf v} = \\underbrace{3}_{\\lambda} \\underbrace{\\cg{\\begin{bmatrix} 1 \\\\ 1 \\end{bmatrix}}}_{\\mathbf v} \\\\[4pt] \\begin{bmatrix} 2 & 1 \\\\ 1 & 2 \\end{bmatrix} \\cg{\\begin{bmatrix} 1 \\\\ -1 \\end{bmatrix}} = \\cy{\\begin{bmatrix} 1 \\\\ -1 \\end{bmatrix}} = \\underbrace{1}_{\\lambda} \\cg{\\begin{bmatrix} 1 \\\\ -1 \\end{bmatrix}} \\end{gathered}',
+    why: 'The zero vector is never an eigenvector: it has no direction. Any non-zero multiple of an eigenvector is another eigenvector on the same line, with the same eigenvalue. λ can be negative (the vector flips through the Anchor) or 0 (it collapses onto the Anchor).',
     cue: 'When you see **“stays on its own line”**, think **eigenvector**.',
     use: 'Google’s first ranking of web pages was one eigenvector of a matrix of links.',
   },
@@ -87,6 +93,9 @@ const ch: ChapterDef = {
     { kind: 'scene', id: 'p1-intro', lines: S.p1Intro, setup: bridgeShot },
     { kind: 'puzzle', id: 'p1', puzzle: p1 },
     NAME_EIG,
+    { kind: 'puzzle', id: 'm1', puzzle: m1 },
+    { kind: 'puzzle', id: 'drill', puzzle: drill },
+    { kind: 'puzzle', id: 'solo', puzzle: solo },
     { kind: 'scene', id: 'p2-intro', lines: S.p2Intro, setup: bridgeShot },
     { kind: 'puzzle', id: 'p2', puzzle: p2 },
     { kind: 'scene', id: 'p3-intro', lines: S.p3Intro, setup: bridgeShot },

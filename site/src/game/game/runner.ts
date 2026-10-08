@@ -281,12 +281,25 @@ export class Runner {
       (state.ctx as PuzzleCtxImpl).onFirstMove = () => { if (prediction === null) box.hidden = true; };
     }
 
+    let stepping = false;
     const hintBox = h('div', { class: 'hint-box glass' });
     hintBox.hidden = true;
     this.g.ui.scene.appendChild(hintBox);
 
     const controls = {
       onHint: () => {
+        const rt = this.puzzle?.runtime;
+        if (rt?.hint) {
+          // stage-aware hints: the puzzle chooses the text and keeps its own record of the help
+          const got = rt.hint();
+          if (!got) return;
+          hintsUsed++;
+          hintBox.hidden = false;
+          // the count belongs to the current step, so it lives in the box, not on the button
+          hintBox.innerHTML = `<div class="kicker">Hint${got.left ? ` · ${got.left} more for this step` : ''}</div>${md(got.text)}`;
+          hintBox.style.pointerEvents = 'auto';
+          return;
+        }
         if (!def.hints.length) return;
         const i = Math.min(hintsUsed, def.hints.length - 1);
         hintsUsed = Math.min(hintsUsed + 1, def.hints.length);
@@ -297,6 +310,16 @@ export class Runner {
       },
       onShowMe: async () => {
         if (!this.puzzle || this.puzzle.ctx.won) return;
+        const rt = this.puzzle.runtime;
+        if (rt?.showStep) {
+          // one stage demonstrated; the puzzle goes on (counts as help, not as a shown puzzle)
+          if (stepping) return;
+          stepping = true;
+          hintsUsed++;
+          hintBox.hidden = true;
+          try { await rt.showStep(); } catch (e) { console.error(e); } finally { stepping = false; }
+          return;
+        }
         this.puzzle.shown = true;
         this.hud.clearControls();
         try { await this.puzzle.runtime?.showMe(); } catch (e) { console.error(e); }
@@ -314,7 +337,7 @@ export class Runner {
         sfx.back();
       },
     };
-    this.hud.showControls(controls, def.hints.length);
+    this.hud.showControls(controls, state.runtime?.hint ? 0 : def.hints.length);
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || this.g.dialogue.active) return;
       if (e.key === 'h' || e.key === 'H') controls.onHint();

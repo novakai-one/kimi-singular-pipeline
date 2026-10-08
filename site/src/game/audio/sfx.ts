@@ -128,5 +128,41 @@ export const sfx = {
   thrust(dur = 0.6): void { noise({ from: 180, to: 700, dur, vol: 0.07, q: 0.6, type: 'lowpass' }); },
   warp(): void { inKey(); tone(midiHz(D - 12), { vol: 0.1, d: 1.6, glideTo: midiHz(D + 24), wave: 'sawtooth', filter: 2400, reverb: 0.6 }); noise({ from: 200, to: 8000, dur: 1.6, vol: 0.05, reverb: 0.6 }); },
   type(): void { inKey(); tone(midiHz(D + 31), { vol: 0.012, d: 0.02, wave: 'square', filter: 2000 }); },
+  /**
+   * A navigation pulse (Chapter 18). GDD §10.2: one held note stays fixed while the others glide, the way the
+   * kept line stays put while everything else is moved.
+   */
+  pulse(dur = 0.8): void {
+    inKey();
+    noise({ from: 160, to: 1900, dur, vol: 0.05, q: 0.7, reverb: 0.5 });
+    tone(midiHz(D), { wave: 'sine', vol: 0.08, a: 0.03, d: dur, reverb: 0.5 });
+    tone(midiHz(D + 12 + scale[4]), { wave: 'triangle', vol: 0.035, a: 0.03, d: dur, glideTo: midiHz(D + 12 + scale[4] + 3), reverb: 0.4, filter: 2600, pan: 0.3 });
+    tone(midiHz(D + 12 + scale[2]), { wave: 'triangle', vol: 0.035, a: 0.03, d: dur, glideTo: midiHz(D + 12 + scale[2] - 2), reverb: 0.4, filter: 2600, pan: -0.3 });
+  },
+  /** The trajectory stayed on its line: a bright, open fifth that rings. */
+  align(): void {
+    inKey();
+    [0, 7, 12].forEach((s, i) => tone(midiHz(D + 12 + s), { wave: 'sine', vol: 0.065, a: 0.03, d: 1.2, at: i * 0.035, reverb: 0.85, pan: (i - 1) * 0.4 }));
+    tone(midiHz(D + 36), { vol: 0.025, d: 1, at: 0.14, reverb: 0.9 });
+  },
+  /** The trajectory was turned off its line: two soft falling tones (amber, never harsh). */
+  offcourse(): void {
+    inKey();
+    tone(midiHz(D + 10), { wave: 'triangle', vol: 0.06, d: 0.18, filter: 1600, glideTo: midiHz(D + 8) });
+    tone(midiHz(D + 7), { wave: 'triangle', vol: 0.05, d: 0.26, at: 0.16, filter: 1400, glideTo: midiHz(D + 5) });
+  },
+  /** The ship passes through the Anchor (a reversing pulse). */
+  flip(): void {
+    inKey();
+    tone(midiHz(D + 19), { wave: 'sine', vol: 0.05, d: 0.32, glideTo: midiHz(D + 7), reverb: 0.5, pan: 0.4 });
+    tone(midiHz(D + 7), { wave: 'sine', vol: 0.05, d: 0.32, at: 0.04, glideTo: midiHz(D + 19), reverb: 0.5, pan: -0.4 });
+  },
+  /** A waypoint reached: a docking thump under a rising chord. */
+  arrive(): void {
+    inKey();
+    noise({ from: 900, to: 120, dur: 0.35, vol: 0.07, type: 'lowpass', q: 0.8 });
+    [0, 4, 7, 9].forEach((s, i) => tone(midiHz(D + 12 + scale[s]), { wave: 'triangle', vol: 0.08, d: 1.3, at: 0.08 + i * 0.06, reverb: 0.7, pan: (i - 1.5) * 0.3 }));
+    tone(midiHz(D - 12), { vol: 0.1, d: 1.4, at: 0.08, reverb: 0.4 });
+  },
   alarm(): void { inKey(); [0, 0.5].forEach((at) => tone(midiHz(D + 7), { vol: 0.07, d: 0.3, at, wave: 'square', filter: 1400, glideTo: midiHz(D + 5) })); },
 };

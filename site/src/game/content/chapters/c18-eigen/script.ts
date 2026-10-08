@@ -15,13 +15,12 @@ export const S: Record<string, Line[]> = {
     { who: 'bram', text: 'Most lines through the Anchor get turned by a pulse. A few might only stretch. We find those first.' },
   ],
   p1Intro: [
-    { who: 'lantern', text: `A test first, on a matrix we know from the spire bench. It sends ${fmtV([1, 0])} to ${fmtV(col(P1_A, 0))}, and ${fmtV([0, 1])} to ${fmtV(col(P1_A, 1))}.`, say: `A test first, on a matrix we know from the spire bench. It sends one, zero to ${sayV(col(P1_A, 0))}, and zero, one to ${sayV(col(P1_A, 1))}.` },
-    { who: 'bram', text: 'Green is your arrow. Yellow is where the pulse throws it. Most arrows come out turned.' },
-    { who: 'bram', text: 'Find the ones that come out pointing the same way, Nav. Only longer or shorter.' },
+    { who: 'wren', text: 'Before we go near his field, a practice run. The spire bench is set to a pulse we can read.' },
+    { who: 'lantern', text: `Each pulse moves the Lantern’s displacement from the Anchor by one matrix. The bench matrix sends ${fmtV([1, 0])} to ${fmtV(col(P1_A, 0))}, and ${fmtV([0, 1])} to ${fmtV(col(P1_A, 1))}.`, say: `Each pulse moves the Lantern’s displacement from the Anchor by one matrix. The bench matrix sends one, zero to ${sayV(col(P1_A, 0))}, and zero, one to ${sayV(col(P1_A, 1))}.` },
+    { who: 'wren', text: 'I launch along a straight line, the pulse fires, and I come out somewhere else. Find me a line it leaves alone, Nav.' },
   ],
   p1Win: [
-    { who: 'lantern', text: `Two lines hold. Along ${fmtV(P1_LINES[0][0])} every arrow is stretched ${spell(P1_LINES[0][1])} times. Along ${fmtV(P1_LINES[1][0])} every arrow keeps its length.`, say: `Two lines hold. Along ${sayV(P1_LINES[0][0])}, every arrow is stretched ${spell(P1_LINES[0][1])} times. Along ${sayV(P1_LINES[1][0])}, every arrow keeps its length.` },
-    { who: 'wren', text: 'And everything in between gets turned.' },
+    { who: 'wren', text: `Two lines I can fly: ${fmtV(P1_LINES[0][0])} and ${fmtV(P1_LINES[1][0])}. Everything else gets turned.`, say: `Two lines I can fly: ${sayV(P1_LINES[0][0])}, and ${sayV(P1_LINES[1][0])}. Everything else gets turned.` },
   ],
   p2Intro: [
     { who: 'lantern', text: `A shear. The grid arrows land at ${fmtV(col(P2_A, 0))} and ${fmtV(col(P2_A, 1))}.`, say: `A shear. The grid arrows land at ${sayV(col(P2_A, 0))}, and ${sayV(col(P2_A, 1))}.` },
