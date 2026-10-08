@@ -23,6 +23,19 @@ export function puzzleLifecycle(scope: object, id: string): PuzzleLifecycle {
 }
 export function beginPuzzleBeat(scope: object): void { sessions.get(scope)?.forEach((state) => state.startBeat()); }
 
+/** Typing previews feedback; only Enter commits the complete numeric answer. */
+export function bindNumericAnswer(input: HTMLInputElement, preview: (value: number | null) => void, submit: (value: number) => void): void {
+  const value = () => input.value.trim() ? Number(input.value) : null;
+  input.addEventListener('input', () => preview(value()));
+  input.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    event.stopPropagation();
+    const answer = value();
+    if (answer !== null) submit(answer);
+  });
+}
+
 /** Continue requires this run's full suite and adoption, never an old save flag. */
 export class BuildGate {
   private epoch = 0;

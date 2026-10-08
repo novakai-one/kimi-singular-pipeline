@@ -74,8 +74,49 @@ test('build: 200 integer pairs in the authored range; reference passes and decoy
   assert.equal(message, COPY.build.feedback.replace('{a}', JSON.stringify(c.args[0])).replace('{b}', JSON.stringify(c.args[1])).replace('{r}', String(c.expect)).replace('{y}', String(wrong)));
 });
 
-import { PuzzleLifecycle, puzzleLifecycle, beginPuzzleBeat, BuildGate, ReadingChannel, restoreTestsLine } from '../../site/src/game/content/chapters/d01-dot/lifecycle.ts';
+import { PuzzleLifecycle, puzzleLifecycle, beginPuzzleBeat, bindNumericAnswer, BuildGate, ReadingChannel, restoreTestsLine } from '../../site/src/game/content/chapters/d01-dot/lifecycle.ts';
 import { compactBeatChrome, TransientSlot } from '../../site/src/game/ui/beat-chrome.ts';
+
+test('Commander typing previews complete and partial answers; only Enter submits the current field value', () => {
+  const input = Object.assign(new EventTarget(), { value: '' });
+  const submitted: number[] = [];
+  const previews: (number | null)[] = [];
+  let wins = 0;
+  bindNumericAnswer(input as unknown as HTMLInputElement, (value) => previews.push(value), (value) => {
+    submitted.push(value);
+    if (p2Won(value)) wins++;
+  });
+  const type = (value: string) => { input.value = value; input.dispatchEvent(new Event('input')); };
+  const enter = () => {
+    const event = Object.assign(new Event('keydown', { cancelable: true }), { key: 'Enter' });
+    input.dispatchEvent(event);
+    assert.equal(event.defaultPrevented, true, 'confirmation must not trigger the next control too');
+  };
+  for (const prefix of ['1', '15', '15.', '15.1']) {
+    type(prefix);
+    assert.deepEqual(submitted, [], `typing ${prefix} must not submit a correct prefix`);
+    assert.equal(wins, 0);
+  }
+  assert.deepEqual(previews, [1, 15, 15, 15.1]);
+  enter();
+  assert.deepEqual(submitted, [15.1]);
+  assert.equal(wins, 0, 'the complete confirmed value is outside tolerance');
+  for (const value of ['7', '25', '35']) {
+    type(value);
+    assert.equal(previews.at(-1), Number(value), 'authored misconception feedback remains available during preview');
+    enter();
+  }
+  assert.deepEqual(submitted, [15.1, 7, 25, 35]);
+  assert.equal(wins, 0);
+  type(''); enter();
+  assert.equal(previews.at(-1), null);
+  assert.deepEqual(submitted, [15.1, 7, 25, 35], 'an empty field clears preview without submitting zero');
+  type('15');
+  assert.equal(wins, 0, 'even a complete correct answer still needs confirmation');
+  enter();
+  assert.deepEqual(submitted, [15.1, 7, 25, 35, 15]);
+  assert.equal(wins, 1);
+});
 
 test('prediction dismissal survives Reset-style remounts; a goal only reopens on a deliberate toggle', () => {
   for (const event of ['drag', 'submitPrediction'] as const) {

@@ -10,6 +10,7 @@ import { COPY } from './copy';
 import { dot, holdReading, newBands, p2Won, sensorTip, snapDegrees } from './logic.ts';
 import { stagePuzzle } from './staging';
 import { readingChannel, savedDot } from './instrument';
+import { bindNumericAnswer } from './lifecycle';
 
 export function frame(p: Parameters<PuzzleDef['setup']>[0]): void {
   p.grid();
@@ -124,23 +125,24 @@ export const p2: PuzzleDef = {
     statusEl.dataset.attention = 'transient';
     const readout = p.readout();
     readout.el.hidden = true;
+    const preview = (value: number | null) => {
+      if (p.won) return;
+      if (value !== null) staging.attempt();
+      p.g.ui.clearTransient();
+      const text = value === null ? undefined : (COPY.p2.feedback as Record<string, string>)[String(value)];
+      statusEl.textContent = text ?? '';
+      if (text) p.g.ui.showTransient(statusEl);
+    };
     const submit = (value: number) => {
       if (p.won) return;
-      staging.attempt();
-      p.g.ui.clearTransient();
+      preview(value);
       if (p2Won(value)) { statusEl.textContent = ''; readout.el.hidden = false; readout.eq(COPY.p2.solution); p.win(); }
-      else {
-        const text = (COPY.p2.feedback as Record<string, string>)[String(value)];
-        statusEl.textContent = text ?? '';
-        if (text) p.g.ui.showTransient(statusEl);
-      }
     };
     let cards: ChoiceCards | null = null;
     if (p.difficulty === 'commander') {
       const input = document.createElement('input');
       input.type = 'number'; input.step = 'any'; input.inputMode = 'decimal'; input.className = 'd01-answer'; input.setAttribute('aria-label', COPY.p2.goal);
-      input.addEventListener('input', () => { if (input.value.trim()) submit(Number(input.value)); else { statusEl.textContent = ''; p.g.ui.clearTransient(); } });
-      input.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.stopPropagation(); submit(Number(input.value)); } });
+      bindNumericAnswer(input, preview, submit);
       p.dock().append(input);
     } else {
       cards = new ChoiceCards([7, 15, 25, 35].map((value) => ({ id: String(value), text: String(value) })), (id) => {
