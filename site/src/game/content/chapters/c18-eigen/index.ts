@@ -15,18 +15,23 @@ import { compare, doubtEvery, doubtTrace, doubtZero, law, procedure, sayit } fro
 import { buildEig2, buildPower } from './build';
 import { coda, coldOpen, fieldShot, finder, whyVisual } from './scenes';
 import { S } from './script';
+import { S as SAVE } from '../../../core/save';
+import { NAME_TEXT, nameFormula, nameSaw, type Seen } from './traj-text';
 
 const IN_SHORT_ANSWER = 'Which arrows stay on their own line? Most arrows turn. A few only **stretch, shrink or flip**. They sit where the move minus a stretch flattens space. A quarter turn keeps no line at all.';
+// The card before Scene 1 states the problem only: the player discovers the answer by flying (spec §3, §7).
+const IN_SHORT_PROBLEM = 'Which arrows stay on their own line? Each pulse transforms your trajectory, and most launches are turned off course. Find the launches it does not turn.';
 
 // Named only after the player has launched, failed, found two kept directions and typed both multipliers
-// (Scenes 1–3). Every symbol of A v = λ v is tied to the pulse and the vectors just used.
+// (Scenes 1–3). Every symbol of A v = λ v is tied to the pulse and the vectors this player used (p1 records them).
+const seen = () => SAVE().flags['c18-seen'] as Seen | undefined;
 const NAME_EIG: Beat = {
   kind: 'name', id: 'name-eigen', entry: {
     id: 'eigenvector', term: 'eigenvector', question: 'What do we call a launch direction the pulse does not turn?', nodes: ['N20'],
-    saw: 'Most launches were turned off their line: the pulse moved $(1, 0)$ to $(2, 1)$. Two directions held. $(1, 1)$ came back as $(3, 3)$, the same line three times as long, and $(1, -1)$ came back as itself. $(2, 2)$ held too, but it was the line of $(1, 1)$ again.',
+    get saw() { return nameSaw(seen()); },
     means: 'Along a kept direction the pulse does one thing: it multiplies the vector by a number. Every non-zero vector on that line is multiplied by the same number.',
-    name: 'A non-zero vector $\\mathbf v$ that $A$ keeps on its own line is an **eigenvector** of $A$. The number it is multiplied by, λ, is its **eigenvalue**: $A\\mathbf v = \\lambda\\mathbf v$.',
-    formula: '\\begin{gathered} \\underbrace{\\begin{bmatrix} 2 & 1 \\\\ 1 & 2 \\end{bmatrix}}_{A \\text{ (the pulse)}} \\underbrace{\\cg{\\begin{bmatrix} 1 \\\\ 1 \\end{bmatrix}}}_{\\mathbf v \\text{ (launch)}} = \\underbrace{\\cy{\\begin{bmatrix} 3 \\\\ 3 \\end{bmatrix}}}_{A\\mathbf v} = \\underbrace{3}_{\\lambda} \\underbrace{\\cg{\\begin{bmatrix} 1 \\\\ 1 \\end{bmatrix}}}_{\\mathbf v} \\\\[4pt] \\begin{bmatrix} 2 & 1 \\\\ 1 & 2 \\end{bmatrix} \\cg{\\begin{bmatrix} 1 \\\\ -1 \\end{bmatrix}} = \\cy{\\begin{bmatrix} 1 \\\\ -1 \\end{bmatrix}} = \\underbrace{1}_{\\lambda} \\cg{\\begin{bmatrix} 1 \\\\ -1 \\end{bmatrix}} \\end{gathered}',
+    name: NAME_TEXT,
+    get formula() { return nameFormula(seen()); },
     why: 'The zero vector is never an eigenvector: it has no direction. Any non-zero multiple of an eigenvector is another eigenvector on the same line, with the same eigenvalue. λ can be negative (the vector flips through the Anchor) or 0 (it collapses onto the Anchor).',
     cue: 'When you see **“stays on its own line”**, think **eigenvector**.',
     use: 'Google’s first ranking of web pages was one eigenvector of a matrix of links.',
@@ -89,7 +94,7 @@ const ch: ChapterDef = {
   catchup: 'A matrix moves every point; its columns are where the grid arrows land. A move **flattens space** exactly when its determinant is 0, and then some non-zero arrow lands on the origin. Story so far: the ark is out of the debris stream, Ilse is alive in the core, and Vell holds the Anchor.',
   beats: [
     { kind: 'cinematic', id: 'open', run: coldOpen },
-    { kind: 'card', id: 'inshort', card: { kind: 'inshort', title: 'Which lines does the pulse not turn?', body: IN_SHORT_ANSWER } },
+    { kind: 'card', id: 'inshort', card: { kind: 'inshort', title: 'Which lines does the pulse not turn?', body: IN_SHORT_PROBLEM } },
     { kind: 'scene', id: 'p1-intro', lines: S.p1Intro, setup: bridgeShot },
     { kind: 'puzzle', id: 'p1', puzzle: p1 },
     NAME_EIG,

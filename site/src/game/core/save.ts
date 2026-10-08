@@ -51,7 +51,7 @@ export const DEFAULT_SETTINGS: Settings = {
 };
 
 function fresh(): SaveData {
-  return { v: 1, settings: { ...DEFAULT_SETTINGS }, last: null, chapters: {}, codex: {}, explains: {}, code: {}, flags: {}, manual: {}, laws: {}, doubts: {} };
+  return { v: 1, settings: { ...DEFAULT_SETTINGS }, last: null, chapters: {}, codex: {}, explains: {}, code: {}, flags: { 'c18-layout-2': true }, manual: {}, laws: {}, doubts: {} };
 }
 
 let data: SaveData = fresh();
@@ -65,6 +65,10 @@ export function loadSave(): SaveData {
       if (j && j.v === 1) data = { ...fresh(), ...j, settings: { ...DEFAULT_SETTINGS, ...j.settings } };
     }
   } catch { storageOk = false; }
+  // Chapter 18 gained three beats after its name card (beat 4): a save resting past that point in the older
+  // layout resumes at the same content, not three beats early. Every save loaded from now on is in the new layout.
+  if (data.last?.chapter === 'c18' && data.last.beat >= 5 && !data.flags['c18-layout-2']) data.last = { ...data.last, beat: data.last.beat + 3 };
+  data.flags['c18-layout-2'] = true;
   return data;
 }
 

@@ -2,6 +2,7 @@
 // and nothing the player reads before the name card says "eigenvector", "eigenvalue" or λ.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import * as X from '../../site/src/game/content/chapters/c18-eigen/traj-text.ts';
 import { checkMult, PULSE_A } from '../../site/src/game/content/chapters/c18-eigen/traj-logic.ts';
 
@@ -41,7 +42,10 @@ function walk(x: unknown, at: string, out: { at: string; s: string }[]): void {
 
 function strings(): { at: string; s: string }[] {
   const out: { at: string; s: string }[] = [];
-  for (const k of ['P1', 'M1T', 'SOLOT', 'DRILL', 'LOG_NAMES', 'OUTCOME_NAMES', 'ZERO', 'UNREAD', 'UNREAD_M'] as const) walk(X[k], k, out);
+  for (const k of ['P1', 'M1T', 'SOLOT', 'DRILL', 'LOG_NAMES', 'OUTCOME_NAMES', 'ZERO', 'UNREAD', 'UNREAD_M', 'NAME_TEXT'] as const) walk(X[k], k, out);
+  // the name card, from the default record and from a player who found (1, -1) first and tested a multiple
+  out.push({ at: 'nameSaw()', s: X.nameSaw() });
+  out.push({ at: 'nameSaw(seen)', s: X.nameSaw({ miss: [[1, 0], [2, 1]], lines: [[[2, -2], [2, -2], 1], [[1, 1], [3, 3], 3]], dupe: [[-1, 1], [2, -2], -0.5] }) });
   // the part-by-part multiplier messages, each kind of wrong answer
   for (const [v, m] of [[[1, 1], 2], [[1, 1], -3], [[1, -1], 2], [[2, 1], 3]] as [number[], number][]) {
     const vd = checkMult(PULSE_A, v, m);
@@ -63,6 +67,10 @@ test('every trajectory string follows the wording rules', () => {
 
 test('nothing before the name card says eigenvector, eigenvalue or λ', () => {
   const early = strings().filter(({ at }) => /^(P1|ZERO|UNREAD|wrongMult)/.test(at));
+  // and the In-short card shown before Scene 1 states the problem only
+  const idx = readFileSync(new URL('../../site/src/game/content/chapters/c18-eigen/index.ts', import.meta.url), 'utf8');
+  const card = idx.match(/const IN_SHORT_PROBLEM = '([^']*)'/)?.[1] ?? '';
+  assert.ok(card.length > 20 && !/stretch|shrink|flip|eigen|λ/.test(card), card);
   assert.ok(early.length > 20);
   assert.deepEqual(early.filter(({ s }) => EARLY.test(s)).map(({ at, s }) => `${at} · ${s}`), []);
 });
@@ -78,4 +86,26 @@ test('the spec\'s own sentences are used where it gives them', () => {
   assert.equal(X.P1.firstMiss([1, 0], [2, 1]), 'Your launch direction changed. The pulse moved $(1, 0)$ to $(2, 1)$. Find a direction that the pulse doesn\'t turn.');
   assert.equal(X.P1.another, 'One safe direction found. Is there another?');
   assert.match(X.P1.dupe([2, 2], [1, 1], 2), /another vector, not another direction/);
+});
+
+test('the name card quotes the vectors this player used', () => {
+  const s = X.nameSaw({ miss: [[1, 0], [2, 1]], lines: [[[2, -2], [2, -2], 1], [[1, 1], [3, 3], 3]] });
+  assert.match(s, /\(2, -2\)\$ came back as itself/);
+  assert.match(s, /\(1, 1\)\$ came back as \$\(3, 3\)\$, the same line 3 times as long/);
+  assert.doesNotMatch(s, /held too/, 'no multiple was tested, so none is quoted');
+  const f = X.nameFormula({ lines: [[[2, -2], [2, -2], 1], [[1, 1], [3, 3], 3]] });
+  assert.match(f, /\\underbrace\{1\}_\{\\lambda\}/);
+  assert.match(X.nameFormula(), /\\underbrace\{3\}_\{\\lambda\}/, 'default: the canonical lines');
+  assert.match(X.NAME_TEXT, /^Those kept directions are called \*\*eigenvectors\*\*\. Their multipliers are \*\*eigenvalues\*\*\./);
+});
+
+test('angles and near misses read honestly', () => {
+  assert.equal(X.fdeg(0.19), '0.2°');
+  assert.equal(X.fdeg(0.019), 'less than 0.1°');
+  assert.equal(X.fdeg(26.565), '27°');
+  assert.equal(X.tnp(2.9999), '2.9999');
+  assert.equal(X.tnp(3), '3');
+  assert.match(X.wrongMult([1, 1], checkMult(PULSE_A, [1, 1], 2.9999)), /^\$2\.9999\(1, 1\) = \(2\.9999, 2\.9999\)/);
+  // (0, 3) with multiplier 1 under the flip: only the second part has the wrong sign
+  assert.match(X.wrongMult([0, 3], checkMult([[2, 0], [0, -1]], [0, 3], 1)), /The second part has the wrong sign/);
 });

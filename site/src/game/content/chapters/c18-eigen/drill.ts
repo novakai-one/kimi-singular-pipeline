@@ -11,9 +11,9 @@ import { matVec, type Mat, type Vec } from '../../../math/la';
 import {
   PULSE_A, PULSE_FLAT, PULSE_FLIP, PULSE_NEW, PULSE_S, PULSE_SHEAR, R1_PLANS, R3_OPEN, R3_PLANS, R6, R8_PULSES, R10,
   checkMult, classifyPlan, cleanV, genMission, genPulse, isZero, keeps, keptLines, launchFor, lineTurnDeg, multipleOf, multiplierOf,
-  onLineOf, path, signedDeg, type Attempt, type Mission, type PlanClass,
+  onLineOf, path, lineAngle, type Attempt, type Mission, type PlanClass,
 } from './traj-logic';
-import { DRILL, UNREAD, UNREAD_M, ZERO, fv, tn, tv, wrongMult } from './traj-text';
+import { DRILL, UNREAD, UNREAD_M, ZERO, fv, tn, tnp, tv, wrongMult } from './traj-text';
 import { NumCell, TrajView, VecField, hideHint, record, records, resultLine, trajDock, type TrajDock } from './traj';
 import { missionPanel } from './traj-puzzles';
 
@@ -60,7 +60,7 @@ function askMult(rc: RC, host: HTMLElement, v: Vec, text: string, onRight: (m: n
     if (m === null) { rc.d.msg(UNREAD_M, 'warn'); return; }
     rc.p.move();
     const vd = checkMult(M, v, m);
-    if (!vd.ok) { rc.att.wrong++; sfx.miss(); rc.view.ghost(vd.scaled, `$${tn(m)}${tv(v)}$`); rc.d.msg(wrongMult(v, vd), 'bad'); return; }
+    if (!vd.ok) { rc.att.wrong++; sfx.miss(); rc.view.ghost(vd.scaled, `$${tnp(m)}${tv(v)}$`); rc.d.msg(wrongMult(v, vd), 'bad'); return; }
     rc.view.ghost(null);
     rc.ask = null;
     box.classList.add('ok');
@@ -105,13 +105,13 @@ function hunt(rc: RC, o: {
       await view.frame(pts, { min: 3, cap: 40 });
       view.clear();
       await view.launch(v);
-      for (let k = 1; k <= n; k++) { await wait(130); if (k > 1) view.mark(pts[k - 1], `after pulse ${k - 1}`, undefined, k % 2 === 1); await view.pulse(); }
+      for (let k = 1; k <= n; k++) { await (k > 1 ? view.settled() : wait(130)); if (k > 1) view.mark(pts[k - 1], `after pulse ${k - 1}`, undefined, k % 2 === 1); await view.pulse(); }
       if (gen !== rc.gen) return;
       const w = pts[1], end = pts[n];
       const kept = keeps(M, v);
       res.innerHTML = inline(n === 1 ? resultLine(v, w, kept, lineTurnDeg(M, v)) : `$${pts.map(tv).join(' \\to ')}$`);
       if (!kept) {
-        const deg = Math.abs(signedDeg(v, end));
+        const deg = lineAngle(v, end);
         await view.showTurned(v, end);
         d.msg(o.driftMsg ? o.driftMsg(v, end, deg) : DRILL.hunt.turned(v, w, deg), 'warn');
         return;
@@ -209,7 +209,7 @@ const R: Round[] = [
       const res = h('div', { class: 'tj-res' });
       let busy = false, done = false;
       const cell = new NumCell({ aria: 'multiplier', onEnter: () => void fire(), cls: 'm', placeholder: '?' });
-      const preview = () => { const m = cell.value(); view.ghost(m === null ? null : v.map((x) => x * m), m === null ? '' : `$${tn(m)}${tv(v)}$`); };
+      const preview = () => { const m = cell.value(); view.ghost(m === null ? null : v.map((x) => x * m), m === null ? '' : `$${tnp(m)}${tv(v)}$`); };
       cell.input.addEventListener('input', () => { if (cell.input.value.trim() && cell.input.value.trim() !== '-') preview(); else view.ghost(null); });
       const fire = async () => {
         if (busy || done) return;
@@ -354,7 +354,7 @@ const R: Round[] = [
       const res = h('div', { class: 'tj-res' });
       const rows = lines.map((v, i) => {
         const cell = new NumCell({ aria: `multiplier for line ${i + 1}`, onEnter: () => void fire(i), cls: 'm', placeholder: '?' });
-        cell.input.addEventListener('input', () => { const m = parseInput(cell); view.ghost(m === null ? null : v.map((x) => x * m), m === null ? '' : `$${tn(m)}${tv(v)}$`); });
+        cell.input.addEventListener('input', () => { const m = parseInput(cell); view.ghost(m === null ? null : v.map((x) => x * m), m === null ? '' : `$${tnp(m)}${tv(v)}$`); });
         const b = button(DRILL.r5.fire, () => void fire(i), { cls: 'primary small' });
         const el = h('div', { class: 'tj-row' }, h('span', { class: 'k', html: inline(`line $${tv(v)}$ · multiplier`) }), cell.el, b);
         return { el, cell, b };
@@ -369,7 +369,7 @@ const R: Round[] = [
         const w = cleanV(matVec(PULSE_S, v));
         await view.frame([v, w, v.map((x) => x * m)], { min: 3, cap: 60 });
         view.clear();
-        view.ghost(v.map((x) => x * m), `$${tn(m)}${tv(v)}$`);
+        view.ghost(v.map((x) => x * m), `$${tnp(m)}${tv(v)}$`);
         await view.launch(v);
         await wait(120);
         await view.pulse();
@@ -431,7 +431,7 @@ const R: Round[] = [
     start(rc) {
       return hunt(rc, {
         need: 1, counts: (v) => isZero(matVec(PULSE_FLAT, v)), other: DRILL.r7.other,
-        askText: (v) => DRILL.r7.collapsed(v), findHints: DRILL.r7.hints, askHints: () => DRILL.r7.askHints, answers: [[0, 1]],
+        askText: (v) => DRILL.r7.collapsed(v), findHints: DRILL.r7.hints, askHints: (v) => DRILL.r7.askHints(v), answers: [[0, 1]],
       });
     },
   },
@@ -471,16 +471,17 @@ const R: Round[] = [
 const parseInput = (c: NumCell): number | null => { const t = c.input.value.trim(); return t && t !== '-' ? c.value() : null; };
 
 /** Round 11 onwards: fresh pulses, alternating between finding both kept lines and a two-pulse mission. */
-function extraRound(n: number): Round {
+function extraRound(n: number, prev?: Mat): Round {
   const seed = 7919 * n + 17;
+  const avoid = prev ? [prev] : [];
   if (n % 2 === 1) {
-    const g = genPulse(seed);
+    const g = genPulse(seed, { avoid });
     return {
       id: 'drill-more', name: DRILL.extraLines.name, M: g.M, goal: DRILL.extraLines.goal,
       start(rc) { return hunt(rc, { need: 2, findHints: DRILL.extraLines.hints, answers: g.lines.map((l) => l.dir) }); },
     };
   }
-  const ms: Mission & { launch: Vec } = genMission(seed);
+  const ms: Mission & { launch: Vec } = genMission(seed, avoid);
   return {
     id: 'drill-more', name: DRILL.extraMission.name, M: ms.M, goal: DRILL.extraMission.goal(ms.target),
     start(rc) {
@@ -534,13 +535,13 @@ export const drill: PuzzleDef = {
       clearRound();
       st.at = i;
       save();
-      cur = i < 10 ? R[i] : extraRound(i - 10);
+      cur = i < 10 ? R[i] : extraRound(i - 10, cur?.M);
       roundDone = false;
       rc.att = fresh();
       view.M = cur.M;
       d.setMatrix(cur.M);
-      label.textContent = i < 10 ? `round ${i + 1} of 10` : `extra round ${i - 9}`;
-      p.setGoal(DRILL.roundGoal(i < 10 ? i + 1 : i - 9, i < 10 ? 10 : 0, cur.name, cur.goal));
+      label.textContent = i < 10 ? `round ${i + 1} of 10` : `extra round ${i - 10}`;
+      p.setGoal(DRILL.roundGoal(i < 10 ? i + 1 : i - 10, i < 10 ? 10 : 0, cur.name, cur.goal));
       rc.complete = () => {
         if (roundDone) return;
         roundDone = true;

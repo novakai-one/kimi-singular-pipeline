@@ -102,3 +102,22 @@ test('generated rounds: whole entries, two distinct whole multipliers on whole-n
   }
   assert.ok(seen.size >= 20, `only ${seen.size} different pulses`);
 });
+
+test('an older save resting past the Chapter 18 name card resumes at the same content', async () => {
+  const store = new Map<string, string>();
+  (globalThis as unknown as { localStorage: Storage }).localStorage = {
+    getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => { store.set(k, v); },
+  } as Storage;
+  const { loadSave } = await import('../../site/src/game/core/save.ts');
+  const put = (last: { chapter: string; beat: number }, flags: Record<string, unknown> = {}) =>
+    store.set('la-game-v1', JSON.stringify({ v: 1, settings: {}, last, chapters: {}, flags }));
+  put({ chapter: 'c18', beat: 6 });
+  assert.deepEqual(loadSave().last, { chapter: 'c18', beat: 9 }, 'old layout: the shear puzzle (c18-p2) moved from beat 6 to 9');
+  put({ chapter: 'c18', beat: 4 });
+  assert.deepEqual(loadSave().last, { chapter: 'c18', beat: 4 }, 'the name card did not move');
+  put({ chapter: 'c18', beat: 6 }, { 'c18-layout-2': true });
+  assert.deepEqual(loadSave().last, { chapter: 'c18', beat: 6 }, 'a new-layout save is left alone');
+  put({ chapter: 'c17', beat: 6 });
+  assert.deepEqual(loadSave().last, { chapter: 'c17', beat: 6 }, 'other chapters are left alone');
+  delete (globalThis as { localStorage?: unknown }).localStorage;
+});

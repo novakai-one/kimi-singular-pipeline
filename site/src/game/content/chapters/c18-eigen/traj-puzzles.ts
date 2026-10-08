@@ -10,11 +10,12 @@ import { h, button, inline } from '../../../ui/ui';
 import { sfx } from '../../../audio/sfx';
 import { wait } from '../../../core/tween';
 import { matVec, type Vec } from '../../../math/la';
+import { S as SAVE, save } from '../../../core/save';
 import {
   PULSE_A, M1, SOLO, checkMult, cleanV, genMission, isZero, keeps, keptLines, launchFor, lineTurnDeg, multipleOf, multiplierOf,
   onLineOf, path, reaches, type Attempt, type Mission,
 } from './traj-logic';
-import { M1T, P1, SOLOT, UNREAD, UNREAD_M, ZERO, LOG_NAMES, fv, tn, tv, wrongMult } from './traj-text';
+import { M1T, P1, SOLOT, UNREAD, UNREAD_M, ZERO, LOG_NAMES, fv, tn, tnp, tv, wrongMult, type Seen } from './traj-text';
 import { NumCell, TrajView, VecField, hideHint, pips, record, records, resultLine, trajDock, type TrajDock } from './traj';
 import { sg } from './parts';
 import { S } from './script';
@@ -81,7 +82,14 @@ export const p1: PuzzleDef = {
     const chips = h('div', { class: 'tj-lines' });
     d.body.append(h('div', { class: 'tj-row' }, field.el, go), res, q, chips);
     d.msg(P1.start);
+    // Scene 1: the intended route for the prefilled (1, 0) is lit, and the first launch is that one, so every
+    // player sees a failure before anything holds. The numbers unlock after it.
+    view.preview([1, 0]);
+    field.enable(false);
     void view.frame([[1, 0], [2, 1]], { ms: 0, min: 3.2 });
+    // what the name card (beat 4) will quote back
+    const seen: Seen = { lines: [] };
+    SAVE().flags['c18-seen'] = seen;
 
     const found: { dir: Vec; m: number }[] = [];
     const queue: { v: Vec; idx: number }[] = []; // kept lines waiting for their multiplier
@@ -95,8 +103,10 @@ export const p1: PuzzleDef = {
       const w = matVec(A, cur.v);
       cell = new NumCell({ aria: 'multiplier', onEnter: () => check(), cls: 'm', placeholder: '?' });
       q.className = 'tj-q';
+      // "changed its length" is only true when it did
+      const sameLength = Math.abs(Math.hypot(w[0], w[1]) - Math.hypot(cur.v[0], cur.v[1])) < 1e-9 * (1 + Math.hypot(cur.v[0], cur.v[1]));
       q.replaceChildren(
-        h('div', { class: 't', html: inline(`${P1.kept} ${P1.ask(cur.v)}`) }),
+        h('div', { class: 't', html: inline(`${sameLength ? P1.keptSame : P1.kept} ${P1.ask(cur.v)}`) }),
         h('div', { class: 'tj-row' }, h('span', { class: 'k', html: inline(`$${tv(w)} =$`) }), cell.el, h('span', { class: 'k', html: inline(`$\\times\\ ${tv(cur.v)}$`) }), button('Check', () => check(), { cls: 'primary small' })),
       );
       q.hidden = false;
@@ -114,7 +124,7 @@ export const p1: PuzzleDef = {
       if (!vd.ok) {
         att.wrong++;
         sfx.miss();
-        view.ghost(vd.scaled, `$${tn(m)}${tv(cur.v)}$`);
+        view.ghost(vd.scaled, `$${tnp(m)}${tv(cur.v)}$`);
         d.msg(wrongMult(cur.v, vd), 'bad');
         return;
       }
@@ -125,6 +135,8 @@ export const p1: PuzzleDef = {
       void view.flashLock(cur.idx, 900);
       sfx.success();
       found.push({ dir: cur.v, m });
+      seen.lines.push([cur.v.slice(), cleanV(vd.image), m]);
+      save();
       record(`p1-line${found.length}`, att);
       att = fresh();
       hideHint(p);
@@ -157,7 +169,13 @@ export const p1: PuzzleDef = {
         if (!kept) {
           await view.showTurned(v, w);
           misses++;
-          d.msg(misses === 1 ? P1.firstMiss(v, w) : P1.miss(v, w, Math.abs(deg)), 'warn');
+          if (misses === 1) {
+            seen.miss = [v.slice(), w.slice()];
+            save();
+            field.enable(true);
+            d.msg(`${P1.firstMiss(v, w)} ${P1.edit}`, 'warn');
+            if (!p.g.headless) window.setTimeout(() => field.focus(), 60);
+          } else d.msg(P1.miss(v, w, deg), 'warn');
           return;
         }
         const li = view.lockOf(v);
@@ -166,14 +184,17 @@ export const p1: PuzzleDef = {
           // another vector on a line already locked: same direction, not a new one
           await view.showKept(v, w, { quiet: true, ruler: true });
           void view.flashLock(li, 900);
-          d.msg(P1.dupe(v, found[lockedLine].dir, multipleOf(v, found[lockedLine].dir)), '');
+          const base = found[lockedLine].dir, k = multipleOf(v, base);
+          if (Math.abs(k - 1) < 1e-9) { d.msg(P1.again(v), ''); return; }
+          if (!seen.dupe) { seen.dupe = [v.slice(), base.slice(), k]; save(); }
+          d.msg(P1.dupe(v, base, k), '');
           return;
         }
         const pending = queue.findIndex((x) => onLineOf(x.v, v));
         if (pending >= 0) {
           await view.showKept(v, w, { quiet: true, ruler: true });
           void view.flashLock(li, 900);
-          d.msg(P1.dupePending(v, queue[pending].v), '');
+          d.msg(Math.abs(multipleOf(v, queue[pending].v) - 1) < 1e-9 ? P1.againPending(v) : P1.dupePending(v, queue[pending].v), '');
           return;
         }
         // a new kept direction
@@ -187,6 +208,9 @@ export const p1: PuzzleDef = {
         go.disabled = done;
       }
     };
+
+    /** The kept line of A not yet found or waiting: what Scene 3 is looking for. */
+    const nextLine = (): Vec | null => keptLines(A).map((l) => l.dir).find((dir) => !found.some((f) => onLineOf(f.dir, dir)) && !queue.some((x) => onLineOf(x.v, dir))) ?? null;
 
     const finish = async () => {
       done = true;
@@ -204,19 +228,22 @@ export const p1: PuzzleDef = {
       if (done) return;
       att.help++;
       const s = stage();
-      if (s === 'find1') await test([1, 1]);
-      else if (s === 'find2') await test([1, -1]);
+      // the first launch is always the prefilled (1, 0): Show me plays it before anything else
+      if (!misses) await test([1, 0]);
+      else if (s === 'find1') await test([1, 1]);
+      else if (s === 'find2') { const n = nextLine(); if (n) await test(n); }
       else if (s === 'ask' && cell) { cell.set(multiplierOf(A, queue[0].v) ?? 0); check(); }
     };
     const hint = hinter(() => {
       const s = stage();
+      if (!misses) return [P1.hints.first];
       if (s === 'find1') return P1.hints.find1;
-      if (s === 'find2') return P1.hints.find2;
+      if (s === 'find2') return P1.hints.find2(found[0].dir);
       if (s === 'ask') return P1.hints.ask(queue[0].v, matVec(A, queue[0].v));
       return [];
     }, () => { att.help++; });
 
-    const all = async () => { for (let i = 0; i < 8 && !done; i++) await step(); while (!p.won) await wait(20); };
+    const all = async () => { for (let i = 0; i < 10 && !done; i++) await step(); while (!p.won) await wait(20); };
     const rt: PuzzleRuntime = {
       hint,
       showStep: step,
@@ -258,8 +285,8 @@ export function missionPanel(p: PuzzleCtx, view: TrajView, d: TrajDock, ms: Miss
   d.body.append(row, res);
   d.msg(o.start);
   const lock = (on: boolean) => { goL.disabled = on || run.done; if (goP) goP.disabled = on || run.done; };
-  // a missed flight must still end on screen, so the player sees where the pulses took it
-  const cap = Math.max(16, Math.hypot(ms.target[0], ms.target[1]) * 4.5);
+  // a missed flight must still end on screen, so the player sees where the pulses took it: no cap on the path
+  const cap = Infinity;
 
   run.launch = async (vIn?: Vec) => {
     if (run.busy || run.done) return;
@@ -276,7 +303,7 @@ export function missionPanel(p: PuzzleCtx, view: TrajView, d: TrajDock, ms: Miss
       pipBox.replaceChildren(pips(ms.pulses));
       await view.launch(v);
       for (let k = 1; k <= ms.pulses; k++) {
-        await wait(150);
+        await (k > 1 ? view.settled() : wait(150));
         if (k > 1) view.mark(pts[k - 1], `after pulse ${k - 1} · ${fv(pts[k - 1])}`, undefined, k % 2 === 1);
         await view.pulse();
         pipBox.replaceChildren(pips(ms.pulses, k));
@@ -405,7 +432,7 @@ export const solo: PuzzleDef = {
         h('div', { class: 'tj-kick' }, 'Flight log'),
         flightLog(),
         h('div', { class: 'tj-row' },
-          button('Another challenge', () => { round++; ms = genMission(1000 + round * 37 + Math.floor(Math.random() * 1000)); view.M = ms.M; d.setMatrix(ms.M); start(); }, { cls: 'small' }),
+          button('Another challenge', () => { round++; ms = genMission(1000 + round * 37 + Math.floor(Math.random() * 1000), [ms.M]); view.M = ms.M; d.setMatrix(ms.M); start(); }, { cls: 'small' }),
           button('Finish', () => { if (!finished) { finished = true; p.win(); } }, { cls: 'primary small' })),
       );
       summary.hidden = false;

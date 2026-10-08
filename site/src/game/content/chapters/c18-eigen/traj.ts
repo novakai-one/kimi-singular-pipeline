@@ -18,8 +18,8 @@ import { animate, ease, wait } from '../../../core/tween';
 import { sfx } from '../../../audio/sfx';
 import { h, button, inline } from '../../../ui/ui';
 import { identity, matVec, mlerp, type Mat, type Vec } from '../../../math/la';
-import { cleanV, isZero, onLineOf, outcomeOf, parseEntry, signedDeg, type Attempt, type Outcome } from './traj-logic';
-import { fv, tn, tv } from './traj-text';
+import { cleanV, isZero, lineAngle, onLineOf, outcomeOf, parseEntry, signedDeg, type Attempt, type Outcome } from './traj-logic';
+import { fdeg, fv, tn, tv } from './traj-text';
 import { S, save } from '../../../core/save';
 import { fmtN, texM } from './logic';
 
@@ -306,6 +306,20 @@ export class TrajView {
     this.routeCore.setOpacity(0.7); this.routeGlow.setOpacity(0.1);
   }
 
+  /** Before any launch: the intended route and the green launch arrow for v, the ship resting at the Anchor. */
+  preview(v: Vec): void {
+    this.clear();
+    if (isZero(v)) return;
+    this.showRoute(v);
+    this.launchV = v.slice();
+    this.green.set([0, 0, Z.arrow], v3(v, Z.arrow));
+    this.green.setOpacity(1);
+    this.ship.face([v[0], v[1], 0]);
+    this.gTag.set(`$${tv(v)}$`);
+    this.gTag.show(true);
+    this.placeTags();
+  }
+
   /** The ship flies from the Anchor to v; the green arrow grows with it. */
   async launch(v: Vec, ms = 520): Promise<void> {
     this.launchV = v.slice();
@@ -372,9 +386,13 @@ export class TrajView {
     this.yTag.set(`$${tv(to)}$`);
     this.yTag.show(true);
     this.placeTags();
-    void this.settleGrid();
+    this.settling = this.settleGrid();
     return to;
   }
+
+  private settling: Promise<void> = Promise.resolve();
+  /** Resolves when the grid has come to rest after the last pulse (chain the next pulse after this). */
+  settled(): Promise<void> { return this.settling; }
 
   /** After a pulse the field rests: the moved grid fades out and the plain grid fades back in (no motion backwards). */
   private async settleGrid(): Promise<void> {
@@ -412,9 +430,9 @@ export class TrajView {
     const u = unit(w);
     this.newDir.setPoints([[-u[0] * L, -u[1] * L, Z.line], [u[0] * L, u[1] * L, Z.line]]);
     this.newDir.setOpacity(0.5);
-    const deg = Math.abs(signedDeg(v, w));
+    const deg = lineAngle(v, w);
     this.drawArc(v, w);
-    this.arcTag.set(`turned ${Math.round(deg)}°`);
+    this.arcTag.set(`turned ${fdeg(deg)}`);
     this.arcTag.show(true);
     sfx.offcourse();
     this.p.g.stage.nudge(0.04);
@@ -427,7 +445,9 @@ export class TrajView {
     return deg;
   }
 
-  private drawArc(v: Vec, w: Vec): void {
+  /** The angle between green's line and yellow's line, drawn to the nearer end of yellow's (dashed) line. */
+  private drawArc(v: Vec, w0: Vec): void {
+    const w: Vec = v[0] * w0[0] + v[1] * w0[1] < 0 ? [-w0[0], -w0[1]] : w0;
     this.arcFrom = v; this.arcTo = w;
     const r = Math.min(54 / this.ppu, 0.45 * Math.min(len(v), Math.max(len(w), 1e-9)) || 54 / this.ppu);
     const a0 = Math.atan2(v[1], v[0]);
@@ -438,8 +458,14 @@ export class TrajView {
     this.arc.setPoints(pts);
     this.arc.setOpacity(0.95);
     const mid = a0 + d / 2;
-    this.arcTag.at([r * 1.5 * Math.cos(mid), r * 1.5 * Math.sin(mid), Z.dot]);
-    this.arcTag.el.style.translate = `${(Math.cos(mid) * 30).toFixed(0)}px ${(-Math.sin(mid) * 14).toFixed(0)}px`;
+    if (this.dots.length) {
+      // a multi-pulse path has stop labels inside the angle: the tag goes on the far side of the Anchor
+      this.arcTag.at([0, 0, Z.dot]);
+      this.arcTag.el.style.translate = `${(-Math.cos(mid) * 78).toFixed(0)}px ${(Math.sin(mid) * 30 - 12).toFixed(0)}px`;
+    } else {
+      this.arcTag.at([r * 1.5 * Math.cos(mid), r * 1.5 * Math.sin(mid), Z.dot]);
+      this.arcTag.el.style.translate = `${(Math.cos(mid) * 30).toFixed(0)}px ${(-Math.sin(mid) * 14).toFixed(0)}px`;
+    }
   }
 
   /** Unlabelled marks at whole multiples of v up to w: the true stretch made countable. */
@@ -537,6 +563,8 @@ export class TrajView {
       }
     }
     l.at = [u[0] * best.t, u[1] * best.t];
+    // a line that barely crosses the picture has no room for a legible tag: the line alone shows until it does
+    l.tag.show(Math.max(rn, rp) * px >= 90);
     l.tag.at([l.at[0], l.at[1], Z.dot]);
     l.tag.el.style.translate = `${(-u[1] * 26).toFixed(0)}px ${(-u[0] * 26).toFixed(0)}px`;
   }
@@ -554,11 +582,6 @@ export class TrajView {
     if (!l) return;
     await animate(ms, (k) => { l.glow.setOpacity(0.16 + 0.5 * Math.sin(k * Math.PI)); }, ease.linear);
     l.glow.setOpacity(0.16);
-  }
-
-  /** Hide or show every copper line (rounds that must not reveal directions). */
-  showLocks(on: boolean): void {
-    for (const l of this.locks) { l.core.setOpacity(on ? 0.9 : 0); l.glow.setOpacity(on ? 0.16 : 0); l.tag.show(on); }
   }
 
   /** Remove every copper line. */
@@ -585,7 +608,9 @@ export class TrajView {
 
   /** A marked stop on the flight (after pulse k). `below` puts the label under the dot (alternate close stops). */
   mark(at: Vec, label: string, color = '#e8f1ff', below = false): void {
-    const d = new Dot(v3(at, Z.dot), { color, size: 0.06, label, labelOffset: [0, below ? 20 : -16] });
+    // a stop on a waypoint ring: the label clears the ring
+    const onPad = this.pads.some((q) => Math.hypot(q.at[0] - at[0], q.at[1] - at[1]) < 1e-9);
+    const d = new Dot(v3(at, Z.dot), { color, size: 0.06, label, labelOffset: [0, onPad ? -34 : below ? 20 : -16] });
     d.object.scale.setScalar(60 / this.ppu);
     this.p.add(d);
     this.dots.push(d);
@@ -642,8 +667,8 @@ export class TrajView {
     this.newDir.setPoints([[-u[0] * L, -u[1] * L, Z.line], [u[0] * L, u[1] * L, Z.line]]);
     if (kept) { this.newDir.setOpacity(0); await this.showKept(v, w, { quiet: true }); return { w, kept, deg: 0 }; }
     this.drawArc(v, w);
-    const deg = Math.abs(signedDeg(v, w));
-    this.arcTag.set(`turned ${Math.round(deg)}°`);
+    const deg = lineAngle(v, w);
+    this.arcTag.set(`turned ${fdeg(deg)}`);
     this.arcTag.show(true);
     sfx.offcourse();
     return { w, kept, deg };
@@ -656,6 +681,8 @@ export class TrajView {
     for (const l of this.locks) { const u = l.dir; for (const k of [-2, -1, 1, 2]) on.push([u[0] * k, u[1] * k]); }
     for (const q of [[1, 0], [0, 1], [-1, 0], [0, -1], [2, 1], [-2, -1]]) if (this.lockOf(q) < 0) offs.push(q);
     const mk = (q: Vec, color: string) => { const d = new Dot(v3(q, Z.dot), { color, size: 0.06, glow: 1.6 }); d.object.scale.setScalar(60 / this.ppu); this.p.add(d); return d; };
+    // every dot must stay in the picture at the end of the pulse too
+    await this.frame([...on, ...offs].flatMap((q) => [q, matVec(this.M, q)]), { min: 3 });
     const dOn = on.map((q) => mk(q, '#f2b27c')), dOff = offs.map((q) => mk(q, '#c3cde0'));
     for (const l of this.locks) l.glow.setOpacity(0.4);
     sfx.pulse(ms / 2000);
@@ -667,11 +694,11 @@ export class TrajView {
       dOff.forEach((d, i) => d.at(v3(matVec(Mt, offs[i]), Z.dot)));
     }, ease.inOut);
     await go(I2, this.M);
-    await wait(250);
-    await go(this.M, I2);
+    await wait(450);
+    // rest as after any pulse: fade, never run backwards
+    await Promise.all([this.settleGrid(), animate(300, (k) => { for (const d of [...dOn, ...dOff]) d.setOpacity(1 - k); }, ease.linear)]);
     for (const d of [...dOn, ...dOff]) d.dispose();
     for (const l of this.locks) l.glow.setOpacity(0.2);
-    this.grid.set(I2);
   }
 }
 
@@ -681,7 +708,9 @@ export class TrajView {
 export class NumCell {
   readonly el: HTMLElement;
   readonly input: HTMLInputElement;
-  constructor(o: { value?: string; aria: string; onEnter?: () => void; cls?: string; placeholder?: string }) {
+  private readonly comma: boolean;
+  constructor(o: { value?: string; aria: string; onEnter?: () => void; cls?: string; placeholder?: string; comma?: boolean }) {
+    this.comma = o.comma ?? true;
     this.input = h('input', {
       class: `cell tj-cell ${o.cls ?? ''}`, type: 'text', inputmode: 'decimal', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false',
       enterkeyhint: 'go', 'aria-label': o.aria, placeholder: o.placeholder ?? '', value: o.value ?? '',
@@ -701,7 +730,7 @@ export class NumCell {
   }
   /** The typed number, or null (and marked) if it cannot be read. */
   value(): number | null {
-    const x = parseEntry(this.input.value);
+    const x = parseEntry(this.input.value, { comma: this.comma });
     this.input.classList.toggle('bad', x === null);
     return x;
   }
@@ -717,8 +746,9 @@ export class VecField {
   readonly y: NumCell;
   constructor(o: { value?: Vec; label?: string; onEnter?: () => void }) {
     const v = o.value ?? [1, 0];
-    this.x = new NumCell({ value: fmtN(v[0]).replace(/−/g, '-'), aria: 'first part', onEnter: o.onEnter, cls: 'c0' });
-    this.y = new NumCell({ value: fmtN(v[1]).replace(/−/g, '-'), aria: 'second part', onEnter: o.onEnter, cls: 'c0' });
+    // one number per box: "1,1" in a part is a whole vector typed in one box, so it is refused, not read as 1.1
+    this.x = new NumCell({ value: fmtN(v[0]).replace(/−/g, '-'), aria: 'first part', onEnter: o.onEnter, cls: 'c0', comma: false });
+    this.y = new NumCell({ value: fmtN(v[1]).replace(/−/g, '-'), aria: 'second part', onEnter: o.onEnter, cls: 'c0', comma: false });
     this.el = h('span', { class: 'tj-vec' },
       h('span', { class: 'tj-vl', html: inline(o.label ?? '$\\mathbf v$ =') }), h('span', { class: 'tj-par' }, '('), this.x.el, h('span', { class: 'tj-par' }, ','), this.y.el, h('span', { class: 'tj-par' }, ')'));
   }
@@ -762,7 +792,7 @@ export function hideHint(p: PuzzleCtx): void {
 
 /** The result line: v → A v, and whether it held. */
 export function resultLine(v: Vec, w: Vec, kept: boolean, deg: number): string {
-  const tail = isZero(w) ? 'collapsed onto the Anchor' : kept ? 'stayed on its line' : `turned ${Math.round(deg)}° off its line`;
+  const tail = isZero(w) ? 'collapsed onto the Anchor' : kept ? 'stayed on its line' : `turned ${fdeg(deg)} off its line`;
   return `$\\cg{${tv(v)}} \\to \\cy{${tv(w)}}$ · ${tail}`;
 }
 

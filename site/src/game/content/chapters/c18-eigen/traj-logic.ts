@@ -40,7 +40,11 @@ export function multiplierOf(M: Mat, v: Vec): number | null {
 
 /** How far the pulse turns the LINE of v, in degrees (0 to 90). A kept line, flipped or collapsed, is 0. */
 export function lineTurnDeg(M: Mat, v: Vec): number {
-  const w = pulseOf(M, v);
+  return lineAngle(v, pulseOf(M, v));
+}
+
+/** The angle between the line through v and the line through w, in degrees (0 to 90): how far off its line. */
+export function lineAngle(v: Vec, w: Vec): number {
   if (isZero(v) || isZero(w)) return 0;
   const c = Math.abs(dot(v, w)) / (len(v) * len(w));
   return (Math.acos(Math.min(1, c)) * 180) / Math.PI;
@@ -87,19 +91,26 @@ export function checkMult(M: Mat, v: Vec, m: number): MultVerdict {
  * Read a typed number. Accepts 3, -1.5, −2 (real minus), +3, .5, 3., 3/4, and a decimal comma (1,5).
  * Returns null for anything else (empty, "-", "1e3", "x/0").
  */
-export function parseEntry(s: string): number | null {
+export function parseEntry(s: string, o: { comma?: boolean } = {}): number | null {
   let t = s.trim().replace(/[−–]/g, '-').replace(/\s+/g, '').replace(/^\+/, '');
-  if (/^-?\d*,\d+$/.test(t)) t = t.replace(',', '.');
+  // a decimal comma (2,5) where a single number is asked for; never "1,000", and never in a vector part,
+  // where "1,1" is far more likely to be a whole vector typed into one box
+  if (o.comma !== false && /^-?\d*,\d{1,2}$/.test(t)) t = t.replace(',', '.');
   if (/^-?\d+\.$/.test(t)) t = t.slice(0, -1);
   const f = t.match(/^(-?\d*\.?\d+)\/(\d*\.?\d+)$/);
   if (f) {
     const d = parseFloat(f[2]);
-    return d === 0 ? null : parseFloat(f[1]) / d;
+    const x = d === 0 ? null : parseFloat(f[1]) / d;
+    return x === null || Math.abs(x) > ENTRY_MAX || (x !== 0 && Math.abs(x) < ENTRY_MIN) ? null : x;
   }
   if (!/^-?(\d+(\.\d+)?|\.\d+)$/.test(t)) return null;
   const x = parseFloat(t);
+  // the chart works to a few decimals and four digits: larger or finer entries are refused, not misjudged
+  if (Math.abs(x) > ENTRY_MAX || (x !== 0 && Math.abs(x) < ENTRY_MIN)) return null;
   return Object.is(x, -0) ? 0 : x;
 }
+export const ENTRY_MAX = 9999;
+export const ENTRY_MIN = 0.001;
 
 // ------------------------------------------------------------------ flights and missions
 
@@ -227,9 +238,15 @@ const MULTS = [-2, -1, 2, 3, 4];
 export interface GenPulse { M: Mat; lines: { dir: Vec; m: number }[] }
 
 /** A fresh pulse with two whole-number kept lines and distinct whole multipliers, entries at most 9 in size. */
-export function genPulse(seed: number): GenPulse {
+/** Every pulse the player meets by name in this chapter: a generated round must never repeat one. */
+export const FIXED_PULSES: Mat[] = [PULSE_A, SOLO_B, PULSE_S, PULSE_FLIP, PULSE_FLAT, PULSE_SHEAR, PULSE_NEW];
+const sameMat = (a: Mat, b: Mat) => a.every((row, i) => row.every((x, j) => x === b[i][j]));
+
+/** A fresh pulse, never a fixture and never one in `avoid`. `twoPulse` also refuses opposite multipliers (A² = cI). */
+export function genPulse(seed: number, o: { avoid?: Mat[]; twoPulse?: boolean } = {}): GenPulse {
   const r = rng(seed);
-  for (let tries = 0; tries < 200; tries++) {
+  const avoid = [...FIXED_PULSES, ...(o.avoid ?? [])];
+  for (let tries = 0; tries < 400; tries++) {
     const P = BASES[Math.floor(r() * BASES.length)];
     const i = Math.floor(r() * MULTS.length);
     let j = Math.floor(r() * (MULTS.length - 1));
@@ -239,14 +256,17 @@ export function genPulse(seed: number): GenPulse {
     const M = [[0, 0], [0, 0]].map((row, a) => row.map((_, b) => clean(P[a][0] * l1 * Pi[0][b] + P[a][1] * l2 * Pi[1][b])));
     if (M.flat().some((x) => Math.abs(x) > 9 || !Number.isInteger(x))) continue;
     if (M[0][1] === 0 && M[1][0] === 0) continue; // diagonal: too easy to read
+    if (avoid.some((X) => sameMat(X, M))) continue;
+    // A² = cI: two pulses only rescale, so a two-pulse mission needs no kept line
+    if (o.twoPulse && l1 === -l2) continue;
     return { M, lines: [{ dir: niceDir([P[0][0], P[1][0]]), m: l1 }, { dir: niceDir([P[0][1], P[1][1]]), m: l2 }] };
   }
   return { M: PULSE_NEW, lines: keptLines(PULSE_NEW) };
 }
 
 /** A fresh mission: a target on a kept line of a fresh pulse, reached after two pulses from a small launch. */
-export function genMission(seed: number): Mission & { launch: Vec } {
-  const g = genPulse(seed);
+export function genMission(seed: number, avoid: Mat[] = []): Mission & { launch: Vec } {
+  const g = genPulse(seed, { avoid, twoPulse: true });
   const r = rng(seed * 7 + 3);
   const line = g.lines.find((l) => Math.abs(l.m) >= 2) ?? g.lines[0];
   const k = r() < 0.5 ? 1 : -1;
