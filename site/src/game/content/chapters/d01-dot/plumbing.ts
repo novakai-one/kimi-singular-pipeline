@@ -1,12 +1,13 @@
 import { buildTest } from '../../../game/build';
 import { Readout } from '../../../ui/widgets';
 import type { UI } from '../../../ui/ui';
-import { S } from '../../../core/save';
+import { S, save } from '../../../core/save';
 import { COPY } from './copy';
 import { build } from './build';
 import { mismatch } from './logic.ts';
-import { BuildGate, PuzzleLifecycle, beginPuzzleBeat } from './lifecycle.ts';
+import { BuildGate, PuzzleLifecycle, beginPuzzleBeat, restoreTestsLine } from './lifecycle.ts';
 import { playerReading } from './instrument';
+import { isolateBuildStorage } from './storage.ts';
 import { stageGoal } from './staging';
 import './style.css';
 
@@ -36,25 +37,49 @@ function stageBuild(ui: UI): () => void {
   let alive = true;
   let mounted: HTMLElement | null = null;
   let handledResults: Element | null = null;
+  let savedResults: Element | null = null;
   let instrument: Readout | null = null;
   let running = false;
+  let finishing = false;
+  let continueEl: HTMLButtonElement | null = null;
   const actions = ui.hud.querySelector<HTMLElement>('.d01-actions')!;
-  const continueButton = () => ui.hud.querySelector<HTMLButtonElement>('.hud-br .primary');
+  const storage = isolateBuildStorage(S(), () => {
+    const rows = [...(mounted?.querySelectorAll('.test-results .test') ?? [])];
+    if (rows.length === 200 && rows[0] !== savedResults && rows.every((row) => row.matches('.ok, .fail'))) {
+      savedResults = rows[0];
+      return 'result';
+    }
+    return finishing ? 'draft' : false;
+  });
   const renderGate = () => {
-    const button = continueButton();
-    if (button) { button.hidden = !gate.ready; button.disabled = !gate.ready; }
-    if (mounted) mounted.dataset.ready = String(gate.ready);
+    if (!alive || !mounted?.isConnected) return;
+    continueEl ??= ui.hud.querySelector<HTMLButtonElement>('.hud-br .primary');
+    if (continueEl) { continueEl.hidden = !gate.ready; continueEl.disabled = !gate.ready; }
+    mounted.dataset.ready = String(gate.ready);
   };
+  const removeInstrument = () => { instrument?.el.remove(); instrument = null; };
   const invalidate = () => {
+    if (!alive) return;
     epoch = gate.invalidate();
-    instrument?.el.remove(); instrument = null;
+    removeInstrument();
     renderGate();
   };
-  // The shared primary handler listens on document. Capture prevents keyboard
-  // advance as well as clicking a stale/synthetic Continue before adoption.
+  const releaseStorage = () => {
+    if (alive || running || finishing) return;
+    settlement.disconnect(); storage.release(); save();
+  };
+  const finishRenderer = () => {
+    finishing = true;
+    // The primary promise's finally runs in a microtask. Keep its draft write
+    // isolated through that turn, then restore the original record identities.
+    queueMicrotask(() => queueMicrotask(() => { finishing = false; releaseStorage(); }));
+  };
   const blockAdvance = (event: Event) => {
-    if (gate.ready) return;
     const target = event.target as HTMLElement | null;
+    if (gate.ready) {
+      if (event.type === 'click' && target?.closest('.hud-br .primary') === continueEl) finishRenderer();
+      return;
+    }
     const key = event as KeyboardEvent;
     if (event.type === 'click' ? !!target?.closest('.hud-br .primary')
       : ['Enter', ' '].includes(key.key) && !target?.closest('input, textarea, [contenteditable=true]')) {
@@ -65,18 +90,21 @@ function stageBuild(ui: UI): () => void {
   document.addEventListener('keydown', blockAdvance, true);
   ui.hud.addEventListener('click', blockAdvance, true);
   const changed = () => invalidate();
+  const isRunning = (raw: string) => raw.startsWith('Running') || raw.startsWith('Starting Python (');
   const reconcile = () => {
+    if (!alive) return;
     const box = ui.scene.querySelector<HTMLElement>('.build');
     const current = buildTest.current;
     if (!box || !current) return;
     if (mounted !== box) {
       mounted = box;
+      storage.mounted();
+      settlement.observe(box, { subtree: true, childList: true, characterData: true });
       box.dataset.attention = 'editor';
       const left = box.querySelector<HTMLElement>('.build-left')!;
       left.dataset.attention = 'goal';
       const status = box.querySelector<HTMLElement>('.build-status')!;
       left.append(status);
-      if (!status.textContent) status.textContent = COPY.build.tests;
       const controls = box.querySelector<HTMLElement>('.build-actions')!;
       actions.prepend(controls);
       box.addEventListener('input', changed);
@@ -86,15 +114,17 @@ function stageBuild(ui: UI): () => void {
     }
     renderGate();
     const status = box.querySelector<HTMLElement>('.build-status')!;
+    restoreTestsLine(status, COPY.build.tests);
     const raw = status.textContent ?? '';
-    if (raw.startsWith('Running') || raw.startsWith('Starting Python')) {
+    if (isRunning(raw)) {
       if (!running) { running = true; invalidate(); }
       return;
     }
+    running = false;
     const rows = [...box.querySelectorAll('.test-results .test')];
-    if (rows.length !== 200 || !rows.every((row) => row.classList.contains('ok') || row.classList.contains('fail'))) return;
+    if (rows.length !== 200 || !rows.every((row) => row.matches('.ok, .fail'))) return;
     if (handledResults === rows[0]) return;
-    handledResults = rows[0]; running = false;
+    handledResults = rows[0];
     const passed = rows.map((row) => row.classList.contains('ok'));
     const bad = passed.indexOf(false);
     if (bad >= 0) {
@@ -103,11 +133,14 @@ function stageBuild(ui: UI): () => void {
       if (difference) status.textContent = mismatch(COPY.build.feedback, build.tests[bad].args, difference[1], difference[2]);
       return;
     }
-    if (!current.passed()) return;
-    const source = S().code.dot;
+    const source = storage.local.source;
+    if (!source || !current.passed()) return;
     const testedEpoch = epoch;
+    const ownsAdoption = () => alive && box.isConnected && mounted === box && source === storage.local.source;
     void playerReading(source, [3, 4], [5, 0]).then((value) => {
-      if (!alive || !box.isConnected || source !== S().code.dot || !gate.adopt(testedEpoch, passed, value)) return;
+      if (!ownsAdoption() || !gate.adopt(testedEpoch, passed, value)) return;
+      storage.local.adoptedSource = source;
+      save();
       status.textContent = COPY.build.success.text;
       instrument = new Readout();
       instrument.el.classList.add('d01-player-reading');
@@ -116,20 +149,35 @@ function stageBuild(ui: UI): () => void {
       instrument.row('reading', COPY.p1.labels.reading, value.toFixed(2));
       ui.scene.append(instrument.el);
       renderGate();
-    }).catch(() => { invalidate(); });
+    }).catch(() => {
+      if (!ownsAdoption() || !gate.reject(testedEpoch)) return;
+      removeInstrument(); renderGate();
+    });
   };
+  // Observe the actual builder even after removal until an outstanding run
+  // settles. Its storage writes are identified by its own new result rows.
+  const settlement = new MutationObserver(() => {
+    if (alive) { reconcile(); return; }
+    running = isRunning(mounted?.querySelector('.build-status')?.textContent ?? '');
+    releaseStorage();
+  });
   const observer = new MutationObserver(reconcile);
   observer.observe(ui.scene, { subtree: true, childList: true, characterData: true });
   observer.observe(ui.hud, { subtree: true, childList: true });
   return () => {
-    alive = false; observer.disconnect(); invalidate();
+    running = isRunning(mounted?.querySelector('.build-status')?.textContent ?? '');
+    alive = false; gate.dispose(); observer.disconnect(); removeInstrument();
     document.removeEventListener('keydown', blockAdvance, true);
     ui.hud.removeEventListener('click', blockAdvance, true);
     mounted?.removeEventListener('input', changed);
     mounted?.removeEventListener('click', changed, true);
     const controls = actions.querySelector('.build-actions');
-    controls?.removeEventListener('click', changed, true);
-    controls?.remove();
+    controls?.removeEventListener('click', changed, true); controls?.remove();
+    storage.mounted();
+    // Resolve the old shared primary now, while it still owns the action row;
+    // its finalizer must not linger and react to a later beat's Enter key.
+    finishRenderer();
+    if (continueEl) { continueEl.disabled = false; continueEl.click(); }
   };
 }
 

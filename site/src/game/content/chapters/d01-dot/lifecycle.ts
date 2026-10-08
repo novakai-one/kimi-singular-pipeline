@@ -26,10 +26,18 @@ export function beginPuzzleBeat(scope: object): void { sessions.get(scope)?.forE
 /** Continue requires this run's full suite and adoption, never an old save flag. */
 export class BuildGate {
   private epoch = 0;
+  private alive = true;
   ready = false;
   invalidate(): number { this.ready = false; return ++this.epoch; }
+  current(epoch: number): boolean { return this.alive && epoch === this.epoch; }
+  reject(epoch: number): boolean {
+    if (!this.current(epoch)) return false;
+    this.invalidate();
+    return true;
+  }
+  dispose(): void { this.alive = false; this.invalidate(); }
   adopt(epoch: number, results: readonly boolean[], value: unknown): boolean {
-    if (epoch !== this.epoch || results.length !== 200 || !results.every(Boolean) || typeof value !== 'number' || !Number.isFinite(value)) return false;
+    if (!this.current(epoch) || results.length !== 200 || !results.every(Boolean) || typeof value !== 'number' || !Number.isFinite(value)) return false;
     this.ready = true;
     return true;
   }
@@ -39,15 +47,26 @@ export class BuildGate {
 export class ReadingChannel {
   private epoch = 0;
   private key = '';
+  private alive = true;
+  private cached: number | null = null;
   private readonly execute: (source: string, v: readonly number[], w: readonly number[]) => Promise<number>;
   constructor(execute: (source: string, v: readonly number[], w: readonly number[]) => Promise<number>) { this.execute = execute; }
-  async request(source: string | null, v: readonly number[], w: readonly number[], display: (value: number) => void): Promise<void> {
+  async request(source: string | null, v: readonly number[], w: readonly number[], display: (value: number) => void, rejected: (error: unknown) => void = () => {}): Promise<void> {
+    if (!this.alive) return;
     const key = JSON.stringify([source, v, w]);
-    if (key === this.key) return;
+    if (key === this.key) { if (this.cached !== null) display(this.cached); return; }
     this.key = key;
+    this.cached = null;
     const epoch = ++this.epoch;
-    const value = source ? await this.execute(source, v, w) : v[0] * w[0] + v[1] * w[1];
-    if (epoch === this.epoch) display(value);
+    let value: number;
+    try { value = source ? await this.execute(source, v, w) : v[0] * w[0] + v[1] * w[1]; }
+    catch (error) { if (this.alive && epoch === this.epoch) rejected(error); return; }
+    if (this.alive && epoch === this.epoch) { this.cached = value; display(value); }
   }
-  dispose(): void { ++this.epoch; }
+  dispose(): void { this.alive = false; ++this.epoch; }
+}
+
+/** The renderer clears this node on Start over; keep its one authored line. */
+export function restoreTestsLine(status: { textContent: string | null }, tests: string): void {
+  if (!status.textContent?.trim()) status.textContent = tests;
 }

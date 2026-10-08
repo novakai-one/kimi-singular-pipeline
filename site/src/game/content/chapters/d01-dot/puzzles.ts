@@ -51,9 +51,10 @@ export const p1: PuzzleDef = {
       const confirmed = (bands.biggest && Math.abs(reading - 12) <= 0.05 + 1e-12)
         || (bands.perpendicular && Math.abs(reading) <= 0.05 + 1e-12);
       void instrument.request(savedDot(), beam.slice(0, 2), sensor.slice(0, 2), (value) => {
+        readout.el.hidden = false;
         readout.row('reading', COPY.p1.labels.reading, (Math.abs(value) < 1e-10 ? 0 : value).toFixed(2), confirmed ? C.good : undefined);
         readout.el.dataset.source = savedDot() ? 'player' : 'reference';
-      }).catch(() => { readout.el.hidden = true; });
+      }, () => { readout.el.hidden = true; });
       if (result.bark) p.bark('lantern', COPY.p1.feedback);
       if (result.won) p.win();
     };
@@ -119,7 +120,7 @@ export const p2: PuzzleDef = {
       new Arrow([0, 0, 0], [5, 0, 0], { color: C.violet, label: COPY.p1.labels.sensor }),
     );
     const statusEl = document.createElement('div');
-    statusEl.className = 'd01-feedback'; statusEl.setAttribute('role', 'status'); statusEl.setAttribute('aria-live', 'polite');
+    statusEl.className = 'd01-feedback glass'; statusEl.setAttribute('role', 'status'); statusEl.setAttribute('aria-live', 'polite');
     statusEl.dataset.attention = 'transient';
     const readout = p.readout();
     readout.el.hidden = true;

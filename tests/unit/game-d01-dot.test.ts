@@ -74,7 +74,7 @@ test('build: 200 integer pairs in the authored range; reference passes and decoy
   assert.equal(message, COPY.build.feedback.replace('{a}', JSON.stringify(c.args[0])).replace('{b}', JSON.stringify(c.args[1])).replace('{r}', String(c.expect)).replace('{y}', String(wrong)));
 });
 
-import { PuzzleLifecycle, puzzleLifecycle, beginPuzzleBeat, BuildGate, ReadingChannel } from '../../site/src/game/content/chapters/d01-dot/lifecycle.ts';
+import { PuzzleLifecycle, puzzleLifecycle, beginPuzzleBeat, BuildGate, ReadingChannel, restoreTestsLine } from '../../site/src/game/content/chapters/d01-dot/lifecycle.ts';
 import { compactBeatChrome, TransientSlot } from '../../site/src/game/ui/beat-chrome.ts';
 
 test('prediction dismissal survives Reset-style remounts; a goal only reopens on a deliberate toggle', () => {
@@ -162,5 +162,160 @@ test('the saved player function supplies the instrument; stale results and teard
   assert.equal(calls.length, 2, 'unchanged frames do not flood Python');
   const late = channel.request(ownSource, [0, 4], [0, 3], show);
   channel.dispose(); pending[2](222); await late;
-  assert.deepEqual(shown, [15, 321]);
+  assert.deepEqual(shown, [15, 321, 321]);
+});
+
+import { isolateBuildStorage, localDot, adoptedDot, type DotSave } from '../../site/src/game/content/chapters/d01-dot/storage.ts';
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; });
+  return { promise, resolve, reject };
+}
+
+test('an old adoption rejection cannot invalidate a newer pass or touch a later beat', async () => {
+  const gate = new BuildGate();
+  let renders = 0;
+  const old = gate.invalidate();
+  const oldCall = deferred<number>();
+  const rejected = oldCall.promise.catch(() => { if (gate.reject(old)) renders++; });
+  const current = gate.invalidate();
+  assert.equal(gate.adopt(current, Array(200).fill(true), 15), true);
+  oldCall.reject(new Error('old failure')); await rejected;
+  assert.equal(gate.ready, true); assert.equal(renders, 0);
+  const late = deferred<number>();
+  const lateRejected = late.promise.catch(() => { if (gate.reject(current)) renders++; });
+  gate.dispose();
+  late.reject(new Error('after teardown')); await lateRejected;
+  assert.equal(renders, 0);
+  assert.equal(gate.adopt(current, Array(200).fill(true), 15), false);
+});
+
+test('instrument rejection obeys epochs, recovers after a current failure, and is inert after teardown', async () => {
+  const requests: ReturnType<typeof deferred<number>>[] = [];
+  const channel = new ReadingChannel(() => { const request = deferred<number>(); requests.push(request); return request.promise; });
+  let visible = true, value = 0, errors = 0;
+  const show = (n: number) => { value = n; visible = true; };
+  const failed = () => { errors++; visible = false; };
+  const a = channel.request('player', [1, 1], [1, 0], show, failed);
+  const b = channel.request('player', [2, 2], [1, 0], show, failed);
+  requests[1].resolve(2); await b;
+  requests[0].reject(new Error('stale')); await a;
+  assert.deepEqual({ visible, value, errors }, { visible: true, value: 2, errors: 0 });
+  const c = channel.request('player', [0.5, 1], [1, 0], show, failed);
+  requests[2].reject(new Error('current noninteger')); await c;
+  assert.deepEqual({ visible, errors }, { visible: false, errors: 1 });
+  const d = channel.request('player', [3, 4], [5, 0], show, failed);
+  requests[3].resolve(15); await d;
+  assert.deepEqual({ visible, value, errors }, { visible: true, value: 15, errors: 1 });
+  const e = channel.request('player', [0.25, 1], [1, 0], show, failed);
+  channel.dispose(); requests[4].reject(new Error('late')); await e;
+  assert.deepEqual({ visible, value, errors }, { visible: true, value: 15, errors: 1 });
+});
+
+test('holding a heading refreshes confirmation presentation without executing Python again', async () => {
+  let calls = 0, confirmed = false, displayedConfirmed = false;
+  const channel = new ReadingChannel(async () => { calls++; return 12; });
+  const show = () => { displayedConfirmed = confirmed; };
+  const bands = newBands();
+  holdReading(bands, 12, 0);
+  await channel.request('player', [4, 0], [3, 0], show);
+  assert.equal(displayedConfirmed, false);
+  holdReading(bands, 12, 1000); confirmed = bands.biggest;
+  await channel.request('player', [4, 0], [3, 0], show);
+  assert.equal(displayedConfirmed, true); assert.equal(calls, 1);
+});
+
+test('Start over status clearing restores one authored tests line without replacing a result', () => {
+  const status = { textContent: COPY.build.success.text };
+  // This is the shared Start over handler's actual mutation.
+  status.textContent = '';
+  restoreTestsLine(status, COPY.build.tests);
+  assert.equal(status.textContent, COPY.build.tests);
+  restoreTestsLine(status, COPY.build.tests);
+  assert.equal(status.textContent, COPY.build.tests);
+  status.textContent = COPY.build.success.text;
+  restoreTestsLine(status, COPY.build.tests);
+  assert.equal(status.textContent, COPY.build.success.text);
+});
+
+const storySource = 'def dot(v, w):\n    return sum(a*b for a, b in zip(v, w))';
+function storySave(): DotSave {
+  return { code: { dot: storySource, length: 'story length' }, flags: {
+    buildPassing: { dot: true, length: true }, buildDraft: { dot: { fill: ['story draft'] } },
+  } };
+}
+function writeSharedResult(store: DotSave, source: string, passed: boolean) {
+  store.code.dot = source;
+  (store.flags.buildPassing as Record<string, boolean>).dot = passed;
+}
+
+test('d01 mounting, passing, failing and serializing never replace story source/flags/drafts', () => {
+  const store = storySave();
+  const originalCode = store.code, originalPassing = store.flags.buildPassing, originalDraft = store.flags.buildDraft;
+  Object.assign(localDot(store), { source: COPY.build.solution, passed: true, draft: { fill: ['local draft'] } });
+  let ownsResult = false;
+  const lease = isolateBuildStorage(store, () => { if (!ownsResult) return false; ownsResult = false; return 'result'; });
+  const local = lease.local;
+  assert.equal(store.code.dot, COPY.build.solution, 'renderer mounts its own saved code');
+  assert.deepEqual((store.flags.buildDraft as Record<string, unknown>).dot, { fill: ['local draft'] });
+  const duringMount = JSON.parse(JSON.stringify(store));
+  assert.equal(duringMount.code.dot, storySource, 'even a save during temporary mounting is isolated');
+  assert.deepEqual(duringMount.flags.buildDraft.dot, { fill: ['story draft'] });
+  lease.mounted();
+  assert.equal(store.code.dot, storySource, 'normal library reads stay story-owned');
+  ownsResult = true; writeSharedResult(store, COPY.build.solution, true);
+  local.adoptedSource = local.source;
+  assert.equal(adoptedDot(store), COPY.build.solution);
+  ownsResult = true; writeSharedResult(store, COPY.build.decoy, false);
+  assert.equal(local.source, COPY.build.decoy); assert.equal(local.passed, false);
+  const saved = JSON.parse(JSON.stringify(store));
+  assert.equal(saved.code.dot, storySource);
+  assert.deepEqual(saved.flags.buildPassing, { dot: true, length: true });
+  assert.equal(saved.flags['d01-dot-build'].source, COPY.build.decoy);
+  lease.release();
+  assert.equal(store.code, originalCode);
+  assert.equal(store.flags.buildPassing, originalPassing);
+  assert.equal(store.flags.buildDraft, originalDraft);
+  assert.equal(store.code.dot, storySource);
+});
+
+test('an aborted renderer isolates late writes while preserving a newer story save', () => {
+  const store = storySave();
+  let lateResult = false, finalizing = false;
+  const lease = isolateBuildStorage(store, () => {
+    if (lateResult) { lateResult = false; return 'result'; }
+    return finalizing ? 'draft' : false;
+  });
+  lease.mounted();
+  finalizing = true; store.code.dot = 'unfinished d01 draft'; finalizing = false;
+  assert.equal(localDot(store).source, 'unfinished d01 draft');
+  writeSharedResult(store, 'newer story implementation', true);
+  assert.equal(store.code.dot, 'newer story implementation');
+  lateResult = true; writeSharedResult(store, COPY.build.solution, true);
+  assert.equal(localDot(store).source, COPY.build.solution);
+  assert.equal(store.code.dot, 'newer story implementation');
+  lease.release();
+  assert.equal(store.code.dot, 'newer story implementation', 'cleanup does not restore a stale snapshot over later story work');
+  assert.equal((store.flags.buildPassing as Record<string, boolean>).dot, true);
+});
+
+test('overlapping build lifetimes route each result to its owner and restore absent flags on setup failure', () => {
+  const store: DotSave = { code: {}, flags: {} };
+  let oldOwns = false, newOwns = false;
+  const old = isolateBuildStorage(store, () => { if (!oldOwns) return false; oldOwns = false; return 'result'; });
+  old.mounted();
+  const newer = isolateBuildStorage(store, () => { if (!newOwns) return false; newOwns = false; return 'result'; });
+  newer.mounted();
+  newOwns = true; writeSharedResult(store, COPY.build.solution, true);
+  oldOwns = true; writeSharedResult(store, 'old result', true);
+  assert.equal(old.local.source, 'old result');
+  assert.equal(newer.local.source, COPY.build.solution);
+  assert.equal(localDot(store).source, COPY.build.solution, 'late old result cannot overwrite the newer chapter save');
+  old.release();
+  try { throw new Error('mount failure'); } catch { newer.release(); }
+  assert.deepEqual(store.code, {});
+  assert.equal(Object.hasOwn(store.flags, 'buildPassing'), false);
+  assert.equal(Object.hasOwn(store.flags, 'buildDraft'), false);
 });

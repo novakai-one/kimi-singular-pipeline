@@ -27,7 +27,8 @@
 [data-d01-interactive] .brief.law > .kicker { display: none; }
 [data-d01-interactive] .brief.law .law-reason:empty,
 [data-d01-interactive] .brief.law .law-status:empty { display: none; }
-[data-d01-interactive] .win-card { top: auto; bottom: 96px; left: 50%; right: auto; transform: translateX(-50%); width: 260px; margin: 0; }
+[data-d01-interactive] .win-card { top: auto; bottom: 96px; left: 50%; right: auto; transform: translateX(-50%); width: 260px; margin: 0; animation-name: d01-win-in; }
+@keyframes d01-win-in { from { opacity: 0; transform: translate(-50%, -10px) scale(.98); } to { opacity: 1; transform: translateX(-50%); } }
 [data-d01-interactive=build] .build { top: 100px; bottom: 100px; height: auto; transform: translateX(-50%); }
 [data-d01-interactive=build] .build-left > :not(h2):not(.build-brief):not(.build-status) { display: none; }
 [data-d01-interactive=build] .build-status { white-space: pre-line; margin-top: 16px; padding: 14px 0; }

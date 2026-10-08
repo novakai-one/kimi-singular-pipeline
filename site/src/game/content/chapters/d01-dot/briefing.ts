@@ -23,9 +23,10 @@ export const doubt: DoubtDef = {
     const instrument = readingChannel();
     p.onDispose(() => instrument.dispose());
     const update = () => { void instrument.request(savedDot(), v, w, (value) => {
+      readout.el.hidden = false;
       readout.row('dot', COPY.p1.labels.reading, value.toFixed(2));
       readout.el.dataset.source = savedDot() ? 'player' : 'reference';
-    }).catch(() => { readout.el.hidden = true; }); };
+    }, () => { readout.el.hidden = true; }); };
     const hv = new VectorHandle(p, { to: v3(v), color: C.v, limit: 4, countMoves: false, onChange: (t) => { v = [t[0], t[1]]; update(); } });
     const hw = new VectorHandle(p, { to: v3(w), color: C.w, limit: 4, countMoves: false, onChange: (t) => { w = [t[0], t[1]]; update(); } });
     const set = (a: Pair, b: Pair) => { hv.set(v3(a)); hw.set(v3(b)); };
