@@ -1,8 +1,9 @@
-# EXECUTION CONTRACT — v1
+# EXECUTION CONTRACT — v1.1
 
 > Paste this to the coding agent (the BUILDER) at the start of every build session,
 > together with the path to the Lesson Pack. Versioned: one new rule per diagnosed failure.
-> Changelog: v1 — initial.
+> Changelog: v1 — initial. v1.1 — rule 5 gains a scoped-license exception, so a
+> Pack's §4 may authorize exact, enumerated chrome changes.
 
 You are the BUILDER. The Lesson Pack referenced below is the complete and only
 source of learner-facing content for this task.
@@ -36,10 +37,14 @@ source of learner-facing content for this task.
 4. **Content lives in data.** Chapter content modules contain only data copied
    from the Pack; engine code contains no content.
 
-5. **Do not edit shared files** (kit, engine, types, truth, other chapters).
-   Work only in `site/src/game/content/chapters/<lesson id>/` and
-   `tests/unit/game-<lesson id>.test.ts`. If a shared file has a bug, work
-   around it locally and say so in the report.
+5. **Do not edit shared files** (kit, engine, types, truth, UI chrome, other
+   chapters). Work only in `site/src/game/content/chapters/<lesson id>/` and
+   `tests/unit/game-<lesson id>.test.ts`.
+   **Exception:** if the Pack's §4 grants a numbered licensed chrome change
+   (CH1, CH2, …) naming the exact behavior, you may edit the shared files that
+   render that behavior, gated to this chapter only, nothing beyond the license.
+   Log every licensed change in the report. Any other shared-file bug: work
+   around it locally and say so.
 
 ## Before reporting done
 
@@ -48,10 +53,11 @@ source of learner-facing content for this task.
 3. `node tests/game-solve-all.mjs <lesson id>` passes at cadet, navigator and
    commander, no console errors (dev server on http://localhost:5173).
 4. `node tests/game-flow.mjs <lesson id> <scratch dir>` — look at every
-   screenshot; nothing cluttered, overlapping, off-screen or ugly.
+   screenshot; nothing cluttered, overlapping, off-screen or ugly; the Pack's
+   attention-budget tests pass.
 5. `node tests/game-wording.mjs <lesson id>` reports 0 hits.
 6. `node tools/checks/provenance.mjs <lesson id>` — every learner-facing string
-   in your chapter code appears verbatim in the Pack file.
+   in your chapter code appears verbatim in the Pack file (highest version N).
 
 ## Report format
 
@@ -59,6 +65,6 @@ source of learner-facing content for this task.
 - Check outputs, verbatim.
 - Screenshot paths.
 - DECISIONS: every T1/T2 decision, one line each, with the reference chapter
-  for T2.
+  for T2. Every licensed chrome change, one line each.
 - STOP list: numbered T3 gaps, each with a PROPOSED default.
 - Do not summarize the pedagogy. You did not author it.

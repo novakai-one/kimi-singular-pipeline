@@ -1,9 +1,10 @@
-# PACK TEMPLATE — v1
+# PACK TEMPLATE — v2
 
 > The AUTHOR (chat agent: Kimi / ChatGPT / Claude) fills every field of this
 > template. A field the author cannot fill goes in §6 OPEN items with a
 > PROPOSED default. Empty §6 = green light.
-> Changelog: v1 — initial.
+> Changelog: v1 — initial. v2 — §4 is now staging AND attention budget:
+> every element needs an entry and an exit condition; gate extended.
 
 ```markdown
 # LESSON PACK — <lesson-id> v<N>
@@ -52,14 +53,25 @@ spoken variant for any line containing maths symbols.
   reference order, failure messages
 - compare: the model page (full text) + 2–3 "Did you say…?" key ideas
 
-## 4. Staging
-Per beat: what is on screen (kit components only), max number of arrows,
-readout rows, camera view. No layout invention left to the builder.
+## 4. Staging and attention budget
+The canvas is the protagonist. For EVERY on-screen element, in every beat:
+- when it enters, and when it EXITS. An element without an exit condition
+  is a defect.
+- which elements are persistent, and why they earned persistence
+  (instruments and controls only).
+- during interactive beats: at most four non-canvas elements — collapsed
+  goal pill, readout, action row, and at most ONE transient element
+  (bark, prompt, toast). A new transient replaces the current one.
+- what is on screen (kit components only), max number of arrows, readout
+  rows, camera view. No layout invention left to the builder.
+- if the beat needs engine chrome to behave differently, state it as a
+  numbered licensed change (CH1, CH2, …) with the exact behavior.
 Flow screenshots required at 1440px and 390px for every beat.
 
 ## 5. Acceptance tests
 Numbered, machine-checkable. Every puzzle win condition, every feedback
-string, every term-ordering rule, and the provenance check must appear here.
+string, every term-ordering rule, every attention-budget rule, and the
+provenance check must appear here.
 
 ## 6. OPEN items
 Anything unspecified, each with a PROPOSED default. Empty = green light.
@@ -72,7 +84,10 @@ Anything unspecified, each with a PROPOSED default. Empty = green light.
       parameters, feedback strings, reference solution
 - [ ] Every term used is listed in §0 as earned-here or earned-earlier
 - [ ] No banned words (see CAPABILITY_SHEET.md §5)
-- [ ] Acceptance tests numbered and machine-checkable
+- [ ] Every on-screen element has an entry AND an exit condition
+- [ ] Interactive beats respect the four-element attention budget
+- [ ] Acceptance tests numbered and machine-checkable, including
+      attention-budget tests
 - [ ] Only capability-sheet beat kinds and kit components used
 
 The author states "gate passed" with the checklist when delivering the Pack.

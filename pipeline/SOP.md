@@ -1,11 +1,13 @@
-# SOP — the authoring pipeline — v1
+# SOP — the authoring pipeline — v1.1
 
 > How a lesson goes from idea to shipped chapter. Roles:
 > **AUTHOR** = chat agent (Kimi / ChatGPT / Claude) — owns every learner-facing word.
 > **BUILDER** = coding agent (Claude Code / Codex) — owns zero prose.
 > **CHECKER** = the automated harness (solve-all, flow, wording, provenance).
 > **BRIDGE** = the human — moves artifacts verbatim, never summarizes.
-> Changelog: v1 — initial.
+> Changelog: v1 — initial. v1.1 — Phase 3 review gains the attention-budget
+> criterion (first retrospective rule: d01-dot v1 shipped a cluttered screen
+> because elements had no exit conditions).
 
 ## Phase 0 — setup (once)
 
@@ -13,8 +15,8 @@
 |---|---|---|
 | 0.1 | BRIDGE | Clone the game repo → `kimi-singular-pipeline`. ✅ Done. |
 | 0.2 | AUTHOR | Draft `pipeline/CAPABILITY_SHEET.md` from `game-design/AUTHORING.md`. ✅ Done. |
-| 0.3 | AUTHOR | Save `EXECUTION_CONTRACT.md`, `PACK_TEMPLATE.md`, `SOP.md`, first Pack. ✅ Done (this commit). |
-| 0.4 | BRIDGE→BUILDER | Paste the PROVENANCE LINT task (below). Builder writes `tools/checks/provenance.mjs` and validates it on a synthetic fixture. |
+| 0.3 | AUTHOR | Save `EXECUTION_CONTRACT.md`, `PACK_TEMPLATE.md`, `SOP.md`, first Pack. ✅ Done. |
+| 0.4 | BRIDGE→BUILDER | Paste the PROVENANCE LINT task (below). Builder writes `tools/checks/provenance.mjs` and validates it on a synthetic fixture. ✅ Done. |
 
 ### The provenance lint task (paste verbatim to the BUILDER)
 
@@ -35,7 +37,7 @@ file. Report the two fixture results verbatim.
 
 | Step | Role | Action |
 |---|---|---|
-| 1.1 | BRIDGE→AUTHOR | Paste: `PACK_TEMPLATE.md` + `CAPABILITY_SHEET.md` + "Author Pack v1 for lesson <id>, complete." For lesson `d01-dot` this is already done — the Pack is at `pipeline/packs/d01-dot-v1.md`. |
+| 1.1 | BRIDGE→AUTHOR | Paste: `PACK_TEMPLATE.md` + `CAPABILITY_SHEET.md` + "Author Pack v1 for lesson <id>, complete." For lesson `d01-dot` this is already done — the Pack is at `pipeline/packs/d01-dot-v2.md`. |
 | 1.2 | AUTHOR | Run the completeness gate (template §end). Deliver the Pack + "gate passed". |
 | 1.3 | BRIDGE | Save the Pack to `pipeline/packs/<id>-v<N>.md`. Never paraphrase, trim, or fix it. |
 
@@ -44,7 +46,7 @@ file. Report the two fixture results verbatim.
 | Step | Role | Action |
 |---|---|---|
 | 2.1 | BRIDGE→BUILDER | Paste `EXECUTION_CONTRACT.md` + the Pack's repo path. Nothing else. |
-| 2.2 | BUILDER | Build under the contract. T1/T2/T3 decision tiers. Run all six checks (contract §Before reporting done). Return the report. |
+| 2.2 | BUILDER | Build under the contract. T1/T2/T3 decision tiers. Run all checks (contract §Before reporting done). Return the report. |
 | 2.3 | BRIDGE | Triage: plumbing failures → back to BUILDER with raw output. Content failures + screenshots → to AUTHOR. |
 
 ## Phase 3 — revise
@@ -52,7 +54,7 @@ file. Report the two fixture results verbatim.
 | Step | Role | Action |
 |---|---|---|
 | 3.1 | AUTHOR | Diagnose. Content defects → Pack v<N+1> (full new version + changelog line; never prose instructions). Plumbing defects → Builder-Fix Note quoting the exact check output. |
-| 3.2 | BRIDGE | Repeat 2.1–3.1 until all checks green AND author approves screenshots AND you approve screenshots. |
+| 3.2 | BRIDGE | Repeat 2.1–3.1 until all checks green AND author approves screenshots AND you approve screenshots. **Review criterion — attention budget:** during interactive beats, each screenshot shows the canvas + readout + action row + at most one transient element, and no element lacks an exit condition. |
 | 3.3 | BRIDGE | Retrospective, 15 min: every T2 flag and T3 stop becomes one new line in the contract, template, or capability sheet. Bump the version. |
 
 ## Standing rules
