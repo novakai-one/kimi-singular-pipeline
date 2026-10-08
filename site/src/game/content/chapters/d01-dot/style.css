@@ -61,6 +61,7 @@
   [data-d01-interactive] .win-card { bottom: 118px; width: 220px; }
   [data-d01-interactive] .brief.law { top: 68px; left: 12px; right: 12px; width: auto; max-height: 52vh; padding: 14px; }
   [data-d01-interactive] .brief.law .choice-card { padding: 9px; }
+  [data-d01-interactive=law] .toasts { top: auto; bottom: 75px; left: 12px; right: 12px; transform: none; }
   [data-d01-interactive=build] .build { top: 86px; bottom: 108px; left: 12px; right: 12px; width: auto; height: auto; transform: none; }
   [data-d01-interactive=build] .build-left { max-height: 28vh; padding: 14px; }
   [data-d01-interactive=build] .build-left h2 { font-size: 20px; margin-top: 0; }

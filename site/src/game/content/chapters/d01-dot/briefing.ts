@@ -48,7 +48,7 @@ export const doubt: DoubtDef = {
 export const law: LawDef<DotCase> = {
   ...lawCore, ...COPY.law,
   draw(g, c) {
-    void g.stage.view2D({ center: innerWidth < 600 ? [0, -5.5] : [-5, 0], height: innerWidth < 600 ? 55 : 14, ms: 0 });
+    void g.stage.view2D({ center: innerWidth < 600 ? [0, 13.5] : [-5, 0], height: innerWidth < 600 ? 55 : 14, ms: 0 });
     for (const [v, color] of [[c.v, C.v], [c.w, C.w]] as [Pair, string][]) {
       const arrow = new Arrow([0, 0, 0], v3(v), { color });
       arrow.object.userData.dispose = () => arrow.dispose();
