@@ -1,5 +1,7 @@
 # Chapter 18 trajectory rebuild: status for review
 
+> Game 1's current text and screenshots: `reviews/c18-game1/README.md`. This note describes the earlier build (`5c5a7b2`).
+
 As of 2026-10-08. Code at commit `5c5a7b2` on branch `claude/ch18-trajectory-preview`.
 
 ---
