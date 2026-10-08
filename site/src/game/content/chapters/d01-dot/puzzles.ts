@@ -25,7 +25,9 @@ export const p1: PuzzleDef = {
     const beam: V3 = [4, 0, 0];
     let sensor: V3 = [3 / Math.sqrt(2), 3 / Math.sqrt(2), 0];
     const bands = newBands();
-    p.add(new Arrow([0, 0, 0], beam, { color: C.v, label: COPY.p1.labels.beam }));
+    const beamArrow = new Arrow([0, 0, 0], beam, { color: C.v, label: COPY.p1.labels.beam });
+    beamArrow.label?.at([4, innerWidth < 600 ? -0.7 : -0.4, 0]);
+    p.add(beamArrow);
     const shadow = new Shadow(p, { onto: beam, of: sensor, lineColor: C.v, color: C.result, label: COPY.p1.labels.shadow });
     const angle = new AngleArc(p, [0, 0, 0], beam, sensor);
     const readout = p.readout();
@@ -38,6 +40,10 @@ export const p1: PuzzleDef = {
     const update = () => {
       if (!alive) return;
       shadow.set(sensor, beam); angle.set(beam, sensor);
+      // Keep the rotating label off the shaft and away from beam/shadow at
+      // both aligned headings. The entire ±3 sweep remains within the frame.
+      const offset = innerWidth < 600 ? 1.1 : 0.6;
+      handle.arrow.label?.at([sensor[0] - sensor[1] / 3 * offset, sensor[1] + sensor[0] / 3 * offset, 0]);
       const reading = dot(beam, sensor);
       readout.row('shadow', COPY.p1.labels.shadow, Math.abs(shadow.value).toFixed(2));
       readout.hideRow('shadow', p.difficulty === 'commander');
@@ -51,10 +57,15 @@ export const p1: PuzzleDef = {
       if (result.bark) p.bark('lantern', COPY.p1.feedback);
       if (result.won) p.win();
     };
+    let dragging = false;
     const handle = new VectorHandle(p, {
       to: sensor, color: C.violet, label: COPY.p1.labels.sensor, snap: null, countMoves: false,
       constrain: (q) => { const [x, y] = sensorTip(q.x, q.y, snapDegrees(p.difficulty)); return new Vector3(x, y, 0); },
-      onChange: (tip) => { if (p.g.drag.dragging) staging.drag(); sensor = tip; update(); },
+      onChange: (tip) => {
+        if (p.g.drag.dragging && !dragging) { dragging = true; staging.drag(); }
+        sensor = tip; update();
+      },
+      onCommit: () => { dragging = false; },
     });
     // Use DOM APIs here: the provenance scanner mistakes h() tag names and
     // input attributes nested inside content containers for learner prose.
@@ -127,7 +138,7 @@ export const p2: PuzzleDef = {
     if (p.difficulty === 'commander') {
       const input = document.createElement('input');
       input.type = 'number'; input.step = 'any'; input.inputMode = 'decimal'; input.className = 'd01-answer'; input.setAttribute('aria-label', COPY.p2.goal);
-      input.addEventListener('input', () => { if (input.value.trim()) submit(Number(input.value)); else statusEl.textContent = ''; });
+      input.addEventListener('input', () => { if (input.value.trim()) submit(Number(input.value)); else { statusEl.textContent = ''; p.g.ui.clearTransient(); } });
       input.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.stopPropagation(); submit(Number(input.value)); } });
       p.dock().append(input);
     } else {

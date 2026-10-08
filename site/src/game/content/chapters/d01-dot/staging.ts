@@ -13,6 +13,9 @@ export function stageGoal(ui: UI, state: PuzzleLifecycle): () => void {
   const render = () => {
     objective.dataset.expanded = String(state.goalExpanded);
     toggle.setAttribute('aria-expanded', String(state.goalExpanded));
+    // The inherited title row has inline display:flex. Use the native hidden
+    // state so collapsing removes the entire card body, including that row.
+    for (const child of objective.children) if (child !== toggle) (child as HTMLElement).hidden = !state.goalExpanded;
   };
   toggle.addEventListener('click', () => { state.toggleGoal(); render(); });
   objective.prepend(toggle);
