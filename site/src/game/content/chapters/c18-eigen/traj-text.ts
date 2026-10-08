@@ -55,52 +55,51 @@ export const UNREAD_M = 'Type one number, like 2, -1 or 0.5, between −9999 and
 // ------------------------------------------------------------------ Scenes 1–3 (before the name card)
 
 export const P1 = {
-  title: 'Which launch direction stays on its line?',
-  goal: 'Each pulse transforms your trajectory. Find a launch direction that stays on its original line.',
-  subgoals: ['Find a launch direction the pulse does not turn', 'Enter how much the pulse multiplied it', 'Find a second direction, and its multiplier'],
-  start: 'Your launch vector is $(1, 0)$. Press **Test this arrow**: the ship launches along it, then the pulse fires.',
-  firstMiss: (v: Vec, w: Vec) => `Your launch direction changed. The pulse moved $${tv(v)}$ to $${tv(w)}$. Find a direction that the pulse doesn't turn.`,
-  /** After the first miss, the launch numbers unlock. */
-  edit: 'Change the numbers in $\\mathbf v$, then test again.',
-  miss: (v: Vec, w: Vec, deg: number) => `The pulse moved $${tv(v)}$ to $${tv(w)}$: turned ${fdeg(deg)} off the green line. Try another direction.`,
-  kept: 'The direction stayed on the same line. The pulse changed its length, but didn\'t turn it.',
-  /** A kept vector whose length did not change either (multiplier ±1): the Scene 2 sentence would be false. */
-  keptSame: 'The direction stayed on the same line. The pulse didn\'t turn it.',
-  ask: (v: Vec) => `How much did the pulse multiply your vector $${tv(v)}$?`,
-  askShort: 'Enter the multiplier, then press **Check**.',
-  right: (v: Vec, w: Vec, m: number) => `Right: $${tn(m)}${tv(v)} = ${tv(w)}$. The line is locked, multiplier ${fmtN(m)}.`,
-  another: 'One safe direction found. Is there another?',
-  dupe: (v: Vec, base: Vec, k: number) => `$${tv(v)}$ also stays on this line. It's ${times(k)} $${tv(base)}$, so you've found another vector, not another direction.`,
-  dupePending: (v: Vec, base: Vec) => `$${tv(v)}$ is on the same line as $${tv(base)}$: the same direction. Answer the multiplier for $${tv(base)}$ first.`,
-  /** The very vector already locked, tested again. */
-  again: (v: Vec) => `That is $${tv(v)}$ again: its line is already locked. Look for another direction.`,
-  againPending: (v: Vec) => `That is $${tv(v)}$ again. Enter its multiplier first.`,
-  queued: 'A second direction holds too. Its multiplier comes next.',
-  done: 'Both directions hold. Watch the pulse: points on the copper lines stay on them, every other point is turned.',
+  title: "Which directions does the matrix leave unchanged?",
+  goal: "Find two different directions that the matrix doesn't turn. For each one, work out its multiplier.",
+  subgoals: [
+    "Find one direction that doesn't turn",
+    "Work out its multiplier",
+    "Find a different direction and its multiplier",
+  ],
+  start: "Start with the vector (1, 0). Press **Test this arrow** to see where the matrix sends it.",
+  firstMiss: (v: Vec, w: Vec) => `The matrix changed $${tv(v)}$ to $${tv(w)}$. The yellow arrow is no longer on the green line. Can you find a vector that stays on its original line?`,
+  edit: "Change the two numbers in your vector and press **Test this arrow** again.",
+  miss: (v: Vec, w: Vec, deg: number) => `The matrix changed $${tv(v)}$ to $${tv(w)}$. The yellow arrow is ${fdeg(deg)} away from the original line. Try another vector.`,
+  kept: "That works. The yellow arrow stays on the green line, although its length changes.",
+  keptSame: "That works. The yellow arrow stays on the green line, and its length is unchanged.",
+  ask: (v: Vec) => `What number multiplies $${tv(v)}$ to give the yellow vector?`,
+  askShort: "Enter the multiplier and press **Check**.",
+  right: (v: Vec, w: Vec, m: number) => `Correct. $${tn(m)} \\times ${tv(v)} = ${tv(w)}$. You've locked this line.`,
+  another: "You've found one line that works. Now find a different line.",
+  dupe: (v: Vec, base: Vec, k: number) => `$${tv(v)}$ is ${times(k)} $${tv(base)}$. They lie on the same line. You need a different line, not just a different-sized vector.`,
+  dupePending: (v: Vec, base: Vec) => `$${tv(v)}$ lies on the same line as $${tv(base)}$. Enter the multiplier for $${tv(base)}$ first.`,
+  again: (v: Vec) => `You've already locked the line through $${tv(v)}$. Try another direction.`,
+  againPending: (v: Vec) => `That's $${tv(v)}$ again. Enter its multiplier before testing more vectors.`,
+  queued: "You've found a second line that works. Now calculate its multiplier.",
+  done: "Both lines found. Watch the grid change: points on either line stay on that line. Points elsewhere change direction.",
   hints: {
-    first: 'Press **Test this arrow**. The first launch shows what one pulse does to your trajectory.',
+  first: "Press **Test this arrow**. Watch where the yellow arrow ends up compared with the green line.",
     find1: [
-      'Yellow is where the pulse sends your launch vector. You need yellow on the green dashed line: yellow equal to a number times green.',
-      'The pulse sends $(a, b)$ to $(2a + b,\\ a + 2b)$. Try a vector whose two parts are equal.',
-      'Test $(1, 1)$.',
+      "Look at the green line and the yellow arrow. Can you find a vector that makes them lie on the same line through the centre?",
+      "If you enter (a, b), the matrix gives (2a + b, a + 2b). What happens if you make a and b equal?",
+      "Try (1, 1).",
     ],
     ask: (v: Vec, w: Vec) => [
-      `Compare part by part. Green is $${tv(v)}$, yellow is $${tv(w)}$. What number turns each part of green into the same part of yellow?`,
-      `Divide: $${tn(w[0])} \\div ${tn(v[0] || v[1])}$${v[0] ? '' : ' (using the second parts)'}.`,
+      `The green vector is $${tv(v)}$ and the yellow vector is $${tv(w)}$. Find a single number that multiplies both green coordinates to give the yellow coordinates.`,
+      `Use the first coordinates: $${tn(w[0])} \\div ${tn(v[0])}$. Check that the same number also works for the second coordinates.`,
     ],
-    /** For the second direction; `have` is the line already found. */
     find2: (have: Vec) => Math.abs(have[0] - have[1]) < 1e-9 * (Math.abs(have[0]) + 1) ? [
-      `A multiple of $${tv(have)}$ lies on the same line. A new direction needs a different ratio between its two parts.`,
-      'For yellow to be $m$ times green: $2a + b = ma$ and $a + 2b = mb$. Subtract: $a - b = m(a - b)$. Either $a = b$, the line you have, or $m = 1$.',
-      'Test $(1, -1)$.',
+      `You already found the line through $${tv(have)}$. Multiplying that vector by another number won't give you a new line.`,
+      'Try opposite coordinates, such as (a, −a). What will the matrix do to them?',
+      'Try (1, −1).',
     ] : [
-      `A multiple of $${tv(have)}$ lies on the same line. A new direction needs a different ratio between its two parts.`,
-      'For yellow to be $m$ times green: $2a + b = ma$ and $a + 2b = mb$. Add: $3(a + b) = m(a + b)$. Either $a = -b$, the line you have, or $m = 3$.',
-      'Test $(1, 1)$.',
+      `You already found the line through $${tv(have)}$. Multiplying that vector by another number won't give you a new line.`,
+      'Try equal coordinates, such as (a, a). What will the matrix do to them?',
+      'Try (1, 1).',
     ],
   },
 };
-
 // ------------------------------------------------------------------ Scene 4: the two-pulse mission
 
 export const M1T = {
