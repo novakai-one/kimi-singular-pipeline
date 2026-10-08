@@ -1,0 +1,203 @@
+[
+  {
+    "where": "d01-dot title",
+    "text": "How much does this arrow point along that one?",
+    "order": 896
+  },
+  {
+    "where": "d01-dot/open line 0",
+    "text": "Docking sensor test. The beacon's beam is fixed along (4, 0). Your\n  sensor arrow has length 3; you can point it anywhere.",
+    "order": 897
+  },
+  {
+    "where": "d01-dot/open line 1",
+    "text": "Find the strongest reading first. Then find where it dies.",
+    "order": 897
+  },
+  {
+    "where": "d01-dot/p1 title",
+    "text": "Where is the reading strongest?",
+    "order": 898
+  },
+  {
+    "where": "d01-dot/p1 goal",
+    "text": "Turn the sensor. Find the heading with the biggest\n  reading, then the heading where the reading is exactly zero.",
+    "order": 898
+  },
+  {
+    "where": "d01-dot/name-dot TERM",
+    "text": "dot product",
+    "order": 899,
+    "term": "dot product"
+  },
+  {
+    "where": "d01-dot/name-dot term",
+    "text": "dot product",
+    "order": 899
+  },
+  {
+    "where": "d01-dot/name-dot question",
+    "text": "How much does one arrow point along another?",
+    "order": 899
+  },
+  {
+    "where": "d01-dot/name-dot saw",
+    "text": "The reading was biggest when the sensor pointed along the beam, zero\n  at a right angle, and negative past it. The shadow on the beam's line grew\n  and shrank with it.",
+    "order": 899
+  },
+  {
+    "where": "d01-dot/name-dot means",
+    "text": "Multiply matching components and add: (4, 0) · (a, b) = 4a — the\n  beam's length times the shadow's length.",
+    "order": 899
+  },
+  {
+    "where": "d01-dot/name-dot name",
+    "text": "The **dot product** $\\mathbf v \\cdot \\mathbf w = v_1w_1 + v_2w_2$ is\n  one number: how much $\\mathbf w$ points along $\\mathbf v$, scaled by both\n  lengths. A zero dot product means the arrows are at a right angle — they\n  are **orthogonal**.",
+    "order": 899
+  },
+  {
+    "where": "d01-dot/name-dot why",
+    "text": "Expand $\\|\\mathbf v - \\mathbf w\\|^2$ with components and compare with\n  the law of cosines: the two agree only if $\\mathbf v \\cdot \\mathbf w =\n  \\|\\mathbf v\\|\\,\\|\\mathbf w\\|\\cos\\theta$.",
+    "order": 899
+  },
+  {
+    "where": "d01-dot/name-dot cue",
+    "text": "When you see **'how much along'** or **'aligned'**, think **dot product**.",
+    "order": 899
+  },
+  {
+    "where": "d01-dot/name-dot use",
+    "text": "One neuron in a network computes a dot product of its weights with its\n  inputs.",
+    "order": 899
+  },
+  {
+    "where": "d01-dot/p2-intro line 0",
+    "text": "Now with numbers. Beam (3, 4), sensor (5, 0). Compute the reading\n  by hand, then check it.",
+    "order": 900
+  },
+  {
+    "where": "d01-dot/p2 title",
+    "text": "What is the reading?",
+    "order": 901
+  },
+  {
+    "where": "d01-dot/p2 goal",
+    "text": "Compute v·w for v = (3, 4), w = (5, 0), then answer.",
+    "order": 901
+  },
+  {
+    "where": "d01-dot/sayit ask",
+    "text": "In plain words: what does the dot product measure?",
+    "order": 902
+  },
+  {
+    "where": "d01-dot/doubt claim",
+    "text": "A zero dot product means one of the arrows is the zero arrow.",
+    "order": 903
+  },
+  {
+    "where": "d01-dot/doubt reason",
+    "text": "(3, 4)·(−4, 3) = −12 + 12 = 0, and neither arrow is zero. Zero\n  means a right angle, not zero length.",
+    "order": 903
+  },
+  {
+    "where": "d01-dot/doubt goal",
+    "text": "Set both arrows. **Challenge it** — two non-zero arrows with\n  a zero reading — or **Back it**.",
+    "order": 903
+  },
+  {
+    "where": "d01-dot/law frame",
+    "text": "$\\mathbf v \\cdot \\mathbf w = 0$ exactly when the arrows are ",
+    "order": 904
+  },
+  {
+    "where": "d01-dot/law frame",
+    "text": "\n  (or one has no length).",
+    "order": 904
+  },
+  {
+    "where": "d01-dot/law slot",
+    "text": "at a right angle",
+    "order": 904
+  },
+  {
+    "where": "d01-dot/law slot",
+    "text": "parallel",
+    "order": 904
+  },
+  {
+    "where": "d01-dot/law slot",
+    "text": "pointing in opposite directions",
+    "order": 904
+  },
+  {
+    "where": "d01-dot/law slot",
+    "text": "equal in length",
+    "order": 904
+  },
+  {
+    "where": "d01-dot/law reason ask",
+    "text": "Your Law survived. Why a right angle?",
+    "order": 904
+  },
+  {
+    "where": "d01-dot/law reason option",
+    "text": "$\\mathbf v \\cdot \\mathbf w = \\|v\\|\\|w\\|\\cos\\theta$; with non-zero\n    lengths it is zero exactly when $\\cos\\theta = 0$ — a right angle.",
+    "order": 904
+  },
+  {
+    "where": "d01-dot/law reason why",
+    "text": "Yes: the lengths are non-zero, so only $\\cos\\theta$ can make\n    the product zero.",
+    "order": 904
+  },
+  {
+    "where": "d01-dot/law reason option",
+    "text": "Because the components cancel.",
+    "order": 904
+  },
+  {
+    "where": "d01-dot/law reason why",
+    "text": "Cancelling parts are not\n    the condition: (3, 4)·(−3, 3) = 3 ≠ 0. The guarantee is the right angle.",
+    "order": 904
+  },
+  {
+    "where": "d01-dot/law reason option",
+    "text": "Because the arrows have equal length.",
+    "order": 904
+  },
+  {
+    "where": "d01-dot/law reason why",
+    "text": "(4, 0)·(4, 0) =\n    16: equal lengths, not zero. Length decides size, not sign.",
+    "order": 904
+  },
+  {
+    "where": "d01-dot/compare page",
+    "text": "The **dot product** $\\mathbf v \\cdot \\mathbf w = v_1w_1 + v_2w_2$\n  measures how much one arrow points along another: it equals\n  $\\|\\mathbf v\\|\\,\\|\\mathbf w\\|\\cos\\theta$ — the beam's length times the\n  shadow's length. Zero means a right angle (orthogonal); negative means more\n  than 90° apart.",
+    "order": 905
+  },
+  {
+    "where": "d01-dot/compare key idea",
+    "text": "Did you say what it measures — how much one arrow points along another?",
+    "order": 905
+  },
+  {
+    "where": "d01-dot/compare key idea",
+    "text": "Did you say why zero means a right angle?",
+    "order": 905
+  },
+  {
+    "where": "d01-dot/compare key idea",
+    "text": "Did you connect it to the shadow?",
+    "order": 905
+  },
+  {
+    "where": "d01-dot/dot title",
+    "text": "The sensor firmware",
+    "order": 906
+  },
+  {
+    "where": "d01-dot/dot brief",
+    "text": "Write `dot(v, w)`. The readout runs\n  on your code from here.",
+    "order": 906
+  }
+]

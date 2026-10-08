@@ -1,0 +1,84 @@
+[
+  {
+    "check": "before prototype pass, while editor is mounted",
+    "passed": true,
+    "sourcePreserved": true,
+    "flagPreserved": true,
+    "dot3D": 1,
+    "square3D": 49,
+    "serializedStory": true
+  },
+  {
+    "check": "after assemble pass, while prototype is open",
+    "passed": true,
+    "sourcePreserved": true,
+    "flagPreserved": true,
+    "dot3D": 1,
+    "square3D": 49,
+    "serializedStory": true
+  },
+  {
+    "check": "after fill pass, while prototype is open",
+    "passed": true,
+    "sourcePreserved": true,
+    "flagPreserved": true,
+    "dot3D": 1,
+    "square3D": 49,
+    "serializedStory": true
+  },
+  {
+    "check": "after write pass, while prototype is open",
+    "passed": true,
+    "sourcePreserved": true,
+    "flagPreserved": true,
+    "dot3D": 1,
+    "square3D": 49,
+    "serializedStory": true
+  },
+  {
+    "check": "after leaving prototype for the existing story",
+    "passed": true,
+    "sourcePreserved": true,
+    "flagPreserved": true,
+    "dot3D": 1,
+    "square3D": 49,
+    "serializedStory": true
+  },
+  {
+    "check": "existing c01 full chrome restored",
+    "passed": true,
+    "banner": true,
+    "nav": [
+      "Log",
+      "Case board",
+      "Codex",
+      "⚙",
+      "☰"
+    ],
+    "compact": false
+  },
+  {
+    "check": "after discriminating player fixture",
+    "passed": true,
+    "sourcePreserved": true,
+    "flagPreserved": true,
+    "dot3D": 1,
+    "square3D": 49,
+    "serializedStory": true
+  },
+  {
+    "check": "non-integer p1 instrument uses adopted player source, not reference fallback",
+    "passed": true,
+    "observed": 123.45,
+    "reference": 8.48528137423857
+  },
+  {
+    "check": "after a real aborted Python run settles",
+    "passed": true,
+    "sourcePreserved": true,
+    "flagPreserved": true,
+    "dot3D": 1,
+    "square3D": 49,
+    "serializedStory": true
+  }
+]

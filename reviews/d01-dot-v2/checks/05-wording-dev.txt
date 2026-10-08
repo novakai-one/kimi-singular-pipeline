@@ -1,0 +1,4 @@
+Developer-chapter fixture: 40 strings checked, 0 hits
+"dot product" before name-dot: 0 hits
+The unmodified wording RULES were applied after temporary registry inclusion for text extraction only.
+

@@ -1,0 +1,8 @@
+ok   d01-dot d01-p1 [cadet] 5311ms
+ok   d01-dot d01-p1 [navigator] 3309ms
+ok   d01-dot d01-p1 [commander] 2946ms
+ok   d01-dot d01-p2 [cadet] 1416ms
+ok   d01-dot d01-p2 [navigator] 1437ms
+ok   d01-dot d01-p2 [commander] 1603ms
+
+6/6 passed

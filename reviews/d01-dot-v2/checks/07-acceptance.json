@@ -1,0 +1,3242 @@
+[
+  {
+    "screenshot": "screenshots/desktop-p1-entry.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 1,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p1",
+        "won": false
+      },
+      "dialogue": false,
+      "fps": 61
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 20,
+          "y": 18,
+          "width": 420,
+          "height": 147.25,
+          "top": 18,
+          "right": 440,
+          "bottom": 165.25,
+          "left": 20
+        }
+      },
+      {
+        "class": "readout glass",
+        "rect": {
+          "x": 1170,
+          "y": 18,
+          "width": 250,
+          "height": 74,
+          "top": 18,
+          "right": 1420,
+          "bottom": 92,
+          "left": 1170
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 1053.75,
+          "y": 850,
+          "width": 366.25,
+          "height": 30,
+          "top": 850,
+          "right": 1420,
+          "bottom": 880,
+          "left": 1053.75
+        }
+      },
+      {
+        "class": "d01-prediction glass",
+        "rect": {
+          "x": 20,
+          "y": 740,
+          "width": 360,
+          "height": 140,
+          "top": 740,
+          "right": 380,
+          "bottom": 880,
+          "left": 20
+        }
+      }
+    ],
+    "count": 4,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 1,
+    "goalExpanded": "true",
+    "visiblePrediction": true,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/desktop-p1-maximum.png",
+    "AT7": true,
+    "AT8": true,
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 1,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p1",
+        "won": false
+      },
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 20,
+          "y": 18,
+          "width": 55.171875,
+          "height": 32,
+          "top": 18,
+          "right": 75.171875,
+          "bottom": 50,
+          "left": 20
+        }
+      },
+      {
+        "class": "readout glass",
+        "rect": {
+          "x": 1170,
+          "y": 18,
+          "width": 250,
+          "height": 74,
+          "top": 18,
+          "right": 1420,
+          "bottom": 92,
+          "left": 1170
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 1053.75,
+          "y": 850,
+          "width": 366.25,
+          "height": 30,
+          "top": 850,
+          "right": 1420,
+          "bottom": 880,
+          "left": 1053.75
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/desktop-p1-reset.png",
+    "AT7": true,
+    "AT8": true,
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 1,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p1",
+        "won": false
+      },
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 20,
+          "y": 18,
+          "width": 55.171875,
+          "height": 32,
+          "top": 18,
+          "right": 75.171875,
+          "bottom": 50,
+          "left": 20
+        }
+      },
+      {
+        "class": "readout glass",
+        "rect": {
+          "x": 1170,
+          "y": 18,
+          "width": 250,
+          "height": 74,
+          "top": 18,
+          "right": 1420,
+          "bottom": 92,
+          "left": 1170
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 1053.75,
+          "y": 850,
+          "width": 366.25,
+          "height": 30,
+          "top": 850,
+          "right": 1420,
+          "bottom": 880,
+          "left": 1053.75
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/desktop-p1-negative.png",
+    "AT7": true,
+    "AT8": true,
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 1,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p1",
+        "won": false
+      },
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 20,
+          "y": 18,
+          "width": 55.171875,
+          "height": 32,
+          "top": 18,
+          "right": 75.171875,
+          "bottom": 50,
+          "left": 20
+        }
+      },
+      {
+        "class": "readout glass",
+        "rect": {
+          "x": 1170,
+          "y": 18,
+          "width": 250,
+          "height": 74,
+          "top": 18,
+          "right": 1420,
+          "bottom": 92,
+          "left": 1170
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 1053.75,
+          "y": 850,
+          "width": 366.25,
+          "height": 30,
+          "top": 850,
+          "right": 1420,
+          "bottom": 880,
+          "left": 1053.75
+        }
+      },
+      {
+        "class": "bark glass",
+        "rect": {
+          "x": 720,
+          "y": 755.8556518554688,
+          "width": 640,
+          "height": 60,
+          "top": 755.8556518554688,
+          "right": 1360,
+          "bottom": 815.8556518554688,
+          "left": 720
+        }
+      }
+    ],
+    "count": 4,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 1,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/desktop-p1-next-drag.png",
+    "AT7": true,
+    "AT8": true,
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 1,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p1",
+        "won": false
+      },
+      "dialogue": false,
+      "fps": 61
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 20,
+          "y": 18,
+          "width": 55.171875,
+          "height": 32,
+          "top": 18,
+          "right": 75.171875,
+          "bottom": 50,
+          "left": 20
+        }
+      },
+      {
+        "class": "readout glass",
+        "rect": {
+          "x": 1170,
+          "y": 18,
+          "width": 250,
+          "height": 74,
+          "top": 18,
+          "right": 1420,
+          "bottom": 92,
+          "left": 1170
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 1053.75,
+          "y": 850,
+          "width": 366.25,
+          "height": 30,
+          "top": 850,
+          "right": 1420,
+          "bottom": 880,
+          "left": 1053.75
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/desktop-p1-solved.png",
+    "AT7": true,
+    "AT8": true,
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 1,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p1",
+        "won": true
+      },
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 20,
+          "y": 18,
+          "width": 55.171875,
+          "height": 32,
+          "top": 18,
+          "right": 75.171875,
+          "bottom": 50,
+          "left": 20
+        }
+      },
+      {
+        "class": "readout glass",
+        "rect": {
+          "x": 1170,
+          "y": 18,
+          "width": 250,
+          "height": 74,
+          "top": 18,
+          "right": 1420,
+          "bottom": 92,
+          "left": 1170
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 1223.75,
+          "y": 842,
+          "width": 196.25,
+          "height": 38,
+          "top": 842,
+          "right": 1420,
+          "bottom": 880,
+          "left": 1223.75
+        }
+      },
+      {
+        "class": "win-card glass",
+        "rect": {
+          "x": 590,
+          "y": 744,
+          "width": 260,
+          "height": 60,
+          "top": 744,
+          "right": 850,
+          "bottom": 804,
+          "left": 590
+        }
+      }
+    ],
+    "count": 4,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 1,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "check": "desktop prediction exits on Enter",
+    "passed": true
+  },
+  {
+    "screenshot": "screenshots/desktop-p1-transient-replacement.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 1,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p1",
+        "won": false
+      },
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 20,
+          "y": 18,
+          "width": 420,
+          "height": 147.25,
+          "top": 18,
+          "right": 440,
+          "bottom": 165.25,
+          "left": 20
+        }
+      },
+      {
+        "class": "readout glass",
+        "rect": {
+          "x": 1170,
+          "y": 18,
+          "width": 250,
+          "height": 74,
+          "top": 18,
+          "right": 1420,
+          "bottom": 92,
+          "left": 1170
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 1053.75,
+          "y": 850,
+          "width": 366.25,
+          "height": 30,
+          "top": 850,
+          "right": 1420,
+          "bottom": 880,
+          "left": 1053.75
+        }
+      },
+      {
+        "class": "toast glass",
+        "rect": {
+          "x": 420,
+          "y": 743.9983520507812,
+          "width": 600,
+          "height": 56,
+          "top": 743.9983520507812,
+          "right": 1020,
+          "bottom": 799.9983520507812,
+          "left": 420
+        }
+      }
+    ],
+    "count": 4,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 1,
+    "goalExpanded": "true",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/desktop-p2-entry.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 4,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p2",
+        "won": false
+      },
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 20,
+          "y": 18,
+          "width": 392.140625,
+          "height": 103.75,
+          "top": 18,
+          "right": 412.140625,
+          "bottom": 121.75,
+          "left": 20
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 943.75,
+          "y": 838,
+          "width": 476.25,
+          "height": 42,
+          "top": 838,
+          "right": 1420,
+          "bottom": 880,
+          "left": 943.75
+        }
+      }
+    ],
+    "count": 2,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "goalExpanded": "true",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/desktop-p2-wrong-25.png",
+    "AT7": true,
+    "AT8": true,
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 4,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p2",
+        "won": false
+      },
+      "dialogue": false,
+      "fps": 62
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 20,
+          "y": 18,
+          "width": 55.171875,
+          "height": 32,
+          "top": 18,
+          "right": 75.171875,
+          "bottom": 50,
+          "left": 20
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 943.75,
+          "y": 838,
+          "width": 476.25,
+          "height": 42,
+          "top": 838,
+          "right": 1420,
+          "bottom": 880,
+          "left": 943.75
+        }
+      },
+      {
+        "class": "d01-feedback glass",
+        "rect": {
+          "x": 457.640625,
+          "y": 730,
+          "width": 524.71875,
+          "height": 70,
+          "top": 730,
+          "right": 982.359375,
+          "bottom": 800,
+          "left": 457.640625
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 1,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "check": "AT3 desktop 25",
+    "passed": true,
+    "actual": "That is ‖v‖ times ‖w‖ — the reading only if the arrows pointed the\n    same way. Multiply matching components, not the lengths.",
+    "expected": "That is ‖v‖ times ‖w‖ — the reading only if the arrows pointed the\n    same way. Multiply matching components, not the lengths.",
+    "won": false
+  },
+  {
+    "screenshot": "screenshots/desktop-p2-wrong-35.png",
+    "AT7": true,
+    "AT8": true,
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 4,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p2",
+        "won": false
+      },
+      "dialogue": false,
+      "fps": 62
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 20,
+          "y": 18,
+          "width": 55.171875,
+          "height": 32,
+          "top": 18,
+          "right": 75.171875,
+          "bottom": 50,
+          "left": 20
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 943.75,
+          "y": 838,
+          "width": 476.25,
+          "height": 42,
+          "top": 838,
+          "right": 1420,
+          "bottom": 880,
+          "left": 943.75
+        }
+      },
+      {
+        "class": "d01-feedback glass",
+        "rect": {
+          "x": 463.640625,
+          "y": 730,
+          "width": 512.71875,
+          "height": 70,
+          "top": 730,
+          "right": 976.359375,
+          "bottom": 800,
+          "left": 463.640625
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 1,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "check": "AT3 desktop 35",
+    "passed": true,
+    "actual": "That multiplies the sums. Multiply each matching pair first, then\n    add: 3·5 + 4·0.",
+    "expected": "That multiplies the sums. Multiply each matching pair first, then\n    add: 3·5 + 4·0.",
+    "won": false
+  },
+  {
+    "screenshot": "screenshots/desktop-p2-wrong-7.png",
+    "AT7": true,
+    "AT8": true,
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 4,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p2",
+        "won": false
+      },
+      "dialogue": false,
+      "fps": 63
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 20,
+          "y": 18,
+          "width": 55.171875,
+          "height": 32,
+          "top": 18,
+          "right": 75.171875,
+          "bottom": 50,
+          "left": 20
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 943.75,
+          "y": 838,
+          "width": 476.25,
+          "height": 42,
+          "top": 838,
+          "right": 1420,
+          "bottom": 880,
+          "left": 943.75
+        }
+      },
+      {
+        "class": "d01-feedback glass",
+        "rect": {
+          "x": 431.3359375,
+          "y": 730,
+          "width": 577.328125,
+          "height": 70,
+          "top": 730,
+          "right": 1008.6640625,
+          "bottom": 800,
+          "left": 431.3359375
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 1,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "check": "AT3 desktop 7",
+    "passed": true,
+    "actual": "That adds v's components. The dot product mixes both arrows: multiply\n    matching pairs, then add.",
+    "expected": "That adds v's components. The dot product mixes both arrows: multiply\n    matching pairs, then add.",
+    "won": false
+  },
+  {
+    "screenshot": "screenshots/desktop-p2-solved.png",
+    "AT7": true,
+    "AT8": true,
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 4,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p2",
+        "won": true
+      },
+      "dialogue": false,
+      "fps": 61
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 20,
+          "y": 18,
+          "width": 55.171875,
+          "height": 32,
+          "top": 18,
+          "right": 75.171875,
+          "bottom": 50,
+          "left": 20
+        }
+      },
+      {
+        "class": "readout glass",
+        "rect": {
+          "x": 1170,
+          "y": 18,
+          "width": 250,
+          "height": 163.296875,
+          "top": 18,
+          "right": 1420,
+          "bottom": 181.296875,
+          "left": 1170
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 1113.75,
+          "y": 838,
+          "width": 306.25,
+          "height": 42,
+          "top": 838,
+          "right": 1420,
+          "bottom": 880,
+          "left": 1113.75
+        }
+      },
+      {
+        "class": "win-card glass",
+        "rect": {
+          "x": 590,
+          "y": 744,
+          "width": 260,
+          "height": 60,
+          "top": 744,
+          "right": 850,
+          "bottom": 804,
+          "left": 590
+        }
+      }
+    ],
+    "count": 4,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 1,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/desktop-doubt-entry.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 6,
+      "kind": "doubt",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 61
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 20,
+          "y": 18,
+          "width": 55.171875,
+          "height": 32,
+          "top": 18,
+          "right": 75.171875,
+          "bottom": 50,
+          "left": 20
+        }
+      },
+      {
+        "class": "readout glass",
+        "rect": {
+          "x": 1170,
+          "y": 18,
+          "width": 250,
+          "height": 49,
+          "top": 18,
+          "right": 1420,
+          "bottom": 67,
+          "left": 1170
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 1046.1875,
+          "y": 850,
+          "width": 373.8125,
+          "height": 30,
+          "top": 850,
+          "right": 1420,
+          "bottom": 880,
+          "left": 1046.1875
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/desktop-doubt-solved.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 6,
+      "kind": "doubt",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 20,
+          "y": 18,
+          "width": 55.171875,
+          "height": 32,
+          "top": 18,
+          "right": 75.171875,
+          "bottom": 50,
+          "left": 20
+        }
+      },
+      {
+        "class": "readout glass",
+        "rect": {
+          "x": 1170,
+          "y": 18,
+          "width": 250,
+          "height": 49,
+          "top": 18,
+          "right": 1420,
+          "bottom": 67,
+          "left": 1170
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 1223.75,
+          "y": 842,
+          "width": 196.25,
+          "height": 38,
+          "top": 842,
+          "right": 1420,
+          "bottom": 880,
+          "left": 1223.75
+        }
+      },
+      {
+        "class": "d01-feedback glass",
+        "rect": {
+          "x": 420,
+          "y": 540,
+          "width": 600,
+          "height": 260,
+          "top": 540,
+          "right": 1020,
+          "bottom": 800,
+          "left": 420
+        }
+      }
+    ],
+    "count": 4,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 1,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/desktop-law-entry.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 7,
+      "kind": "law",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 20,
+          "y": 18,
+          "width": 55.171875,
+          "height": 32,
+          "top": 18,
+          "right": 75.171875,
+          "bottom": 50,
+          "left": 20
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 1158.296875,
+          "y": 850,
+          "width": 261.703125,
+          "height": 30,
+          "top": 850,
+          "right": 1420,
+          "bottom": 880,
+          "left": 1158.296875
+        }
+      },
+      {
+        "class": "brief law glass",
+        "rect": {
+          "x": 20,
+          "y": 76,
+          "width": 530,
+          "height": 121.78125,
+          "top": 76,
+          "right": 550,
+          "bottom": 197.78125,
+          "left": 20
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/desktop-law-solved.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 7,
+      "kind": "law",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 20,
+          "y": 18,
+          "width": 55.171875,
+          "height": 32,
+          "top": 18,
+          "right": 75.171875,
+          "bottom": 50,
+          "left": 20
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 1223.75,
+          "y": 842,
+          "width": 196.25,
+          "height": 38,
+          "top": 842,
+          "right": 1420,
+          "bottom": 880,
+          "left": 1223.75
+        }
+      },
+      {
+        "class": "toast glass",
+        "rect": {
+          "x": 541.7890625,
+          "y": 17.333599090576172,
+          "width": 356.421875,
+          "height": 39,
+          "top": 17.333599090576172,
+          "right": 898.2109375,
+          "bottom": 56.33359909057617,
+          "left": 541.7890625
+        }
+      },
+      {
+        "class": "brief law glass",
+        "rect": {
+          "x": 20,
+          "y": 76,
+          "width": 530,
+          "height": 592.828125,
+          "top": 76,
+          "right": 550,
+          "bottom": 668.828125,
+          "left": 20
+        }
+      }
+    ],
+    "count": 4,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 1,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/desktop-build-entry.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 9,
+      "kind": "build",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 1009.234375,
+          "y": 850,
+          "width": 410.765625,
+          "height": 30,
+          "top": 850,
+          "right": 1420,
+          "bottom": 880,
+          "left": 1009.234375
+        }
+      },
+      {
+        "class": "build-left",
+        "rect": {
+          "x": 131,
+          "y": 101,
+          "width": 481.90625,
+          "height": 698,
+          "top": 101,
+          "right": 612.90625,
+          "bottom": 799,
+          "left": 131
+        }
+      },
+      {
+        "class": "build-right",
+        "rect": {
+          "x": 612.90625,
+          "y": 101,
+          "width": 696.09375,
+          "height": 698,
+          "top": 101,
+          "right": 1309,
+          "bottom": 799,
+          "left": 612.90625
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/desktop-build-wrong.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 9,
+      "kind": "build",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 1009.234375,
+          "y": 850,
+          "width": 410.765625,
+          "height": 30,
+          "top": 850,
+          "right": 1420,
+          "bottom": 880,
+          "left": 1009.234375
+        }
+      },
+      {
+        "class": "build-left",
+        "rect": {
+          "x": 131,
+          "y": 101,
+          "width": 481.90625,
+          "height": 698,
+          "top": 101,
+          "right": 612.90625,
+          "bottom": 799,
+          "left": 131
+        }
+      },
+      {
+        "class": "build-right",
+        "rect": {
+          "x": 612.90625,
+          "y": 101,
+          "width": 696.09375,
+          "height": 698,
+          "top": 101,
+          "right": 1309,
+          "bottom": 799,
+          "left": 612.90625
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/desktop-build-assemble-passed.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 9,
+      "kind": "build",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "readout glass d01-player-reading",
+        "rect": {
+          "x": 1170,
+          "y": 18,
+          "width": 250,
+          "height": 49,
+          "top": 18,
+          "right": 1420,
+          "bottom": 67,
+          "left": 1170
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 860.984375,
+          "y": 842,
+          "width": 559.015625,
+          "height": 38,
+          "top": 842,
+          "right": 1420,
+          "bottom": 880,
+          "left": 860.984375
+        }
+      },
+      {
+        "class": "build-left",
+        "rect": {
+          "x": 131,
+          "y": 101,
+          "width": 481.90625,
+          "height": 698,
+          "top": 101,
+          "right": 612.90625,
+          "bottom": 799,
+          "left": 131
+        }
+      },
+      {
+        "class": "build-right",
+        "rect": {
+          "x": 612.90625,
+          "y": 101,
+          "width": 696.09375,
+          "height": 698,
+          "top": 101,
+          "right": 1309,
+          "bottom": 799,
+          "left": 612.90625
+        }
+      }
+    ],
+    "count": 4,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "check": "AT6 desktop assemble",
+    "passed": true,
+    "cases": 200
+  },
+  {
+    "screenshot": "screenshots/desktop-build-fill-passed.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 9,
+      "kind": "build",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "readout glass d01-player-reading",
+        "rect": {
+          "x": 1170,
+          "y": 18,
+          "width": 250,
+          "height": 49,
+          "top": 18,
+          "right": 1420,
+          "bottom": 67,
+          "left": 1170
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 860.984375,
+          "y": 842,
+          "width": 559.015625,
+          "height": 38,
+          "top": 842,
+          "right": 1420,
+          "bottom": 880,
+          "left": 860.984375
+        }
+      },
+      {
+        "class": "build-left",
+        "rect": {
+          "x": 131,
+          "y": 101,
+          "width": 481.90625,
+          "height": 698,
+          "top": 101,
+          "right": 612.90625,
+          "bottom": 799,
+          "left": 131
+        }
+      },
+      {
+        "class": "build-right",
+        "rect": {
+          "x": 612.90625,
+          "y": 101,
+          "width": 696.09375,
+          "height": 698,
+          "top": 101,
+          "right": 1309,
+          "bottom": 799,
+          "left": 612.90625
+        }
+      }
+    ],
+    "count": 4,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "check": "AT6 desktop fill",
+    "passed": true,
+    "cases": 200
+  },
+  {
+    "screenshot": "screenshots/desktop-build-write-passed.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 9,
+      "kind": "build",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "readout glass d01-player-reading",
+        "rect": {
+          "x": 1170,
+          "y": 18,
+          "width": 250,
+          "height": 49,
+          "top": 18,
+          "right": 1420,
+          "bottom": 67,
+          "left": 1170
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 860.984375,
+          "y": 842,
+          "width": 559.015625,
+          "height": 38,
+          "top": 842,
+          "right": 1420,
+          "bottom": 880,
+          "left": 860.984375
+        }
+      },
+      {
+        "class": "build-left",
+        "rect": {
+          "x": 131,
+          "y": 101,
+          "width": 481.90625,
+          "height": 698,
+          "top": 101,
+          "right": 612.90625,
+          "bottom": 799,
+          "left": 131
+        }
+      },
+      {
+        "class": "build-right",
+        "rect": {
+          "x": 612.90625,
+          "y": 101,
+          "width": 696.09375,
+          "height": 698,
+          "top": 101,
+          "right": 1309,
+          "bottom": 799,
+          "left": 612.90625
+        }
+      }
+    ],
+    "count": 4,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "check": "AT6 desktop write",
+    "passed": true,
+    "cases": 200
+  },
+  {
+    "screenshot": "screenshots/desktop-build-edited-pass.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 9,
+      "kind": "build",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 1009.234375,
+          "y": 850,
+          "width": 410.765625,
+          "height": 30,
+          "top": 850,
+          "right": 1420,
+          "bottom": 880,
+          "left": 1009.234375
+        }
+      },
+      {
+        "class": "build-left",
+        "rect": {
+          "x": 131,
+          "y": 101,
+          "width": 481.90625,
+          "height": 698,
+          "top": 101,
+          "right": 612.90625,
+          "bottom": 799,
+          "left": 131
+        }
+      },
+      {
+        "class": "build-right",
+        "rect": {
+          "x": 612.90625,
+          "y": 101,
+          "width": 696.09375,
+          "height": 698,
+          "top": 101,
+          "right": 1309,
+          "bottom": 799,
+          "left": 612.90625
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "check": "desktop pass invalidation",
+    "passed": true
+  },
+  {
+    "screenshot": "screenshots/desktop-build-start-over.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 9,
+      "kind": "build",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 1009.234375,
+          "y": 850,
+          "width": 410.765625,
+          "height": 30,
+          "top": 850,
+          "right": 1420,
+          "bottom": 880,
+          "left": 1009.234375
+        }
+      },
+      {
+        "class": "build-left",
+        "rect": {
+          "x": 131,
+          "y": 101,
+          "width": 481.90625,
+          "height": 698,
+          "top": 101,
+          "right": 612.90625,
+          "bottom": 799,
+          "left": 131
+        }
+      },
+      {
+        "class": "build-right",
+        "rect": {
+          "x": 612.90625,
+          "y": 101,
+          "width": 696.09375,
+          "height": 698,
+          "top": 101,
+          "right": 1309,
+          "bottom": 799,
+          "left": 612.90625
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "check": "desktop Start over restores tests line",
+    "passed": true
+  },
+  {
+    "screenshot": "screenshots/mobile-p1-entry.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 1,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p1",
+        "won": false
+      },
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 12,
+          "y": 12,
+          "width": 226,
+          "height": 165.375,
+          "top": 12,
+          "right": 238,
+          "bottom": 177.375,
+          "left": 12
+        }
+      },
+      {
+        "class": "readout glass",
+        "rect": {
+          "x": 242,
+          "y": 12,
+          "width": 136,
+          "height": 68,
+          "top": 12,
+          "right": 378,
+          "bottom": 80,
+          "left": 242
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 107.65625,
+          "y": 802,
+          "width": 270.34375,
+          "height": 30,
+          "top": 802,
+          "right": 378,
+          "bottom": 832,
+          "left": 107.65625
+        }
+      },
+      {
+        "class": "d01-prediction glass",
+        "rect": {
+          "x": 12,
+          "y": 664,
+          "width": 366,
+          "height": 108,
+          "top": 664,
+          "right": 378,
+          "bottom": 772,
+          "left": 12
+        }
+      }
+    ],
+    "count": 4,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 1,
+    "goalExpanded": "true",
+    "visiblePrediction": true,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/mobile-p1-maximum.png",
+    "AT7": true,
+    "AT8": true,
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 1,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p1",
+        "won": false
+      },
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 12,
+          "y": 12,
+          "width": 55.171875,
+          "height": 32,
+          "top": 12,
+          "right": 67.171875,
+          "bottom": 44,
+          "left": 12
+        }
+      },
+      {
+        "class": "readout glass",
+        "rect": {
+          "x": 242,
+          "y": 12,
+          "width": 136,
+          "height": 68,
+          "top": 12,
+          "right": 378,
+          "bottom": 80,
+          "left": 242
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 107.65625,
+          "y": 802,
+          "width": 270.34375,
+          "height": 30,
+          "top": 802,
+          "right": 378,
+          "bottom": 832,
+          "left": 107.65625
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/mobile-p1-reset.png",
+    "AT7": true,
+    "AT8": true,
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 1,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p1",
+        "won": false
+      },
+      "dialogue": false,
+      "fps": 61
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 12,
+          "y": 12,
+          "width": 55.171875,
+          "height": 32,
+          "top": 12,
+          "right": 67.171875,
+          "bottom": 44,
+          "left": 12
+        }
+      },
+      {
+        "class": "readout glass",
+        "rect": {
+          "x": 242,
+          "y": 12,
+          "width": 136,
+          "height": 68,
+          "top": 12,
+          "right": 378,
+          "bottom": 80,
+          "left": 242
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 107.65625,
+          "y": 802,
+          "width": 270.34375,
+          "height": 30,
+          "top": 802,
+          "right": 378,
+          "bottom": 832,
+          "left": 107.65625
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/mobile-p1-negative.png",
+    "AT7": true,
+    "AT8": true,
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 1,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p1",
+        "won": false
+      },
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 12,
+          "y": 12,
+          "width": 55.171875,
+          "height": 32,
+          "top": 12,
+          "right": 67.171875,
+          "bottom": 44,
+          "left": 12
+        }
+      },
+      {
+        "class": "readout glass",
+        "rect": {
+          "x": 242,
+          "y": 12,
+          "width": 136,
+          "height": 68,
+          "top": 12,
+          "right": 378,
+          "bottom": 80,
+          "left": 242
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 107.65625,
+          "y": 802,
+          "width": 270.34375,
+          "height": 30,
+          "top": 802,
+          "right": 378,
+          "bottom": 832,
+          "left": 107.65625
+        }
+      },
+      {
+        "class": "bark glass",
+        "rect": {
+          "x": 12,
+          "y": 633.855712890625,
+          "width": 366,
+          "height": 70,
+          "top": 633.855712890625,
+          "right": 378,
+          "bottom": 703.855712890625,
+          "left": 12
+        }
+      }
+    ],
+    "count": 4,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 1,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/mobile-p1-next-drag.png",
+    "AT7": true,
+    "AT8": true,
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 1,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p1",
+        "won": false
+      },
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 12,
+          "y": 12,
+          "width": 55.171875,
+          "height": 32,
+          "top": 12,
+          "right": 67.171875,
+          "bottom": 44,
+          "left": 12
+        }
+      },
+      {
+        "class": "readout glass",
+        "rect": {
+          "x": 242,
+          "y": 12,
+          "width": 136,
+          "height": 68,
+          "top": 12,
+          "right": 378,
+          "bottom": 80,
+          "left": 242
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 107.65625,
+          "y": 802,
+          "width": 270.34375,
+          "height": 30,
+          "top": 802,
+          "right": 378,
+          "bottom": 832,
+          "left": 107.65625
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/mobile-p1-solved.png",
+    "AT7": true,
+    "AT8": true,
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 1,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p1",
+        "won": true
+      },
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 12,
+          "y": 12,
+          "width": 55.171875,
+          "height": 32,
+          "top": 12,
+          "right": 67.171875,
+          "bottom": 44,
+          "left": 12
+        }
+      },
+      {
+        "class": "readout glass",
+        "rect": {
+          "x": 242,
+          "y": 12,
+          "width": 136,
+          "height": 68,
+          "top": 12,
+          "right": 378,
+          "bottom": 80,
+          "left": 242
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 235.453125,
+          "y": 794,
+          "width": 142.546875,
+          "height": 38,
+          "top": 794,
+          "right": 378,
+          "bottom": 832,
+          "left": 235.453125
+        }
+      },
+      {
+        "class": "win-card glass",
+        "rect": {
+          "x": 85,
+          "y": 666,
+          "width": 220,
+          "height": 60,
+          "top": 666,
+          "right": 305,
+          "bottom": 726,
+          "left": 85
+        }
+      }
+    ],
+    "count": 4,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 1,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "check": "mobile prediction exits on Enter",
+    "passed": true
+  },
+  {
+    "screenshot": "screenshots/mobile-p1-transient-replacement.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 1,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p1",
+        "won": false
+      },
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 12,
+          "y": 12,
+          "width": 226,
+          "height": 165.375,
+          "top": 12,
+          "right": 238,
+          "bottom": 177.375,
+          "left": 12
+        }
+      },
+      {
+        "class": "readout glass",
+        "rect": {
+          "x": 242,
+          "y": 12,
+          "width": 136,
+          "height": 68,
+          "top": 12,
+          "right": 378,
+          "bottom": 80,
+          "left": 242
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 107.65625,
+          "y": 802,
+          "width": 270.34375,
+          "height": 30,
+          "top": 802,
+          "right": 378,
+          "bottom": 832,
+          "left": 107.65625
+        }
+      },
+      {
+        "class": "toast glass",
+        "rect": {
+          "x": 12,
+          "y": 630.970703125,
+          "width": 366,
+          "height": 73,
+          "top": 630.970703125,
+          "right": 378,
+          "bottom": 703.970703125,
+          "left": 12
+        }
+      }
+    ],
+    "count": 4,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 1,
+    "goalExpanded": "true",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/mobile-p2-entry.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 4,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p2",
+        "won": false
+      },
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 12,
+          "y": 12,
+          "width": 226,
+          "height": 114.6875,
+          "top": 12,
+          "right": 238,
+          "bottom": 126.6875,
+          "left": 12
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 12,
+          "y": 754,
+          "width": 366,
+          "height": 78,
+          "top": 754,
+          "right": 378,
+          "bottom": 832,
+          "left": 12
+        }
+      }
+    ],
+    "count": 2,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "goalExpanded": "true",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/mobile-p2-wrong-25.png",
+    "AT7": true,
+    "AT8": true,
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 4,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p2",
+        "won": false
+      },
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 12,
+          "y": 12,
+          "width": 55.171875,
+          "height": 32,
+          "top": 12,
+          "right": 67.171875,
+          "bottom": 44,
+          "left": 12
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 12,
+          "y": 754,
+          "width": 366,
+          "height": 78,
+          "top": 754,
+          "right": 378,
+          "bottom": 832,
+          "left": 12
+        }
+      },
+      {
+        "class": "d01-feedback glass",
+        "rect": {
+          "x": 12,
+          "y": 610,
+          "width": 366,
+          "height": 94,
+          "top": 610,
+          "right": 378,
+          "bottom": 704,
+          "left": 12
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 1,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "check": "AT3 mobile 25",
+    "passed": true,
+    "actual": "That is ‖v‖ times ‖w‖ — the reading only if the arrows pointed the\n    same way. Multiply matching components, not the lengths.",
+    "expected": "That is ‖v‖ times ‖w‖ — the reading only if the arrows pointed the\n    same way. Multiply matching components, not the lengths.",
+    "won": false
+  },
+  {
+    "screenshot": "screenshots/mobile-p2-wrong-35.png",
+    "AT7": true,
+    "AT8": true,
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 4,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p2",
+        "won": false
+      },
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 12,
+          "y": 12,
+          "width": 55.171875,
+          "height": 32,
+          "top": 12,
+          "right": 67.171875,
+          "bottom": 44,
+          "left": 12
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 12,
+          "y": 754,
+          "width": 366,
+          "height": 78,
+          "top": 754,
+          "right": 378,
+          "bottom": 832,
+          "left": 12
+        }
+      },
+      {
+        "class": "d01-feedback glass",
+        "rect": {
+          "x": 12,
+          "y": 626,
+          "width": 366,
+          "height": 78,
+          "top": 626,
+          "right": 378,
+          "bottom": 704,
+          "left": 12
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 1,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "check": "AT3 mobile 35",
+    "passed": true,
+    "actual": "That multiplies the sums. Multiply each matching pair first, then\n    add: 3·5 + 4·0.",
+    "expected": "That multiplies the sums. Multiply each matching pair first, then\n    add: 3·5 + 4·0.",
+    "won": false
+  },
+  {
+    "screenshot": "screenshots/mobile-p2-wrong-7.png",
+    "AT7": true,
+    "AT8": true,
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 4,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p2",
+        "won": false
+      },
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 12,
+          "y": 12,
+          "width": 55.171875,
+          "height": 32,
+          "top": 12,
+          "right": 67.171875,
+          "bottom": 44,
+          "left": 12
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 12,
+          "y": 754,
+          "width": 366,
+          "height": 78,
+          "top": 754,
+          "right": 378,
+          "bottom": 832,
+          "left": 12
+        }
+      },
+      {
+        "class": "d01-feedback glass",
+        "rect": {
+          "x": 12,
+          "y": 626,
+          "width": 366,
+          "height": 78,
+          "top": 626,
+          "right": 378,
+          "bottom": 704,
+          "left": 12
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 1,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "check": "AT3 mobile 7",
+    "passed": true,
+    "actual": "That adds v's components. The dot product mixes both arrows: multiply\n    matching pairs, then add.",
+    "expected": "That adds v's components. The dot product mixes both arrows: multiply\n    matching pairs, then add.",
+    "won": false
+  },
+  {
+    "screenshot": "screenshots/mobile-p2-solved.png",
+    "AT7": true,
+    "AT8": true,
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 4,
+      "kind": "puzzle",
+      "puzzle": {
+        "id": "d01-p2",
+        "won": true
+      },
+      "dialogue": false,
+      "fps": 63
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 12,
+          "y": 12,
+          "width": 55.171875,
+          "height": 32,
+          "top": 12,
+          "right": 67.171875,
+          "bottom": 44,
+          "left": 12
+        }
+      },
+      {
+        "class": "readout glass",
+        "rect": {
+          "x": 143,
+          "y": 12,
+          "width": 235,
+          "height": 159.296875,
+          "top": 12,
+          "right": 378,
+          "bottom": 171.296875,
+          "left": 143
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 139.453125,
+          "y": 746,
+          "width": 238.546875,
+          "height": 86,
+          "top": 746,
+          "right": 378,
+          "bottom": 832,
+          "left": 139.453125
+        }
+      },
+      {
+        "class": "win-card glass",
+        "rect": {
+          "x": 85,
+          "y": 666,
+          "width": 220,
+          "height": 60,
+          "top": 666,
+          "right": 305,
+          "bottom": 726,
+          "left": 85
+        }
+      }
+    ],
+    "count": 4,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 1,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/mobile-doubt-entry.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 6,
+      "kind": "doubt",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 63
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 12,
+          "y": 12,
+          "width": 55.171875,
+          "height": 32,
+          "top": 12,
+          "right": 67.171875,
+          "bottom": 44,
+          "left": 12
+        }
+      },
+      {
+        "class": "readout glass",
+        "rect": {
+          "x": 242,
+          "y": 12,
+          "width": 136,
+          "height": 44,
+          "top": 12,
+          "right": 378,
+          "bottom": 56,
+          "left": 242
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 46.015625,
+          "y": 802,
+          "width": 331.984375,
+          "height": 30,
+          "top": 802,
+          "right": 378,
+          "bottom": 832,
+          "left": 46.015625
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/mobile-doubt-solved.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 6,
+      "kind": "doubt",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 61
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 12,
+          "y": 12,
+          "width": 55.171875,
+          "height": 32,
+          "top": 12,
+          "right": 67.171875,
+          "bottom": 44,
+          "left": 12
+        }
+      },
+      {
+        "class": "readout glass",
+        "rect": {
+          "x": 242,
+          "y": 12,
+          "width": 136,
+          "height": 44,
+          "top": 12,
+          "right": 378,
+          "bottom": 56,
+          "left": 242
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 235.453125,
+          "y": 794,
+          "width": 142.546875,
+          "height": 38,
+          "top": 794,
+          "right": 378,
+          "bottom": 832,
+          "left": 235.453125
+        }
+      },
+      {
+        "class": "d01-feedback glass",
+        "rect": {
+          "x": 12,
+          "y": 486,
+          "width": 366,
+          "height": 218,
+          "top": 486,
+          "right": 378,
+          "bottom": 704,
+          "left": 12
+        }
+      }
+    ],
+    "count": 4,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 1,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/mobile-law-entry.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 7,
+      "kind": "law",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 12,
+          "y": 12,
+          "width": 55.171875,
+          "height": 32,
+          "top": 12,
+          "right": 67.171875,
+          "bottom": 44,
+          "left": 12
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 145.96875,
+          "y": 802,
+          "width": 232.03125,
+          "height": 30,
+          "top": 802,
+          "right": 378,
+          "bottom": 832,
+          "left": 145.96875
+        }
+      },
+      {
+        "class": "brief law glass",
+        "rect": {
+          "x": 12,
+          "y": 68,
+          "width": 366,
+          "height": 109.78125,
+          "top": 68,
+          "right": 378,
+          "bottom": 177.78125,
+          "left": 12
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/mobile-law-solved.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 7,
+      "kind": "law",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 61
+    },
+    "groups": [
+      {
+        "class": "objective glass",
+        "rect": {
+          "x": 12,
+          "y": 12,
+          "width": 55.171875,
+          "height": 32,
+          "top": 12,
+          "right": 67.171875,
+          "bottom": 44,
+          "left": 12
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 235.453125,
+          "y": 794,
+          "width": 142.546875,
+          "height": 38,
+          "top": 794,
+          "right": 378,
+          "bottom": 832,
+          "left": 235.453125
+        }
+      },
+      {
+        "class": "toast glass",
+        "rect": {
+          "x": 16.78125,
+          "y": 729.2235717773438,
+          "width": 356.421875,
+          "height": 39,
+          "top": 729.2235717773438,
+          "right": 373.203125,
+          "bottom": 768.2235717773438,
+          "left": 16.78125
+        }
+      },
+      {
+        "class": "brief law glass",
+        "rect": {
+          "x": 12,
+          "y": 68,
+          "width": 366,
+          "height": 438.875,
+          "top": 68,
+          "right": 378,
+          "bottom": 506.875,
+          "left": 12
+        }
+      }
+    ],
+    "count": 4,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 1,
+    "goalExpanded": "false",
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/mobile-build-entry.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 9,
+      "kind": "build",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 94.5,
+          "y": 802,
+          "width": 283.5,
+          "height": 30,
+          "top": 802,
+          "right": 378,
+          "bottom": 832,
+          "left": 94.5
+        }
+      },
+      {
+        "class": "build-left",
+        "rect": {
+          "x": 13,
+          "y": 87,
+          "width": 364,
+          "height": 154.921875,
+          "top": 87,
+          "right": 377,
+          "bottom": 241.921875,
+          "left": 13
+        }
+      },
+      {
+        "class": "build-right",
+        "rect": {
+          "x": 13,
+          "y": 241.921875,
+          "width": 364,
+          "height": 493.078125,
+          "top": 241.921875,
+          "right": 377,
+          "bottom": 735,
+          "left": 13
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/mobile-build-wrong.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 9,
+      "kind": "build",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 94.5,
+          "y": 802,
+          "width": 283.5,
+          "height": 30,
+          "top": 802,
+          "right": 378,
+          "bottom": 832,
+          "left": 94.5
+        }
+      },
+      {
+        "class": "build-left",
+        "rect": {
+          "x": 13,
+          "y": 87,
+          "width": 364,
+          "height": 179.921875,
+          "top": 87,
+          "right": 377,
+          "bottom": 266.921875,
+          "left": 13
+        }
+      },
+      {
+        "class": "build-right",
+        "rect": {
+          "x": 13,
+          "y": 266.921875,
+          "width": 364,
+          "height": 468.078125,
+          "top": 266.921875,
+          "right": 377,
+          "bottom": 735,
+          "left": 13
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "screenshot": "screenshots/mobile-build-assemble-passed.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 9,
+      "kind": "build",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "readout glass d01-player-reading",
+        "rect": {
+          "x": 242,
+          "y": 12,
+          "width": 136,
+          "height": 44,
+          "top": 12,
+          "right": 378,
+          "bottom": 56,
+          "left": 242
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 12,
+          "y": 758,
+          "width": 366,
+          "height": 74,
+          "top": 758,
+          "right": 378,
+          "bottom": 832,
+          "left": 12
+        }
+      },
+      {
+        "class": "build-left",
+        "rect": {
+          "x": 13,
+          "y": 87,
+          "width": 364,
+          "height": 163.921875,
+          "top": 87,
+          "right": 377,
+          "bottom": 250.921875,
+          "left": 13
+        }
+      },
+      {
+        "class": "build-right",
+        "rect": {
+          "x": 13,
+          "y": 250.921875,
+          "width": 364,
+          "height": 484.078125,
+          "top": 250.921875,
+          "right": 377,
+          "bottom": 735,
+          "left": 13
+        }
+      }
+    ],
+    "count": 4,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "check": "AT6 mobile assemble",
+    "passed": true,
+    "cases": 200
+  },
+  {
+    "screenshot": "screenshots/mobile-build-fill-passed.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 9,
+      "kind": "build",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "readout glass d01-player-reading",
+        "rect": {
+          "x": 242,
+          "y": 12,
+          "width": 136,
+          "height": 44,
+          "top": 12,
+          "right": 378,
+          "bottom": 56,
+          "left": 242
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 12,
+          "y": 758,
+          "width": 366,
+          "height": 74,
+          "top": 758,
+          "right": 378,
+          "bottom": 832,
+          "left": 12
+        }
+      },
+      {
+        "class": "build-left",
+        "rect": {
+          "x": 13,
+          "y": 87,
+          "width": 364,
+          "height": 163.921875,
+          "top": 87,
+          "right": 377,
+          "bottom": 250.921875,
+          "left": 13
+        }
+      },
+      {
+        "class": "build-right",
+        "rect": {
+          "x": 13,
+          "y": 250.921875,
+          "width": 364,
+          "height": 484.078125,
+          "top": 250.921875,
+          "right": 377,
+          "bottom": 735,
+          "left": 13
+        }
+      }
+    ],
+    "count": 4,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "check": "AT6 mobile fill",
+    "passed": true,
+    "cases": 200
+  },
+  {
+    "screenshot": "screenshots/mobile-build-write-passed.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 9,
+      "kind": "build",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "readout glass d01-player-reading",
+        "rect": {
+          "x": 242,
+          "y": 12,
+          "width": 136,
+          "height": 44,
+          "top": 12,
+          "right": 378,
+          "bottom": 56,
+          "left": 242
+        }
+      },
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 12,
+          "y": 758,
+          "width": 366,
+          "height": 74,
+          "top": 758,
+          "right": 378,
+          "bottom": 832,
+          "left": 12
+        }
+      },
+      {
+        "class": "build-left",
+        "rect": {
+          "x": 13,
+          "y": 87,
+          "width": 364,
+          "height": 163.921875,
+          "top": 87,
+          "right": 377,
+          "bottom": 250.921875,
+          "left": 13
+        }
+      },
+      {
+        "class": "build-right",
+        "rect": {
+          "x": 13,
+          "y": 250.921875,
+          "width": 364,
+          "height": 484.078125,
+          "top": 250.921875,
+          "right": 377,
+          "bottom": 735,
+          "left": 13
+        }
+      }
+    ],
+    "count": 4,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "check": "AT6 mobile write",
+    "passed": true,
+    "cases": 200
+  },
+  {
+    "screenshot": "screenshots/mobile-build-edited-pass.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 9,
+      "kind": "build",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 94.5,
+          "y": 802,
+          "width": 283.5,
+          "height": 30,
+          "top": 802,
+          "right": 378,
+          "bottom": 832,
+          "left": 94.5
+        }
+      },
+      {
+        "class": "build-left",
+        "rect": {
+          "x": 13,
+          "y": 87,
+          "width": 364,
+          "height": 154.921875,
+          "top": 87,
+          "right": 377,
+          "bottom": 241.921875,
+          "left": 13
+        }
+      },
+      {
+        "class": "build-right",
+        "rect": {
+          "x": 13,
+          "y": 241.921875,
+          "width": 364,
+          "height": 493.078125,
+          "top": 241.921875,
+          "right": 377,
+          "bottom": 735,
+          "left": 13
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "check": "mobile pass invalidation",
+    "passed": true
+  },
+  {
+    "screenshot": "screenshots/mobile-build-start-over.png",
+    "AT7": true,
+    "AT8": "not applicable",
+    "AT9": true,
+    "state": {
+      "chapter": "d01-dot",
+      "beat": 9,
+      "kind": "build",
+      "puzzle": null,
+      "dialogue": false,
+      "fps": 60
+    },
+    "groups": [
+      {
+        "class": "d01-actions",
+        "rect": {
+          "x": 94.5,
+          "y": 802,
+          "width": 283.5,
+          "height": 30,
+          "top": 802,
+          "right": 378,
+          "bottom": 832,
+          "left": 94.5
+        }
+      },
+      {
+        "class": "build-left",
+        "rect": {
+          "x": 13,
+          "y": 87,
+          "width": 364,
+          "height": 154.921875,
+          "top": 87,
+          "right": 377,
+          "bottom": 241.921875,
+          "left": 13
+        }
+      },
+      {
+        "class": "build-right",
+        "rect": {
+          "x": 13,
+          "y": 241.921875,
+          "width": 364,
+          "height": 493.078125,
+          "top": 241.921875,
+          "right": 377,
+          "bottom": 735,
+          "left": 13
+        }
+      }
+    ],
+    "count": 3,
+    "banners": 0,
+    "expandedNav": 0,
+    "transients": 0,
+    "visiblePrediction": false,
+    "UIGroupOverlap": false
+  },
+  {
+    "check": "mobile Start over restores tests line",
+    "passed": true
+  }
+]

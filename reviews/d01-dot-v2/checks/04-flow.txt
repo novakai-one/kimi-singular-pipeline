@@ -1,0 +1,6 @@
+beat 1 puzzle d01-p1: solve → true
+beat 4 puzzle d01-p2: solve → true
+beat 6 doubt: solve → true
+beat 7 law: solve → true
+beat 9 build dot: assemble true, fill true, write true
+no console errors

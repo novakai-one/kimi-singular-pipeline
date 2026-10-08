@@ -1,0 +1,146 @@
+### Ran Playwright code
+```js
+await (async (page) => {
+  const evidence = [];
+  const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  page.on('console', m => { if(m.type()==='error') errors.push(m.text()); });
+  await page.addInitScript(() => {
+    if(location.hostname!=='localhost') return;
+    const difficulty=new URL(location.href).searchParams.get('qaDiff') ?? 'navigator';
+    localStorage.setItem('la-game-v1',JSON.stringify({v:1,settings:{difficulty,codeHelp:'fill',voiceOn:false,autoAdvance:false,textSpeed:100},last:null,chapters:{},codex:{},explains:{},code:{},flags:{},manual:{},laws:{},doubts:{}}));
+  });
+  const load = async (beat,width,difficulty='navigator') => {
+    await page.setViewportSize({width,height:width===1440?900:844});
+    await page.goto(`http://localhost:5173/game/index.html?test&chapter=d01-dot&beat=${beat}&qaDiff=${difficulty}`);
+    await page.waitForFunction(beat=>window.__game?.state().chapter==='d01-dot'&&window.__game.state().beat===beat,beat);
+    await page.evaluate(async()=>{const d=await import('/src/game/ui/dialogue.ts');d.dialogueSettings.autoAdvance=false;d.dialogueSettings.textSpeed=100;});
+    await page.waitForSelector('#loading',{state:'detached'});
+    if([1,4].includes(beat)) await page.waitForFunction(()=>!!window.__game.app.runner.puzzle?.runtime);
+  };
+  const inventory = () => page.evaluate(() => {
+    const visible=e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'&&Number(s.opacity)>0&&!e.closest('[hidden]');};
+    const selectors=['#loading','.objective','.readout','.d01-actions','.d01-prediction','.bark','.toast','.d01-feedback','.predict-card','.hint-box','.win-card','.brief.doubt','.brief.law','.brief.procedure','.build-left','.build-right','.dialogue'];
+    const groups=[...new Set(selectors.flatMap(s=>[...document.querySelectorAll(s)]))].filter(visible).filter(e=>!(e.matches('.brief.doubt,.brief.law,.brief.procedure')&&e.closest('.objective')));
+    const nav=[...document.querySelectorAll('.hud-tr button')].filter(visible);
+    const expandedNav=nav.filter(e=>!e.hasAttribute('data-chrome-menu'));
+    const banners=[...document.querySelectorAll('.hud-chapter')].filter(visible);
+    const transient=groups.filter(e=>e.matches('.d01-prediction,.bark,.toast,.d01-feedback,.predict-card,.win-card'));
+    return {state:window.__game.state(),groups:groups.map(e=>({class:e.className,rect:e.getBoundingClientRect().toJSON()})),count:groups.length,banners:banners.length,expandedNav:expandedNav.length,transients:transient.length,goalExpanded:document.querySelector('.objective')?.dataset.expanded,visiblePrediction:!!document.querySelector('.d01-prediction')&&visible(document.querySelector('.d01-prediction'))};
+  });
+  const shot = async (name,afterDrag=false) => {
+    await page.waitForTimeout(name.endsWith('-solved') ? 650 : 300);
+    const observed=await inventory();
+    if(observed.count>4) throw new Error(`AT7 ${name}: ${observed.count} groups ${JSON.stringify(observed.groups.map(g=>g.class))}`);
+    if(observed.transients>1) throw new Error(`CH3 ${name}: multiple transients`);
+    if(observed.banners||observed.expandedNav) throw new Error(`AT9 ${name}: expanded chrome`);
+    if(afterDrag&&(observed.visiblePrediction||observed.goalExpanded!=='false')) throw new Error(`AT8 ${name}: prediction or full goal remains`);
+    const outside=observed.groups.filter(g=>g.rect.left < -2 || g.rect.top < -2 || g.rect.right > (name.startsWith('desktop')?1440:390)+2 || g.rect.bottom > (name.startsWith('desktop')?900:844)+2);
+    if(outside.length) throw new Error(`off-screen UI ${name}: ${JSON.stringify(outside)}`);
+    for(let i=0;i<observed.groups.length;i++) for(let j=i+1;j<observed.groups.length;j++) {
+      const a=observed.groups[i],b=observed.groups[j];
+      if(Math.min(a.rect.right,b.rect.right)-Math.max(a.rect.left,b.rect.left)>2 && Math.min(a.rect.bottom,b.rect.bottom)-Math.max(a.rect.top,b.rect.top)>2) throw new Error(`overlapping UI ${name}: ${a.class} / ${b.class}`);
+    }
+    observed.UIGroupOverlap=false;
+    await page.screenshot({path:`reviews/d01-dot-v2/screenshots/${name}.png`});
+    evidence.push({screenshot:`screenshots/${name}.png`,AT7:true,AT8:afterDrag?true:'not applicable',AT9:true,...observed});
+  };
+  const dragTo = async target => {
+    const a=await page.evaluate(()=>window.__game.app.stage.toScreen(window.__game.app.runner.puzzle.runtime.telemetry().sensor));
+    const b=await page.evaluate(target=>window.__game.app.stage.toScreen(target),target);
+    await page.mouse.move(a.x,a.y);await page.mouse.down();await page.mouse.move(b.x,b.y,{steps:20});await page.mouse.up();
+  };
+  for(const width of [1440,390]) {
+    const tag=width===1440?'desktop':'mobile';
+    await load(1,width);
+    await page.waitForFunction(()=>document.querySelector('.readout .v')?.textContent?.trim());
+    await shot(`${tag}-p1-entry`);
+    await dragTo([3,0,0]);await page.waitForTimeout(1100);await shot(`${tag}-p1-maximum`,true);
+    await page.getByRole('button',{name:/^Reset/}).click();
+    await page.waitForFunction(()=>!!window.__game.app.runner.puzzle?.runtime);
+    await shot(`${tag}-p1-reset`,true);
+    await dragTo([-3,0,0]);await page.waitForTimeout(1150);await shot(`${tag}-p1-negative`,true);
+    await dragTo([0,3,0]);await page.waitForTimeout(100);
+    if(await page.locator('.bark').count()) throw new Error('bark survived the next drag');
+    await shot(`${tag}-p1-next-drag`,true);
+    await page.waitForTimeout(1050);
+    await dragTo([3,0,0]);await page.waitForTimeout(1100);
+    await page.waitForFunction(()=>window.__game.state().puzzle.won);await shot(`${tag}-p1-solved`,true);
+
+    await load(1,width);
+    const prediction=page.locator('.d01-prediction input');
+    await prediction.fill('90');await prediction.press('Enter');
+    if(await page.locator('.d01-prediction').count()) throw new Error('prediction survived submission');
+    evidence.push({check:`${tag} prediction exits on Enter`,passed:true});
+    await page.evaluate(async()=>{const {COPY}=await import('/src/game/content/chapters/d01-dot/copy.ts');window.__game.app.ui.toast(COPY.p1.feedback);window.__game.app.ui.toast(COPY.p1.feedback);});
+    if(await page.locator('.toast').count()!==1) throw new Error('toast replacement failed');
+    await shot(`${tag}-p1-transient-replacement`);
+
+    await load(4,width,'commander');
+    await shot(`${tag}-p2-entry`);
+    for(const value of [25,35,7]) {
+      await page.locator('.d01-answer').fill(String(value));
+      await page.locator('.d01-answer').press('Enter');
+      const data=await page.evaluate(async value=>{const {COPY}=await import('/src/game/content/chapters/d01-dot/copy.ts');return {actual:document.querySelector('.d01-feedback')?.textContent,expected:COPY.p2.feedback[value],won:window.__game.state().puzzle.won};},value);
+      if(data.actual!==data.expected||data.won) throw new Error(`AT3 incorrect feedback for ${value}`);
+      await shot(`${tag}-p2-wrong-${value}`,true);
+      evidence.push({check:`AT3 ${tag} ${value}`,passed:true,...data});
+    }
+    await page.locator('.d01-answer').fill('15');await page.locator('.d01-answer').press('Enter');await page.waitForFunction(()=>window.__game.state().puzzle.won);
+    await shot(`${tag}-p2-solved`,true);
+
+    for(const [beat,kind] of [[6,'doubt'],[7,'law']]) {
+      await load(beat,width);
+      if(beat===6){await page.waitForFunction(()=>window.__game.briefing()==='doubt'||window.__game.state().dialogue);if(await page.locator('.dialogue').count()){await page.locator('.dialogue').click();await page.waitForTimeout(100);if(await page.locator('.dialogue').count())await page.locator('.dialogue').click();}}
+      await page.waitForFunction(kind=>window.__game.briefing()===kind,kind);
+      await shot(`${tag}-${kind}-entry`);
+      const solved=await page.evaluate(()=>window.__game.solveBriefing());
+      if(!solved?.ok) throw new Error(`${kind} solver failed`);
+      await shot(`${tag}-${kind}-solved`);
+    }
+
+    await load(9,width,'commander');await page.waitForSelector('.build .code-ta');
+    await shot(`${tag}-build-entry`);
+    await page.locator('.code-ta').evaluate(e=>e.blur());
+    await page.keyboard.press('Enter');
+    if((await page.evaluate(()=>window.__game.state().beat))!==9) throw new Error('Continue advanced before pass');
+    const wrong=await page.evaluate(async()=>{const {COPY}=await import('/src/game/content/chapters/d01-dot/copy.ts');return COPY.build.solution.split('\n')[0]+'\n'+COPY.build.decoy;});
+    await page.locator('.code-ta').fill(wrong);
+    await page.evaluate(async()=>{await (await import('/src/game/game/build.ts')).buildTest.current.run();});
+    await page.waitForFunction(()=>document.querySelector('.build-status')?.textContent.includes('First mismatch:'));
+    if(await page.locator('.hud-br .primary:visible').count()) throw new Error('Continue visible after failing code');
+    await shot(`${tag}-build-wrong`);
+    for(const mode of ['assemble','fill','write']) {
+      const solved=await page.evaluate(mode=>window.__game.solveBuild(mode),mode);
+      if(!solved?.ok) throw new Error(`AT6 ${mode} failed`);
+      await page.waitForSelector('.build[data-ready=true]');
+      const count=await page.locator('.test-results .test.ok').count();
+      if(count!==200) throw new Error('AT6 wrong case count');
+      await shot(`${tag}-build-${mode}-passed`);
+      evidence.push({check:`AT6 ${tag} ${mode}`,passed:true,cases:count});
+    }
+    await page.locator('.code-ta').fill(wrong);
+    if(await page.locator('.hud-br .primary:visible').count()) throw new Error('editing a pass did not invalidate Continue');
+    const pendingLine=await page.evaluate(async()=> (await import('/src/game/content/chapters/d01-dot/copy.ts')).COPY.build.tests);
+    if(await page.locator('.build-status').textContent()!==pendingLine) throw new Error('editing a pass retained a stale success claim');
+    await shot(`${tag}-build-edited-pass`);
+    evidence.push({check:`${tag} pass invalidation`,passed:true});
+    await page.getByRole('button',{name:'Start over',exact:true}).click();
+    const resetLine=await page.locator('.build-status').textContent();
+    const expectedLine=await page.evaluate(async()=> (await import('/src/game/content/chapters/d01-dot/copy.ts')).COPY.build.tests);
+    if(resetLine!==expectedLine) throw new Error('Start over did not restore the authored tests line');
+    await shot(`${tag}-build-start-over`);
+    evidence.push({check:`${tag} Start over restores tests line`,passed:true});
+  }
+  if(errors.length) throw new Error('console errors: '+errors.join(' | '));
+  await page.evaluate(evidence=>{window.d01V2Evidence=evidence;},evidence);
+})(page);
+```
+### Page
+- Page URL: http://localhost:5173/game/index.html?test&chapter=d01-dot&beat=9&qaDiff=commander
+- Page Title: SINGULAR · a linear algebra game
+### Events
+- New console entries: .playwright-cli/console-2026-10-08T10-34-12-492Z.log#L257-L266
+46 interactive screenshots: AT7/AT9 passed; all after-drag/attempt captures: AT8 passed.
+AT3 feedback, prediction permanence, CH3 replacement/dismissal, build gating/invalidation, and AT6 200-case modes: passed.
+no console errors

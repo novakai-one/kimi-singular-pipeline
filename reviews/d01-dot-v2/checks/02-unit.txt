@@ -1,0 +1,30 @@
+✔ p1 holds each band for a full second, in either order (0.486334ms)
+✔ p1 leaving a band resets its timer; negative readings bark without winning (0.06575ms)
+✔ sensor radius stays 3 with the authored angular steps; bands include their tolerance boundaries (5.654042ms)
+✔ p2 accepts 15 within ±0.01, rejects the three specified misconceptions (0.566292ms)
+✔ doubt: non-zero perpendicular arrows refute the claim; a zero arrow satisfies it (0.302917ms)
+✔ law: target survives 500 seeded cases; every near-miss breaks (9.147375ms)
+✔ build: 200 integer pairs in the authored range; reference passes and decoy fails with the authored format (1.089583ms)
+✔ Commander typing previews complete and partial answers; only Enter submits the current field value (1.28ms)
+✔ prediction dismissal survives Reset-style remounts; a goal only reopens on a deliberate toggle (0.330333ms)
+✔ only the licensed d01 interactive beats receive compact chrome (0.224ms)
+✔ a new transient replaces the old one; its old timeout cannot remove the replacement (0.6275ms)
+✔ Continue needs 200 passing cases and finite adopted output; editing invalidates a pending adoption (0.189167ms)
+✔ the saved player function supplies the instrument; stale results and teardown cannot overwrite it (0.355333ms)
+✔ an old adoption rejection cannot invalidate a newer pass or touch a later beat (0.656292ms)
+✔ instrument rejection obeys epochs, recovers after a current failure, and is inert after teardown (0.15575ms)
+✔ holding a heading refreshes confirmation presentation without executing Python again (0.086917ms)
+✔ Start over status clearing restores one authored tests line without replacing a result (0.048542ms)
+✔ edited success resets to one tests line without causing an observer mutation loop (0.0485ms)
+✔ run ownership starts at synchronous status write, rejects edits during testing, and recovers on a fresh run (0.438292ms)
+✔ d01 mounting, passing, failing and serializing never replace story source/flags/drafts (0.328ms)
+✔ an aborted renderer isolates late writes while preserving a newer story save (0.06225ms)
+✔ overlapping build lifetimes route each result to its owner and restore absent flags on setup failure (0.08275ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 480.783125
