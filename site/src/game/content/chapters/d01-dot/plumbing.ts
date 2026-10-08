@@ -1,11 +1,12 @@
 import { buildTest } from '../../../game/build';
+import { composeFill, deriveFill } from '../../../game/codehelp';
 import { Readout } from '../../../ui/widgets';
 import type { UI } from '../../../ui/ui';
 import { S, save } from '../../../core/save';
 import { COPY } from './copy';
 import { build } from './build';
 import { mismatch } from './logic.ts';
-import { BuildGate, PuzzleLifecycle, beginPuzzleBeat, restoreTestsLine } from './lifecycle.ts';
+import { BuildGate, PuzzleLifecycle, beginPuzzleBeat, restoreTestsLine, observeBuildRunStatus, type BuildRun } from './lifecycle.ts';
 import { playerReading } from './instrument';
 import { isolateBuildStorage } from './storage.ts';
 import { stageGoal } from './staging';
@@ -33,13 +34,15 @@ export function installPlumbing(): void {
 
 function stageBuild(ui: UI): () => void {
   const gate = new BuildGate();
-  let epoch = gate.invalidate();
+  gate.invalidate();
   let alive = true;
   let mounted: HTMLElement | null = null;
   let handledResults: Element | null = null;
   let savedResults: Element | null = null;
   let instrument: Readout | null = null;
   let running = false;
+  let run: BuildRun | null = null;
+  let restoreRunStatus = () => {};
   let finishing = false;
   let continueEl: HTMLButtonElement | null = null;
   const actions = ui.hud.querySelector<HTMLElement>('.d01-actions')!;
@@ -58,15 +61,17 @@ function stageBuild(ui: UI): () => void {
     mounted.dataset.ready = String(gate.ready);
   };
   const removeInstrument = () => { instrument?.el.remove(); instrument = null; };
-  const invalidate = () => {
+  const invalidate = (edited = false) => {
     if (!alive) return;
-    epoch = gate.invalidate();
+    gate.invalidate();
     removeInstrument();
+    const status = mounted?.querySelector<HTMLElement>('.build-status');
+    if (edited && status && !running) restoreTestsLine(status, COPY.build.tests, true);
     renderGate();
   };
   const releaseStorage = () => {
     if (alive || running || finishing) return;
-    settlement.disconnect(); storage.release(); save();
+    settlement.disconnect(); restoreRunStatus(); storage.release(); save();
   };
   const finishRenderer = () => {
     finishing = true;
@@ -89,8 +94,14 @@ function stageBuild(ui: UI): () => void {
   };
   document.addEventListener('keydown', blockAdvance, true);
   ui.hud.addEventListener('click', blockAdvance, true);
-  const changed = () => invalidate();
-  const isRunning = (raw: string) => raw.startsWith('Running') || raw.startsWith('Starting Python (');
+  const changed = () => invalidate(true);
+  const editorSource = (box: HTMLElement) => {
+    const write = box.querySelector<HTMLTextAreaElement>('.editor-host .code-ta');
+    if (write) return write.value;
+    const fill = box.querySelector('.editor-host .fill-code');
+    if (fill) return composeFill(build.fill ?? deriveFill(build.solution)!.template, [...fill.querySelectorAll<HTMLInputElement>('.blank')].map((input) => input.value));
+    return [...box.querySelectorAll('.editor-host .asm-list .asm-line code')].map((line) => line.textContent!.replace(/\u00a0/g, ' ')).join('\n') + '\n';
+  };
   const reconcile = () => {
     if (!alive) return;
     const box = ui.scene.querySelector<HTMLElement>('.build');
@@ -105,6 +116,13 @@ function stageBuild(ui: UI): () => void {
       left.dataset.attention = 'goal';
       const status = box.querySelector<HTMLElement>('.build-status')!;
       left.append(status);
+      restoreRunStatus = observeBuildRunStatus(status, () => {
+        // This setter runs in the renderer's own synchronous source-capture
+        // turn, before a later input, mode change, or Python result can arrive.
+        run = gate.startRun(editorSource(box));
+        running = true;
+        removeInstrument(); renderGate();
+      }, () => { running = false; });
       const controls = box.querySelector<HTMLElement>('.build-actions')!;
       actions.prepend(controls);
       box.addEventListener('input', changed);
@@ -115,12 +133,13 @@ function stageBuild(ui: UI): () => void {
     renderGate();
     const status = box.querySelector<HTMLElement>('.build-status')!;
     restoreTestsLine(status, COPY.build.tests);
-    const raw = status.textContent ?? '';
-    if (isRunning(raw)) {
-      if (!running) { running = true; invalidate(); }
+    if (running) return;
+    if (run && !gate.ownsRun(run, editorSource(box))) {
+      // Even an old passing result must not describe the edited draft as passed.
+      if (gate.current(run.epoch)) invalidate();
+      restoreTestsLine(status, COPY.build.tests, true);
       return;
     }
-    running = false;
     const rows = [...box.querySelectorAll('.test-results .test')];
     if (rows.length !== 200 || !rows.every((row) => row.matches('.ok, .fail'))) return;
     if (handledResults === rows[0]) return;
@@ -128,15 +147,17 @@ function stageBuild(ui: UI): () => void {
     const passed = rows.map((row) => row.classList.contains('ok'));
     const bad = passed.indexOf(false);
     if (bad >= 0) {
+      run = null;
       invalidate();
       const difference = rows[bad].querySelector('.tdiff')?.textContent?.match(/^got (.*), want (.*)$/);
       if (difference) status.textContent = mismatch(COPY.build.feedback, build.tests[bad].args, difference[1], difference[2]);
       return;
     }
     const source = storage.local.source;
-    if (!source || !current.passed()) return;
-    const testedEpoch = epoch;
-    const ownsAdoption = () => alive && box.isConnected && mounted === box && source === storage.local.source;
+    const testedRun = run;
+    if (!source || !current.passed() || !testedRun || source !== testedRun.source) return;
+    const testedEpoch = testedRun.epoch;
+    const ownsAdoption = () => alive && box.isConnected && mounted === box && source === storage.local.source && gate.ownsRun(testedRun, editorSource(box));
     void playerReading(source, [3, 4], [5, 0]).then((value) => {
       if (!ownsAdoption() || !gate.adopt(testedEpoch, passed, value)) return;
       storage.local.adoptedSource = source;
@@ -158,14 +179,12 @@ function stageBuild(ui: UI): () => void {
   // settles. Its storage writes are identified by its own new result rows.
   const settlement = new MutationObserver(() => {
     if (alive) { reconcile(); return; }
-    running = isRunning(mounted?.querySelector('.build-status')?.textContent ?? '');
     releaseStorage();
   });
   const observer = new MutationObserver(reconcile);
   observer.observe(ui.scene, { subtree: true, childList: true, characterData: true });
   observer.observe(ui.hud, { subtree: true, childList: true });
   return () => {
-    running = isRunning(mounted?.querySelector('.build-status')?.textContent ?? '');
     alive = false; gate.dispose(); observer.disconnect(); removeInstrument();
     document.removeEventListener('keydown', blockAdvance, true);
     ui.hud.removeEventListener('click', blockAdvance, true);

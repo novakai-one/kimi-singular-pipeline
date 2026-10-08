@@ -74,7 +74,7 @@ test('build: 200 integer pairs in the authored range; reference passes and decoy
   assert.equal(message, COPY.build.feedback.replace('{a}', JSON.stringify(c.args[0])).replace('{b}', JSON.stringify(c.args[1])).replace('{r}', String(c.expect)).replace('{y}', String(wrong)));
 });
 
-import { PuzzleLifecycle, puzzleLifecycle, beginPuzzleBeat, bindNumericAnswer, BuildGate, ReadingChannel, restoreTestsLine } from '../../site/src/game/content/chapters/d01-dot/lifecycle.ts';
+import { PuzzleLifecycle, puzzleLifecycle, beginPuzzleBeat, bindNumericAnswer, BuildGate, ReadingChannel, restoreTestsLine, observeBuildRunStatus, type BuildRun } from '../../site/src/game/content/chapters/d01-dot/lifecycle.ts';
 import { compactBeatChrome, TransientSlot } from '../../site/src/game/ui/beat-chrome.ts';
 
 test('Commander typing previews complete and partial answers; only Enter submits the current field value', () => {
@@ -279,6 +279,65 @@ test('Start over status clearing restores one authored tests line without replac
   status.textContent = COPY.build.success.text;
   restoreTestsLine(status, COPY.build.tests);
   assert.equal(status.textContent, COPY.build.success.text);
+});
+
+test('edited success resets to one tests line without causing an observer mutation loop', () => {
+  let content = COPY.build.success.text, writes = 0;
+  const status = { get textContent() { return content; }, set textContent(value: string) { content = value; writes++; } };
+  restoreTestsLine(status, COPY.build.tests, true);
+  assert.equal(content, COPY.build.tests);
+  restoreTestsLine(status, COPY.build.tests, true);
+  assert.equal(writes, 1, 'reconciling an already invalidated status must not queue another mutation');
+});
+
+test('run ownership starts at synchronous status write, rejects edits during testing, and recovers on a fresh run', () => {
+  class Status {
+    private content = '';
+    get textContent() { return this.content; }
+    set textContent(value: string) { this.content = value; }
+    get innerHTML() { return this.content; }
+    set innerHTML(value: string) { this.content = value; }
+  }
+  for (const change of ['edit', 'mode', 'start over', 'programmatic source change', 'teardown']) {
+    const gate = new BuildGate();
+    const status = new Status();
+    let source = COPY.build.solution, running = false, run: BuildRun | null = null;
+    const restore = observeBuildRunStatus(status, () => { run = gate.startRun(source); running = true; }, () => { running = false; });
+    // This is the shared renderer's ordering: capture, status write, await.
+    const testedSource = source;
+    status.textContent = 'Running…';
+    const testedRun = run!;
+    assert.equal(testedRun.source, testedSource);
+    assert.equal(running, true);
+    if (change === 'teardown') gate.dispose();
+    else {
+      source = COPY.build.decoy;
+      if (change !== 'programmatic source change') gate.invalidate();
+      if (change === 'start over') status.textContent = '';
+    }
+    assert.equal(running, true, 'editing or clearing status cannot finish the outstanding run');
+    status.innerHTML = 'All tests pass';
+    assert.equal(running, false);
+    assert.equal(gate.ownsRun(testedRun, source), false, change);
+    if (gate.ownsRun(testedRun, source)) gate.adopt(testedRun.epoch, Array(200).fill(true), 15);
+    assert.equal(gate.ready, false);
+    restoreTestsLine(status, COPY.build.tests, true);
+    assert.equal(status.textContent, COPY.build.tests);
+    if (change !== 'teardown') {
+      source = COPY.build.solution;
+      status.textContent = 'Starting Python (first run takes a few seconds)…';
+      const freshRun = run!;
+      status.innerHTML = 'All tests pass';
+      assert.equal(gate.ownsRun(freshRun, source), true);
+      assert.equal(gate.adopt(freshRun.epoch, Array(200).fill(true), 15), true);
+    }
+    restore();
+    assert.equal(Object.hasOwn(status, 'textContent'), false);
+    assert.equal(Object.hasOwn(status, 'innerHTML'), false);
+    const lastRun = run;
+    status.textContent = 'Running…';
+    assert.equal(run, lastRun, 'released status observation cannot start another owned run');
+  }
 });
 
 const storySource = 'def dot(v, w):\n    return sum(a*b for a, b in zip(v, w))';

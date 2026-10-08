@@ -37,12 +37,15 @@ export function bindNumericAnswer(input: HTMLInputElement, preview: (value: numb
 }
 
 /** Continue requires this run's full suite and adoption, never an old save flag. */
+export interface BuildRun { epoch: number; source: string }
 export class BuildGate {
   private epoch = 0;
   private alive = true;
   ready = false;
   invalidate(): number { this.ready = false; return ++this.epoch; }
   current(epoch: number): boolean { return this.alive && epoch === this.epoch; }
+  startRun(source: string): BuildRun { return { epoch: this.invalidate(), source }; }
+  ownsRun(run: BuildRun, source: string): boolean { return this.current(run.epoch) && run.source === source; }
   reject(epoch: number): boolean {
     if (!this.current(epoch)) return false;
     this.invalidate();
@@ -80,6 +83,33 @@ export class ReadingChannel {
 }
 
 /** The renderer clears this node on Start over; keep its one authored line. */
-export function restoreTestsLine(status: { textContent: string | null }, tests: string): void {
-  if (!status.textContent?.trim()) status.textContent = tests;
+export function restoreTestsLine(status: { textContent: string | null }, tests: string, invalidated = false): void {
+  if ((invalidated || !status.textContent?.trim()) && status.textContent !== tests) status.textContent = tests;
+}
+
+/** The unchanged renderer writes Running synchronously just after capturing code,
+ * then writes innerHTML only when that run settles. Observe this one node, not
+ * global DOM prototypes; a cleared Start over status is not run completion.
+ */
+export function observeBuildRunStatus(status: { textContent: string | null; innerHTML: string }, start: () => void, finish: () => void): () => void {
+  const restore: (() => void)[] = [];
+  for (const key of ['textContent', 'innerHTML'] as const) {
+    const own = Object.getOwnPropertyDescriptor(status, key);
+    let prototype: object | null = status;
+    let descriptor: PropertyDescriptor | undefined;
+    while (prototype && !descriptor) { descriptor = Object.getOwnPropertyDescriptor(prototype, key); prototype = Object.getPrototypeOf(prototype); }
+    if (!descriptor?.get || !descriptor.set) throw new Error(`Missing build status accessor: ${key}`);
+    const accessor = descriptor;
+    Object.defineProperty(status, key, {
+      configurable: true,
+      get() { return accessor.get!.call(this); },
+      set(value: string | null) {
+        accessor.set!.call(this, value);
+        if (key === 'textContent' && /^(Running|Starting Python \()/.test(value ?? '')) start();
+        if (key === 'innerHTML') finish();
+      },
+    });
+    restore.push(() => { if (own) Object.defineProperty(status, key, own); else Reflect.deleteProperty(status, key); });
+  }
+  return () => restore.forEach((reset) => reset());
 }

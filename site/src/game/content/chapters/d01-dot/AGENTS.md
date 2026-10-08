@@ -7,5 +7,7 @@
 - Type Commander answers character by character and confirm with Enter. A correct prefix must never win before the complete answer is submitted.
 - The authored two-component dot is chapter-local. Preserve story `code.dot`, its passing flag and drafts during save, failure and abort; verify the story's three-component cases after d01 builds.
 - Exercise rejected and late Python calls as well as successful calls. Old results must not touch later beat controls, and a current readout failure must recover when a later input succeeds.
+- After a passing build, edits and mode changes must replace success with the authored tests line and remove current readiness/readout. Exercise a slow run, edit or Start over before it settles, reject its stale result, then verify a fresh run recovers; capture ownership at run start, not completion.
+- Inspect ordinary replacement toasts as well as authored barks. Interactive toasts must stay clear of goal, readout and bottom controls; the replacement probe is not the negative-reading bark.
 - Read reviews/d01-dot-v2/REPORT.md and its current STOP list before further implementation. UI and harness checks do not establish author or Chris acceptance.
 - This chapter currently uses the developer registry to preserve the existing story and reference-library registration. The normal solve and wording commands omit developer chapters; report that coverage gap and the meaningful supplementary checks explicitly.
