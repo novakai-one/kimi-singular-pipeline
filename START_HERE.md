@@ -22,9 +22,9 @@ Open the address it prints (usually http://localhost:5173).
 
 **Option B: as a web page.** The repository can publish the site with GitHub Pages:
 
-1. Merge the branch `claude/ai-field-explorer-qjyojf` into `main`.
-2. On GitHub: **Settings → Pages → Source: GitHub Actions**.
-3. The next push to `main` publishes it at `https://novakai-one.github.io/claude-ai-demo/`.
+1. On GitHub: **Settings → Pages → Source: GitHub Actions**.
+2. The next push to the default branch (`claude/ai-field-explorer-qjyojf`) publishes it at `https://novakai-one.github.io/claude-ai-demo/`. To publish without a push: **Actions → Deploy site to GitHub Pages → Run workflow**.
+3. The game is at `https://novakai-one.github.io/claude-ai-demo/game/`. Add `?chapter=c18&beat=3` to open a chapter at a given beat (here: Chapter 18, Game 1).
 
 GitHub Pages on a **private** repository needs a paid GitHub plan. If that isn't available, use Option A.
 

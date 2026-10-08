@@ -1,10 +1,11 @@
 # Builds the static site and publishes it to GitHub Pages.
 # Turn on Pages first: Settings → Pages → Source: "GitHub Actions".
 # (Pages on a private repo needs a paid GitHub plan. See START_HERE.md.)
+# Publishes from the repository's default branch (claude/ai-field-explorer-qjyojf), or from main if one is made.
 name: Deploy site to GitHub Pages
 on:
   push:
-    branches: [main]
+    branches: [main, claude/ai-field-explorer-qjyojf]
   workflow_dispatch:
 permissions:
   contents: read
